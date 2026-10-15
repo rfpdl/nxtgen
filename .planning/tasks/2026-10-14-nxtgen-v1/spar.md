@@ -155,3 +155,25 @@ product decision) judged **sound**.
 
 **Summary:** 3 review rounds + sign-off. Blocking 16 → 3 → 0. Requested model `gpt-6-astra` on every call; the
 runner accepted the flag but never reported the model actually used (not verified).
+
+---
+
+# Diff review — Release 1 build (2026-10-15, overnight)
+
+`adversarial-review --scope working-tree`, requested model `gpt-6-astra` (accepted by the runner, actual model not
+reported). Six rounds — the process ceiling — every finding accepted, fixed test-first, gate green after each.
+
+| Round | Severity | Finding | Fix |
+|---|---|---|---|
+| 1 | high | Link check and consumption were separate; an email correction in between let an old-address link sign in and verify the new address | One conditional UPDATE joined to the user/claim; verification conditional on the bound email + version; user row locked during redemption and correction |
+| 2 | high | Import: a regrouped review row could attach a child to the wrong family | Refuse groups mapped to >1 family or whose parent email differs from the imported family |
+| 2 | medium | Import: blank/unknown month became January | Month allowlist; invalid → quarantine |
+| 3 | high | GET on emailed links consumed them (email scanners; could accept a family claim) | GET shows a Continue page; POST (CSRF) uses the link |
+| 3 | medium | A corrected sheet row (new source key) could import a child twice | Never insert a child whose name + birthday already exists… |
+| 4 | medium | …but that blocked genuine same-name/same-birthday children | …unless the reviewer sets "Distinct child = yes" |
+| 4 | medium | Registration could flood one inbox (only /login/link had a per-recipient limit) | One recipient limit in SendMagicLinkJob: 5 link emails / address / 10 min, every path |
+| 5 | high | Excel exports turned "=…" values into live formulas (formula injection) | Every cell written as literal text (`TextRow`), both writers; regression test reads the XML |
+| 5 | high | Claim acceptance could attach to an account whose email changed mid-flight | Lock the login, recheck email, require verification, roll back on mismatch |
+| 6 | high | Public registration revealed whether an email already had a family in the church (membership oracle) | Same public answer for every outcome; specifics only by email |
+
+**Status:** not signed off — round 6 still found an issue, and the ceiling is reached. Escalated to Roy.

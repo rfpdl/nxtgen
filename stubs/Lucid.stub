@@ -1,0 +1,43 @@
+<?php
+
+// PHPStan-only type stubs for Lucid (never loaded at runtime). Lucid's run()/serve() return `mixed`, which
+// level 10 rejects at every call site. These stubs make each unit carry its result type, so
+// `$this->run(new CreateFamilyJob(...))` is typed as Family.
+
+namespace Lucid\Units {
+    /** @template-covariant TResult */
+    abstract class Job {}
+
+    /** @template-covariant TResult */
+    abstract class Operation {}
+
+    /** @template-covariant TResult */
+    abstract class Feature {}
+}
+
+namespace Lucid\Bus {
+    trait UnitDispatcher
+    {
+        /**
+         * @template TUnitResult
+         *
+         * @param  \Lucid\Units\Job<TUnitResult>|\Lucid\Units\Operation<TUnitResult>  $unit
+         * @param  array<mixed>|\Illuminate\Http\Request  $arguments
+         * @param  array<mixed>  $extra
+         * @return TUnitResult
+         */
+        public function run($unit, $arguments = [], $extra = []) {}
+    }
+
+    trait ServesFeatures
+    {
+        /**
+         * @template TUnitResult
+         *
+         * @param  class-string<\Lucid\Units\Feature<TUnitResult>>  $feature
+         * @param  array<string, mixed>  $arguments
+         * @return TUnitResult
+         */
+        public function serve($feature, $arguments = []) {}
+    }
+}

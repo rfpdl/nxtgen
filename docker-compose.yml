@@ -1,0 +1,52 @@
+# Local development only. Production is Laravel Cloud, which supplies its own MySQL, Redis and PHP runtime.
+#
+# Ports and container names differ from the PoC (nxtgen-attendance: 33306 / 36379) so both can run side by side.
+# A colliding MySQL port fails as "access denied", a colliding Redis silently shares another app's sessions.
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: nxtgen-app-mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+    environment:
+      MYSQL_DATABASE: nxtgen
+      MYSQL_USER: nxtgen
+      MYSQL_PASSWORD: nxtgen
+      MYSQL_ROOT_PASSWORD: nxtgen
+    ports:
+      - '33316:3306'
+    volumes:
+      - mysqldata:/var/lib/mysql
+      - ./docker/mysql/init-databases.sql:/docker-entrypoint-initdb.d/10-init-databases.sql:ro
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-unxtgen', '-pnxtgen']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Sessions, cache and queue. Not persisted on purpose: everything in it is disposable.
+  redis:
+    image: redis:7-alpine
+    container_name: nxtgen-app-redis
+    ports:
+      - '36389:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Optional: catches magic-link emails locally (http://localhost:8026). `docker compose --profile mail up -d`.
+  # Without it, MAIL_MAILER=log writes the emails (and their links) to storage/logs/laravel.log.
+  mailpit:
+    profiles: ['mail']
+    image: axllent/mailpit:latest
+    container_name: nxtgen-app-mailpit
+    ports:
+      - '1026:1025'
+      - '8026:8025'
+
+volumes:
+  mysqldata:

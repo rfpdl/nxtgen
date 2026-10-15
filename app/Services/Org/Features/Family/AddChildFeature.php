@@ -1,0 +1,33 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services\Org\Features\Family;
+
+use App\Domains\Family\Jobs\GetFamilyByIdJob;
+use App\Enums\RegistrationSourceEnum;
+use App\Foundation\Inputs\ChildInput;
+use App\Operations\Family\AddChildToFamilyOperation;
+use App\Services\Org\Features\BaseOrgFeature;
+use Illuminate\Http\RedirectResponse;
+
+/**
+ * Any staff in the church may add a child to a family found by search — registration is church-wide
+ * (plan §3.2), even when the family's home satellite is another one.
+ *
+ * @extends BaseOrgFeature<RedirectResponse>
+ */
+final class AddChildFeature extends BaseOrgFeature
+{
+    public function __construct(private readonly int $familyId) {}
+
+    public function handle(ChildInput $input): RedirectResponse
+    {
+        abort_unless($this->scope()->canRegisterFamilies(), 404);
+        $family = $this->run(new GetFamilyByIdJob(organizationId: $this->organization()->id, id: $this->familyId));
+
+        $child = $this->run(new AddChildToFamilyOperation(family: $family, details: $input->toDetails(), source: RegistrationSourceEnum::Staff));
+
+        return back()->with('success', "{$child->displayName()} is added to the family.");
+    }
+}

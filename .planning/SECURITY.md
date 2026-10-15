@@ -14,3 +14,9 @@ Items here are known and tracked; none blocks a release unless marked **must**.
 | 7 | Rate limits: login link per email + IP, registration per IP | R1 | plan §4.3 |
 | 8 | Name barcodes cannot be revoked (legacy cards) | accepted until QR in Feb | plan §5 |
 | 9 | Admin role-grant ceiling | R1 | plan §3.2 |
+| 10 | Emailed links: GET shows Continue, POST uses the link (scanner-safe) | done | diff review r3 |
+| 11 | Spreadsheet exports write text only (no formula injection) | done | diff review r5 |
+| 12 | Public registration gives one answer for every outcome (no membership oracle) | done | diff review r6 |
+| 13 | Recipient-level limit on link emails across all paths | done | diff review r4 |
+| 14 | Staff search shows masked emails and no phones/health to Lifeshapers outside their satellite | done | plan §3.3 |
+| 15 | Codex diff review not signed off after 6 rounds — another pass before production | **open** | spar.md |

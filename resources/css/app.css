@@ -1,0 +1,251 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter/index.css';
+
+/*
+ * The brand mark's colours. Referenced only inside `BrandMark.vue`'s SVG, where Tailwind's scanner
+ * does see them — a class the scanner misses compiles to nothing and the mark renders as a grey blob with no error anywhere.
+ */
+@source inline("fill-brand-cyan fill-brand-orange fill-brand-amber stroke-brand-orange");
+
+/*
+ * Design tokens.
+ *
+ * Components use SEMANTIC names only — `bg-surface`, `text-text-muted`, `border-danger`. Raw Tailwind
+ * colours (`text-red-500`, `bg-gray-100`) are banned in components and pages, and the discipline gate
+ * scans for them. The reason is not neatness: a raw colour is a decision made in one component that
+ * cannot be revisited anywhere else, and this interface has a hard 7:1 contrast requirement on teacher
+ * screens (plan §5.10) that can only be held if the pairs live in one place.
+ */
+@theme {
+    --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+
+    /* ── Brand ────────────────────────────────────────────────────────────────
+     * Taken from the NXTGEN logo's cyan, darkened until it clears 7:1 on white.
+     * The logo colour itself does not, which is why this is not the logo colour.
+     */
+    --color-primary: oklch(0.41 0.11 226);
+    --color-primary-strong: oklch(0.39 0.11 226);
+    --color-primary-soft: oklch(0.96 0.02 226);
+    --color-on-primary: oklch(1 0 0);
+
+    /* ── The logo, as drawn ───────────────────────────────────────────────────
+     * Roy sent the shirt and then the logo itself: an amber disc, a white box
+     * with an orange rule, and NXT GEN in cyan with an orange X.
+     *
+     * These are the TRUE ink colours, undarkened, and they are for the MARK
+     * ONLY — never for text, a button, or a state. `--color-primary` above is
+     * the same cyan taken down until it is readable; these are what the badge
+     * is painted with, where nothing has to be read at 16px.
+     *
+     * **Yellow is deliberately not an interactive colour**, and that is the
+     * one real constraint the brand imposes here: level 2 is yellow on the
+     * children's own cards. A yellow button would make the palette ambiguous
+     * exactly where it carries meaning — so the brand's yellow appears in the
+     * mark and nowhere else.
+     */
+    --color-brand-cyan: oklch(0.75 0.13 216);
+    --color-brand-orange: oklch(0.72 0.17 55);
+    --color-brand-amber: oklch(0.78 0.15 78);
+
+    /* ── Surfaces ─────────────────────────────────────────────────────────────
+     * Dashboard language: white cards on a cool light grey, thin borders, no
+     * heavy shadows. `sidebar` is its own token rather than reusing `surface`
+     * so the nav can diverge from a card later without touching either.
+     */
+    --color-surface: oklch(1 0 0);
+    --color-surface-sunken: oklch(0.972 0.003 255);
+    --color-surface-overlay: oklch(1 0 0);
+    --color-sidebar: oklch(1 0 0);
+    --color-sidebar-active: oklch(0.955 0.02 226);
+    --color-border: oklch(0.9 0.004 255);
+    --color-border-strong: oklch(0.72 0.006 250);
+
+    /* ── Text ─────────────────────────────────────────────────────────────────
+     * `--color-text` is 16.8:1 on surface and `--color-text-muted` is 7.4:1.
+     *
+     * There is NO `--color-text-subtle`. Every design system has one and it is
+     * the first thing to vanish in a bright foyer, so the token that would
+     * license it does not exist. If a screen needs de-emphasis, use size,
+     * weight or space — not less contrast.
+     */
+    --color-text: oklch(0.22 0.006 250);
+    --color-text-muted: oklch(0.44 0.008 250);
+    --color-on-dark: oklch(0.98 0 0);
+
+    /* ── Status ───────────────────────────────────────────────────────────────
+     * Each `-fg` is ≥7:1 on its matching `-soft`. The danger pair is the one
+     * that matters most and is hardest: it carries the allergy badge (plan
+     * §4.2c), and a red-on-tinted-red pill that looks right rarely clears 7:1.
+     */
+    --color-success: oklch(0.41 0.13 152);
+    --color-success-soft: oklch(0.96 0.03 152);
+    --color-warning: oklch(0.44 0.11 74);
+    --color-warning-soft: oklch(0.97 0.04 85);
+    --color-danger: oklch(0.45 0.17 25);
+    --color-danger-soft: oklch(0.96 0.02 25);
+    --color-info: oklch(0.43 0.11 250);
+    --color-info-soft: oklch(0.96 0.02 250);
+
+
+    /* ── Gender ───────────────────────────────────────────────────────────────
+     * The colour of the card, because it is the colour of the laminated card a
+     * child already carries — blue for a boy, red for a girl (Roy, 2026-09-07).
+     * Palo does the same thing for the same reason.
+     *
+     * Used as a PALE tint with a stronger border, never as a fill. Three hundred
+     * cards at full saturation read as a spreadsheet grid rather than a list of
+     * people: the hue carries the meaning and the intensity was carrying nothing.
+     *
+     * A different visual channel from `--color-level-*`, which is a solid badge.
+     * Neither gives way when the two hues are neighbours — a level 3 badge (red)
+     * on a girl's card (red) still reads as two separate facts.
+     *
+     * Colour is never the ONLY channel: the word is in the card for a screen
+     * reader and for anyone colour excludes.
+     */
+    --color-gender-boy: oklch(0.52 0.19 258);
+    --color-gender-girl: oklch(0.55 0.2 5);
+
+    /* ── Hit areas ────────────────────────────────────────────────────────────
+     * In `rem`, so they scale with the type rather than being pinned to pixels —
+     * which is what keeps the floor honest when the browser's own text size is
+     * turned up, and what the per-user scale (TODO #3) will rely on. A target
+     * that stayed put while its label grew would get HARDER to hit at exactly
+     * the setting chosen by the shakiest hand.
+     */
+    --spacing-touch: 2.75rem;         /* 44px — admin and the public form */
+    --spacing-touch-door: 3.5rem;  /* 56px — every door screen */
+}
+
+/*
+ * ── shadcn-vue bridge ─────────────────────────────────────────────────────────
+ *
+ * shadcn-vue's components are written against a fixed set of semantic names —
+ * `bg-background`, `text-muted-foreground`, `border-border` and so on. This maps
+ * every one of them onto the tokens above, which is the whole reason the library
+ * was chosen over vendoring a theme:
+ *
+ *   the components inherit OUR palette, so they inherit our contrast floor.
+ *
+ * Teacher screens must clear 7:1 (plan §5.10), and the pairs above were darkened
+ * until they do. A library carrying its own greys would have quietly undone that
+ * on every screen it touched, and the failure would have been invisible — a
+ * perfectly normal-looking button that a sixty-year-old volunteer cannot read in
+ * a bright foyer.
+ *
+ * `--muted-foreground` maps to `--color-text-muted` (7.4:1), NOT to a lighter
+ * grey. shadcn's own default for it is far lighter; that substitution is the one
+ * to watch for if these are ever regenerated.
+ */
+@theme inline {
+    --color-background: var(--color-surface-sunken);
+    --color-foreground: var(--color-text);
+
+    --color-card: var(--color-surface);
+    --color-card-foreground: var(--color-text);
+    --color-popover: var(--color-surface-overlay);
+    --color-popover-foreground: var(--color-text);
+
+    /*
+     * `--color-primary` and `--color-border` are deliberately ABSENT from this block.
+     *
+     * shadcn's names for them are already our names, so `bg-primary` and `border-border` resolve
+     * against the @theme block above without help. Mapping them here wrote
+     * `--color-primary: var(--color-primary)` — a circular reference, which resolves to nothing, so
+     * `bg-primary` produced NO background while `text-primary-foreground` stayed white.
+     *
+     * The result was white text on white: an invisible primary button and an invisible badge, with
+     * the markup entirely correct and no error anywhere. Found by looking at the screen.
+     */
+    --color-primary-foreground: var(--color-on-primary);
+
+    --color-secondary: var(--color-surface-sunken);
+    --color-secondary-foreground: var(--color-text);
+
+    --color-muted: var(--color-surface-sunken);
+    --color-muted-foreground: var(--color-text-muted);
+
+    --color-accent: var(--color-primary-soft);
+    --color-accent-foreground: var(--color-primary);
+
+    --color-destructive: var(--color-danger);
+    --color-destructive-foreground: var(--color-on-dark);
+
+    --color-input: var(--color-border-strong);
+    --color-ring: var(--color-primary);
+
+    --color-sidebar: var(--color-sidebar);
+    --color-sidebar-foreground: var(--color-text);
+    --color-sidebar-primary: var(--color-primary);
+    --color-sidebar-primary-foreground: var(--color-on-primary);
+    --color-sidebar-accent: var(--color-sidebar-active);
+    --color-sidebar-accent-foreground: var(--color-primary);
+    --color-sidebar-border: var(--color-border);
+    --color-sidebar-ring: var(--color-primary);
+
+    --radius-sm: 0.5rem;
+    --radius-md: 0.625rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+}
+
+/*
+ * shadcn's components are sized for a desktop app: `text-sm` labels, `h-9`
+ * buttons. That is fine on the admin side and unacceptable on the teacher side,
+ * where the floor is 16px text and a 56px hit area because some of the teachers
+ * are older (plan §5.10).
+ *
+ * Rather than patching each component, teacher routes raise the floor for
+ * everything inside them. The shell sets `data-surface="teacher"`.
+ */
+[data-surface='door'] {
+    font-size: 1.125rem;
+}
+
+[data-surface='door'] button,
+[data-surface='door'] a,
+[data-surface='door'] input,
+[data-surface='door'] [role='button'] {
+    min-height: var(--spacing-touch-door);
+}
+
+[data-surface='door'] .text-sm,
+[data-surface='door'] .text-xs {
+    font-size: 1rem;
+}
+
+/*
+ * The teacher text scale is GONE for now, on Roy's instruction, and returns as a per-user preference
+ * (`TODO.md` #3). Nothing here reads `--text-scale` any more, so the variable and the
+ * `data-text-scale` selectors went with the control that wrote them — a token with no writer is a
+ * thing the next person has to prove is dead.
+ *
+ * The legibility floor above is untouched, and it is the part that mattered: 18px body type and 56px
+ * hit areas on `[data-surface="teacher"]`, in `rem`, whatever anybody asks for.
+ */
+
+/* Never below 16px, whatever a component asks for. */
+body {
+    font-size: max(1rem, 16px);
+    font-family: var(--font-sans);
+}
+
+/*
+ * Respect the platform's own reduced-motion setting. Not politeness: a volunteer
+ * who gets motion sick from a transition will avoid the app.
+ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Keep one-handed controls clear of a home indicator. */
+@utility pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}

@@ -1,0 +1,162 @@
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: make check
+    runs-on: ubuntu-latest
+
+    services:
+      # MySQL, not SQLite, and not a different minor. Six of this schema's invariants are enforced
+      # by generated columns plus unique indexes and one is a CHECK constraint (plan §4.5), and
+      # several tests assert that the DATABASE refuses a malformed write. A suite that runs green
+      # against an engine production never sees proves nothing about those.
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: nxtgen
+          MYSQL_DATABASE: nxtgen_test
+          MYSQL_USER: nxtgen
+          MYSQL_PASSWORD: nxtgen
+        ports:
+          - 33316:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pnxtgen"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_mysql, intl, bcmath, gd
+          coverage: none
+          tools: composer:v2
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Cache composer packages
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: npm ci
+
+      # The PATTERN grant that `artisan test --parallel` needs. Privileges are per database in
+      # MySQL, so a grant on `nxtgen_test` says nothing about the `nxtgen_test_test_1..N` databases
+      # each worker creates for itself. Locally this comes from docker/mysql/init-databases.sql,
+      # which a service container does not run — so it is applied here instead, and
+      # bin/assert-parallel-grant.php verifies it either way.
+      #
+      # The backslash before the underscore matters: `_` is a single-character wildcard in a GRANT
+      # pattern.
+      - name: Grant per-worker test databases
+        run: |
+          mysql -h 127.0.0.1 -P 33316 -uroot -pnxtgen -e "
+            GRANT ALL PRIVILEGES ON \`nxtgen\\_test%\`.* TO 'nxtgen'@'%';
+            GRANT ALL PRIVILEGES ON \`nxtgen\\_e2e%\`.*  TO 'nxtgen'@'%';
+            FLUSH PRIVILEGES;"
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: make check
+        run: make check
+
+  e2e:
+    name: make e2e
+    # No Playwright specs exist yet (TODO #2, review-spar). Re-enable with the first journey.
+    if: false
+    runs-on: ubuntu-latest
+    needs: check
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: nxtgen
+          MYSQL_DATABASE: nxtgen_e2e
+          MYSQL_USER: nxtgen
+          MYSQL_PASSWORD: nxtgen
+        ports:
+          - 33316:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pnxtgen"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+      # Sessions live in Redis (see `.env.example`), so the e2e run needs one: every journey after
+      # the first depends on staying signed in, and `auth.setup.ts` mints eight sessions up front.
+      #
+      # 36379 to match docker-compose.yml and the tracked `.env.e2e`, rather than teaching CI a
+      # different port from every developer's machine.
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 36389:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_mysql, intl, bcmath, gd
+          coverage: none
+          tools: composer:v2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: npm ci
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          npm run build
+
+      # Only the browsers the four projects in playwright.config.ts actually use. WebKit covers both
+      # the iPhone and the iPad projects, and it is not optional: a resized Chromium is not Mobile
+      # Safari, and the teacher surface is phone-first.
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps webkit chromium
+
+      - run: make e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7

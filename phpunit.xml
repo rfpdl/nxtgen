@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         failOnWarning="true"
+         failOnRisky="true"
+         failOnDeprecation="true"
+>
+    <testsuites>
+        <!--
+            Pure: no database, no booted application. The client-side ranker's PHP counterparts,
+            value objects and enum methods live here and should finish in milliseconds. If this
+            suite ever slows down, something in it has reached for the framework.
+        -->
+        <testsuite name="Pure">
+            <directory>tests/Unit</directory>
+        </testsuite>
+
+        <testsuite name="Architecture">
+            <directory>tests/Architecture</directory>
+        </testsuite>
+
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+            <directory>app/Services/*/Tests</directory>
+            <directory>app/Domains/*/Tests</directory>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory>app</directory>
+        </include>
+
+        <!--
+            The colocated Job tests live under `app`, so without this they are measured as production
+            code — and a test file is always ~94% covered, because its `describe` closures run and its
+            `it` bodies are counted oddly. That drags the total toward a number that means nothing.
+        -->
+        <exclude>
+            <directory>app/Domains/*/Tests</directory>
+            <directory>app/Services/*/Tests</directory>
+        </exclude>
+    </source>
+
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
+
+        <!--
+            MYSQL, NOT SQLITE — and this is not a preference.
+
+            Six of this schema's invariants are enforced by GENERATED COLUMNS with unique indexes,
+            plus a CHECK constraint (plan §4.5): the one-capped-star-per-child-per-session cap, one
+            live permanent card per child, one open card loan per card and per child-session, and one
+            open exchange. Several tests assert that the DATABASE refuses a malformed write —
+            including raw inserts that bypass the application entirely.
+
+            SQLite would run those tests and they would prove nothing, because it does not enforce
+            the same things. A suite that goes green against a database production never sees is the
+            exact failure palo hit: two Postgres-only expressions reached production on MySQL under a
+            fully green suite, and one was on the hot path. The suite talks to the same engine as
+            production. It costs a running container.
+        -->
+        <env name="DB_CONNECTION" value="mysql"/>
+        <env name="DB_HOST" value="127.0.0.1"/>
+        <env name="DB_PORT" value="33316"/>
+        <env name="DB_DATABASE" value="nxtgen_test"/>
+        <env name="DB_USERNAME" value="nxtgen"/>
+        <env name="DB_PASSWORD" value="nxtgen"/>
+
+        <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="BROADCAST_CONNECTION" value="null"/>
+        <env name="CACHE_STORE" value="array"/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
+    </php>
+</phpunit>

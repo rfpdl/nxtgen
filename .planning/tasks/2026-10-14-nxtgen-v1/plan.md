@@ -67,11 +67,18 @@ NxtGen is a kids-church app for CCF Dubai's kids ministry, built for any church.
 
 ```
 app/Data/Models · app/Domains/{Domain}/{Jobs,DataObjects,Tests} · app/Operations · app/Foundation
-app/Services/{Public,Auth,Family,Door,Admin,Platform}/{Data,Features,Http,Providers,routes,STORIES.md}
+app/Services/{Public,Auth,Family,Org,Platform}/{Data,Features,Http,Providers,routes,STORIES.md}
 app/Enums · app/Console/Commands
 resources/js/{pages,components/{atoms,molecules,organisms,layout},composables,stores,types,tests} + REGISTRY.md
 .planning/{STATE.md,TODO.md,tasks/…} · docs/DECISIONS.md
 ```
+
+**Org service (Roy, 2026-10-15; was "Admin" + "Door"):** every church staff page, for admins AND Lifeshapers —
+what each person may do is AccessScope's answer, never the URL. URLs start with the church slug and carry no
+`/admin`: `/ccf/families`, `/ccf/families/new`, `/ccf/people`; satellite pages (R2) nest: `/ccf/{satellite}/check-in`.
+The slug is a wildcard at the top of the address, so fixed paths (`/login`, `/home`, `/magic`, `/up`…) are
+reserved (`RouteOrganization::RESERVED`) and the Org routes register last. The app may grow into a whole-church
+app (events, DGroups, NxtGen, Elevate); names stay ministry-neutral.
 
 **Domains:** Organization (orgs, branches, role assignments, access) · User · Auth (magic links) · Family
 (families, guardians) · Child · Group · Event · Attendance · Card · Note · Report · Registry (import).
@@ -318,8 +325,10 @@ mixed-success family check-in, undo vs re-check-in, concurrent registration.
   unconfirmed email, open duplicate candidates), view/edit within scope, set status, dismiss/confirm duplicate
   candidates (confirm = flag for the later merge), family system notes shown, Excel export of the registration
   list.
-- **Platform:** create org + first church admin; satellites, groups, people (invite staff, assign roles within
-  ceiling).
+- **People** (`/{org}/people`, Roy D-R2 2026-10-15): list who serves; add someone by name + email (an existing
+  login, e.g. a parent, just gains the role) with one role within the grant ceiling, emailed a sign-in link;
+  remove a role (kept for the record; never the last church admin).
+- **Platform:** the church, its satellites and its first church admin come from the seeder in R1; screens later.
 - **Registry import** (§7).
 
 ### Release 2 — Check-in
@@ -348,17 +357,20 @@ Moving-Up action · second-parent invite.
 2. **Validate + normalise** (names, full phone in E.164 with original kept, lowercase email, one birth date,
    status: `DUPLICATE` dropped, `FORWARDED TO ELEVATE` → graduated, `WENT HOME`/`remove` → inactive).
 3. **Propose** families: group by normalised email. Phone matches across different emails are **suggestions
-   only**, never automatic unions. Each row gets a stable `source_child_key` derived from the Form's own timestamp + submitter email (not a row
-   position), written into the review file and persisted in `registry_import_mappings`.
+   only**, never automatic unions. Each row gets a stable `source_child_key` = hash(parent email + child first name + birthday) — the Registry tab
+   has no Form timestamp (review 2026-10-15). Written into the review file and persisted in `registry_import_mappings`;
+   a corrected row (new key) is caught by the name + birthday guard, with a reviewer "Distinct child" override.
 4. **Review file:** one sheet of proposed families with `approved_family_key`, chosen primary guardian + email,
    home satellite (from "Attending worship schedule"; "Either …" flagged), group; a **quarantine** sheet
    (missing/invalid email, conflicts); a **reconciliation** sheet (input rows = accepted + dropped + quarantined).
    Reviewer: **Roy** (with Ate Noemi), cutoff before the R1 deploy.
 5. **Apply** the reviewed file only, in transactions per family, through `RegisterFamilyOperation` semantics
-   (imported users unverified). `registry_import_mappings` gives stable identity; the hash only detects change;
-   a rerun updates fields not edited in-app since import and reports conflicts otherwise.
+   (imported users unverified). `registry_import_mappings` gives stable identity.
+6. **One-off** (Roy D-R1, 2026-10-15): the sheet is loaded once, through the seeder/fixture. After that the app is
+   the source of truth — corrections are made in the app, never synced back to the sheet. A rerun skips rows
+   already loaded (safe to run twice); it does not update them.
 
-The source CSV/XLSX never enters git (personal data) — `storage/imports/` is git-ignored. Tests: identical rerun,
+The source CSV/XLSX never enters git (personal data) — `storage/imports/` is git-ignored. Tests: identical rerun (skips),
 corrected row, reordered export, regrouped family, interrupted apply, apply racing a live registration.
 
 ---

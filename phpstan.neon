@@ -1,0 +1,26 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 10
+
+    paths:
+        - app
+        - database
+        - config
+        - tests
+
+    # Reads column types from the schema, so a model's `@property` block has to be honest. That is
+    # what makes a cast enum real to static analysis — see App\Data\Models\User's docblock for the
+    # error it prevents.
+    checkModelProperties: true
+
+    checkOctaneCompatibility: false
+
+    # Typed run()/serve() for Lucid units (see the stub). Each Job/Operation/Feature declares its result type.
+    stubFiles:
+        - stubs/Lucid.stub
+
+    # reportUnmatchedIgnoredErrors stays on (it is the default): an ignore that stops matching is an
+    # ignore that should be deleted, and silently keeping it hides the next real error of that shape.
+    # There are deliberately NO ignoreErrors entries. Add one only with the evidence for it.
