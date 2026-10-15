@@ -6,7 +6,7 @@ export type SharedProps = {
     auth: { user: { id: number; name: string } | null }
     flash: { success?: string | null; error?: string | null }
     /** Shared on church staff pages only (RequireAssignment). */
-    orgNav?: { canManagePeople: boolean }
+    orgNav?: { canManagePeople: boolean; canReviewDuplicates: boolean }
 }
 
 export type LandingOption = App.Domains.Organization.DataObjects.LandingOptionData
@@ -18,3 +18,7 @@ export type FamilySearchResult = App.Domains.Family.DataObjects.FamilySearchResu
 export type FamilyAdmin = App.Domains.Family.DataObjects.FamilyAdminData
 export type StaffMember = App.Domains.Organization.DataObjects.StaffMemberData
 export type GrantOption = App.Domains.Organization.DataObjects.GrantOptionData
+export type FamilyDetails = App.Domains.Family.DataObjects.FamilyDetailsData
+export type GuardianEdit = App.Domains.Family.DataObjects.GuardianEditData
+export type Note = App.Domains.Family.DataObjects.NoteData
+export type DuplicatePair = App.Domains.Family.DataObjects.DuplicatePairData

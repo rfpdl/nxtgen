@@ -16,7 +16,13 @@ export async function fillChild(page: Page, index: number, child: Child): Promis
     await page.getByTestId(`child-${index}-nickname`).fill(child.nickname)
     await page.getByTestId(`child-${index}-gender`).selectOption(child.gender)
     await page.getByTestId(`child-${index}-dob`).fill(child.dob)
-    if (child.allergies) await page.getByTestId(`child-${index}-allergies`).fill(child.allergies)
+    // Always answered, yes or no — the form will not take a blank (review B6).
+    if (child.allergies) {
+        await page.getByTestId(`child-${index}-has-allergies-yes`).check()
+        await page.getByTestId(`child-${index}-allergies`).fill(child.allergies)
+    } else {
+        await page.getByTestId(`child-${index}-has-allergies-no`).check()
+    }
 }
 
 export type Parent = {

@@ -72,3 +72,23 @@
   export, welcome. Fixed: parents had no sign-out (SignOutButton); per-device limit configurable (e2e only raised);
   e2e DB guard. Not e2e-able yet: parent child edit (no UI), link expiry. Review 2 paused — Codex rounds pending.
 - **Gate:** `make check` green — 192 Pest (incl. 25 arch), 63 Vitest, PHPStan level 10.
+- **R1 build, after 101d728 (2026-10-15, uncommitted):**
+  - `ChurchSeeder`: production church/satellites/groups/first admin from NXTGEN_* settings; `db:seed` in production
+    never makes the demo logins (password "password") — revert-checked. README "Starting production".
+  - Form parity (B6): allergy question is an explicit yes/no (a "no" keeps no details), nickname required, DGroup
+    area + leader phone, lifestage, ministry on the form.
+  - Editing (B5): parent edits family + own details + children (PUT /{church}/family, …/family/children/{id});
+    staff who may edit: PUT /{church}/families/{id}, /{church}/children/{id}. Full health on every child card.
+    One owner of field rules: FamilyDetailsInput / GuardianDetailsInput (registration spreads them); shared
+    GuardianFieldset + FamilyFieldset (RegisterFamilyForm 267 → 141 lines). Edit gates revert-checked.
+  - `make check` lint now really covers tests/e2e (Makefile called eslint directly).
+  - Gate: 215 Pest (incl. 25 arch), 81 Vitest, PHPStan L10; E2E 33 runs green.
+  - Duplicates (B7): `/{church}/duplicates` side by side (lite view), dismiss / confirm (flag for merge, nothing
+    merged), reviewers = who may edit the new family; noted on the family. System notes (Note model, morph map
+    `family`/`child`): email corrections, status changes, duplicate answers → "History" on the staff family page.
+    List search + filters (satellite, status, group, unconfirmed, duplicates; never widens scope), export matches.
+    One search rule: `Family::scopeMatching` (door search + list).
+  - Guards: `TenancyArchTest` (tenant queries must `where` organization_id/family_id; 4 cross-church reads listed
+    with reasons) and `AccessRowTest` (every Org/Family Feature declares its matrix row) — both proven by removal.
+  - `docs/DECISIONS.md` started.
+  - Gate: 237 Pest (incl. 31 arch), 87 Vitest, PHPStan L10; E2E 34 runs green.

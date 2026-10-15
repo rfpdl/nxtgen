@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Data\Models\Child;
+use App\Data\Models\Family;
 use App\Foundation\Support\RouteOrganization;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +30,10 @@ final class AppServiceProvider extends ServiceProvider
         // Lazy loading is a bug here, not a convenience: it is how a door list of 250 children turns
         // into 250 queries on church wifi. Fail loudly outside production.
         Model::shouldBeStrict(! $this->app->isProduction());
+
+        // Short, stable names in polymorphic columns (notes.noteable_type), never class names — a class rename
+        // must not orphan rows. Enforced: an unmapped model in a morph relation is an error, not a silent FQCN.
+        Relation::enforceMorphMap(['family' => Family::class, 'child' => Child::class]);
 
         // Every route starting with a church slug shares one rule, so /up, /login… never reach a church.
         Route::pattern('organization', RouteOrganization::pattern());

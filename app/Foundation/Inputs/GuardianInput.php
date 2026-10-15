@@ -8,6 +8,7 @@ use App\Domains\Family\DataObjects\GuardianDetailsData;
 use App\Enums\RelationshipEnum;
 use Spatie\LaravelData\Data;
 
+/** The parent on a registration form: their details (GuardianDetailsInput's rules) and the email. */
 final class GuardianInput extends Data
 {
     /** @param list<string> $ministries */
@@ -20,28 +21,30 @@ final class GuardianInput extends Data
         public array $ministries = [],
     ) {}
 
-    /** @return array<string, string> */
+    /**
+     * GuardianDetailsInput's messages, plus the email.
+     *
+     * @return array<string, string>
+     */
     public static function messages(): array
     {
         return [
-            'first_name.required' => 'Please enter your first name.',
-            'last_name.required' => 'Please enter your last name.',
-            'phone.required' => 'Please enter your mobile number.',
+            ...GuardianDetailsInput::messages(),
             'email.required' => 'Please enter your email.',
             'email.email' => 'Please check your email address.',
         ];
     }
 
-    /** @return array<string, list<mixed>> */
+    /**
+     * GuardianDetailsInput's rules, plus the email.
+     *
+     * @return array<string, list<mixed>>
+     */
     public static function rules(): array
     {
         return [
-            'first_name' => ['required', 'string', 'max:100'],
-            'last_name' => ['required', 'string', 'max:100'],
-            'phone' => ['required', 'string', 'max:30'],
+            ...GuardianDetailsInput::rules(),
             'email' => ['required', 'string', 'email', 'max:255'],
-            'ministries' => ['array', 'max:10'],
-            'ministries.*' => ['string', 'max:100'],
         ];
     }
 

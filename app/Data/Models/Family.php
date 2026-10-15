@@ -7,6 +7,7 @@ namespace App\Data\Models;
 use App\Enums\RegistrationSourceEnum;
 use Carbon\CarbonImmutable;
 use Database\Factories\FamilyFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -115,5 +116,37 @@ final class Family extends Model
     public function contactEmailConfirmed(): bool
     {
         return $this->primaryGuardian?->user?->email_verified_at !== null;
+    }
+
+    /**
+     * Families matching a typed search: a parent's name, email (login or guardian) or phone digits, or a child's
+     * name or nickname. The ONE matching rule, used by the door search and the registration list. Under two
+     * characters matches nothing.
+     *
+     * @param  Builder<Family>  $query
+     */
+    public function scopeMatching(Builder $query, string $term): void
+    {
+        $term = trim($term);
+        if (mb_strlen($term) < 2) {
+            $query->whereRaw('1 = 0');
+
+            return;
+        }
+
+        $like = '%'.str_replace(['%', '_'], ['\\%', '\\_'], $term).'%';
+        $digits = (string) preg_replace('/\D+/', '', $term);
+
+        $query->where(fn (Builder $q) => $q
+            ->whereHas('guardians', fn (Builder $g) => $g
+                ->where('first_name', 'like', $like)
+                ->orWhere('last_name', 'like', $like)
+                ->orWhere('email', 'like', $like)
+                ->when(strlen($digits) >= 4, fn (Builder $p) => $p->orWhere('phone', 'like', '%'.$digits.'%'))
+                ->orWhereHas('user', fn (Builder $u) => $u->where('email', 'like', $like)))
+            ->orWhereHas('children', fn (Builder $c) => $c
+                ->where('first_name', 'like', $like)
+                ->orWhere('last_name', 'like', $like)
+                ->orWhere('nickname', 'like', $like)));
     }
 }

@@ -16,6 +16,8 @@ export const FAMILIES = {
     dxb: {
         parent: 'Maria Dela Cruz',
         email: 'delacruz@nxtgen.test',
+        // Matches E2ESeeder; a new family with this phone is a "possible duplicate" of this one.
+        phone: '0501000001',
         child: 'Migs',
         satellite: 'CCF DXB',
     },

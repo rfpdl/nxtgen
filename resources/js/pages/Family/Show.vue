@@ -4,13 +4,19 @@ import { Head } from '@inertiajs/vue3'
 import FlashBanner from '@/components/molecules/FlashBanner.vue'
 import FamilyChildCard from '@/components/molecules/FamilyChildCard.vue'
 import AddChildForm from '@/components/organisms/AddChildForm.vue'
+import EditChildForm from '@/components/organisms/EditChildForm.vue'
+import FamilyDetailsForm from '@/components/organisms/FamilyDetailsForm.vue'
 import { useFlashMessages } from '@/composables/useFlashMessages'
-import type { FamilyPortal } from '@/types'
+import type { BranchOption, FamilyDetails, FamilyPortal, GuardianEdit } from '@/types'
 import { route } from 'ziggy-js'
 
 defineProps<{
     church: { name: string; slug: string }
     family: FamilyPortal
+    details: FamilyDetails
+    me: GuardianEdit
+    satellites: BranchOption[]
+    relationships: { value: string; label: string }[]
     genders: { value: string; label: string }[]
 }>()
 
@@ -41,11 +47,24 @@ const { message, dismiss } = useFlashMessages()
                 {{ g.firstName }} {{ g.lastName }} · {{ g.relationship
                 }}<span v-if="g.phone"> · {{ g.phone }}</span>
             </p>
+            <FamilyDetailsForm
+                :action="route('family.update', church.slug)"
+                :details="details"
+                :guardian="me"
+                :satellites="satellites"
+                :relationships="relationships"
+            />
         </section>
 
         <section class="flex flex-col gap-3">
             <h2 class="text-text text-2xl font-semibold">Children</h2>
-            <FamilyChildCard v-for="child in family.children" :key="child.id" :child="child" />
+            <FamilyChildCard v-for="child in family.children" :key="child.id" :child="child">
+                <EditChildForm
+                    :action="route('family.children.update', [church.slug, child.id])"
+                    :child="child"
+                    :genders="genders"
+                />
+            </FamilyChildCard>
             <AddChildForm
                 :action="route('family.children.store', church.slug)"
                 :genders="genders"

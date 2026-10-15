@@ -2,7 +2,9 @@ import OrgShell from '@/components/layout/OrgShell.vue'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
-const page = { props: { flash: {}, orgNav: { canManagePeople: false } } }
+const page = {
+    props: { flash: {}, orgNav: { canManagePeople: false, canReviewDuplicates: false } },
+}
 
 vi.mock('@inertiajs/vue3', () => ({
     Link: { props: ['href', 'method', 'as'], template: '<a :href="href"><slot /></a>' },
@@ -40,5 +42,17 @@ describe('OrgShell', () => {
         expect(
             mount(OrgShell, { props: { church: { name: 'CCF', slug: 'ccf' } } }).text(),
         ).toContain('People')
+    })
+
+    it('shows Duplicates only to someone who may review them', () => {
+        page.props.orgNav.canReviewDuplicates = false
+        expect(
+            mount(OrgShell, { props: { church: { name: 'CCF', slug: 'ccf' } } }).text(),
+        ).not.toContain('Duplicates')
+
+        page.props.orgNav.canReviewDuplicates = true
+        expect(
+            mount(OrgShell, { props: { church: { name: 'CCF', slug: 'ccf' } } }).text(),
+        ).toContain('Duplicates')
     })
 })

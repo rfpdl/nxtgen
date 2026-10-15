@@ -13,6 +13,7 @@ defineProps<{ church: { name: string; slug: string } }>()
 const { message, dismiss } = useFlashMessages()
 const page = usePage<SharedProps>()
 const canManagePeople = computed(() => page.props.orgNav?.canManagePeople === true)
+const canReviewDuplicates = computed(() => page.props.orgNav?.canReviewDuplicates === true)
 </script>
 
 <template>
@@ -29,6 +30,12 @@ const canManagePeople = computed(() => page.props.orgNav?.canManagePeople === tr
                     :href="route('org.families.register', church.slug)"
                     class="min-h-touch text-text flex items-center underline-offset-4 hover:underline"
                     >Register a family</Link
+                >
+                <Link
+                    v-if="canReviewDuplicates"
+                    :href="route('org.duplicates.index', church.slug)"
+                    class="min-h-touch text-text flex items-center underline-offset-4 hover:underline"
+                    >Duplicates</Link
                 >
                 <Link
                     v-if="canManagePeople"

@@ -3,9 +3,12 @@ import type { FamilySearchResult } from '@/types'
 
 /**
  * A church-wide search hit when registering for a parent: "already registered?" at a glance. The email is
- * masked; the family opens only when the volunteer's scope allows it.
+ * masked; the family opens only when the volunteer's scope allows it. Also one side of a possible duplicate,
+ * where "Add a child" does not belong (`canAddChild: false`).
  */
-defineProps<{ result: FamilySearchResult; href: string }>()
+withDefaults(defineProps<{ result: FamilySearchResult; href: string; canAddChild?: boolean }>(), {
+    canAddChild: true,
+})
 
 defineEmits<{ addChild: [] }>()
 </script>
@@ -30,6 +33,7 @@ defineEmits<{ addChild: [] }>()
         </p>
         <p class="text-text-muted">{{ result.satellite }} · {{ result.children.join(', ') }}</p>
         <button
+            v-if="canAddChild"
             type="button"
             class="min-h-touch text-primary self-start text-lg font-semibold underline"
             data-testid="search-add-child"

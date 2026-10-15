@@ -12,6 +12,8 @@ export type ChildForm = {
     nickname: string
     gender: string
     date_of_birth: string
+    /** Null until the parent answers: a blank must never be read as "no allergies" (review B6). */
+    has_allergies: boolean | null
     allergies: string
     illnesses: string
     dislikes: string
@@ -67,6 +69,7 @@ const input = 'min-h-touch rounded-md border border-border bg-surface px-4 text-
         <FormField
             label="Nickname"
             hint="What we call your child. It goes big on the ID card."
+            required
             :error="error('nickname')"
         >
             <input
@@ -89,9 +92,52 @@ const input = 'min-h-touch rounded-md border border-border bg-surface px-4 text-
                 :data-testid="`child-${index}-dob`"
             />
         </FormField>
+        <div
+            role="radiogroup"
+            :aria-labelledby="`child-${index}-has-allergies-label`"
+            class="flex flex-col gap-2"
+        >
+            <p :id="`child-${index}-has-allergies-label`" class="text-text text-lg font-medium">
+                Does your child have any allergies?<span class="text-danger" aria-hidden="true">
+                    *</span
+                >
+            </p>
+            <div class="flex gap-6">
+                <label class="min-h-touch text-text flex items-center gap-2 text-lg">
+                    <input
+                        v-model="child.has_allergies"
+                        type="radio"
+                        :name="`child-${index}-has-allergies`"
+                        :value="true"
+                        class="size-6"
+                        :data-testid="`child-${index}-has-allergies-yes`"
+                    />
+                    Yes
+                </label>
+                <label class="min-h-touch text-text flex items-center gap-2 text-lg">
+                    <input
+                        v-model="child.has_allergies"
+                        type="radio"
+                        :name="`child-${index}-has-allergies`"
+                        :value="false"
+                        class="size-6"
+                        :data-testid="`child-${index}-has-allergies-no`"
+                    />
+                    No
+                </label>
+            </div>
+            <span
+                v-if="error('has_allergies')"
+                role="alert"
+                class="text-danger text-base font-semibold"
+                >{{ error('has_allergies') }}</span
+            >
+        </div>
         <FormField
-            label="Allergies"
-            hint="Food or anything else. Leave empty if none."
+            v-if="child.has_allergies === true"
+            label="What is your child allergic to?"
+            hint="Food or anything else."
+            required
             :error="error('allergies')"
         >
             <input

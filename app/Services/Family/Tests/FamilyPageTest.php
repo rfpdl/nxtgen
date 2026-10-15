@@ -8,10 +8,12 @@ use App\Data\Models\Family;
 use App\Data\Models\Guardian;
 use App\Data\Models\Organization;
 use App\Data\Models\User;
+use App\Enums\ChildStatusEnum;
 use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
+use function Tests\Support\familyEdit;
 
 /** @return array{0: Organization, 1: Family, 2: User} */
 function familyWithParent(string $slug = 'ccf'): array
@@ -63,7 +65,7 @@ it('lets a parent add a child, with a suggested group', function (): void {
 
     actingAs($user)->post('/ccf/family/children', [
         'first_name' => 'Aaron', 'middle_name' => null, 'last_name' => 'Ramos', 'nickname' => 'Aaron',
-        'gender' => 'boy', 'date_of_birth' => '2018-03-04', 'allergies' => null,
+        'gender' => 'boy', 'date_of_birth' => '2018-03-04', 'has_allergies' => false, 'allergies' => null,
     ])->assertRedirect('/ccf/family')->assertSessionHas('success', 'Aaron is added to your family.');
 
     expect($family->children()->sole()->nickname)->toBe('Aaron');
@@ -82,7 +84,7 @@ it('lets a parent edit their own child, but not the status or group', function (
 
     actingAs($user)->put("/ccf/family/children/{$child->id}", [
         'first_name' => $child->first_name, 'middle_name' => null, 'last_name' => $child->last_name, 'nickname' => 'Igo',
-        'gender' => $child->gender->value, 'date_of_birth' => $child->date_of_birth->toDateString(), 'allergies' => 'Shrimp',
+        'gender' => $child->gender->value, 'date_of_birth' => $child->date_of_birth->toDateString(), 'has_allergies' => true, 'allergies' => 'Shrimp',
         'status' => 'graduated', 'group_id' => 999,
     ])->assertRedirect('/ccf/family');
 
@@ -99,8 +101,91 @@ it('refuses to edit a child from another family', function (): void {
     $stranger = Child::factory()->create();
 
     actingAs($user)->put("/ccf/family/children/{$stranger->id}", [
-        'first_name' => 'X', 'last_name' => 'Y', 'gender' => 'boy', 'date_of_birth' => '2018-01-01',
+        'first_name' => 'X', 'last_name' => 'Y', 'nickname' => 'X', 'gender' => 'boy', 'date_of_birth' => '2018-01-01', 'has_allergies' => false,
     ])->assertNotFound();
 
     expect($stranger->fresh()?->first_name)->not->toBe('X');
+});
+
+/*
+ * The family page, editable (plan §3.2 "Edit family/guardian/child details": own family, not status/group;
+ * review B5). The page carries what the edit forms need; health details are the child's own family's to see.
+ */
+
+it('gives the page what the edit forms need, and every health detail', function (): void {
+    [, $family, $user] = familyWithParent();
+    Child::factory()->create([
+        'family_id' => $family->id, 'organization_id' => $family->organization_id, 'nickname' => 'Amara',
+        'allergies' => 'Peanuts', 'illnesses' => 'Asthma', 'dislikes' => 'Loud music', 'fears' => 'The dark', 'parent_notes' => 'Shy at first',
+    ]);
+
+    actingAs($user)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p
+        ->where('details.homeBranchId', $family->home_branch_id)
+        ->where('details.areaText', 'Al Barsha')
+        ->where('me.firstName', 'Janice')
+        ->has('satellites', 1)
+        ->has('relationships')
+        ->where('family.children.0.illnesses', 'Asthma')
+        ->where('family.children.0.dislikes', 'Loud music')
+        ->where('family.children.0.fears', 'The dark')
+        ->where('family.children.0.parentNotes', 'Shy at first'));
+});
+
+it('lets a parent edit their family details and their own details', function (): void {
+    [$org, $family, $user] = familyWithParent();
+    $other = Branch::factory()->for($org)->create(['name' => 'House Church']);
+
+    actingAs($user)->put('/ccf/family', familyEdit($other))->assertRedirect('/ccf/family')->assertSessionHas('success');
+
+    $family->refresh();
+    $guardian = Guardian::query()->where('user_id', $user->id)->sole();
+    expect($family->home_branch_id)->toBe($other->id)
+        ->and($family->area_text)->toBe('Deira')
+        ->and($family->dgroup_leader_phone)->toBe('0501231234')
+        ->and($family->lifestage)->toBe('Married with kids')
+        ->and($guardian->last_name)->toBe('Ramos-Lee')
+        ->and($guardian->phone)->toBe('0559998888')
+        ->and($guardian->ministries)->toBe(['Music'])
+        // The email is NOT editable here: it changes only through the confirm-by-link flow (plan §4.4).
+        ->and($user->fresh()?->email)->toBe($user->email);
+});
+
+it('refuses a satellite from another church', function (): void {
+    [, , $user] = familyWithParent();
+    $foreign = Branch::factory()->create();
+
+    actingAs($user)->put('/ccf/family', familyEdit($foreign))->assertSessionHasErrors('home_branch_id');
+});
+
+it('needs the parent\'s name and phone', function (): void {
+    [$org, , $user] = familyWithParent();
+    $branch = Branch::query()->where('organization_id', $org->id)->firstOrFail();
+
+    actingAs($user)->put('/ccf/family', familyEdit($branch, ['guardian' => ['first_name' => '', 'phone' => '']]))
+        ->assertSessionHasErrors(['guardian.first_name', 'guardian.phone']);
+});
+
+it('lets a parent fix a child\'s details but never the status or group', function (): void {
+    [, $family, $user] = familyWithParent();
+    $child = Child::factory()->create(['family_id' => $family->id, 'organization_id' => $family->organization_id, 'status' => ChildStatusEnum::Active]);
+
+    actingAs($user)->put("/ccf/family/children/{$child->id}", [
+        'first_name' => 'Gabriel', 'last_name' => 'Ramos', 'nickname' => 'Gab', 'gender' => 'boy', 'date_of_birth' => '2017-05-10',
+        'has_allergies' => true, 'allergies' => 'Eggs', 'fears' => 'Dogs', 'status' => 'graduated', 'group_id' => 999,
+    ])->assertRedirect();
+
+    $child->refresh();
+    expect($child->nickname)->toBe('Gab')->and($child->allergies)->toBe('Eggs')->and($child->fears)->toBe('Dogs')
+        ->and($child->status)->toBe(ChildStatusEnum::Active)->and($child->group_id)->not->toBe(999);
+});
+
+it('does not let a parent edit another family', function (): void {
+    [$org, , $user] = familyWithParent();
+    $branch = Branch::query()->where('organization_id', $org->id)->firstOrFail();
+    $otherFamily = Family::factory()->create(['organization_id' => $org->id, 'home_branch_id' => $branch->id, 'area_text' => 'Untouched']);
+
+    // The family page edits only the signed-in parent's own family; there is no family id to point elsewhere.
+    actingAs($user)->put('/ccf/family', familyEdit($branch))->assertRedirect();
+
+    expect($otherFamily->fresh()?->area_text)->toBe('Untouched');
 });

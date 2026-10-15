@@ -134,10 +134,10 @@ and who adds them — you, or church admins themselves?
 
 ### Remaining Release 1 build (accepted, unbuilt — plan scope, not decisions)
 
-Family-page edit UI + guardian/family edit + full health display (B5) · registration form field parity + explicit
-allergy yes/no (B6) · duplicate review screen, list search/filters, system notes (B7) · Playwright journeys (B8) ·
-QR poster, staff password backup, remembered landing choice (B9) · photo + consent · Sentry · `TenancyArchTest` +
-matrix-row arch test · decisions log.
+~~Family-page edit UI + guardian/family edit + full health display (B5)~~ done · ~~registration form field parity + explicit
+allergy yes/no (B6)~~ done · ~~duplicate review screen, list search/filters, system notes (B7)~~ done · ~~Playwright journeys (B8)~~ done ·
+QR poster, staff password backup, remembered landing choice (B9) · photo + consent · Sentry · ~~`TenancyArchTest` +
+matrix-row arch test~~ done · ~~decisions log~~ done (`docs/DECISIONS.md`).
 
 ### Logged (with trigger)
 

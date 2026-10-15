@@ -59,4 +59,12 @@ describe('FamilySearchResultCard', () => {
 
         expect(wrapper.emitted('addChild')).toHaveLength(1)
     })
+
+    it('can leave out "Add a child" where it does not belong', () => {
+        const wrapper = mount(FamilySearchResultCard, {
+            props: { result: result(), href: '/f/1', canAddChild: false },
+        })
+
+        expect(wrapper.find('[data-testid="search-add-child"]').exists()).toBe(false)
+    })
 })

@@ -2,13 +2,22 @@
 import OrgShell from '@/components/layout/OrgShell.vue'
 import FamilyChildCard from '@/components/molecules/FamilyChildCard.vue'
 import AddChildForm from '@/components/organisms/AddChildForm.vue'
-import type { FamilyAdmin } from '@/types'
+import EditChildForm from '@/components/organisms/EditChildForm.vue'
+import FamilyDetailsForm from '@/components/organisms/FamilyDetailsForm.vue'
+import type { BranchOption, FamilyAdmin, FamilyDetails, GuardianEdit, Note } from '@/types'
 import { Head, router, useForm } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
 const props = defineProps<{
     church: { name: string; slug: string }
     family: FamilyAdmin
+    /** What staff changed on this family and its children (system notes), newest first. Staff only. */
+    notes: Note[]
+    /** Only for someone who may edit this family (null otherwise). */
+    details: FamilyDetails | null
+    primary: GuardianEdit | null
+    satellites: BranchOption[]
+    relationships: { value: string; label: string }[]
     genders: { value: string; label: string }[]
 }>()
 
@@ -100,11 +109,26 @@ function setStatus(childId: number, status: string): void {
                 {{ g.firstName }} {{ g.lastName }} · {{ g.relationship
                 }}<span v-if="g.phone"> · {{ g.phone }}</span>
             </p>
+            <FamilyDetailsForm
+                v-if="details && primary"
+                :action="route('org.families.update', [church.slug, family.id])"
+                :details="details"
+                :guardian="primary"
+                :satellites="satellites"
+                :relationships="relationships"
+            />
         </section>
         <section class="flex flex-col gap-3">
             <h2 class="text-text text-xl font-semibold">Children</h2>
             <div v-for="child in family.children" :key="child.id" class="flex flex-col gap-2">
-                <FamilyChildCard :child="child" />
+                <FamilyChildCard :child="child">
+                    <EditChildForm
+                        v-if="family.canEdit"
+                        :action="route('org.children.update', [church.slug, child.id])"
+                        :child="child"
+                        :genders="genders"
+                    />
+                </FamilyChildCard>
                 <label v-if="family.canEdit" class="text-text flex items-center gap-2">
                     Status
                     <select
@@ -123,6 +147,15 @@ function setStatus(childId: number, status: string): void {
                 :action="route('org.families.children.store', [church.slug, family.id])"
                 :genders="genders"
             />
+        </section>
+        <section v-if="notes.length > 0" class="flex flex-col gap-2" data-testid="history">
+            <h2 class="text-text text-xl font-semibold">History</h2>
+            <ul class="flex flex-col gap-1">
+                <li v-for="note in notes" :key="note.id" class="text-text">
+                    {{ note.body }}
+                    <span class="text-text-muted"> — {{ note.author }}, {{ note.at }}</span>
+                </li>
+            </ul>
         </section>
     </OrgShell>
 </template>

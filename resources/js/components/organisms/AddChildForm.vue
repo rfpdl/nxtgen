@@ -19,6 +19,7 @@ const form = useForm<ChildForm>({
     nickname: '',
     gender: '',
     date_of_birth: '',
+    has_allergies: null,
     allergies: '',
     illnesses: '',
     dislikes: '',

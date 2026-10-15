@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import FormField from '@/components/atoms/FormField.vue'
 import ChildFieldset, { type ChildForm } from '@/components/molecules/ChildFieldset.vue'
+import FamilyFieldset from '@/components/molecules/FamilyFieldset.vue'
+import GuardianFieldset from '@/components/molecules/GuardianFieldset.vue'
 import { useForm } from '@inertiajs/vue3'
 
 /**
@@ -23,6 +24,7 @@ const blankChild = (): ChildForm => ({
     nickname: '',
     gender: '',
     date_of_birth: '',
+    has_allergies: null,
     allergies: '',
     illnesses: '',
     dislikes: '',
@@ -39,7 +41,9 @@ const form = useForm({
     in_dgroup: false,
     dgroup_area_text: '',
     dgroup_leader_name: '',
+    dgroup_leader_phone: '',
     wants_dgroup: false,
+    lifestage: '',
     guardian: {
         first_name: '',
         last_name: '',
@@ -65,115 +69,23 @@ function removeChild(index: number): void {
 function submit(): void {
     form.post(props.action, { preserveScroll: true })
 }
-
-const input = 'min-h-touch rounded-md border border-border bg-surface px-4 text-lg text-text'
 </script>
 
 <template>
     <form class="flex flex-col gap-6" novalidate @submit.prevent="submit">
         <section class="flex flex-col gap-4">
             <h2 class="text-text text-2xl font-semibold">About you</h2>
-            <FormField label="Your first name" required :error="errors()['guardian.first_name']">
-                <input
-                    v-model="form.guardian.first_name"
-                    :class="input"
-                    autocomplete="given-name"
-                    data-testid="guardian-first-name"
-                />
-            </FormField>
-            <FormField label="Your last name" required :error="errors()['guardian.last_name']">
-                <input
-                    v-model="form.guardian.last_name"
-                    :class="input"
-                    autocomplete="family-name"
-                    data-testid="guardian-last-name"
-                />
-            </FormField>
-            <FormField
-                label="You are the child's"
-                required
-                :error="errors()['guardian.relationship']"
-            >
-                <select
-                    v-model="form.guardian.relationship"
-                    :class="input"
-                    data-testid="guardian-relationship"
-                >
-                    <option v-for="r in relationships" :key="r.value" :value="r.value">
-                        {{ r.label }}
-                    </option>
-                </select>
-            </FormField>
-            <FormField label="Mobile number" required :error="errors()['guardian.phone']">
-                <input
-                    v-model="form.guardian.phone"
-                    type="tel"
-                    :class="input"
-                    autocomplete="tel"
-                    data-testid="guardian-phone"
-                />
-            </FormField>
-            <FormField
-                label="Email"
-                required
-                hint="We send a link here so you can sign in. No password needed."
-                :error="errors()['guardian.email']"
-            >
-                <input
-                    v-model="form.guardian.email"
-                    type="email"
-                    :class="input"
-                    autocomplete="email"
-                    data-testid="guardian-email"
-                />
-            </FormField>
+            <GuardianFieldset
+                v-model="form.guardian"
+                :relationships="relationships"
+                :errors="errors()"
+                with-email
+            />
         </section>
 
         <section class="flex flex-col gap-4">
             <h2 class="text-text text-2xl font-semibold">Your family</h2>
-            <FormField
-                label="Satellite you usually attend"
-                required
-                :error="errors()['home_branch_id']"
-            >
-                <select v-model="form.home_branch_id" :class="input" data-testid="home-branch">
-                    <option value="">Choose…</option>
-                    <option v-for="s in satellites" :key="s.id" :value="s.id">{{ s.name }}</option>
-                </select>
-            </FormField>
-            <FormField
-                label="Area where you live"
-                hint="For example: Al Barsha"
-                :error="errors()['area_text']"
-            >
-                <input v-model="form.area_text" :class="input" data-testid="area" />
-            </FormField>
-            <FormField
-                label="Facebook account"
-                hint="To add you to the parents' group"
-                :error="errors()['fb_account']"
-            >
-                <input v-model="form.fb_account" :class="input" />
-            </FormField>
-            <label class="min-h-touch text-text flex items-center gap-3 text-lg"
-                ><input v-model="form.wants_fb_group" type="checkbox" class="size-6" /> Add me to
-                the parents' FB group / chat</label
-            >
-            <label class="min-h-touch text-text flex items-center gap-3 text-lg"
-                ><input v-model="form.in_dgroup" type="checkbox" class="size-6" /> I am in a
-                DGroup</label
-            >
-            <FormField
-                v-if="form.in_dgroup"
-                label="DGroup leader's name"
-                :error="errors()['dgroup_leader_name']"
-            >
-                <input v-model="form.dgroup_leader_name" :class="input" />
-            </FormField>
-            <label v-else class="min-h-touch text-text flex items-center gap-3 text-lg"
-                ><input v-model="form.wants_dgroup" type="checkbox" class="size-6" /> I would like
-                to join a DGroup</label
-            >
+            <FamilyFieldset v-model="form" :satellites="satellites" :errors="errors()" />
         </section>
 
         <section class="flex flex-col gap-4">

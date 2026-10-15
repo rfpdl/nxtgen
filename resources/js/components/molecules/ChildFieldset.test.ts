@@ -15,6 +15,7 @@ const blank = () => ({
     nickname: '',
     gender: '',
     date_of_birth: '',
+    has_allergies: null as boolean | null,
     allergies: '',
     illnesses: '',
     dislikes: '',
@@ -85,5 +86,34 @@ describe('ChildFieldset', () => {
         await wrapper.find('[data-testid="child-0-remove"]').trigger('click')
 
         expect(wrapper.emitted('remove')).toHaveLength(1)
+    })
+
+    it('asks the allergy question with no answer chosen, and shows details only for yes', async () => {
+        const child = reactive(blank())
+        const wrapper = fieldset({ modelValue: child })
+
+        const yes = wrapper.find('[data-testid="child-0-has-allergies-yes"]')
+        const no = wrapper.find('[data-testid="child-0-has-allergies-no"]')
+        expect((yes.element as HTMLInputElement).checked).toBe(false)
+        expect((no.element as HTMLInputElement).checked).toBe(false)
+        expect(wrapper.find('[data-testid="child-0-allergies"]').exists()).toBe(false)
+
+        await yes.setValue(true)
+        expect(child.has_allergies).toBe(true)
+        expect(wrapper.find('[data-testid="child-0-allergies"]').exists()).toBe(true)
+
+        await no.setValue(true)
+        expect(child.has_allergies).toBe(false)
+        expect(wrapper.find('[data-testid="child-0-allergies"]').exists()).toBe(false)
+    })
+
+    it("shows the server's allergy messages on this child", () => {
+        const wrapper = fieldset({
+            errors: {
+                'children.0.has_allergies': 'Please answer: does your child have any allergies?',
+            },
+        })
+
+        expect(wrapper.text()).toContain('Please answer: does your child have any allergies?')
     })
 })

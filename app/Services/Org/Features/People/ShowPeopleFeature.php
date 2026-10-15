@@ -11,8 +11,10 @@ use App\Domains\Organization\DataObjects\StaffMemberData;
 use App\Domains\Organization\DataObjects\StaffRoleData;
 use App\Domains\Organization\Jobs\GetBranchesJob;
 use App\Domains\Organization\Jobs\GetStaffRolesJob;
+use App\Enums\AccessRowEnum;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
+use App\Foundation\Attributes\AccessRow;
 use App\Services\Org\Features\BaseOrgFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -23,6 +25,7 @@ use Inertia\Response;
  *
  * @extends BaseOrgFeature<Response>
  */
+#[AccessRow(AccessRowEnum::GrantRoles)]
 final class ShowPeopleFeature extends BaseOrgFeature
 {
     public function handle(): Response

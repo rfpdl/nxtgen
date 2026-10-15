@@ -1,0 +1,34 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Domains\Family\DataObjects;
+
+use App\Data\Models\DuplicateCandidate;
+use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
+
+/**
+ * One possible duplicate on the review screen: the new family and the existing one, side by side, in the
+ * church-wide search's limited view (FamilySearchResultData: masked email, no phone, no health).
+ */
+#[TypeScript]
+final class DuplicatePairData extends Data
+{
+    public function __construct(
+        public int $id,
+        public string $reason,
+        public FamilySearchResultData $subject,
+        public FamilySearchResultData $candidate,
+    ) {}
+
+    public static function fromModel(DuplicateCandidate $pair, bool $canOpenSubject, bool $canOpenCandidate): self
+    {
+        return new self(
+            id: $pair->id,
+            reason: $pair->reason->label(),
+            subject: FamilySearchResultData::fromModel(DuplicateCandidate::familyOf($pair->subject), $canOpenSubject),
+            candidate: FamilySearchResultData::fromModel(DuplicateCandidate::familyOf($pair->candidate), $canOpenCandidate),
+        );
+    }
+}

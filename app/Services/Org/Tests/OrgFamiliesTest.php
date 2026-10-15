@@ -5,17 +5,22 @@ declare(strict_types=1);
 use App\Data\Models\Branch;
 use App\Data\Models\Child;
 use App\Data\Models\Family;
+use App\Data\Models\Group;
 use App\Data\Models\Guardian;
 use App\Data\Models\MagicLink;
 use App\Data\Models\Organization;
 use App\Data\Models\RoleAssignment;
 use App\Data\Models\User;
+use App\Domains\Family\Jobs\CreateDuplicateCandidatesJob;
+use App\Enums\ChildStatusEnum;
 use App\Enums\MagicLinkPurposeEnum;
 use App\Enums\RegistrationSourceEnum;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia;
+use OpenSpout\Reader\XLSX\Reader;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
@@ -131,7 +136,7 @@ describe('registering for a parent', function (): void {
         actingAs($volunteer)->post('/ccf/families', [
             'home_branch_id' => $htc->id, 'area_text' => 'Deira', 'privacy_consented' => true,
             'guardian' => ['first_name' => 'Mira', 'last_name' => 'Bonza', 'relationship' => 'mother', 'phone' => '0523508443', 'email' => 'mira@example.com'],
-            'children' => [['first_name' => 'Clarion', 'middle_name' => null, 'last_name' => 'Bonza', 'nickname' => 'Clarion', 'gender' => 'boy', 'date_of_birth' => '2018-02-03', 'allergies' => null]],
+            'children' => [['first_name' => 'Clarion', 'middle_name' => null, 'last_name' => 'Bonza', 'nickname' => 'Clarion', 'gender' => 'boy', 'date_of_birth' => '2018-02-03', 'has_allergies' => false, 'allergies' => null]],
         ])->assertRedirect()->assertSessionHas('success');
 
         $family = Family::query()->sole();
@@ -147,7 +152,7 @@ describe('registering for a parent', function (): void {
         $family = registeredFamily($org, $house, 'Janice', 'janice@example.com');
 
         actingAs(staff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id))->post("/ccf/families/{$family->id}/children", [
-            'first_name' => 'Baby', 'middle_name' => null, 'last_name' => 'Ramos', 'nickname' => 'Baby', 'gender' => 'girl', 'date_of_birth' => '2021-01-01', 'allergies' => null,
+            'first_name' => 'Baby', 'middle_name' => null, 'last_name' => 'Ramos', 'nickname' => 'Baby', 'gender' => 'girl', 'date_of_birth' => '2021-01-01', 'has_allergies' => false, 'allergies' => null,
         ])->assertRedirect()->assertSessionHas('success');
 
         expect($family->children()->count())->toBe(2);
@@ -158,7 +163,7 @@ describe('registering for a parent', function (): void {
         $foreign = Family::factory()->create();
 
         actingAs(staff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id))->post("/ccf/families/{$foreign->id}/children", [
-            'first_name' => 'X', 'last_name' => 'Y', 'gender' => 'boy', 'date_of_birth' => '2018-01-01',
+            'first_name' => 'X', 'last_name' => 'Y', 'nickname' => 'X', 'gender' => 'boy', 'date_of_birth' => '2018-01-01', 'has_allergies' => false,
         ])->assertNotFound();
     });
 });
@@ -240,12 +245,95 @@ describe('review-spar fixes', function (): void {
             'home_branch_id' => $htc->id, 'area_text' => 'Deira', 'privacy_consented' => true,
             'dgroup_area_text' => 'Barsha', 'dgroup_leader_phone' => '0501234567', 'lifestage' => 'Couple',
             'guardian' => ['first_name' => 'Mira', 'last_name' => 'Bonza', 'relationship' => 'mother', 'phone' => '0523508443', 'email' => 'mira2@example.com'],
-            'children' => [['first_name' => 'Clarion', 'last_name' => 'Bonza', 'nickname' => 'Clarion', 'gender' => 'boy', 'date_of_birth' => '2018-02-03']],
+            'children' => [['first_name' => 'Clarion', 'last_name' => 'Bonza', 'nickname' => 'Clarion', 'gender' => 'boy', 'date_of_birth' => '2018-02-03', 'has_allergies' => false]],
         ])->assertRedirect();
 
         $family = Family::query()->sole();
         expect($family->dgroup_area_text)->toBe('Barsha')
             ->and($family->dgroup_leader_phone)->toBe('0501234567')
             ->and($family->lifestage)->toBe('Couple');
+    });
+});
+
+/*
+ * The registration list's search and filters (plan §6: status, group, satellite, unconfirmed email, open
+ * duplicate candidates). Filters narrow what the viewer may see — they never widen it.
+ */
+describe('searching and filtering the list', function (): void {
+    it('finds families by parent, email, phone or child — the same matching as the door search', function (): void {
+        ['org' => $org, 'htc' => $htc] = adminChurch();
+        registeredFamily($org, $htc, 'Janice', 'janice@example.com');
+        registeredFamily($org, $htc, 'Mira', 'mira@example.com');
+        $admin = staff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id);
+
+        foreach (['Janice', 'janice@exa', 'Janice-kid'] as $q) {
+            actingAs($admin)->get('/ccf/families?q='.urlencode($q))->assertInertia(fn (AssertableInertia $p) => $p
+                ->has('families', 1)->where('families.0.primaryName', 'Janice Ramos')->where('filters.q', $q));
+        }
+    });
+
+    it('filters by satellite, child status and group, and offers those choices', function (): void {
+        ['org' => $org, 'htc' => $htc, 'house' => $house] = adminChurch();
+        $a = registeredFamily($org, $htc, 'Janice', 'janice@example.com');
+        registeredFamily($org, $house, 'Mira', 'mira@example.com');
+        $group = Group::factory()->create(['organization_id' => $org->id, 'name' => 'Level 2 Girls']);
+        Child::query()->where('family_id', $a->id)->update(['status' => ChildStatusEnum::Inactive, 'group_id' => $group->id]);
+        $admin = staff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id);
+
+        actingAs($admin)->get("/ccf/families?satellite={$house->id}")->assertInertia(fn (AssertableInertia $p) => $p
+            ->has('families', 1)->where('families.0.primaryName', 'Mira Ramos')
+            ->has('options.satellites', 2)->has('options.groups', 1)->has('options.statuses', 3));
+        actingAs($admin)->get('/ccf/families?status=inactive')->assertInertia(fn (AssertableInertia $p) => $p
+            ->has('families', 1)->where('families.0.primaryName', 'Janice Ramos'));
+        actingAs($admin)->get("/ccf/families?group={$group->id}")->assertInertia(fn (AssertableInertia $p) => $p
+            ->has('families', 1)->where('families.0.primaryName', 'Janice Ramos'));
+    });
+
+    it('filters to families with an open possible duplicate, on either side', function (): void {
+        ['org' => $org, 'htc' => $htc] = adminChurch();
+        $old = registeredFamily($org, $htc, 'Janice', 'janice@example.com');
+        $new = registeredFamily($org, $htc, 'Jan', 'jan@example.com');
+        registeredFamily($org, $htc, 'Mira', 'mira@example.com')->guardians()->update(['phone' => '0500000099']);
+        (new CreateDuplicateCandidatesJob($new))->handle();
+
+        actingAs(staff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id))->get('/ccf/families?duplicates=1')
+            // Newest first: the new family, then the one it may duplicate; Mira (different phone) is not listed.
+            ->assertInertia(fn (AssertableInertia $p) => $p->has('families', 2)
+                ->where('families.0.id', $new->id)->where('families.1.id', $old->id));
+    });
+
+    it('never widens a satellite admin\'s view by picking another satellite', function (): void {
+        ['org' => $org, 'htc' => $htc, 'house' => $house] = adminChurch();
+        registeredFamily($org, $house, 'Mira', 'mira@example.com');
+
+        actingAs(staff($org, RoleEnum::Admin, ScopeTypeEnum::Branch, $htc->id))->get("/ccf/families?satellite={$house->id}")
+            ->assertInertia(fn (AssertableInertia $p) => $p->has('families', 0)->has('options.satellites', 1));
+    });
+
+    it('downloads what the filters show', function (): void {
+        ['org' => $org, 'htc' => $htc, 'house' => $house] = adminChurch();
+        registeredFamily($org, $htc, 'Janice', 'janice@example.com');
+        registeredFamily($org, $house, 'Mira', 'mira@example.com');
+
+        $response = actingAs(staff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id))->get("/ccf/families/export?satellite={$house->id}");
+
+        $download = $response->baseResponse;
+        if (! $download instanceof BinaryFileResponse) {
+            throw new RuntimeException('Expected a file download.');
+        }
+        $file = $download->getFile()->getPathname();
+        $rows = [];
+        $reader = new Reader;
+        $reader->open($file);
+        foreach ($reader->getSheetIterator() as $sheet) {
+            foreach ($sheet->getRowIterator() as $row) {
+                $rows[] = implode('|', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $row->toArray()));
+            }
+            break;
+        }
+        $reader->close();
+
+        $sheet = implode("\n", $rows);
+        expect(str_contains($sheet, 'Mira'))->toBeTrue()->and(str_contains($sheet, 'Janice'))->toBeFalse();
     });
 });

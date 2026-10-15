@@ -33,5 +33,10 @@ it('seeds exactly what the browser journeys expect', function (): void {
             ->and($world)->toContain("child: '{$family->children->first()?->nickname}'");
     }
 
+    // The duplicates journey re-registers with this family's phone.
+    $dxb = $families->first(fn (Family $f): bool => $f->contactEmail() === 'delacruz@nxtgen.test');
+    expect($world)->toContain("phone: '0501000001'")
+        ->and(substr((string) preg_replace('/\D+/', '', (string) $dxb?->primaryGuardian?->phone), -9))->toBe('501000001');
+
     expect(User::query()->where('email', E2ESeeder::HOUSE_ADMIN_EMAIL)->firstOrFail()->roleAssignments()->first()?->role)->toBe(RoleEnum::Admin);
 });

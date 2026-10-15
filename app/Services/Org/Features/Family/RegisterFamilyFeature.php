@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Services\Org\Features\Family;
 
 use App\Domains\Organization\Jobs\GetBranchJob;
+use App\Enums\AccessRowEnum;
 use App\Enums\RegistrationOutcomeEnum;
 use App\Enums\RegistrationSourceEnum;
+use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Inputs\RegisterFamilyInput;
 use App\Operations\Registration\RegisterFamilyOperation;
 use App\Services\Org\Features\BaseOrgFeature;
@@ -18,6 +20,7 @@ use Illuminate\Http\RedirectResponse;
  *
  * @extends BaseOrgFeature<RedirectResponse>
  */
+#[AccessRow(AccessRowEnum::RegisterFamily)]
 final class RegisterFamilyFeature extends BaseOrgFeature
 {
     public function handle(RegisterFamilyInput $input): RedirectResponse

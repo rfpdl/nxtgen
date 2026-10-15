@@ -9,8 +9,6 @@ use App\Data\Models\Organization;
 use App\Data\Models\User;
 use App\Domains\Family\DataObjects\FamilyRegistrationData;
 use App\Enums\RegistrationSourceEnum;
-use App\Foundation\Support\RouteOrganization;
-use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Data;
 
@@ -71,8 +69,7 @@ final class RegisterFamilyInput extends Data
     public static function messages(): array
     {
         return [
-            'home_branch_id.required' => 'Please choose the satellite you usually attend.',
-            'home_branch_id.exists' => 'Please choose the satellite you usually attend.',
+            ...FamilyDetailsInput::messages(),
             'privacy_consented.accepted' => 'Please agree so we can keep these details.',
             'children.required' => 'Please add at least one child.',
             'children.min' => 'Please add at least one child.',
@@ -82,19 +79,11 @@ final class RegisterFamilyInput extends Data
     /** @return array<string, list<mixed>> */
     public static function rules(): array
     {
-        $orgId = RouteOrganization::from(request())->id ?? 0;
-
+        // The family fields are FamilyDetailsInput's rules (one owner, shared with editing).
         return [
-            'home_branch_id' => ['required', 'integer', Rule::exists('branches', 'id')->where('organization_id', $orgId)],
-            'area_text' => ['nullable', 'string', 'max:120'],
+            ...FamilyDetailsInput::rules(),
             'privacy_consented' => ['accepted'],
             'children' => ['required', 'array', 'min:1', 'max:10'],
-            'fb_account' => ['nullable', 'string', 'max:120'],
-            'dgroup_area_text' => ['nullable', 'string', 'max:120'],
-            'dgroup_leader_name' => ['nullable', 'string', 'max:120'],
-            'dgroup_leader_phone' => ['nullable', 'string', 'max:30'],
-            'lifestage' => ['nullable', 'string', 'max:120'],
-            'notes' => ['nullable', 'string', 'max:1000'],
         ];
     }
 }

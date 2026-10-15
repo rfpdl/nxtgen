@@ -11,8 +11,10 @@ use App\Domains\Organization\Jobs\CreateRoleAssignmentJob;
 use App\Domains\Organization\Jobs\GetBranchJob;
 use App\Domains\User\Jobs\CreateUserJob;
 use App\Domains\User\Jobs\GetUserByEmailJob;
+use App\Enums\AccessRowEnum;
 use App\Enums\MagicLinkPurposeEnum;
 use App\Enums\ScopeTypeEnum;
+use App\Foundation\Attributes\AccessRow;
 use App\Services\Org\Data\AddStaffInput;
 use App\Services\Org\Features\BaseOrgFeature;
 use Illuminate\Http\RedirectResponse;
@@ -25,6 +27,7 @@ use Illuminate\Support\Facades\DB;
  *
  * @extends BaseOrgFeature<RedirectResponse>
  */
+#[AccessRow(AccessRowEnum::GrantRoles)]
 final class AddStaffFeature extends BaseOrgFeature
 {
     public function handle(AddStaffInput $input): RedirectResponse

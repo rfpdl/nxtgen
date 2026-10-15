@@ -6,7 +6,6 @@ namespace App\Domains\Family\Jobs;
 
 use App\Data\Models\Family;
 use App\Foundation\Jobs\BaseJob;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
@@ -25,28 +24,14 @@ final class SearchFamiliesJob extends BaseJob
     /** @return Collection<int, Family> */
     public function handle(): Collection
     {
-        $term = trim($this->query);
-        if (mb_strlen($term) < 2) {
+        if (mb_strlen(trim($this->query)) < 2) {
             return new Collection;
         }
-
-        $like = '%'.str_replace(['%', '_'], ['\%', '\_'], $term).'%';
-        $digits = (string) preg_replace('/\D+/', '', $term);
 
         return Family::query()
             ->with(['primaryGuardian.user', 'homeBranch', 'children'])
             ->where('organization_id', $this->organizationId)
-            ->where(fn (Builder $q) => $q
-                ->whereHas('guardians', fn (Builder $g) => $g
-                    ->where('first_name', 'like', $like)
-                    ->orWhere('last_name', 'like', $like)
-                    ->orWhere('email', 'like', $like)
-                    ->when(strlen($digits) >= 4, fn (Builder $p) => $p->orWhere('phone', 'like', '%'.$digits.'%'))
-                    ->orWhereHas('user', fn (Builder $u) => $u->where('email', 'like', $like)))
-                ->orWhereHas('children', fn (Builder $c) => $c
-                    ->where('first_name', 'like', $like)
-                    ->orWhere('last_name', 'like', $like)
-                    ->orWhere('nickname', 'like', $like)))
+            ->matching($this->query)
             ->limit(20)
             ->get();
     }

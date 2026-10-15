@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Org\Features\Home;
 
+use App\Enums\AccessRowEnum;
+use App\Foundation\Attributes\AccessRow;
 use App\Services\Org\Features\BaseOrgFeature;
 use Illuminate\Http\RedirectResponse;
 
@@ -12,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
  *
  * @extends BaseOrgFeature<RedirectResponse>
  */
+#[AccessRow(AccessRowEnum::StaffArea)]
 final class ShowOrgHomeFeature extends BaseOrgFeature
 {
     public function handle(): RedirectResponse

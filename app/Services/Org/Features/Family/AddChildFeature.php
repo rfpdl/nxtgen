@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Services\Org\Features\Family;
 
 use App\Domains\Family\Jobs\GetFamilyByIdJob;
+use App\Enums\AccessRowEnum;
 use App\Enums\RegistrationSourceEnum;
+use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Inputs\ChildInput;
 use App\Operations\Family\AddChildToFamilyOperation;
 use App\Services\Org\Features\BaseOrgFeature;
@@ -17,6 +19,7 @@ use Illuminate\Http\RedirectResponse;
  *
  * @extends BaseOrgFeature<RedirectResponse>
  */
+#[AccessRow(AccessRowEnum::AddChild)]
 final class AddChildFeature extends BaseOrgFeature
 {
     public function __construct(private readonly int $familyId) {}

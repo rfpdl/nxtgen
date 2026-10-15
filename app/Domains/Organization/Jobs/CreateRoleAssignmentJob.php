@@ -31,6 +31,7 @@ final class CreateRoleAssignmentJob extends BaseJob
     public function handle(): bool
     {
         $assignment = RoleAssignment::query()->lockForUpdate()->firstOrNew([
+            'organization_id' => $this->organization->id,
             'user_id' => $this->user->id,
             'role' => $this->role,
             'scope_type' => $this->scopeType,
@@ -42,7 +43,6 @@ final class CreateRoleAssignmentJob extends BaseJob
         }
 
         $assignment->fill([
-            'organization_id' => $this->organization->id,
             'is_active' => true,
             'granted_by' => $this->grantedBy->id,
         ])->save();

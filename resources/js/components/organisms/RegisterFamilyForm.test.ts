@@ -69,4 +69,29 @@ describe('RegisterFamilyForm', () => {
             mount(RegisterFamilyForm, { props }).find('[data-testid="register-submit"]').text(),
         ).toBe('Register my family')
     })
+
+    it('asks the DGroup area and leader phone only of a parent already in a DGroup', async () => {
+        const wrapper = mount(RegisterFamilyForm, { props })
+        expect(wrapper.find('[data-testid="dgroup-area"]').exists()).toBe(false)
+
+        await wrapper.find('[data-testid="in-dgroup"]').setValue(true)
+
+        expect(wrapper.find('[data-testid="dgroup-area"]').exists()).toBe(true)
+        expect(wrapper.find('[data-testid="dgroup-leader-phone"]').exists()).toBe(true)
+    })
+
+    it('sends lifestage and the ministry the parent serves in', async () => {
+        const wrapper = mount(RegisterFamilyForm, { props })
+
+        await wrapper.find('[data-testid="lifestage"]').setValue('Married with kids')
+        await wrapper.find('[data-testid="ministry"]').setValue('Music')
+        await wrapper.find('form').trigger('submit')
+
+        const sent = post.mock.contexts[0] as {
+            lifestage: string
+            guardian: { ministries: string[] }
+        }
+        expect(sent.lifestage).toBe('Married with kids')
+        expect(sent.guardian.ministries).toEqual(['Music'])
+    })
 })

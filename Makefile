@@ -161,7 +161,7 @@ test-fe: ## Run Vitest component tests, and prove every file was collected
 	fi
 
 lint: ## Lint the frontend
-	npx eslint resources/js
+	npm run lint
 
 format: ## Format the frontend
 	npm run format

@@ -100,6 +100,20 @@ final readonly class AccessScope
     /** The People page: church admins and satellite admins. */
     public function canManagePeople(): bool
     {
+        return $this->isAnyAdmin();
+    }
+
+    /**
+     * The possible-duplicates screen: church admins and satellite admins. WHICH pairs each may review is
+     * canEditFamily on the new family (plan §6).
+     */
+    public function canReviewDuplicates(): bool
+    {
+        return $this->isAnyAdmin();
+    }
+
+    private function isAnyAdmin(): bool
+    {
         return $this->isChurchAdmin || $this->adminBranchIds !== [];
     }
 

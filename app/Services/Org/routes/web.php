@@ -13,6 +13,7 @@ declare(strict_types=1);
 */
 
 use App\Services\Org\Http\Controllers\Child\Controller as ChildController;
+use App\Services\Org\Http\Controllers\Duplicate\Controller as DuplicateController;
 use App\Services\Org\Http\Controllers\Family\Controller as FamilyController;
 use App\Services\Org\Http\Controllers\Home\Controller as HomeController;
 use App\Services\Org\Http\Controllers\People\Controller as PeopleController;
@@ -25,11 +26,16 @@ Route::get('/families/export', [FamilyController::class, 'export'])->name('org.f
 Route::get('/families/new', [FamilyController::class, 'register'])->name('org.families.register');
 Route::post('/families', [FamilyController::class, 'store'])->name('org.families.store');
 Route::get('/families/{family}', [FamilyController::class, 'show'])->whereNumber('family')->name('org.families.show');
+Route::put('/families/{family}', [FamilyController::class, 'update'])->whereNumber('family')->name('org.families.update');
 Route::post('/families/{family}/children', [FamilyController::class, 'addChild'])->whereNumber('family')->name('org.families.children.store');
 Route::post('/families/{family}/resend', [FamilyController::class, 'resend'])->whereNumber('family')->middleware('throttle:10,1')->name('org.families.resend');
 Route::put('/families/{family}/email', [FamilyController::class, 'correctEmail'])->whereNumber('family')->name('org.families.email');
+Route::put('/children/{child}', [ChildController::class, 'update'])->whereNumber('child')->name('org.children.update');
 Route::put('/children/{child}/status', [ChildController::class, 'updateStatus'])->whereNumber('child')->name('org.children.status');
 
 Route::get('/people', [PeopleController::class, 'index'])->name('org.people.index');
 Route::post('/people', [PeopleController::class, 'store'])->middleware('throttle:per-device')->name('org.people.store');
 Route::delete('/people/roles/{assignment}', [PeopleController::class, 'removeRole'])->whereNumber('assignment')->name('org.people.roles.destroy');
+
+Route::get('/duplicates', [DuplicateController::class, 'index'])->name('org.duplicates.index');
+Route::put('/duplicates/{pair}', [DuplicateController::class, 'resolve'])->whereNumber('pair')->name('org.duplicates.resolve');

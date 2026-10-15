@@ -48,4 +48,36 @@ describe('FamilyChildCard', () => {
             mount(FamilyChildCard, { props: { child: child({ group: null }) } }).text(),
         ).toContain('Group not set yet')
     })
+
+    it('shows every health detail the family gave, and nothing for what they left empty', () => {
+        const wrapper = mount(FamilyChildCard, {
+            props: {
+                child: child({
+                    illnesses: 'Asthma',
+                    dislikes: 'Loud music',
+                    fears: 'The dark',
+                    parentNotes: 'Shy at first',
+                }),
+            },
+        })
+
+        expect(wrapper.find('[data-testid="health"]').text()).toContain('Asthma')
+        expect(wrapper.text()).toContain('Loud music')
+        expect(wrapper.text()).toContain('The dark')
+        expect(wrapper.text()).toContain('Shy at first')
+        expect(
+            mount(FamilyChildCard, { props: { child: child() } })
+                .find('[data-testid="health"]')
+                .exists(),
+        ).toBe(false)
+    })
+
+    it('has room for an action under the card', () => {
+        const wrapper = mount(FamilyChildCard, {
+            props: { child: child() },
+            slots: { default: '<button>Edit</button>' },
+        })
+
+        expect(wrapper.find('button').text()).toBe('Edit')
+    })
 })

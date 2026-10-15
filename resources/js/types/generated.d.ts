@@ -18,6 +18,12 @@ declare namespace App {
                     group: string | null
                     status: string
                 }
+                export type DuplicatePairData = {
+                    id: number
+                    reason: string
+                    subject: App.Domains.Family.DataObjects.FamilySearchResultData
+                    candidate: App.Domains.Family.DataObjects.FamilySearchResultData
+                }
                 export type FamilyAdminData = {
                     id: number
                     primaryName: string
@@ -29,6 +35,19 @@ declare namespace App {
                     guardians: App.Domains.Family.DataObjects.GuardianPortalData[]
                     children: App.Domains.Family.DataObjects.ChildPortalData[]
                     canEdit: boolean
+                }
+                export type FamilyDetailsData = {
+                    homeBranchId: number
+                    areaText: string | null
+                    fbAccount: string | null
+                    wantsFbGroup: boolean
+                    inDgroup: boolean
+                    dgroupAreaText: string | null
+                    dgroupLeaderName: string | null
+                    dgroupLeaderPhone: string | null
+                    wantsDgroup: boolean
+                    lifestage: string | null
+                    notes: string | null
                 }
                 export type FamilyListRowData = {
                     id: number
@@ -55,11 +74,32 @@ declare namespace App {
                     children: string[]
                     canOpen: boolean
                 }
+                export type GuardianEditData = {
+                    firstName: string
+                    lastName: string
+                    relationship: App.Enums.RelationshipEnum
+                    phone: string
+                    ministries: string[]
+                }
                 export type GuardianPortalData = {
                     firstName: string
                     lastName: string
                     relationship: string
                     phone: string | null
+                }
+                export type NoteData = {
+                    id: number
+                    body: string
+                    author: string
+                    at: string
+                }
+            }
+        }
+        namespace Group {
+            namespace DataObjects {
+                export type GroupOptionData = {
+                    id: number
+                    name: string
                 }
             }
         }

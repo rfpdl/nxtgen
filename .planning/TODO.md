@@ -6,10 +6,10 @@
 | 2 | ~~E2E harness~~ built: `make e2e` / `make e2e-ui` / `make e2e-report`, 4 journeys × 2 browsers | plan §10 | done 2026-10-15 |
 | 3 | Laravel Cloud project + env (D2) | Roy owns the account | before Release 1 deploy |
 | 4 | ~~D-R1~~ decided: import once, app is the source of truth (plan §7.6) | Roy 2026-10-15 | done |
-| 5 | ~~D-R2~~ decided: People screens (built). Still needed: production seeder for the church, satellites and first church admin | Roy 2026-10-15 | before deploy |
+| 5 | ~~D-R2~~ decided: People screens (built) + `ChurchSeeder` from NXTGEN_* settings (built 2026-10-15). **Roy:** real satellite list + first admin email | Roy 2026-10-15 | before deploy |
 | 6 | Remaining R1 build list (review.md "Remaining Release 1 build") | review-spar | before R1 release |
 | 7 | Claim-acceptance concurrency test (two DB connections) | review-spar | with R2 concurrency harness |
-| 8 | A church slug must never be a reserved path (`RouteOrganization::RESERVED`) — enforce when a create-church screen/command exists | Org rename | with Platform |
+| 8 | ~~Church slug never a reserved path~~ — ChurchSeeder refuses one; enforce again in any future create-church screen | Org rename | with Platform |
 | 9 | Class-admin roles (event series) in People — `canGrant` refuses them until series exist | People | R2 |
 | 10 | E2E "test map" like admin-v2 (`e2e/map/serve.mjs`): the access matrix (plan §3.2) as a page, each cell → its Pest + E2E tests, with Run buttons | Roy: admin-v2 has a good page per item | when the matrix grows (R2) |
 | 11 | More journeys: family-page edit, duplicates screen, export download, resend/correct email, check-in (R2) | e2e | with each feature |

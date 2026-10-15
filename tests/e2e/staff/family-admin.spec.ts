@@ -39,6 +39,11 @@ test('register for a parent, resend, correct the email, set a status', async ({
     await page.goto(`/${CHURCH}/families`)
     await page.getByTestId('filter-unconfirmed').check()
     await expect(page).toHaveURL(/unconfirmed=1/)
+    // Search narrows further, and the filters stay in the address.
+    await page.getByTestId('filter-q').fill(surname)
+    await page.getByTestId('filter-q').press('Enter')
+    await expect(page).toHaveURL(new RegExp(`q=${surname}`))
+    await expect(page.getByTestId('family-row')).toHaveCount(1)
     const row = page.getByTestId('family-row').filter({ hasText: `Lea ${surname}` })
     await expect(row).toContainText('Email not confirmed')
     await row.getByRole('link').click()
@@ -65,17 +70,39 @@ test('register for a parent, resend, correct the email, set a status', async ({
         page.locator('[data-testid^="status-"]').first().locator('option').first(),
     ).toHaveText(/inactive/i)
 
+    // Both changes are on the family's history, for staff.
+    await expect(page.getByTestId('history')).toContainText(
+        `Email corrected from ${typo} to ${real}`,
+    )
+    await expect(page.getByTestId('history')).toContainText(
+        'status changed from Active to Inactive',
+    )
+
+    // Staff fix the family's details and a child's, the same forms the parent has.
+    await page.getByTestId('edit-family').click()
+    await page.getByTestId('area').fill('Karama')
+    await page.getByTestId('edit-family-submit').click()
+    await expect(page.getByTestId('flash-success')).toContainText('Family details saved')
+    await expect(page.getByText('Karama')).toBeVisible()
+
+    const card = page.getByTestId('family-child').filter({ hasText: 'Caloy' })
+    await card.getByTestId('edit-child').click()
+    await card.getByTestId('child-0-nickname').fill('Carlitos')
+    await card.getByTestId('edit-child-submit').click()
+    await expect(page.getByTestId('family-child').filter({ hasText: 'Carlitos' })).toBeVisible()
+
     // The parent, on their own phone, confirms from the corrected address and sees their family.
     const parent = await browser.newContext({ storageState: { cookies: [], origins: [] } })
     const parentPage = await parent.newPage()
     await openEmailedLink(parentPage, real, beforeReal)
     await expect(parentPage).toHaveURL(new RegExp(`/${CHURCH}/family`))
-    await expect(parentPage.getByTestId('family-child')).toContainText('Caloy')
+    await expect(parentPage.getByTestId('family-child')).toContainText('Carlitos')
     await parent.close()
 })
 
-test('downloads the families list as Excel', async ({ page }) => {
-    await page.goto(`/${CHURCH}/families`)
+test('downloads the families list as Excel — what the filters show', async ({ page }) => {
+    await page.goto(`/${CHURCH}/families?unconfirmed=1`)
+    await expect(page.getByTestId('export')).toHaveAttribute('href', /unconfirmed=1/)
 
     const [download] = await Promise.all([
         page.waitForEvent('download'),

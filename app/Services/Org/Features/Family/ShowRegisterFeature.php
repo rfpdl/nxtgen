@@ -8,8 +8,10 @@ use App\Data\Models\Family;
 use App\Domains\Family\DataObjects\FamilySearchResultData;
 use App\Domains\Family\Jobs\SearchFamiliesJob;
 use App\Domains\Organization\Jobs\GetBranchesJob;
+use App\Enums\AccessRowEnum;
 use App\Enums\GenderEnum;
 use App\Enums\RelationshipEnum;
+use App\Foundation\Attributes\AccessRow;
 use App\Services\Org\Features\BaseOrgFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -20,6 +22,7 @@ use Inertia\Response;
  *
  * @extends BaseOrgFeature<Response>
  */
+#[AccessRow(AccessRowEnum::DoorSearch)]
 final class ShowRegisterFeature extends BaseOrgFeature
 {
     public function handle(): Response

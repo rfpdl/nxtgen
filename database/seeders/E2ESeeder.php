@@ -42,16 +42,17 @@ final class E2ESeeder extends Seeder
             'scope_type' => ScopeTypeEnum::Branch, 'scope_id' => $house->id, 'is_active' => true,
         ]);
 
-        $this->family($ccf, $dxb, 'Maria', 'Dela Cruz', 'delacruz@nxtgen.test', 'Miguel', 'Migs', GenderEnum::Boy, '2017-03-14');
-        $this->family($ccf, $house, 'Grace', 'Santos', 'santos@nxtgen.test', 'Bea', 'Bea', GenderEnum::Girl, '2018-07-02');
+        // Different phones: a shared one would make the seed itself a "possible duplicate" no journey asked for.
+        $this->family($ccf, $dxb, 'Maria', 'Dela Cruz', 'delacruz@nxtgen.test', '+971501000001', 'Miguel', 'Migs', GenderEnum::Boy, '2017-03-14');
+        $this->family($ccf, $house, 'Grace', 'Santos', 'santos@nxtgen.test', '+971502000002', 'Bea', 'Bea', GenderEnum::Girl, '2018-07-02');
     }
 
-    private function family(Organization $org, Branch $branch, string $parent, string $surname, string $email, string $child, string $nickname, GenderEnum $gender, string $dob): void
+    private function family(Organization $org, Branch $branch, string $parent, string $surname, string $email, string $phone, string $child, string $nickname, GenderEnum $gender, string $dob): void
     {
         (new RegisterFamilyOperation(new FamilyRegistrationData(
             organization: $org,
             homeBranch: $branch,
-            primary: new GuardianDetailsData(firstName: $parent, lastName: $surname, relationship: RelationshipEnum::Mother, phone: '+971500000000', email: $email),
+            primary: new GuardianDetailsData(firstName: $parent, lastName: $surname, relationship: RelationshipEnum::Mother, phone: $phone, email: $email),
             children: [new ChildDetailsData(firstName: $child, middleName: null, lastName: $surname, nickname: $nickname, gender: $gender, dateOfBirth: $dob, allergies: null)],
             areaText: 'Al Barsha',
             privacyConsented: true,

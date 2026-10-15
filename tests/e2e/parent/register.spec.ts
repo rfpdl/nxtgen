@@ -88,4 +88,11 @@ test('the form says what is missing, in plain words', async ({ page }) => {
 
     await expect(page).toHaveURL(new RegExp(`/${CHURCH}/register$`))
     await expect(page.getByRole('alert').first()).toBeVisible()
+    // The allergy question must be answered, and a "yes" needs the details.
+    await expect(page.getByText('Please answer: does your child have any allergies?')).toBeVisible()
+    await expect(page.getByText('Please enter the name your child goes by.')).toBeVisible()
+
+    await page.getByTestId('child-0-has-allergies-yes').check()
+    await page.getByTestId('register-submit').click()
+    await expect(page.getByText('Please tell us what your child is allergic to.')).toBeVisible()
 })

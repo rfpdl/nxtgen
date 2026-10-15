@@ -12,6 +12,7 @@ use App\Services\Org\Features\Family\ResendConfirmationFeature;
 use App\Services\Org\Features\Family\ShowFamiliesFeature;
 use App\Services\Org\Features\Family\ShowFamilyFeature;
 use App\Services\Org\Features\Family\ShowRegisterFeature;
+use App\Services\Org\Features\Family\UpdateFamilyFeature;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -41,6 +42,11 @@ final class Controller extends \Lucid\Units\Controller
     public function show(string $organization, int $family): Response
     {
         return $this->serve(ShowFamilyFeature::class, ['familyId' => $family]);
+    }
+
+    public function update(string $organization, int $family): RedirectResponse
+    {
+        return $this->serve(UpdateFamilyFeature::class, ['familyId' => $family]);
     }
 
     public function addChild(string $organization, int $family): RedirectResponse

@@ -3,6 +3,7 @@
 Kids church registration and check-in, built for CCF's NxtGen and for any church.
 
 - Plan: `.planning/tasks/2026-10-14-nxtgen-v1/plan.md` (and `spar.md`, the Codex review that shaped it)
+- Decisions (newest first): `docs/DECISIONS.md`
 - Where things stand: `.planning/STATE.md` · Security list: `.planning/SECURITY.md` · TODO: `.planning/TODO.md`
 
 ## Run it locally
@@ -38,3 +39,12 @@ make e2e-report   # the last run's report: each journey, its steps; screenshot, 
 
 They sign in the way people do — by opening the emailed link (copied to `storage/app/e2e/mailbox.jsonl` under
 `APP_ENV=e2e` only). First time: `npx playwright install webkit chromium`.
+
+## Starting production
+
+1. Set `NXTGEN_*` in the server's `.env` (church name and address, satellites as the registry sheet spells them,
+   first admin's email) — see `.env.example`.
+2. `php artisan migrate --force && php artisan db:seed --force` — creates that church and its first admin only
+   (never the demo logins). Safe to run again.
+3. The first admin signs in at `/login` with their email and adds everyone else on **People** (`/{church}/people`).
+4. Families: the registry import (`nxtgen:registry-propose` → review → `nxtgen:registry-apply`), once.

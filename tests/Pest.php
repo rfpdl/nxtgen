@@ -9,6 +9,7 @@ use Tests\TestCase;
 // functions — so each helper file is required once here. Palo does the same; the alternative is a
 // composer `files` entry per file, which is the same list somewhere less obvious.
 require_once __DIR__.'/Support/InertiaHelpers.php';
+require_once __DIR__.'/Support/FormPayloads.php';
 
 /*
 |--------------------------------------------------------------------------

@@ -38,7 +38,7 @@ function validForm(Branch $branch): array
         ],
         'children' => [[
             'first_name' => 'Alexis', 'middle_name' => 'Amara', 'last_name' => 'Ramos', 'nickname' => 'Amara',
-            'gender' => 'girl', 'date_of_birth' => '2019-05-10', 'allergies' => 'Peanuts',
+            'gender' => 'girl', 'date_of_birth' => '2019-05-10', 'has_allergies' => true, 'allergies' => 'Peanuts',
         ]],
     ];
 }
@@ -77,7 +77,7 @@ it('registers several children at once', function (): void {
     [, $branch] = ccf();
 
     $form = validForm($branch);
-    $form['children'][] = ['first_name' => 'Aaron', 'middle_name' => null, 'last_name' => 'Ramos', 'nickname' => 'Aaron', 'gender' => 'boy', 'date_of_birth' => '2017-01-02', 'allergies' => null];
+    $form['children'][] = ['first_name' => 'Aaron', 'middle_name' => null, 'last_name' => 'Ramos', 'nickname' => 'Aaron', 'gender' => 'boy', 'date_of_birth' => '2017-01-02', 'has_allergies' => false, 'allergies' => null];
 
     post('/ccf/register', $form)->assertRedirect('/ccf/register/thanks');
 
@@ -146,4 +146,66 @@ it('refuses a satellite from another church', function (): void {
     post('/ccf/register', validForm($foreign))->assertSessionHasErrors('home_branch_id');
 
     expect(Family::query()->count())->toBe(0);
+});
+
+/*
+ * Form parity with today's Google Form (plan §6 R1, review B6): the allergy question is answered every time,
+ * yes or no, and a "yes" needs the details — a blank box must never be read as "no allergies".
+ */
+describe('allergies are an explicit yes or no', function (): void {
+    it('requires the question to be answered', function (): void {
+        [, $branch] = ccf();
+        $form = validForm($branch);
+        unset($form['children'][0]['has_allergies']);
+
+        post('/ccf/register', $form)->assertSessionHasErrors(['children.0.has_allergies' => 'Please answer: does your child have any allergies?']);
+    });
+
+    it('needs the details when the answer is yes', function (): void {
+        [, $branch] = ccf();
+        $form = validForm($branch);
+        $form['children'][0]['allergies'] = '';
+
+        post('/ccf/register', $form)->assertSessionHasErrors(['children.0.allergies' => 'Please tell us what your child is allergic to.']);
+    });
+
+    it('keeps no details when the answer is no, whatever was typed', function (): void {
+        Notification::fake();
+        [, $branch] = ccf();
+        $form = validForm($branch);
+        $form['children'][0]['has_allergies'] = false;
+        $form['children'][0]['allergies'] = 'typed then changed mind';
+
+        post('/ccf/register', $form)->assertRedirect();
+
+        expect(Child::query()->sole()->allergies)->toBeNull();
+    });
+});
+
+it('requires each child\'s nickname — it is the name on their card', function (): void {
+    [, $branch] = ccf();
+    $form = validForm($branch);
+    $form['children'][0]['nickname'] = '';
+
+    post('/ccf/register', $form)->assertSessionHasErrors(['children.0.nickname' => 'Please enter the name your child goes by.']);
+});
+
+it('keeps the rest of the Google Form: DGroup area and leader phone, lifestage, ministry', function (): void {
+    Notification::fake();
+    [, $branch] = ccf();
+    $form = validForm($branch) + [
+        'in_dgroup' => true,
+        'dgroup_area_text' => 'Barsha',
+        'dgroup_leader_name' => 'Leah',
+        'dgroup_leader_phone' => '0501231234',
+        'lifestage' => 'Married with kids',
+    ];
+
+    post('/ccf/register', $form)->assertRedirect();
+
+    $family = Family::query()->with('primaryGuardian')->sole();
+    expect($family->dgroup_area_text)->toBe('Barsha')
+        ->and($family->dgroup_leader_phone)->toBe('0501231234')
+        ->and($family->lifestage)->toBe('Married with kids')
+        ->and($family->primaryGuardian?->ministries)->toBe(['Music']);
 });

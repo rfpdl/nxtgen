@@ -3,6 +3,20 @@
 declare(strict_types=1);
 
 return [
+    /*
+     * The church `php artisan db:seed` creates in production (ChurchSeeder) — settings, never code. Satellite
+     * names are matched by the registry import's "Home satellite" column, so spell them as the sheet does.
+     * Everyone else is added on People; families come from the import.
+     */
+    'church' => [
+        'slug' => env('NXTGEN_CHURCH_SLUG', 'ccf'),
+        'name' => env('NXTGEN_CHURCH_NAME', 'CCF'),
+        'timezone' => env('NXTGEN_CHURCH_TIMEZONE', 'Asia/Dubai'),
+        'satellites' => env('NXTGEN_SATELLITES', 'CCF DXB|House Church'),
+        'first_admin_email' => env('NXTGEN_FIRST_ADMIN_EMAIL'),
+        'first_admin_name' => env('NXTGEN_FIRST_ADMIN_NAME', 'Church Admin'),
+    ],
+
     'rate_limits' => [
         /*
          * Public forms and emailed-link use, per device (IP) per minute. Production keeps 20. Only `.env.e2e`

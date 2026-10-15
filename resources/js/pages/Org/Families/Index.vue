@@ -1,22 +1,33 @@
 <script setup lang="ts">
 import OrgShell from '@/components/layout/OrgShell.vue'
-import type { FamilyListRow } from '@/types'
+import FamilyListFilters, {
+    type FamilyListFilterValues,
+} from '@/components/molecules/FamilyListFilters.vue'
+import type { BranchOption, FamilyListRow } from '@/types'
 import { Head, Link, router } from '@inertiajs/vue3'
+import { computed } from 'vue'
 import { route } from 'ziggy-js'
 
 const props = defineProps<{
     church: { name: string; slug: string }
     families: FamilyListRow[]
-    filters: { unconfirmed: boolean }
+    filters: FamilyListFilterValues
+    options: {
+        satellites: BranchOption[]
+        groups: { id: number; name: string }[]
+        statuses: { value: string; label: string }[]
+    }
 }>()
 
-function toggleUnconfirmed(): void {
-    router.get(
-        route('org.families.index', props.church.slug),
-        props.filters.unconfirmed ? {} : { unconfirmed: 1 },
-        { preserveScroll: true },
-    )
+function apply(params: Record<string, string | number>): void {
+    router.get(route('org.families.index', props.church.slug), params, { preserveScroll: true })
 }
+
+/** The download is what the list shows: the same filters, as the same address parameters. */
+const exportHref = computed(() => {
+    const query = new URLSearchParams(window.location.search).toString()
+    return route('org.families.export', props.church.slug) + (query === '' ? '' : `?${query}`)
+})
 </script>
 
 <template>
@@ -24,23 +35,19 @@ function toggleUnconfirmed(): void {
     <OrgShell :church="church">
         <div class="flex flex-wrap items-center gap-4">
             <h1 class="text-text text-2xl font-semibold">Families ({{ families.length }})</h1>
-            <label class="min-h-touch text-text flex items-center gap-2">
-                <input
-                    type="checkbox"
-                    class="size-5"
-                    :checked="filters.unconfirmed"
-                    data-testid="filter-unconfirmed"
-                    @change="toggleUnconfirmed"
-                />
-                Email not confirmed only
-            </label>
             <a
-                :href="route('org.families.export', church.slug)"
+                :href="exportHref"
                 class="min-h-touch border-border bg-surface text-text ml-auto flex items-center rounded-md border px-4"
                 data-testid="export"
                 >Download Excel</a
             >
         </div>
+        <FamilyListFilters
+            :key="JSON.stringify(filters)"
+            :filters="filters"
+            :options="options"
+            @apply="apply"
+        />
         <ul class="flex flex-col gap-2">
             <li
                 v-for="family in families"
@@ -65,6 +72,6 @@ function toggleUnconfirmed(): void {
                 </p>
             </li>
         </ul>
-        <p v-if="families.length === 0" class="text-text-muted">No families yet.</p>
+        <p v-if="families.length === 0" class="text-text-muted">No families match.</p>
     </OrgShell>
 </template>

@@ -7,8 +7,10 @@ namespace App\Services\Org\Features\People;
 use App\Domains\Organization\Jobs\GetChurchAdminCountJob;
 use App\Domains\Organization\Jobs\GetRoleAssignmentJob;
 use App\Domains\Organization\Jobs\UpdateRoleAssignmentAsInactiveJob;
+use App\Enums\AccessRowEnum;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
+use App\Foundation\Attributes\AccessRow;
 use App\Services\Org\Features\BaseOrgFeature;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +21,7 @@ use Illuminate\Support\Facades\DB;
  *
  * @extends BaseOrgFeature<RedirectResponse>
  */
+#[AccessRow(AccessRowEnum::GrantRoles)]
 final class RemoveStaffRoleFeature extends BaseOrgFeature
 {
     public function __construct(private readonly int $assignmentId) {}

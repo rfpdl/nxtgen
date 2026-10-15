@@ -1,0 +1,35 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services\Org\Features\Child;
+
+use App\Domains\Family\Jobs\GetOrganizationChildJob;
+use App\Domains\Family\Jobs\UpdateChildDetailsJob;
+use App\Enums\AccessRowEnum;
+use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Inputs\ChildInput;
+use App\Services\Org\Features\BaseOrgFeature;
+use Illuminate\Http\RedirectResponse;
+
+/**
+ * Staff fix a child's details (plan §3.2: who may edit the child's family). Not status or group — status is
+ * its own action, group changes only at Moving-Up. The same input and Job as the parent's own edit.
+ *
+ * @extends BaseOrgFeature<RedirectResponse>
+ */
+#[AccessRow(AccessRowEnum::EditFamily)]
+final class UpdateChildDetailsFeature extends BaseOrgFeature
+{
+    public function __construct(private readonly int $childId) {}
+
+    public function handle(ChildInput $input): RedirectResponse
+    {
+        $child = $this->run(new GetOrganizationChildJob(organizationId: $this->organization()->id, childId: $this->childId));
+        abort_unless($this->scope()->canEditFamily($child->family), 404);
+
+        $this->run(new UpdateChildDetailsJob(child: $child, details: $input->toDetails()));
+
+        return back()->with('success', "{$child->displayName()}'s details are saved.");
+    }
+}

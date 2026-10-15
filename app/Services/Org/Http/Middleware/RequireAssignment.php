@@ -33,7 +33,10 @@ final class RequireAssignment
         $request->attributes->set('organization', $organization);
         $request->attributes->set('scope', $scope);
         // What the staff frame shows (OrgShell). Navigation only — every Feature still asks the scope itself.
-        Inertia::share('orgNav', ['canManagePeople' => $scope->canManagePeople()]);
+        Inertia::share('orgNav', [
+            'canManagePeople' => $scope->canManagePeople(),
+            'canReviewDuplicates' => $scope->canReviewDuplicates(),
+        ]);
 
         return $next($request);
     }

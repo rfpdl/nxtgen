@@ -8,7 +8,9 @@ use App\Domains\Auth\Jobs\CreateMagicLinkJob;
 use App\Domains\Auth\Jobs\SendMagicLinkJob;
 use App\Domains\Family\Jobs\GetFamilyByIdJob;
 use App\Domains\Family\Jobs\GetPendingClaimForFamilyJob;
+use App\Enums\AccessRowEnum;
 use App\Enums\MagicLinkPurposeEnum;
+use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Support\EmailMask;
 use App\Services\Org\Features\BaseOrgFeature;
 use Illuminate\Http\RedirectResponse;
@@ -19,6 +21,7 @@ use Illuminate\Http\RedirectResponse;
  *
  * @extends BaseOrgFeature<RedirectResponse>
  */
+#[AccessRow(AccessRowEnum::ResendLink)]
 final class ResendConfirmationFeature extends BaseOrgFeature
 {
     public function __construct(private readonly int $familyId) {}

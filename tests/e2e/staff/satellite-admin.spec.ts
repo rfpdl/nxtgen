@@ -39,6 +39,22 @@ test('a satellite admin can only add Lifeshapers to their own satellite', async 
     expect(choices.map((c) => c.trim())).toEqual(['Lifeshaper · House Church'])
 })
 
+test('a Lifeshaper can see a family but gets no edit forms', async ({ browser }) => {
+    const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
+    const page = await lifeshaper.newPage()
+    await page.goto(`/${CHURCH}/families`)
+    await page
+        .getByTestId('family-row')
+        .filter({ hasText: FAMILIES.dxb.parent })
+        .getByRole('link')
+        .click()
+
+    await expect(page.getByTestId('family-child').first()).toBeVisible()
+    await expect(page.getByTestId('edit-family')).toHaveCount(0)
+    await expect(page.getByTestId('edit-child')).toHaveCount(0)
+    await lifeshaper.close()
+})
+
 test('a Lifeshaper does not get the People page', async ({ browser }) => {
     const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const page = await lifeshaper.newPage()
