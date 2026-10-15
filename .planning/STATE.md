@@ -103,3 +103,9 @@
     .env); `SentryScrubber` before_send strips request body/query/cookies/headers, login email/name/IP, breadcrumb
     data, extras — unit-tested.
   - Gate: 262 Pest (incl. 31 arch), 90 Vitest, PHPStan L10; E2E 38 runs green.
+- **Photos (2026-10-16, Roy: parent or Lifeshaper, take or upload):** private `photos` disk (local; S3 private bucket by
+  PHOTOS_DISK=s3); re-encoded upright/600px/no EXIF (fixture with orientation + GPS proves it); only after the PARENT
+  agrees (consent_at/by, new `photo_consent_by` column), staff never agree; parent takes consent back → photo
+  deleted; view = signed 30-min link AND viewer check (own family or staff who can see the family), no-store.
+  Revert-checked: upright, viewer check, staff consent check. Production satellite default "CCF Dxb"; Sentry off.
+  Gate: 274 Pest (incl. 31 arch), 95 Vitest; E2E 41 runs green.

@@ -72,9 +72,9 @@ test('prints the registration poster, whose address opens the form', async ({ pa
     const qr = page.getByTestId('poster-qr')
     await expect(qr).toBeVisible()
     // The QR image really rendered (not a broken image).
-    expect(await qr.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(
-        true,
-    )
+    await expect
+        .poll(() => qr.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0))
+        .toBe(true)
 
     const address = (await page.getByTestId('poster-url').textContent())?.trim() ?? ''
     expect(address).toMatch(new RegExp(`/${CHURCH}/register$`))

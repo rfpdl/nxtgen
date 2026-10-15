@@ -4,6 +4,15 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-10-16
+
+- **Photos: a parent or a Lifeshaper can take or upload a child's photo** (Roy) — only after the PARENT agrees;
+  staff can never agree for them. The parent can take consent back, which deletes the photo. Photos are private
+  (signed 30-minute links, checked against who is asking), re-encoded on upload (upright, 600px, no location or
+  camera data). *For Roy to confirm:* the consent wording on the family page, and the production bucket.
+- **Production starts with one satellite, "CCF Dxb"** (Roy). More can be added in `NXTGEN_SATELLITES`.
+- **Sentry stays off** for now (Roy).
+
 ## 2026-10-15
 
 - **Error reports never carry personal data**: Sentry's `send_default_pii` is hard-coded false (not an .env switch)

@@ -17,6 +17,8 @@ declare namespace App {
                     parentNotes: string | null
                     group: string | null
                     status: string
+                    photoConsent: boolean
+                    photoUrl: string | null
                 }
                 export type DuplicatePairData = {
                     id: number
@@ -135,6 +137,21 @@ declare namespace App {
         }
     }
     namespace Enums {
+        export type AccessRowEnum =
+            | 'staff_area'
+            | 'door_search'
+            | 'register_family'
+            | 'add_child'
+            | 'family_list'
+            | 'view_family'
+            | 'edit_family'
+            | 'resend_link'
+            | 'correct_contact'
+            | 'set_child_status'
+            | 'review_duplicates'
+            | 'grant_roles'
+            | 'own_family'
+            | 'child_photo'
         export type ChildStatusEnum = 'active' | 'inactive' | 'graduated'
         export type DuplicateReasonEnum = 'same_phone' | 'same_name_dob' | 'same_email'
         export type DuplicateStatusEnum = 'open' | 'dismissed' | 'confirmed'

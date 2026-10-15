@@ -2,6 +2,7 @@
 import OrgShell from '@/components/layout/OrgShell.vue'
 import FamilyChildCard from '@/components/molecules/FamilyChildCard.vue'
 import AddChildForm from '@/components/organisms/AddChildForm.vue'
+import ChildPhotoForm from '@/components/organisms/ChildPhotoForm.vue'
 import EditChildForm from '@/components/organisms/EditChildForm.vue'
 import FamilyDetailsForm from '@/components/organisms/FamilyDetailsForm.vue'
 import type { BranchOption, FamilyAdmin, FamilyDetails, GuardianEdit, Note } from '@/types'
@@ -122,6 +123,11 @@ function setStatus(childId: number, status: string): void {
             <h2 class="text-text text-xl font-semibold">Children</h2>
             <div v-for="child in family.children" :key="child.id" class="flex flex-col gap-2">
                 <FamilyChildCard :child="child">
+                    <ChildPhotoForm
+                        :child="child"
+                        who="staff"
+                        :action="route('org.children.photo', [church.slug, child.id])"
+                    />
                     <EditChildForm
                         v-if="family.canEdit"
                         :action="route('org.children.update', [church.slug, child.id])"

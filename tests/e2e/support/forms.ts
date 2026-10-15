@@ -48,3 +48,24 @@ export async function fillFamily(page: Page, parent: Parent, children: Child[]):
     }
     await page.getByTestId('privacy').check()
 }
+
+/**
+ * A parent registers on the public form and confirms from the email, landing on their family page. For
+ * journeys that start from "a registered, signed-in parent".
+ */
+export async function registerAndConfirm(
+    page: Page,
+    parent: Omit<Parent, 'email'>,
+    children: Child[],
+): Promise<string> {
+    const { uniqueEmail } = await import('./world')
+    const { mailCount } = await import('./mailbox')
+    const { openEmailedLink } = await import('./sign-in')
+    const email = uniqueEmail(parent.first.toLowerCase())
+    const before = mailCount(email)
+    await page.goto('/ccf/register')
+    await fillFamily(page, { ...parent, email }, children)
+    await page.getByTestId('register-submit').click()
+    await openEmailedLink(page, email, before)
+    return email
+}

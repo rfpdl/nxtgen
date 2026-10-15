@@ -23,3 +23,4 @@ fails when one is missing. Reuse before you build: search this list first.
 | FamilyListFilters      | molecule | Registration list search + satellite/status/group/unconfirmed/duplicate filters; emits address params   |
 | SwitchLink             | atom     | "Switch" between My family / Serve (or churches): only when there is more than one place to go          |
 | PasswordLoginForm      | organism | "Use a password instead" on sign-in: the staff backup, collapsed by default                             |
+| ChildPhotoForm         | organism | A child's photo: take (camera) or choose; parent agrees/takes back consent, staff only after consent    |

@@ -15,5 +15,6 @@
 | 11 | More journeys: family-page edit, duplicates screen, export download, resend/correct email, check-in (R2) | e2e | with each feature |
 | 12 | E2E per breakpoint: a **tablet** project (iPad, both portrait/landscape) alongside the phones, and specs that assert layout per size (no sideways scroll, ≥44/56px targets, menu fits) — not just the same journeys at a different width | Roy 2026-10-15 | before R2 door screens |
 | 13 | E2E for link EXPIRY (2 h login / 7 d verify) — needs a controllable clock in the e2e server; Pest covers it today | review 2 | with R2 harness work |
-| 14 | **Roy:** Sentry DSN (`SENTRY_LARAVEL_DSN`) on the server — error reports stay off until then | Sentry wired | before deploy |
-| 15 | **Roy:** photo + consent — who takes/uploads the photo, consent wording, and where photos live (private bucket) | plan §5 photo | decide before building |
+| 14 | ~~Sentry DSN~~ — Roy: keep off for now | Roy 2026-10-16 | later |
+| 15 | Photo + consent built (Roy: parent or Lifeshaper, take or upload). **Roy to confirm:** consent wording; production private bucket (PHOTOS_DISK=s3) | Roy 2026-10-16 | before deploy |
+| 16 | iPhone HEIC photos: Safari converts camera shots to JPEG on upload, but a HEIC chosen from Files may be refused ('Please choose a photo (JPG, PNG or WebP)') — check on a real iPhone | photo | before deploy |

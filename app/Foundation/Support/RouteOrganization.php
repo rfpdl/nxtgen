@@ -20,7 +20,7 @@ final class RouteOrganization
      * so without this `/up` (health check, registered after the services) was answered by the church
      * wildcard. A church can never take one of these as its slug.
      */
-    public const array RESERVED = ['up', 'login', 'logout', 'home', 'magic', 'build', 'storage'];
+    public const array RESERVED = ['up', 'login', 'logout', 'home', 'magic', 'account', 'photos', 'build', 'storage'];
 
     /** The `{organization}` route pattern: a slug that is not reserved. */
     public static function pattern(): string

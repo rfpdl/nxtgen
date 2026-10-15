@@ -5,10 +5,15 @@ declare(strict_types=1);
 namespace App\Domains\Family\DataObjects;
 
 use App\Data\Models\Child;
+use Illuminate\Support\Facades\URL;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** A parent's own child, including health details (visible to staff and the child's own family only). */
+/**
+ * A parent's own child, including health details and the photo (visible to staff who can see the family and the
+ * child's own family only — never in the door search's lite view). The photo is a short-lived signed link; the
+ * photo route still checks who is asking (plan §3.3).
+ */
 #[TypeScript]
 final class ChildPortalData extends Data
 {
@@ -27,6 +32,8 @@ final class ChildPortalData extends Data
         public ?string $parentNotes,
         public ?string $group,
         public string $status,
+        public bool $photoConsent,
+        public ?string $photoUrl,
     ) {}
 
     public static function fromModel(Child $child): self
@@ -46,6 +53,9 @@ final class ChildPortalData extends Data
             parentNotes: $child->parent_notes,
             group: $child->group?->name,
             status: $child->status->label(),
+            photoConsent: $child->photo_consent_at !== null,
+            photoUrl: $child->photo_path === null ? null
+                : URL::temporarySignedRoute('photos.child', now()->addMinutes(30), ['child' => $child->id, 'v' => md5($child->photo_path)]),
         );
     }
 }

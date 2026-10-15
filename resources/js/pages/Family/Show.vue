@@ -5,6 +5,7 @@ import { Head } from '@inertiajs/vue3'
 import FlashBanner from '@/components/molecules/FlashBanner.vue'
 import FamilyChildCard from '@/components/molecules/FamilyChildCard.vue'
 import AddChildForm from '@/components/organisms/AddChildForm.vue'
+import ChildPhotoForm from '@/components/organisms/ChildPhotoForm.vue'
 import EditChildForm from '@/components/organisms/EditChildForm.vue'
 import FamilyDetailsForm from '@/components/organisms/FamilyDetailsForm.vue'
 import { useFlashMessages } from '@/composables/useFlashMessages'
@@ -63,6 +64,14 @@ const { message, dismiss } = useFlashMessages()
         <section class="flex flex-col gap-3">
             <h2 class="text-text text-2xl font-semibold">Children</h2>
             <FamilyChildCard v-for="child in family.children" :key="child.id" :child="child">
+                <ChildPhotoForm
+                    :child="child"
+                    who="parent"
+                    :action="route('family.children.photo', [church.slug, child.id])"
+                    :withdraw-action="
+                        route('family.children.photo-consent', [church.slug, child.id])
+                    "
+                />
                 <EditChildForm
                     :action="route('family.children.update', [church.slug, child.id])"
                     :child="child"

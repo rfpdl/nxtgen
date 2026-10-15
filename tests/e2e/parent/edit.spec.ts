@@ -1,24 +1,17 @@
 import { expect, test } from '@playwright/test'
-import { fillFamily } from '../support/forms'
-import { mailCount } from '../support/mailbox'
-import { openEmailedLink } from '../support/sign-in'
-import { CHURCH, SATELLITES, uniqueEmail } from '../support/world'
+import { registerAndConfirm } from '../support/forms'
+import { CHURCH, SATELLITES } from '../support/world'
 
 /*
  * A parent keeps their own details right (plan §3.2 "own family, not status/group"; review B5): the family's
  * and their own details, and a child's — including health — from the family page, on their phone.
  */
 test("a parent edits their family details and a child's health details", async ({ page }) => {
-    const email = uniqueEmail('editor')
-    const before = mailCount(email)
-    await page.goto(`/${CHURCH}/register`)
-    await fillFamily(
+    await registerAndConfirm(
         page,
-        { first: 'Mia', last: 'Cruz', email, phone: '0501110000', satellite: SATELLITES.dxb },
+        { first: 'Mia', last: 'Cruz', phone: '0501110000', satellite: SATELLITES.dxb },
         [{ first: 'Leo', last: 'Cruz', nickname: 'Leo', gender: 'boy', dob: '2018-01-15' }],
     )
-    await page.getByTestId('register-submit').click()
-    await openEmailedLink(page, email, before)
     await expect(page).toHaveURL(new RegExp(`/${CHURCH}/family`))
 
     // Family + own details: moved house, new number, now in a DGroup.

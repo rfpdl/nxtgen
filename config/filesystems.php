@@ -30,6 +30,27 @@ return [
 
     'disks' => [
 
+        /*
+         * Children's photos (plan §5): PRIVATE — never under public/, never a permanent URL. Pages show them through
+         * short-lived signed links issued after authorization. Local files by default; point PHOTOS_DISK at an S3
+         * disk (private bucket) in production.
+         */
+        'photos' => env('PHOTOS_DISK', 'local') === 's3' ? [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('PHOTOS_BUCKET'),
+            'endpoint' => env('AWS_ENDPOINT'),
+            'visibility' => 'private',
+            'throw' => true,
+        ] : [
+            'driver' => 'local',
+            'root' => storage_path('app/private/photos'),
+            'visibility' => 'private',
+            'throw' => true,
+        ],
+
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),

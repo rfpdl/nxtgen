@@ -37,6 +37,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $group_set_by
  * @property string|null $photo_path
  * @property CarbonImmutable|null $photo_consent_at
+ * @property int|null $photo_consent_by
  * @property RegistrationSourceEnum $registration_source
  * @property-read Family $family
  * @property-read Group|null $group

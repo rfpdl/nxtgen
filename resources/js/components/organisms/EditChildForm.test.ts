@@ -31,6 +31,8 @@ const child = (allergies: string | null): ChildPortal => ({
     parentNotes: null,
     group: 'Level 3 Boys',
     status: 'Active',
+    photoConsent: false,
+    photoUrl: null,
 })
 const genders = [{ value: 'boy', label: 'Boy' }]
 

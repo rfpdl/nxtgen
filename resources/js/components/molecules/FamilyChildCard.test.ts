@@ -18,6 +18,8 @@ const child = (over: Partial<ChildPortal> = {}): ChildPortal => ({
     parentNotes: null,
     group: 'Level 2 Girls',
     status: 'Active',
+    photoConsent: false,
+    photoUrl: null,
     ...over,
 })
 
@@ -79,5 +81,20 @@ describe('FamilyChildCard', () => {
         })
 
         expect(wrapper.find('button').text()).toBe('Edit')
+    })
+
+    it('shows the photo when there is one', () => {
+        const wrapper = mount(FamilyChildCard, {
+            props: { child: child({ photoUrl: '/photos/children/1?signature=x' }) },
+        })
+
+        expect(wrapper.find('[data-testid="child-photo-img"]').attributes('src')).toBe(
+            '/photos/children/1?signature=x',
+        )
+        expect(
+            mount(FamilyChildCard, { props: { child: child() } })
+                .find('[data-testid="child-photo-img"]')
+                .exists(),
+        ).toBe(false)
     })
 })

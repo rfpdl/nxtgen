@@ -1,0 +1,49 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services\Family\Features\Child;
+
+use App\Data\Models\User;
+use App\Domains\Family\Jobs\CreateChildPhotoJob;
+use App\Domains\Family\Jobs\GetFamilyChildJob;
+use App\Domains\Family\Jobs\UpdateChildPhotoConsentJob;
+use App\Enums\AccessRowEnum;
+use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Inputs\ChildPhotoInput;
+use App\Services\Family\Features\BaseFamilyFeature;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+
+/**
+ * A parent adds their child's photo (Roy 2026-10-16: take or upload). Agreeing and adding can happen together;
+ * without consent on record or in this request, nothing is stored.
+ *
+ * @extends BaseFamilyFeature<RedirectResponse>
+ */
+#[AccessRow(AccessRowEnum::OwnFamily)]
+final class AddChildPhotoFeature extends BaseFamilyFeature
+{
+    public function __construct(private readonly int $childId) {}
+
+    public function handle(ChildPhotoInput $input): RedirectResponse
+    {
+        $child = $this->run(new GetFamilyChildJob(family: $this->family(), childId: $this->childId));
+        $parent = request()->user();
+        abort_unless($parent instanceof User, 404);
+
+        if ($child->photo_consent_at === null && ! $input->consent) {
+            throw ValidationException::withMessages(['consent' => 'Please agree to the photo first.']);
+        }
+
+        DB::transaction(function () use ($child, $parent, $input): void {
+            if ($child->photo_consent_at === null) {
+                $this->run(new UpdateChildPhotoConsentJob(child: $child, parent: $parent));
+            }
+            $this->run(new CreateChildPhotoJob(child: $child, file: $input->photo));
+        });
+
+        return back()->with('success', "{$child->displayName()}'s photo is saved.");
+    }
+}

@@ -5,7 +5,8 @@ import { computed } from 'vue'
 /**
  * One child, for the child's own family and for staff who can see the family (plan §3.3: health details are
  * theirs to see). The nickname leads: it is what the child is called. Allergies stand out; the rest of the
- * health details follow only when given. The default slot holds an action (e.g. Edit).
+ * health details follow only when given. The photo, if any, is a short-lived signed link. The default slot
+ * holds actions (Edit, photo).
  */
 const props = defineProps<{ child: ChildPortal }>()
 
@@ -24,6 +25,13 @@ const health = computed(() =>
         class="border-border bg-surface flex flex-col gap-1 rounded-lg border p-4"
         data-testid="family-child"
     >
+        <img
+            v-if="child.photoUrl"
+            :src="child.photoUrl"
+            :alt="`Photo of ${child.nickname}`"
+            class="size-28 rounded-lg object-cover"
+            data-testid="child-photo-img"
+        />
         <h3 class="text-text text-xl font-semibold">{{ child.nickname }}</h3>
         <p class="text-text text-lg">
             {{ [child.firstName, child.middleName, child.lastName].filter(Boolean).join(' ') }}
