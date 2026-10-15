@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SignOutButton from '@/components/atoms/SignOutButton.vue'
 import { Head } from '@inertiajs/vue3'
 import FlashBanner from '@/components/molecules/FlashBanner.vue'
 import FamilyChildCard from '@/components/molecules/FamilyChildCard.vue'
@@ -21,7 +22,10 @@ const { message, dismiss } = useFlashMessages()
     <FlashBanner :message="message" @dismiss="dismiss" />
     <main class="mx-auto flex max-w-xl flex-col gap-6 p-6">
         <header class="flex flex-col gap-1">
-            <h1 class="text-text text-3xl font-semibold">My family</h1>
+            <div class="flex items-center justify-between gap-4">
+                <h1 class="text-text text-3xl font-semibold">My family</h1>
+                <SignOutButton />
+            </div>
             <p class="text-text text-lg">{{ church.name }} · {{ family.homeSatellite }}</p>
             <p v-if="family.area" class="text-text-muted">Lives in {{ family.area }}</p>
         </header>

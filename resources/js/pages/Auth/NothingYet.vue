@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SignOutButton from '@/components/atoms/SignOutButton.vue'
 import { Head } from '@inertiajs/vue3'
 </script>
 
@@ -10,5 +11,6 @@ import { Head } from '@inertiajs/vue3'
             You are signed in, but this email is not linked to a family or a volunteer role yet. Ask
             a Lifeshaper at church for the registration link, or for a leader to add you.
         </p>
+        <SignOutButton class="self-start" />
     </main>
 </template>

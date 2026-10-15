@@ -21,8 +21,8 @@ Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->
 
 // GET only shows a Continue button (email scanners fetch links); the POST is what uses the link.
 Route::get('/magic/{purpose}/{token}', [LinkController::class, 'confirm'])->whereIn('purpose', ['login', 'verify', 'claim'])->name('auth.magic.confirm');
-Route::post('/magic/login/{token}', [LinkController::class, 'login'])->middleware('throttle:20,1')->name('auth.magic.login');
-Route::post('/magic/verify/{token}', [LinkController::class, 'verify'])->middleware('throttle:20,1')->name('auth.magic.verify');
-Route::post('/magic/claim/{token}', [LinkController::class, 'claim'])->middleware('throttle:20,1')->name('auth.magic.claim');
+Route::post('/magic/login/{token}', [LinkController::class, 'login'])->middleware('throttle:per-device')->name('auth.magic.login');
+Route::post('/magic/verify/{token}', [LinkController::class, 'verify'])->middleware('throttle:per-device')->name('auth.magic.verify');
+Route::post('/magic/claim/{token}', [LinkController::class, 'claim'])->middleware('throttle:per-device')->name('auth.magic.claim');
 
 Route::get('/home', [LandingController::class, 'show'])->middleware('auth')->name('home');

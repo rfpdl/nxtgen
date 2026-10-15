@@ -3,7 +3,7 @@ SHELL := /bin/bash
 .PHONY: help up down fresh reseed seed migrate migrate-check \
         pint analyse test test-parallel assert-parallel-grant test-pure test-arch \
         test-fe lint format format-check typecheck discipline build \
-        check e2e e2e-ui dev coverage coverage-fe
+        check e2e e2e-ui e2e-report dev coverage coverage-fe
 
 # MySQL runs in a container; PHP and node run on the host. There is no app container, unlike palo:
 # production is Laravel Cloud, which supplies its own runtime, so a local PHP container would only be
@@ -187,8 +187,13 @@ check: pint analyse test-arch test-parallel test-fe lint format-check typecheck 
 
 # Deliberately outside `check`: it needs browsers and a server, and it runs against its own database
 # on its own port so a run never touches the working data.
-e2e: ## Playwright — mobile WebKit, mobile Chromium and desktop Chromium
-	npx playwright test
+e2e: ## Browser journeys (iPhone Safari + desktop Chrome) on the e2e database; builds assets first
+	npm run build
+	npx playwright test $(E2E_ARGS)
 
-e2e-ui: ## Playwright, interactive
+e2e-report: ## Open the last run's HTML report (each journey, steps, screenshots, video, trace)
+	npx playwright show-report playwright-report
+
+e2e-ui: ## Watch journeys run one by one (Playwright UI)
+	npm run build
 	npx playwright test --ui

@@ -3,7 +3,7 @@
 | # | Item | Why | When |
 |---|---|---|---|
 | 1 | Moving-Up for a **mixed** group (Level 1 → Level 2 Boys/Girls): `next_group_id` can't express a per-gender next group | design gap found while seeding | before Feb Moving-Up |
-| 2 | E2E harness (Playwright projects, `APP_ENV=e2e`, auth setup) | plan §10 | before Release 1 deploy |
+| 2 | ~~E2E harness~~ built: `make e2e` / `make e2e-ui` / `make e2e-report`, 4 journeys × 2 browsers | plan §10 | done 2026-10-15 |
 | 3 | Laravel Cloud project + env (D2) | Roy owns the account | before Release 1 deploy |
 | 4 | ~~D-R1~~ decided: import once, app is the source of truth (plan §7.6) | Roy 2026-10-15 | done |
 | 5 | ~~D-R2~~ decided: People screens (built). Still needed: production seeder for the church, satellites and first church admin | Roy 2026-10-15 | before deploy |
@@ -11,3 +11,7 @@
 | 7 | Claim-acceptance concurrency test (two DB connections) | review-spar | with R2 concurrency harness |
 | 8 | A church slug must never be a reserved path (`RouteOrganization::RESERVED`) — enforce when a create-church screen/command exists | Org rename | with Platform |
 | 9 | Class-admin roles (event series) in People — `canGrant` refuses them until series exist | People | R2 |
+| 10 | E2E "test map" like admin-v2 (`e2e/map/serve.mjs`): the access matrix (plan §3.2) as a page, each cell → its Pest + E2E tests, with Run buttons | Roy: admin-v2 has a good page per item | when the matrix grows (R2) |
+| 11 | More journeys: family-page edit, duplicates screen, export download, resend/correct email, check-in (R2) | e2e | with each feature |
+| 12 | E2E per breakpoint: a **tablet** project (iPad, both portrait/landscape) alongside the phones, and specs that assert layout per size (no sideways scroll, ≥44/56px targets, menu fits) — not just the same journeys at a different width | Roy 2026-10-15 | before R2 door screens |
+| 13 | E2E for link EXPIRY (2 h login / 7 d verify) — needs a controllable clock in the e2e server; Pest covers it today | review 2 | with R2 harness work |

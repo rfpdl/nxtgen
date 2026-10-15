@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { LandingOption } from '@/types'
+import SignOutButton from '@/components/atoms/SignOutButton.vue'
 import { Head, Link } from '@inertiajs/vue3'
 
 defineProps<{ options: LandingOption[] }>()
@@ -19,5 +20,6 @@ defineProps<{ options: LandingOption[] }>()
             <span class="text-text text-lg font-semibold">{{ option.label }}</span>
             <span class="text-text-muted">{{ option.churchName }}</span>
         </Link>
+        <SignOutButton class="self-start" />
     </main>
 </template>

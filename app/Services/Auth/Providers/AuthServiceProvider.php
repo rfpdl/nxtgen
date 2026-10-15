@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Auth\Providers;
 
+use App\Providers\AppServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -24,7 +25,7 @@ final class AuthServiceProvider extends ServiceProvider
 
             return [
                 Limit::perMinute(5)->by('email:'.$email),
-                Limit::perMinute(20)->by('ip:'.$request->ip()),
+                Limit::perMinute(AppServiceProvider::perDevicePerMinute())->by('ip:'.$request->ip()),
             ];
         });
     }

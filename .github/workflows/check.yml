@@ -86,8 +86,6 @@ jobs:
 
   e2e:
     name: make e2e
-    # No Playwright specs exist yet (TODO #2, review-spar). Re-enable with the first journey.
-    if: false
     runs-on: ubuntu-latest
     needs: check
 
@@ -107,20 +105,7 @@ jobs:
           --health-timeout=5s
           --health-retries=20
 
-      # Sessions live in Redis (see `.env.example`), so the e2e run needs one: every journey after
-      # the first depends on staying signed in, and `auth.setup.ts` mints eight sessions up front.
-      #
-      # 36379 to match docker-compose.yml and the tracked `.env.e2e`, rather than teaching CI a
-      # different port from every developer's machine.
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 36389:6379
-        options: >-
-          --health-cmd="redis-cli ping"
-          --health-interval=5s
-          --health-timeout=3s
-          --health-retries=20
+      # No Redis: `.env.e2e` keeps sessions, cache and rate limits in the e2e database.
 
     steps:
       - uses: actions/checkout@v4
@@ -146,16 +131,16 @@ jobs:
           php artisan key:generate
           npm run build
 
-      # Only the browsers the four projects in playwright.config.ts actually use. WebKit covers both
-      # the iPhone and the iPad projects, and it is not optional: a resized Chromium is not Mobile
-      # Safari, and the teacher surface is phone-first.
+      # The two browsers playwright.config.ts uses. WebKit is not optional: a resized Chromium is not
+      # Mobile Safari, and parents register on their phones.
       - name: Install Playwright browsers
         run: npx playwright install --with-deps webkit chromium
 
       - run: make e2e
 
+      # The HTML report (each journey, its steps; screenshots, video and trace for failures).
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
           name: playwright-report
           path: playwright-report

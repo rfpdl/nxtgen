@@ -31,5 +31,5 @@ Route::put('/families/{family}/email', [FamilyController::class, 'correctEmail']
 Route::put('/children/{child}/status', [ChildController::class, 'updateStatus'])->whereNumber('child')->name('org.children.status');
 
 Route::get('/people', [PeopleController::class, 'index'])->name('org.people.index');
-Route::post('/people', [PeopleController::class, 'store'])->middleware('throttle:20,1')->name('org.people.store');
+Route::post('/people', [PeopleController::class, 'store'])->middleware('throttle:per-device')->name('org.people.store');
 Route::delete('/people/roles/{assignment}', [PeopleController::class, 'removeRole'])->whereNumber('assignment')->name('org.people.roles.destroy');

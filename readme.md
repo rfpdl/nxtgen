@@ -27,3 +27,14 @@ open http://localhost:8026.
 make check    # pint, larastan level 10, architecture guards, pest, vitest, eslint, vue-tsc, prettier, build,
               # migrations from zero (test DB only — never touches your working data)
 ```
+
+## Browser tests (E2E)
+
+```bash
+make e2e          # every journey on iPhone Safari, Android Chrome and desktop Chrome (own database, nxtgen_e2e)
+make e2e-ui       # watch each journey run, one by one
+make e2e-report   # the last run's report: each journey, its steps; screenshot, video and trace for failures
+```
+
+They sign in the way people do — by opening the emailed link (copied to `storage/app/e2e/mailbox.jsonl` under
+`APP_ENV=e2e` only). First time: `npx playwright install webkit chromium`.

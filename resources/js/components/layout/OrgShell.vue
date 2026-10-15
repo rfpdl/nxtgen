@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SignOutButton from '@/components/atoms/SignOutButton.vue'
 import FlashBanner from '@/components/molecules/FlashBanner.vue'
 import { useFlashMessages } from '@/composables/useFlashMessages'
 import type { SharedProps } from '@/types'
@@ -35,14 +36,7 @@ const canManagePeople = computed(() => page.props.orgNav?.canManagePeople === tr
                     class="min-h-touch text-text flex items-center underline-offset-4 hover:underline"
                     >People</Link
                 >
-                <Link
-                    :href="route('logout')"
-                    method="post"
-                    as="button"
-                    class="min-h-touch text-text-muted ml-auto flex items-center"
-                    data-testid="sign-out"
-                    >Sign out</Link
-                >
+                <SignOutButton class="ml-auto" />
             </nav>
         </header>
         <FlashBanner :message="message" @dismiss="dismiss" />

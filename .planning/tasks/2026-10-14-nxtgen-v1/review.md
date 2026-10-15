@@ -144,3 +144,49 @@ matrix-row arch test · decisions log.
 - Claim recheck under lock is untested by any sequential test — **becomes testable** when a concurrency harness
   (two DB connections) is added for check-in in Release 2; add the claim case then.
 - Mixed group → per-gender next group (TODO #1) — **before Feb Moving-Up**.
+
+---
+
+# Review 2 — Org rename, People, E2E harness (PAUSED)
+
+**Status:** paused at Roy's request ("start doing the e2e… hard part later") · **Date:** 2026-10-15 ·
+**Reviewed:** `7fe14cd` + uncommitted E2E harness. Codex rounds NOT yet run — resume with Phase 5.
+
+## Intent ledger (so far)
+
+| # | Commitment | Source | Status |
+|---|---|---|---|
+| 1 | Admin → Org, no `/admin` in URLs | Roy chat | DONE — `OrgRoutingTest` |
+| 2 | Fixed top-level paths reserved from the church wildcard | plan §2 | DONE — revert fails `OrgRoutingTest` |
+| 3 | Staff register at `/{church}/families/new`; public stays `/{church}/register` | Roy chat / plan §2 | DONE |
+| 4 | People: church admin sees all, satellite admin own satellite, Lifeshaper none | plan §6, D-R2 | DONE — revert-checked |
+| 5 | Existing login (parent) gains the role, no second account | plan §4, D-R2 | DONE — revert fails 3 |
+| 6 | Grant ceiling (add AND remove) | plan §3.2 | DONE for admin/Lifeshaper; **PARTIAL** class-admin (R2, TODO #9) |
+| 7 | Invite = sign-in link naming the role (2 h) | D-R2, Roy 2 h | DONE |
+| 8 | Never remove the last church admin (under lock) | plan §6 | DONE — revert-checked |
+| 9 | People menu for admins only | build | DONE — revert-checked |
+| 10 | Every Feature declares its matrix row (arch test); matrix rows × 7 actor kinds | plan §3.2/§10 | **MISSING** (on the R1 remaining list) |
+| 11 | Church + first admin come from a seeder in R1 | plan §6 | **MISSING** — only DemoChurchSeeder (password "password", platform admin) — TODO #5 |
+| 12 | Import one-off, rerun skips | plan §7.6 / D-R1 | DONE (built that way before the decision) |
+| 13 | `make e2e` on mobile-webkit, **mobile-chromium**, desktop-chromium | plan §10 | **PARTIAL** — mobile-chromium dropped → fixed now |
+| 14 | E2E never touches working data | build docblocks | **PARTIAL** — missing `.env.e2e` falls back to `.env`; the provider backstop never boots → fixed now |
+| 15 | R1 exit: "staff registers with unconfirmed email **and resends**"; "returning imported parent told already registered" | plan §12 | **MISSING in e2e** → being added |
+| 16 | E2E complete for what is built | Roy | **PARTIAL** — 13 of 28 routes had no journey → being added |
+
+## Found so far (to fix / log)
+- E2E code not linted by `make check` (`lint` = resources/js only) → fix now.
+- README has no e2e section → fix now.
+- AddStaff reveals the account name for an existing email ("Pia Parent is now …") — admin-only, minor → SECURITY.md.
+
+## Progress while paused (2026-10-15)
+- Rows 13, 14, 15, 16 → **DONE**: mobile-chromium added; global setup asks Laravel which DB `--env=e2e` reaches and
+  refuses unless `*_e2e` (proven by hiding `.env.e2e`: the run refuses to start); journeys added for resend,
+  already-registered, claim + Choose, NothingYet, sign-out, used link, Org family page, correct email, child status,
+  unconfirmed filter, Excel download, welcome. **29 runs green, twice.**
+- E2E found a product gap: **parents could not sign out** (only the staff menu had it) → `SignOutButton` atom on
+  the family page, Choose, NothingYet and OrgShell (one owner).
+- Per-device limits now come from `config/nxtgen.php` (20 in production; `.env.e2e` raises it — three browsers on
+  one machine are one IP). Per-email limits unchanged. `RateLimitTest`.
+- Lint + README fixed. Still no e2e: parent child edit (route exists, **no UI** — R1 remaining list), link EXPIRY
+  (needs a clock; the used-link path is covered).
+- **Next:** resume Phase 5 (Codex rounds A and B) over 7fe14cd + this working tree.

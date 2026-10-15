@@ -117,8 +117,10 @@ describe('adding someone', function (): void {
         ['htc' => $htc, 'admin' => $admin] = peopleChurch();
         $parent = User::factory()->create(['name' => 'Pia Parent', 'email' => 'pia@example.com']);
 
+        // The reply names the email the admin typed, never the account's own name (SECURITY #16).
         actingAs($admin)->post('/ccf/people', addPerson('pia@example.com', RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id, 'Typed Differently'))
-            ->assertRedirect()->assertSessionHas('success');
+            ->assertRedirect()
+            ->assertSessionHas('success', fn (string $reply): bool => str_contains($reply, 'pia@example.com') && ! str_contains($reply, 'Pia Parent'));
 
         expect(User::query()->where('email', 'pia@example.com')->count())->toBe(1)
             ->and($parent->fresh()?->name)->toBe('Pia Parent')
@@ -131,8 +133,8 @@ describe('adding someone', function (): void {
         $leo = peopleStaff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id);
 
         actingAs($admin)->post('/ccf/people', addPerson($leo->email, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id))
-            ->assertRedirect()->assertSessionHas('error');
-
+            ->assertRedirect()
+            ->assertSessionHas('error', fn (string $reply): bool => str_contains($reply, $leo->email) && ! str_contains($reply, $leo->name));
         expect(RoleAssignment::query()->where('user_id', $leo->id)->count())->toBe(1);
         Notification::assertNothingSent();
     });

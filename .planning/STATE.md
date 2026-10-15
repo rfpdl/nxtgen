@@ -60,3 +60,15 @@
   remove (kept for record; never the last church admin, counted under lock). Menu link via shared `orgNav`.
   Revert-checked: ceiling and last-admin guard.
 - **Gate:** `make check` green — 184 Pest (+25 arch), 62 Vitest, PHPStan level 10.
+- **E2E (2026-10-15):** Playwright on its own DB (`nxtgen_e2e`, `.env.e2e`) and port 3021; `/__e2e/health` must answer
+  before a run (only an e2e server does). Sign-in through real email links: under APP_ENV=e2e every email is copied
+  to `storage/app/e2e/mailbox.jsonl` (E2EServiceProvider). Staff sign in once (`auth.setup.ts`). Journeys:
+  parent registers → confirms → family page → adds child; returning parent sign-in; Lifeshaper search-first add
+  child / register; admin adds Lifeshaper → invite → sign in → role removed → 404; satellite-admin scope.
+  iPhone Safari + desktop Chrome: **17 passed**. Revert-checked (grant ceiling). CI e2e job switched on.
+  `E2EWorldTest` keeps `world.ts` and E2ESeeder in step.
+- **E2E complete for built pages (2026-10-15):** 29 runs (iPhone Safari, Android Chrome, desktop Chrome), green twice.
+  Added: already-registered, claim + Choose, NothingYet, sign-out, used link, resend, correct email, status, filter,
+  export, welcome. Fixed: parents had no sign-out (SignOutButton); per-device limit configurable (e2e only raised);
+  e2e DB guard. Not e2e-able yet: parent child edit (no UI), link expiry. Review 2 paused — Codex rounds pending.
+- **Gate:** `make check` green — 192 Pest (incl. 25 arch), 63 Vitest, PHPStan level 10.

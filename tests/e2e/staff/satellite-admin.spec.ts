@@ -1,0 +1,50 @@
+import { expect, test } from '@playwright/test'
+import { CHURCH, FAMILIES, sessionFile } from '../support/world'
+
+/*
+ * Journey 4 — scope. A House Church admin sees House Church families and not CCF DXB ones, cannot open a
+ * DXB family by guessing its address, and can only give the Lifeshaper role in House Church.
+ */
+test.use({ storageState: sessionFile('houseAdmin') })
+
+test('a satellite admin sees only their own satellite', async ({ page, browser }) => {
+    await page.goto(`/${CHURCH}/families`)
+    await expect(
+        page.getByTestId('family-row').filter({ hasText: FAMILIES.house.parent }),
+    ).toBeVisible()
+    await expect(
+        page.getByTestId('family-row').filter({ hasText: FAMILIES.dxb.parent }),
+    ).toHaveCount(0)
+
+    // The church admin can see the DXB family's address; the satellite admin typing it gets nothing.
+    const admin = await browser.newContext({ storageState: sessionFile('churchAdmin') })
+    const adminPage = await admin.newPage()
+    await adminPage.goto(`/${CHURCH}/families`)
+    const href = await adminPage
+        .getByTestId('family-row')
+        .filter({ hasText: FAMILIES.dxb.parent })
+        .getByRole('link')
+        .getAttribute('href')
+    await admin.close()
+    expect(href).toMatch(/\/families\/\d+$/)
+
+    const response = await page.goto(href!)
+    expect(response?.status()).toBe(404)
+})
+
+test('a satellite admin can only add Lifeshapers to their own satellite', async ({ page }) => {
+    await page.goto(`/${CHURCH}/people`)
+
+    const choices = await page.getByTestId('staff-role').locator('option').allTextContents()
+    expect(choices.map((c) => c.trim())).toEqual(['Lifeshaper · House Church'])
+})
+
+test('a Lifeshaper does not get the People page', async ({ browser }) => {
+    const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
+    const page = await lifeshaper.newPage()
+    await page.goto(`/${CHURCH}/families`)
+    await expect(page.getByRole('link', { name: 'People' })).toHaveCount(0)
+    const response = await page.goto(`/${CHURCH}/people`)
+    expect(response?.status()).toBe(404)
+    await lifeshaper.close()
+})

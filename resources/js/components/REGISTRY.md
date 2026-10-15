@@ -15,3 +15,4 @@ fails when one is missing. Reuse before you build: search this list first.
 | FamilySearchResultCard | molecule | A church-wide "already registered?" hit: masked email, satellite, add-a-child                  |
 | StaffMemberCard        | molecule | One person who serves, with their roles; Remove only where the viewer may                      |
 | AddStaffForm           | organism | "Add someone": name, email, one role from the server's allowed choices                         |
+| SignOutButton          | atom     | "Sign out" (POST /logout) for every signed-in page: staff menu, family page, landing pages     |

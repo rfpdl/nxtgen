@@ -19,4 +19,5 @@ Items here are known and tracked; none blocks a release unless marked **must**.
 | 12 | Public registration gives one answer for every outcome (no membership oracle) | done | diff review r6 |
 | 13 | Recipient-level limit on link emails across all paths | done | diff review r4 |
 | 14 | Staff search shows masked emails and no phones/health to Lifeshapers outside their satellite | done | plan §3.3 |
-| 15 | Codex diff review not signed off after 6 rounds — another pass before production | **open** | spar.md |
+| 15 | Codex diff review not signed off after 6 rounds — another pass before production | done — review-spar round A4 approves (`review-spar.md`) | spar.md |
+| 16 | People "Add someone" shows the existing account's NAME for a known email (typed name ignored) — tells an admin who owns an email. Admin-only, low. Fixed: replies name the typed email. (Once added, the person appears on People with their name — that is the point of the list.) | done | review 2 |
