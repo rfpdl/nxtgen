@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import SignOutButton from '@/components/atoms/SignOutButton.vue'
+import SwitchLink from '@/components/atoms/SwitchLink.vue'
 import FlashBanner from '@/components/molecules/FlashBanner.vue'
 import { useFlashMessages } from '@/composables/useFlashMessages'
 import type { SharedProps } from '@/types'
@@ -32,6 +33,11 @@ const canReviewDuplicates = computed(() => page.props.orgNav?.canReviewDuplicate
                     >Register a family</Link
                 >
                 <Link
+                    :href="route('org.poster', church.slug)"
+                    class="min-h-touch text-text flex items-center underline-offset-4 hover:underline"
+                    >QR poster</Link
+                >
+                <Link
                     v-if="canReviewDuplicates"
                     :href="route('org.duplicates.index', church.slug)"
                     class="min-h-touch text-text flex items-center underline-offset-4 hover:underline"
@@ -43,7 +49,14 @@ const canReviewDuplicates = computed(() => page.props.orgNav?.canReviewDuplicate
                     class="min-h-touch text-text flex items-center underline-offset-4 hover:underline"
                     >People</Link
                 >
-                <SignOutButton class="ml-auto" />
+                <Link
+                    href="/account/password"
+                    class="min-h-touch text-text-muted ml-auto flex items-center underline-offset-4 hover:underline"
+                    data-testid="backup-password"
+                    >Password</Link
+                >
+                <SwitchLink />
+                <SignOutButton />
             </nav>
         </header>
         <FlashBanner :message="message" @dismiss="dismiss" />

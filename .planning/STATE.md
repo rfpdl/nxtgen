@@ -92,3 +92,14 @@
     with reasons) and `AccessRowTest` (every Org/Family Feature declares its matrix row) — both proven by removal.
   - `docs/DECISIONS.md` started.
   - Gate: 237 Pest (incl. 31 arch), 87 Vitest, PHPStan L10; E2E 34 runs green.
+- **R1 build, after 78e9cdd (2026-10-15):**
+  - Remembered landing (plan §4.5): POST /home/choice remembers My family / Serve on the device (cookie, honoured
+    only while still an option, exact match — no off-site redirect, revert-checked); "Switch" link when there is
+    more than one place to go (`auth.canSwitch`).
+  - Staff backup password (D7): /account/password for anyone serving somewhere; "Use a password instead" on sign-in;
+    works only while they serve (parents never), one answer for every failure, 5 tries/min per email; revert-checked.
+  - QR poster: /{church}/poster (any staff), server-drawn SVG QR (bacon/bacon-qr-code) of the registration URL.
+  - Sentry wired (sentry/sentry-laravel), OFF until SENTRY_LARAVEL_DSN is set; `send_default_pii` false (not from
+    .env); `SentryScrubber` before_send strips request body/query/cookies/headers, login email/name/IP, breadcrumb
+    data, extras — unit-tested.
+  - Gate: 262 Pest (incl. 31 arch), 90 Vitest, PHPStan L10; E2E 38 runs green.

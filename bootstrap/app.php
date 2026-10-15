@@ -7,6 +7,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Sentry\Laravel\Integration;
 use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -26,6 +27,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Errors to Sentry when SENTRY_LARAVEL_DSN is set (off otherwise), scrubbed of personal data first.
+        Integration::handles($exceptions);
+
         // An expired CSRF token on a long-open phone screen: say so in words, not a 419 page.
         $exceptions->respond(function (Response $response): Response {
             if ($response->getStatusCode() !== 419) {

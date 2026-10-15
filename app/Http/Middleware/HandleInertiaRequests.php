@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Data\Models\User;
+use App\Domains\Organization\Jobs\GetLandingOptionsJob;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -33,6 +34,8 @@ final class HandleInertiaRequests extends Middleware
                     'id' => $user->id,
                     'name' => $user->name,
                 ] : null,
+                // More than one place to go (a parent who serves, or two churches) → the "Switch" link.
+                'canSwitch' => fn (): bool => $user instanceof User && count((new GetLandingOptionsJob(user: $user))->handle()) > 1,
             ],
 
             'flash' => [

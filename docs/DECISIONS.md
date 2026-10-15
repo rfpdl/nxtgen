@@ -6,6 +6,11 @@ describes the design; this records the choices that shaped or changed it.
 
 ## 2026-10-15
 
+- **Error reports never carry personal data**: Sentry's `send_default_pii` is hard-coded false (not an .env switch)
+  and every event goes through `SentryScrubber`. Sentry stays off until a DSN is set.
+- **Staff backup password works only while someone serves**; parents sign in by email link only (plan D7).
+- **The landing choice is remembered per device** (cookie) and only ever sends someone to one of their own pages.
+
 - **E2E on every built screen, three browsers** (Roy: "it's important"). iPhone Safari, Android Chrome, desktop
   Chrome, on their own database. Sign-in is tested through the real emailed link. Tablet/breakpoint layouts are
   a TODO (#12).

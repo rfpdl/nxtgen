@@ -17,6 +17,7 @@ use App\Services\Org\Http\Controllers\Duplicate\Controller as DuplicateControlle
 use App\Services\Org\Http\Controllers\Family\Controller as FamilyController;
 use App\Services\Org\Http\Controllers\Home\Controller as HomeController;
 use App\Services\Org\Http\Controllers\People\Controller as PeopleController;
+use App\Services\Org\Http\Controllers\Poster\Controller as PosterController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'show'])->name('org.home');
@@ -39,3 +40,5 @@ Route::delete('/people/roles/{assignment}', [PeopleController::class, 'removeRol
 
 Route::get('/duplicates', [DuplicateController::class, 'index'])->name('org.duplicates.index');
 Route::put('/duplicates/{pair}', [DuplicateController::class, 'resolve'])->whereNumber('pair')->name('org.duplicates.resolve');
+
+Route::get('/poster', [PosterController::class, 'show'])->name('org.poster');

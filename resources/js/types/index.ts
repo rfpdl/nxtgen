@@ -3,7 +3,7 @@
  * alias them here so components import from one place.
  */
 export type SharedProps = {
-    auth: { user: { id: number; name: string } | null }
+    auth: { user: { id: number; name: string } | null; canSwitch?: boolean }
     flash: { success?: string | null; error?: string | null }
     /** Shared on church staff pages only (RequireAssignment). */
     orgNav?: { canManagePeople: boolean; canReviewDuplicates: boolean }

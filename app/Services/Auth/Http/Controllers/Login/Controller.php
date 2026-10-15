@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Auth\Http\Controllers\Login;
 
 use App\Services\Auth\Features\Login\LogoutFeature;
+use App\Services\Auth\Features\Login\PasswordLoginFeature;
 use App\Services\Auth\Features\Login\RequestMagicLinkFeature;
 use App\Services\Auth\Features\Login\ShowLoginFeature;
 use Illuminate\Http\RedirectResponse;
@@ -20,6 +21,11 @@ final class Controller extends \Lucid\Units\Controller
     public function requestLink(): RedirectResponse
     {
         return $this->serve(RequestMagicLinkFeature::class);
+    }
+
+    public function password(): RedirectResponse
+    {
+        return $this->serve(PasswordLoginFeature::class);
     }
 
     public function logout(): RedirectResponse

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3'
 import FlashBanner from '@/components/molecules/FlashBanner.vue'
+import PasswordLoginForm from '@/components/organisms/PasswordLoginForm.vue'
 import { useFlashMessages } from '@/composables/useFlashMessages'
 import { route } from 'ziggy-js'
 
@@ -44,5 +45,6 @@ function submit(): void {
                 Email me a link
             </button>
         </form>
+        <PasswordLoginForm :action="route('auth.password.login')" />
     </main>
 </template>

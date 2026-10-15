@@ -3,6 +3,7 @@ import type { LandingOption } from '@/types'
 import SignOutButton from '@/components/atoms/SignOutButton.vue'
 import { Head, Link } from '@inertiajs/vue3'
 
+/** One login, more than one place: pick one. The pick is remembered on this device (POST /home/choice). */
 defineProps<{ options: LandingOption[] }>()
 </script>
 
@@ -13,7 +14,10 @@ defineProps<{ options: LandingOption[] }>()
         <Link
             v-for="option in options"
             :key="option.url"
-            :href="option.url"
+            href="/home/choice"
+            method="post"
+            as="button"
+            :data="{ url: option.url }"
             data-testid="landing-option"
             class="min-h-touch border-border bg-surface flex flex-col justify-center rounded-md border px-4 py-3"
         >

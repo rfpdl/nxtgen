@@ -95,7 +95,14 @@ test('a Lifeshaper who registers their own family can reach both, from one login
     await page.getByTestId('landing-option').filter({ hasText: 'My family' }).click()
     await expect(page.getByTestId('family-child')).toContainText('Kai')
 
+    // The choice is remembered: signing in again goes straight to the family page…
     await page.goto('/home')
+    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/family`))
+
+    // …and "Switch" asks again.
+    await page.getByTestId('switch-place').click()
     await page.getByTestId('landing-option').filter({ hasText: 'Serve' }).click()
+    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/families`))
+    await page.goto('/home')
     await expect(page).toHaveURL(new RegExp(`/${CHURCH}/families`))
 })

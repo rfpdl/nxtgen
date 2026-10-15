@@ -136,7 +136,7 @@ and who adds them — you, or church admins themselves?
 
 ~~Family-page edit UI + guardian/family edit + full health display (B5)~~ done · ~~registration form field parity + explicit
 allergy yes/no (B6)~~ done · ~~duplicate review screen, list search/filters, system notes (B7)~~ done · ~~Playwright journeys (B8)~~ done ·
-QR poster, staff password backup, remembered landing choice (B9) · photo + consent · Sentry · ~~`TenancyArchTest` +
+~~QR poster, staff password backup, remembered landing choice (B9)~~ done · photo + consent (**needs Roy**) · ~~Sentry~~ wired, needs DSN · ~~`TenancyArchTest` +
 matrix-row arch test~~ done · ~~decisions log~~ done (`docs/DECISIONS.md`).
 
 ### Logged (with trigger)

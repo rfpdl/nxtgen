@@ -85,3 +85,61 @@ it('ignores a revoked role', function (): void {
 
     actingAs($user)->get('/home')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p->component('Auth/NothingYet'));
 });
+
+/*
+ * "Both → one-time choice, remembered, switchable from the menu" (plan §4.5). Remembered on this device, honoured
+ * only while it is still one of the person's options, and never a way to send someone off-site.
+ */
+describe('remembering the choice', function (): void {
+    /** @return array{0: User, 1: Organization} */
+    function bothHats(): array
+    {
+        $org = Organization::factory()->create(['slug' => 'ccf']);
+        $user = User::factory()->create();
+        parentIn($org, $user);
+        staffIn($org, $user);
+
+        return [$user, $org];
+    }
+
+    it('goes where they chose, and remembers it', function (): void {
+        [$user] = bothHats();
+
+        $response = actingAs($user)->post('/home/choice', ['url' => '/ccf/family']);
+
+        $response->assertRedirect('/ccf/family')->assertCookie('nxtgen_landing', '/ccf/family');
+        actingAs($user)->withCookie('nxtgen_landing', '/ccf/family')->get('/home')->assertRedirect('/ccf/family');
+    });
+
+    it('asks again when they want to switch', function (): void {
+        [$user] = bothHats();
+
+        actingAs($user)->withCookie('nxtgen_landing', '/ccf/family')->get('/home?choose=1')
+            ->assertOk()->assertInertia(fn (AssertableInertia $p) => $p->component('Auth/Choose'));
+    });
+
+    it('forgets a choice that is no longer theirs', function (): void {
+        [$user] = bothHats();
+        RoleAssignment::query()->where('user_id', $user->id)->update(['is_active' => false]);
+
+        // Only "My family" is left, so they go there whatever the cookie says.
+        actingAs($user)->withCookie('nxtgen_landing', '/ccf')->get('/home')->assertRedirect('/ccf/family');
+    });
+
+    it('refuses a choice that is not one of their options — no sending people off-site', function (string $url): void {
+        [$user] = bothHats();
+
+        actingAs($user)->post('/home/choice', ['url' => $url])->assertNotFound();
+        actingAs($user)->withCookie('nxtgen_landing', $url)->get('/home')
+            ->assertOk()->assertInertia(fn (AssertableInertia $p) => $p->component('Auth/Choose'));
+    })->with(['https://evil.example/phish', '//evil.example', '/other/family']);
+
+    it('tells the pages when there is more than one place to go, for the Switch link', function (): void {
+        [$user] = bothHats();
+        $parentOnly = User::factory()->create();
+        parentIn(Organization::query()->where('slug', 'ccf')->firstOrFail(), $parentOnly);
+
+        actingAs($user)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('auth.canSwitch', true));
+        actingAs($parentOnly)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('auth.canSwitch', false));
+    });
+});

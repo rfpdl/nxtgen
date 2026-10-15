@@ -20,6 +20,16 @@ final class AuthServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Per email AND per IP: one address cannot be flooded, and one device cannot spray addresses.
+        // Backup-password guessing: per email AND per device.
+        RateLimiter::for('password-login', function (Request $request): array {
+            $email = $request->string('email')->trim()->lower()->value();
+
+            return [
+                Limit::perMinute(5)->by('password:'.$email),
+                Limit::perMinute(AppServiceProvider::perDevicePerMinute())->by('password-ip:'.$request->ip()),
+            ];
+        });
+
         RateLimiter::for('magic-link', function (Request $request): array {
             $email = $request->string('email')->trim()->lower()->value();
 

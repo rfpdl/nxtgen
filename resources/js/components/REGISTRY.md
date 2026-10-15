@@ -21,3 +21,5 @@ fails when one is missing. Reuse before you build: search this list first.
 | FamilyDetailsForm      | organism | "Edit family details": FamilyFieldset + GuardianFieldset (no email), PUT to the given action            |
 | EditChildForm          | organism | "Edit {child}'s details": ChildFieldset from what is saved, PUT to the given action; never status/group |
 | FamilyListFilters      | molecule | Registration list search + satellite/status/group/unconfirmed/duplicate filters; emits address params   |
+| SwitchLink             | atom     | "Switch" between My family / Serve (or churches): only when there is more than one place to go          |
+| PasswordLoginForm      | organism | "Use a password instead" on sign-in: the staff backup, collapsed by default                             |

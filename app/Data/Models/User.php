@@ -46,7 +46,7 @@ final class User extends Authenticatable
      *
      * @var array<string, mixed>
      */
-    protected $attributes = ['credential_version' => 1, 'remember_token' => null];
+    protected $attributes = ['credential_version' => 1, 'remember_token' => null, 'is_platform_admin' => false];
 
     /** @var list<string> */
     protected $hidden = [

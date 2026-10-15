@@ -37,6 +37,7 @@ function crossChurchOnPurpose(): array
         'GetUserIsFamilyOnlyJob.php — RoleAssignment' => 'Same question: a staff role in ANY church means the login is not family-only.',
         'GetLandingOptionsJob.php — Guardian' => 'After sign-in: which churches is this login a parent in? The answer is a list of churches (plan §4.5).',
         'GetLandingOptionsJob.php — RoleAssignment' => 'After sign-in: which churches does this login serve in?',
+        'GetUserIsStaffJob.php — RoleAssignment' => 'Backup password (plan D7): does this login serve in ANY church right now? Parents never get one.',
     ];
 }
 

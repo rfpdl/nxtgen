@@ -64,3 +64,20 @@ test('registers a new family for a parent who is not found', async ({ page }) =>
         page.getByTestId('family-row').filter({ hasText: `Rosa ${surname}` }),
     ).toContainText('Email not confirmed')
 })
+
+test('prints the registration poster, whose address opens the form', async ({ page }) => {
+    await page.goto(`/${CHURCH}/families`)
+    await page.getByRole('link', { name: 'QR poster' }).click()
+
+    const qr = page.getByTestId('poster-qr')
+    await expect(qr).toBeVisible()
+    // The QR image really rendered (not a broken image).
+    expect(await qr.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(
+        true,
+    )
+
+    const address = (await page.getByTestId('poster-url').textContent())?.trim() ?? ''
+    expect(address).toMatch(new RegExp(`/${CHURCH}/register$`))
+    await page.goto(new URL(address).pathname)
+    await expect(page.getByRole('heading', { name: 'Register your family' })).toBeVisible()
+})

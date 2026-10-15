@@ -3,7 +3,11 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
 const page = {
-    props: { flash: {}, orgNav: { canManagePeople: false, canReviewDuplicates: false } },
+    props: {
+        flash: {},
+        auth: { user: null, canSwitch: false },
+        orgNav: { canManagePeople: false, canReviewDuplicates: false },
+    },
 }
 
 vi.mock('@inertiajs/vue3', () => ({
