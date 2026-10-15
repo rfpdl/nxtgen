@@ -7,6 +7,9 @@ const post = vi.fn()
 const del = vi.fn()
 let form: Record<string, unknown>
 
+// The conversion has its own tests (photoForUpload.test.ts); here the file passes straight through.
+vi.mock('@/lib/photoForUpload', () => ({ photoForUpload: async (f: File) => f }))
+
 vi.mock('@inertiajs/vue3', async () => {
     const { reactive } = await import('vue')
     return {
@@ -44,6 +47,7 @@ async function pick(wrapper: ReturnType<typeof mount>, testid: string): Promise<
     const input = wrapper.find(`[data-testid="${testid}"]`)
     Object.defineProperty(input.element, 'files', { value: [photo] })
     await input.trigger('change')
+    await new Promise((r) => setTimeout(r, 0))
 }
 
 describe('ChildPhotoForm', () => {

@@ -17,4 +17,4 @@
 | 13 | E2E for link EXPIRY (2 h login / 7 d verify) — needs a controllable clock in the e2e server; Pest covers it today | review 2 | with R2 harness work |
 | 14 | ~~Sentry DSN~~ — Roy: keep off for now | Roy 2026-10-16 | later |
 | 15 | Photo + consent built (Roy: parent or Lifeshaper, take or upload). **Roy to confirm:** consent wording; production private bucket (PHOTOS_DISK=s3) | Roy 2026-10-16 | before deploy |
-| 16 | iPhone HEIC photos: Safari converts camera shots to JPEG on upload, but a HEIC chosen from Files may be refused ('Please choose a photo (JPG, PNG or WebP)') — check on a real iPhone | photo | before deploy |
+| 16 | iPhone HEIC: now converted to JPEG on the phone before upload (`lib/photoForUpload`). Still try once on a real iPhone (camera + Photos + Files) | photo | before deploy |

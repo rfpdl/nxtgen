@@ -9,7 +9,8 @@ describes the design; this records the choices that shaped or changed it.
 - **Photos: a parent or a Lifeshaper can take or upload a child's photo** (Roy) — only after the PARENT agrees;
   staff can never agree for them. The parent can take consent back, which deletes the photo. Photos are private
   (signed 30-minute links, checked against who is asking), re-encoded on upload (upright, 600px, no location or
-  camera data). *For Roy to confirm:* the consent wording on the family page, and the production bucket.
+  camera data). Consent wording approved by Roy. Photos are converted to an upright ~1600px JPEG ON THE PHONE before upload
+  (iPhone HEIC included; much smaller uploads on church wifi); the server still re-processes every photo.
 - **Production starts with one satellite, "CCF Dxb"** (Roy). More can be added in `NXTGEN_SATELLITES`.
 - **Sentry stays off** for now (Roy).
 

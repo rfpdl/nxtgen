@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { photoForUpload } from '@/lib/photoForUpload'
 import type { ChildPortal } from '@/types'
 import { router, useForm } from '@inertiajs/vue3'
 import { ref } from 'vue'
@@ -18,10 +19,11 @@ const props = defineProps<{
 const agreed = ref(props.child.photoConsent)
 const form = useForm<{ photo: File | null; consent: boolean }>({ photo: null, consent: false })
 
-function send(event: Event): void {
+async function send(event: Event): Promise<void> {
     const file = (event.target as HTMLInputElement).files?.[0]
     if (file === undefined) return
-    form.photo = file
+    // iPhone HEIC → JPEG, upright and small, before it leaves the phone.
+    form.photo = await photoForUpload(file)
     form.consent = props.who === 'parent' && agreed.value
     form.post(props.action, {
         forceFormData: true,
@@ -60,6 +62,7 @@ const button =
             >
         </label>
         <div v-if="agreed || child.photoConsent" class="flex flex-wrap gap-3">
+            <!-- `image/*` (not a list of types) so iPhones offer every photo, HEIC included. -->
             <label :class="button">
                 {{ child.photoUrl ? 'Take a new photo' : 'Take a photo' }}
                 <input
