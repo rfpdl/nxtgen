@@ -9,22 +9,26 @@
 >
     <testsuites>
         <!--
-            Pure: no database, no booted application. Value objects
-            and enum methods live here and should finish in milliseconds. If this
-            suite ever slows down, something in it has reached for the framework.
+            Unit: no database, no booted application. Value objects and enum methods live here and
+            should finish in milliseconds. If this suite ever slows down, something in it has reached
+            for the framework.
         -->
-        <testsuite name="Pure">
+        <testsuite name="Unit">
             <directory>tests/Unit</directory>
+        </testsuite>
+
+        <!-- Feature: HTTP tests per service in tests/Feature/Services/<Service>; operations, schema, seeders beside them. -->
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+
+        <!-- Domain: each Job's own tests, colocated at app/Domains/<Domain>/Tests/Jobs (aegis). -->
+        <testsuite name="Domain">
+            <directory>app/Domains/*/Tests</directory>
         </testsuite>
 
         <testsuite name="Architecture">
             <directory>tests/Architecture</directory>
-        </testsuite>
-
-        <testsuite name="Feature">
-            <directory>tests/Feature</directory>
-            <directory>app/Services/*/Tests</directory>
-            <directory>app/Domains/*/Tests</directory>
         </testsuite>
     </testsuites>
 

@@ -10,13 +10,14 @@ use Tests\TestCase;
 // composer `files` entry per file, which is the same list somewhere less obvious.
 require_once __DIR__.'/Support/InertiaHelpers.php';
 require_once __DIR__.'/Support/FormPayloads.php';
+require_once __DIR__.'/Support/World.php';
 
 /*
 |--------------------------------------------------------------------------
 | Test case binding
 |--------------------------------------------------------------------------
 |
-| `tests/Unit` gets NO application and NO database — see the "Pure" testsuite in
+| `tests/Unit` gets NO application and NO database — see the "Unit" testsuite in
 | phpunit.xml. Anything that needs either belongs in Feature.
 |
 | Helpers live in `tests/Support/*.php` under the `Tests\Support` namespace and
@@ -34,6 +35,6 @@ require_once __DIR__.'/Support/FormPayloads.php';
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
-    ->in('Feature', '../app/Services', '../app/Domains');
+    ->in('Feature', '../app/Domains');
 
 pest()->extend(TestCase::class)->in('Architecture');

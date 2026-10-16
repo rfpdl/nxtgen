@@ -5,46 +5,42 @@ declare(strict_types=1);
 use App\Data\Models\Branch;
 use App\Data\Models\Family;
 use App\Data\Models\Organization;
-use App\Data\Models\RoleAssignment;
 use App\Data\Models\User;
 use App\Domains\Organization\Jobs\GetAccessScopeJob;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
+
+use function Tests\Support\atChurch;
+use function Tests\Support\atSatellite;
+use function Tests\Support\church;
+use function Tests\Support\familyAt;
+use function Tests\Support\grantRole;
+use function Tests\Support\satelliteOf;
 
 /*
  * The access matrix (plan §3.2), one rule per test. AccessScope is the ONE owner of these answers;
  * Features ask it and never compare roles themselves.
  */
 
-function grant(User $user, Organization $org, RoleEnum $role, ScopeTypeEnum $type, int $id, bool $active = true): void
-{
-    RoleAssignment::factory()->create(['organization_id' => $org->id, 'user_id' => $user->id, 'role' => $role, 'scope_type' => $type, 'scope_id' => $id, 'is_active' => $active]);
-}
-
-function homeFamily(Organization $org, Branch $branch): Family
-{
-    return Family::factory()->create(['organization_id' => $org->id, 'home_branch_id' => $branch->id]);
-}
-
 /** @return array{org: Organization, htc: Branch, house: Branch} */
 function fx(): array
 {
-    $org = Organization::factory()->create();
+    $org = church();
 
-    return ['org' => $org, 'htc' => Branch::factory()->for($org)->create(), 'house' => Branch::factory()->for($org)->create()];
+    return ['org' => $org, 'htc' => satelliteOf($org), 'house' => satelliteOf($org)];
 }
 
 it('gives a church admin every family and every edit', function (): void {
     ['org' => $org, 'htc' => $htc, 'house' => $house] = fx();
     $user = User::factory()->create();
-    grant($user, $org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id);
+    grantRole($user, RoleEnum::Admin, atChurch($org));
 
     $scope = (new GetAccessScopeJob(user: $user, organization: $org))->handle();
 
     expect($scope->canWorkHere())->toBeTrue()
         ->and($scope->visibleBranchIds())->toBeNull()
-        ->and($scope->canEditFamily(homeFamily($org, $htc)))->toBeTrue()
-        ->and($scope->canEditFamily(homeFamily($org, $house)))->toBeTrue()
+        ->and($scope->canEditFamily(familyAt($htc)))->toBeTrue()
+        ->and($scope->canEditFamily(familyAt($house)))->toBeTrue()
         ->and($scope->canMergeRecords())->toBeTrue()
         ->and($scope->canManageChurch())->toBeTrue();
 });
@@ -52,14 +48,14 @@ it('gives a church admin every family and every edit', function (): void {
 it('limits a satellite admin to families of that satellite', function (): void {
     ['org' => $org, 'htc' => $htc, 'house' => $house] = fx();
     $user = User::factory()->create();
-    grant($user, $org, RoleEnum::Admin, ScopeTypeEnum::Branch, $htc->id);
+    grantRole($user, RoleEnum::Admin, atSatellite($htc));
 
     $scope = (new GetAccessScopeJob(user: $user, organization: $org))->handle();
 
     expect($scope->visibleBranchIds())->toBe([$htc->id])
-        ->and($scope->canEditFamily(homeFamily($org, $htc)))->toBeTrue()
-        ->and($scope->canEditFamily(homeFamily($org, $house)))->toBeFalse()
-        ->and($scope->canSeeFamily(homeFamily($org, $house)))->toBeFalse()
+        ->and($scope->canEditFamily(familyAt($htc)))->toBeTrue()
+        ->and($scope->canEditFamily(familyAt($house)))->toBeFalse()
+        ->and($scope->canSeeFamily(familyAt($house)))->toBeFalse()
         ->and($scope->canMergeRecords())->toBeFalse()
         ->and($scope->canManageChurch())->toBeFalse();
 });
@@ -67,10 +63,10 @@ it('limits a satellite admin to families of that satellite', function (): void {
 it('lets a Lifeshaper see their satellite\'s families but not edit them', function (): void {
     ['org' => $org, 'htc' => $htc] = fx();
     $user = User::factory()->create();
-    grant($user, $org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id);
+    grantRole($user, RoleEnum::Lifeshaper, atSatellite($htc));
 
     $scope = (new GetAccessScopeJob(user: $user, organization: $org))->handle();
-    $family = homeFamily($org, $htc);
+    $family = familyAt($htc);
 
     expect($scope->canWorkHere())->toBeTrue()
         ->and($scope->canSeeFamily($family))->toBeTrue()
@@ -81,8 +77,8 @@ it('lets a Lifeshaper see their satellite\'s families but not edit them', functi
 it('combines several satellites', function (): void {
     ['org' => $org, 'htc' => $htc, 'house' => $house] = fx();
     $user = User::factory()->create();
-    grant($user, $org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id);
-    grant($user, $org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $house->id);
+    grantRole($user, RoleEnum::Lifeshaper, atSatellite($htc));
+    grantRole($user, RoleEnum::Lifeshaper, atSatellite($house));
 
     $ids = (new GetAccessScopeJob(user: $user, organization: $org))->handle()->visibleBranchIds();
 
@@ -92,21 +88,21 @@ it('combines several satellites', function (): void {
 it('ignores revoked roles and roles in another church', function (): void {
     ['org' => $org, 'htc' => $htc] = fx();
     $user = User::factory()->create();
-    grant($user, $org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id, active: false);
-    $other = Organization::factory()->create();
-    grant($user, $other, RoleEnum::Admin, ScopeTypeEnum::Organization, $other->id);
+    grantRole($user, RoleEnum::Admin, atChurch($org), active: false);
+    $other = church();
+    grantRole($user, RoleEnum::Admin, atChurch($other));
 
     $scope = (new GetAccessScopeJob(user: $user, organization: $org))->handle();
 
     expect($scope->canWorkHere())->toBeFalse()
         ->and($scope->visibleBranchIds())->toBe([])
-        ->and($scope->canSeeFamily(homeFamily($org, $htc)))->toBeFalse();
+        ->and($scope->canSeeFamily(familyAt($htc)))->toBeFalse();
 });
 
 it('never lets a family from another church through, even for a church admin', function (): void {
     ['org' => $org] = fx();
     $user = User::factory()->create();
-    grant($user, $org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id);
+    grantRole($user, RoleEnum::Admin, atChurch($org));
     $foreign = Family::factory()->create();
 
     $scope = (new GetAccessScopeJob(user: $user, organization: $org))->handle();
@@ -122,7 +118,7 @@ it('never lets a family from another church through, even for a church admin', f
 it('lets a church admin grant any role anywhere in the church', function (): void {
     ['org' => $org, 'htc' => $htc] = fx();
     $user = User::factory()->create();
-    grant($user, $org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id);
+    grantRole($user, RoleEnum::Admin, atChurch($org));
 
     $scope = (new GetAccessScopeJob(user: $user, organization: $org))->handle();
 
@@ -136,7 +132,7 @@ it('lets a church admin grant any role anywhere in the church', function (): voi
 it('caps a satellite admin at Lifeshaper in their own satellite', function (): void {
     ['org' => $org, 'htc' => $htc, 'house' => $house] = fx();
     $user = User::factory()->create();
-    grant($user, $org, RoleEnum::Admin, ScopeTypeEnum::Branch, $htc->id);
+    grantRole($user, RoleEnum::Admin, atSatellite($htc));
 
     $scope = (new GetAccessScopeJob(user: $user, organization: $org))->handle();
 
@@ -150,7 +146,7 @@ it('caps a satellite admin at Lifeshaper in their own satellite', function (): v
 it('does not let a Lifeshaper manage people', function (): void {
     ['org' => $org, 'htc' => $htc] = fx();
     $user = User::factory()->create();
-    grant($user, $org, RoleEnum::Lifeshaper, ScopeTypeEnum::Organization, $org->id);
+    grantRole($user, RoleEnum::Lifeshaper, atChurch($org));
 
     $scope = (new GetAccessScopeJob(user: $user, organization: $org))->handle();
 

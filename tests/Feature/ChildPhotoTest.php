@@ -5,13 +5,10 @@ declare(strict_types=1);
 use App\Data\Models\Branch;
 use App\Data\Models\Child;
 use App\Data\Models\Family;
-use App\Data\Models\Guardian;
 use App\Data\Models\Note;
 use App\Data\Models\Organization;
-use App\Data\Models\RoleAssignment;
 use App\Data\Models\User;
 use App\Enums\RoleEnum;
-use App\Enums\ScopeTypeEnum;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -21,6 +18,13 @@ use Inertia\Testing\AssertableInertia;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 use function Pest\Laravel\withoutExceptionHandling;
+use function Tests\Support\atSatellite;
+use function Tests\Support\childOf;
+use function Tests\Support\church;
+use function Tests\Support\familyAt;
+use function Tests\Support\guardianOf;
+use function Tests\Support\satelliteOf;
+use function Tests\Support\staffMember;
 
 /*
  * Children's photos (plan §5 + Roy 2026-10-16): a parent OR a Lifeshaper may take or upload one — but only once
@@ -32,24 +36,15 @@ use function Pest\Laravel\withoutExceptionHandling;
 /** @return array{org: Organization, htc: Branch, house: Branch, family: Family, parent: User, child: Child} */
 function photoFamily(): array
 {
-    $org = Organization::factory()->create(['slug' => 'ccf']);
-    $htc = Branch::factory()->for($org)->create();
-    $house = Branch::factory()->for($org)->create();
-    $family = Family::factory()->create(['organization_id' => $org->id, 'home_branch_id' => $htc->id]);
+    $org = church(['slug' => 'ccf']);
+    $htc = satelliteOf($org);
+    $house = satelliteOf($org);
+    $family = familyAt($htc);
     $parent = User::factory()->create();
-    $g = Guardian::factory()->create(['family_id' => $family->id, 'organization_id' => $org->id, 'user_id' => $parent->id]);
-    $family->forceFill(['primary_guardian_id' => $g->id])->save();
-    $child = Child::factory()->create(['family_id' => $family->id, 'organization_id' => $org->id, 'nickname' => 'Amara']);
+    $g = guardianOf($family, $parent);
+    $child = childOf($family, ['nickname' => 'Amara']);
 
     return ['org' => $org, 'htc' => $htc, 'house' => $house, 'family' => $family, 'parent' => $parent, 'child' => $child];
-}
-
-function photoStaff(Organization $org, RoleEnum $role, ScopeTypeEnum $type, int $id): User
-{
-    $u = User::factory()->create();
-    RoleAssignment::factory()->create(['organization_id' => $org->id, 'user_id' => $u->id, 'role' => $role, 'scope_type' => $type, 'scope_id' => $id]);
-
-    return $u;
 }
 
 function photoFile(): UploadedFile
@@ -102,7 +97,7 @@ describe('a parent', function (): void {
         // Hidden from everyone: no link, and the photo itself refuses — for the family and for staff.
         actingAs($parent)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('family.children.0.photoUrl', null));
         actingAs($parent)->get($url)->assertNotFound();
-        actingAs(photoStaff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id))->get($url)->assertNotFound();
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get($url)->assertNotFound();
 
         actingAs($parent)->put("/ccf/family/children/{$child->id}/photo-consent");
         actingAs($parent)->get($url)->assertOk();
@@ -137,7 +132,7 @@ describe('the consent history (review 4)', function (): void {
 
         $request = fn () => $who === 'parent'
             ? actingAs($parent)->put("/ccf/family/children/{$child->id}/photo-consent")
-            : actingAs(photoStaff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id))->put("/ccf/children/{$child->id}/photo-consent");
+            : actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->put("/ccf/children/{$child->id}/photo-consent");
 
         expect($request)->toThrow(RuntimeException::class, 'note store down');
         expect($child->fresh()?->photo_consent_at)->toBeNull();
@@ -160,7 +155,7 @@ describe('consent first, photo later (review 3)', function (): void {
         actingAs($parent)->put("/ccf/family/children/{$child->id}/photo-consent")->assertRedirect()->assertSessionHas('success');
         expect($child->fresh()?->photo_consent_by)->toBe($parent->id)->and($child->fresh()?->photo_path)->toBeNull();
 
-        actingAs(photoStaff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id))
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))
             ->post("/ccf/children/{$child->id}/photo", ['photo' => photoFile()])->assertSessionHas('success');
         expect($child->fresh()?->photo_path)->not->toBeNull();
     });
@@ -182,7 +177,7 @@ describe('a Lifeshaper', function (): void {
         ['org' => $org, 'htc' => $htc, 'child' => $child, 'parent' => $parent] = photoFamily();
         $child->forceFill(['photo_consent_at' => now(), 'photo_consent_by' => $parent->id])->save();
 
-        actingAs(photoStaff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id))
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))
             ->post("/ccf/children/{$child->id}/photo", ['photo' => photoFile()])->assertSessionHas('success');
 
         expect($child->fresh()?->photo_path)->not->toBeNull();
@@ -191,7 +186,7 @@ describe('a Lifeshaper', function (): void {
     it('cannot add one before consent is recorded — sending "consent" with the photo does not count', function (): void {
         ['org' => $org, 'htc' => $htc, 'child' => $child] = photoFamily();
 
-        actingAs(photoStaff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id))
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))
             ->post("/ccf/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true])
             ->assertSessionHas('error', 'The parent has not agreed to a photo yet. If they say yes to you, record it first.');
 
@@ -200,7 +195,7 @@ describe('a Lifeshaper', function (): void {
 
     it('records that the parent said yes in person, with who recorded it, then takes the photo (Roy 2026-10-16)', function (): void {
         ['org' => $org, 'htc' => $htc, 'child' => $child] = photoFamily();
-        $lifeshaper = photoStaff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id);
+        $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
         $lifeshaper->forceFill(['name' => 'Leo Lifeshaper'])->save();
 
         actingAs($lifeshaper)->put("/ccf/children/{$child->id}/photo-consent")->assertSessionHas('success');
@@ -216,7 +211,7 @@ describe('a Lifeshaper', function (): void {
     it('cannot record consent for a family they cannot see', function (): void {
         ['org' => $org, 'house' => $house, 'child' => $child] = photoFamily();
 
-        actingAs(photoStaff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $house->id))
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($house)))
             ->put("/ccf/children/{$child->id}/photo-consent")->assertNotFound();
 
         expect($child->fresh()?->photo_consent_at)->toBeNull();
@@ -226,7 +221,7 @@ describe('a Lifeshaper', function (): void {
         ['org' => $org, 'house' => $house, 'child' => $child, 'parent' => $parent] = photoFamily();
         $child->forceFill(['photo_consent_at' => now(), 'photo_consent_by' => $parent->id])->save();
 
-        actingAs(photoStaff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $house->id))
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($house)))
             ->post("/ccf/children/{$child->id}/photo", ['photo' => photoFile()])->assertNotFound();
     });
 });
@@ -246,8 +241,8 @@ describe('seeing a photo', function (): void {
         });
 
         actingAs($parent)->get($url)->assertOk()->assertHeader('Content-Type', 'image/jpeg')->assertHeader('Cache-Control', 'no-store, private');
-        actingAs(photoStaff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id))->get($url)->assertOk();
-        actingAs(photoStaff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $house->id))->get($url)->assertNotFound();
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get($url)->assertOk();
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($house)))->get($url)->assertNotFound();
         actingAs(User::factory()->create())->get($url)->assertNotFound();
         actingAs($parent)->get((string) strtok($url, '?'))->assertForbidden();   // unsigned
         Auth::logout();

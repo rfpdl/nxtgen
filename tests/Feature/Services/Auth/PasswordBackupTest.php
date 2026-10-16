@@ -2,14 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Data\Models\Branch;
-use App\Data\Models\Family;
-use App\Data\Models\Guardian;
-use App\Data\Models\Organization;
 use App\Data\Models\RoleAssignment;
 use App\Data\Models\User;
 use App\Enums\RoleEnum;
-use App\Enums\ScopeTypeEnum;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Testing\AssertableInertia;
 
@@ -18,6 +13,12 @@ use function Pest\Laravel\assertAuthenticatedAs;
 use function Pest\Laravel\assertGuest;
 use function Pest\Laravel\get;
 use function Pest\Laravel\post;
+use function Tests\Support\atChurch;
+use function Tests\Support\church;
+use function Tests\Support\familyAt;
+use function Tests\Support\grantRole;
+use function Tests\Support\guardianOf;
+use function Tests\Support\satelliteOf;
 
 /*
  * Staff password backup (plan D7: "magic link + optional password for staff; magic link only for parents").
@@ -27,9 +28,9 @@ use function Pest\Laravel\post;
 
 function servingUser(?string $password = null): User
 {
-    $org = Organization::factory()->create();
+    $org = church();
     $user = User::factory()->create(['email' => 'leo@example.com', 'password' => $password]);
-    RoleAssignment::factory()->create(['organization_id' => $org->id, 'user_id' => $user->id, 'role' => RoleEnum::Lifeshaper, 'scope_type' => ScopeTypeEnum::Organization, 'scope_id' => $org->id]);
+    grantRole($user, RoleEnum::Lifeshaper, atChurch($org));
 
     return $user;
 }
@@ -54,10 +55,10 @@ describe('setting a backup password', function (): void {
     });
 
     it('is not there for a parent', function (): void {
-        $org = Organization::factory()->create();
-        $family = Family::factory()->create(['organization_id' => $org->id, 'home_branch_id' => Branch::factory()->for($org)->create()->id]);
+        $org = church();
+        $family = familyAt(satelliteOf($org));
         $parent = User::factory()->create();
-        Guardian::factory()->create(['family_id' => $family->id, 'organization_id' => $org->id, 'user_id' => $parent->id]);
+        guardianOf($family, $parent);
 
         actingAs($parent)->get('/account/password')->assertNotFound();
         actingAs($parent)->put('/account/password', ['password' => 'a-long-passphrase', 'password_confirmation' => 'a-long-passphrase'])->assertNotFound();
@@ -94,10 +95,10 @@ describe('signing in with it', function (): void {
     });
 
     it('never signs in a parent with a password, even one that has one', function (): void {
-        $org = Organization::factory()->create();
-        $family = Family::factory()->create(['organization_id' => $org->id, 'home_branch_id' => Branch::factory()->for($org)->create()->id]);
+        $org = church();
+        $family = familyAt(satelliteOf($org));
         $parent = User::factory()->create(['email' => 'pia@example.com', 'password' => 'a-long-passphrase']);
-        Guardian::factory()->create(['family_id' => $family->id, 'organization_id' => $org->id, 'user_id' => $parent->id]);
+        guardianOf($family, $parent);
 
         post('/login/password', ['email' => 'pia@example.com', 'password' => 'a-long-passphrase'])->assertSessionHasErrors('email');
         assertGuest();

@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-use App\Data\Models\Branch;
-use App\Data\Models\Family;
-use App\Data\Models\Guardian;
-use App\Data\Models\Organization;
-use App\Data\Models\RoleAssignment;
 use App\Data\Models\User;
 use App\Domains\Card\Jobs\CreateQrCodeSvgJob;
 use App\Enums\RoleEnum;
-use App\Enums\ScopeTypeEnum;
 use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
+use function Tests\Support\atChurch;
+use function Tests\Support\church;
+use function Tests\Support\familyAt;
+use function Tests\Support\grantRole;
+use function Tests\Support\guardianOf;
+use function Tests\Support\satelliteOf;
 
 /*
  * The printable registration poster (plan §6 R1 "printable QR poster"): a QR code that opens this church's
@@ -21,9 +21,9 @@ use function Pest\Laravel\actingAs;
  */
 
 it('gives a volunteer a poster whose QR code opens this church\'s registration form', function (): void {
-    $org = Organization::factory()->create(['slug' => 'ccf', 'name' => 'CCF']);
+    $org = church(['slug' => 'ccf', 'name' => 'CCF']);
     $user = User::factory()->create();
-    RoleAssignment::factory()->create(['organization_id' => $org->id, 'user_id' => $user->id, 'role' => RoleEnum::Lifeshaper, 'scope_type' => ScopeTypeEnum::Organization, 'scope_id' => $org->id]);
+    grantRole($user, RoleEnum::Lifeshaper, atChurch($org));
 
     actingAs($user)->get('/ccf/poster')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
         ->component('Org/Poster')
@@ -34,10 +34,10 @@ it('gives a volunteer a poster whose QR code opens this church\'s registration f
 });
 
 it('is not for a parent', function (): void {
-    $org = Organization::factory()->create(['slug' => 'ccf']);
-    $family = Family::factory()->create(['organization_id' => $org->id, 'home_branch_id' => Branch::factory()->for($org)->create()->id]);
+    $org = church(['slug' => 'ccf']);
+    $family = familyAt(satelliteOf($org));
     $parent = User::factory()->create();
-    Guardian::factory()->create(['family_id' => $family->id, 'organization_id' => $org->id, 'user_id' => $parent->id]);
+    guardianOf($family, $parent);
 
     actingAs($parent)->get('/ccf/poster')->assertNotFound();
 });

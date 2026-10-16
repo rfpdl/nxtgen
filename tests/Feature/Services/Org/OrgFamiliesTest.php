@@ -6,10 +6,8 @@ use App\Data\Models\Branch;
 use App\Data\Models\Child;
 use App\Data\Models\Family;
 use App\Data\Models\Group;
-use App\Data\Models\Guardian;
 use App\Data\Models\MagicLink;
 use App\Data\Models\Organization;
-use App\Data\Models\RoleAssignment;
 use App\Data\Models\User;
 use App\Domains\Family\Jobs\CreateDuplicateCandidatesJob;
 use App\Enums\ChildStatusEnum;
@@ -21,33 +19,33 @@ use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia;
 use OpenSpout\Reader\XLSX\Reader;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Tests\Support\RoleScope;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
+use function Tests\Support\atChurch;
+use function Tests\Support\atSatellite;
+use function Tests\Support\childOf;
+use function Tests\Support\church;
+use function Tests\Support\familyAt;
+use function Tests\Support\guardianOf;
+use function Tests\Support\satelliteOf;
+use function Tests\Support\staffMember;
 
 /** @return array{org: Organization, htc: Branch, house: Branch} */
 function adminChurch(): array
 {
-    $org = Organization::factory()->create(['slug' => 'ccf']);
+    $org = church(['slug' => 'ccf']);
 
-    return ['org' => $org, 'htc' => Branch::factory()->for($org)->create(['name' => 'Holy Trinity Church']), 'house' => Branch::factory()->for($org)->create(['name' => 'House Church'])];
+    return ['org' => $org, 'htc' => satelliteOf($org, ['name' => 'Holy Trinity Church']), 'house' => satelliteOf($org, ['name' => 'House Church'])];
 }
 
-function staff(Organization $org, RoleEnum $role, ScopeTypeEnum $type, int $scopeId): User
+function registeredFamily(Branch $branch, string $parent, string $email, bool $verified = true): Family
 {
-    $user = User::factory()->create();
-    RoleAssignment::factory()->create(['organization_id' => $org->id, 'user_id' => $user->id, 'role' => $role, 'scope_type' => $type, 'scope_id' => $scopeId]);
-
-    return $user;
-}
-
-function registeredFamily(Organization $org, Branch $branch, string $parent, string $email, bool $verified = true): Family
-{
-    $family = Family::factory()->create(['organization_id' => $org->id, 'home_branch_id' => $branch->id]);
+    $family = familyAt($branch);
     $user = User::factory()->create(['email' => $email, 'email_verified_at' => $verified ? now() : null]);
-    $guardian = Guardian::factory()->create(['family_id' => $family->id, 'organization_id' => $org->id, 'user_id' => $user->id, 'first_name' => $parent, 'last_name' => 'Ramos', 'phone' => '0544897346']);
-    $family->forceFill(['primary_guardian_id' => $guardian->id])->save();
-    Child::factory()->create(['family_id' => $family->id, 'organization_id' => $org->id, 'nickname' => $parent.'-kid']);
+    $guardian = guardianOf($family, $user, ['first_name' => $parent, 'last_name' => 'Ramos', 'phone' => '0544897346']);
+    childOf($family, ['nickname' => $parent.'-kid']);
 
     return $family;
 }
@@ -60,35 +58,35 @@ describe('who gets in', function (): void {
 
     it('404s for a parent with no staff role', function (): void {
         ['org' => $org, 'htc' => $htc] = adminChurch();
-        $family = registeredFamily($org, $htc, 'Janice', 'janice@example.com');
+        $family = registeredFamily($htc, 'Janice', 'janice@example.com');
 
         actingAs($family->primaryGuardian->user ?? User::factory()->create())->get('/ccf/families')->assertNotFound();
     });
 
     it('404s for staff of another church', function (): void {
         adminChurch();
-        $other = Organization::factory()->create();
+        $other = church();
 
-        actingAs(staff($other, RoleEnum::Admin, ScopeTypeEnum::Organization, $other->id))->get('/ccf/families')->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atChurch($other)))->get('/ccf/families')->assertNotFound();
     });
 });
 
 describe('the family list', function (): void {
     it('shows a church admin every family', function (): void {
         ['org' => $org, 'htc' => $htc, 'house' => $house] = adminChurch();
-        registeredFamily($org, $htc, 'Janice', 'janice@example.com');
-        registeredFamily($org, $house, 'Mira', 'mira@example.com');
+        registeredFamily($htc, 'Janice', 'janice@example.com');
+        registeredFamily($house, 'Mira', 'mira@example.com');
 
-        actingAs(staff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id))->get('/ccf/families')
+        actingAs(staffMember(RoleEnum::Admin, atChurch($org)))->get('/ccf/families')
             ->assertOk()->assertInertia(fn (AssertableInertia $p) => $p->component('Org/Families/Index')->has('families', 2));
     });
 
     it('shows a Lifeshaper only their satellite, with emails masked', function (): void {
         ['org' => $org, 'htc' => $htc, 'house' => $house] = adminChurch();
-        registeredFamily($org, $htc, 'Janice', 'janice@example.com');
-        registeredFamily($org, $house, 'Mira', 'mira@example.com');
+        registeredFamily($htc, 'Janice', 'janice@example.com');
+        registeredFamily($house, 'Mira', 'mira@example.com');
 
-        actingAs(staff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id))->get('/ccf/families')
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get('/ccf/families')
             ->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
             ->has('families', 1)
             ->where('families.0.primaryName', 'Janice Ramos')
@@ -97,10 +95,10 @@ describe('the family list', function (): void {
 
     it('filters to families whose email is not confirmed yet', function (): void {
         ['org' => $org, 'htc' => $htc] = adminChurch();
-        registeredFamily($org, $htc, 'Janice', 'janice@example.com', verified: false);
-        registeredFamily($org, $htc, 'Mira', 'mira@example.com');
+        registeredFamily($htc, 'Janice', 'janice@example.com', verified: false);
+        registeredFamily($htc, 'Mira', 'mira@example.com');
 
-        actingAs(staff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id))->get('/ccf/families?unconfirmed=1')
+        actingAs(staffMember(RoleEnum::Admin, atChurch($org)))->get('/ccf/families?unconfirmed=1')
             ->assertInertia(fn (AssertableInertia $p) => $p->has('families', 1)->where('families.0.emailConfirmed', false));
     });
 });
@@ -108,9 +106,9 @@ describe('the family list', function (): void {
 describe('registering for a parent', function (): void {
     it('searches the whole church first, so a family is not registered twice', function (): void {
         ['org' => $org, 'htc' => $htc, 'house' => $house] = adminChurch();
-        registeredFamily($org, $house, 'Janice', 'janice@example.com');
+        registeredFamily($house, 'Janice', 'janice@example.com');
 
-        actingAs(staff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id))->get('/ccf/families/new?q=ramos')
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get('/ccf/families/new?q=ramos')
             ->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
             ->component('Org/Families/Register')
             ->has('results', 1)
@@ -121,8 +119,8 @@ describe('registering for a parent', function (): void {
 
     it('also finds a family by a child\'s nickname or the parent\'s phone', function (): void {
         ['org' => $org, 'htc' => $htc] = adminChurch();
-        registeredFamily($org, $htc, 'Janice', 'janice@example.com');
-        $lifeshaper = staff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id);
+        registeredFamily($htc, 'Janice', 'janice@example.com');
+        $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
 
         actingAs($lifeshaper)->get('/ccf/families/new?q=Janice-kid')->assertInertia(fn (AssertableInertia $p) => $p->has('results', 1));
         actingAs($lifeshaper)->get('/ccf/families/new?q=897346')->assertInertia(fn (AssertableInertia $p) => $p->has('results', 1));
@@ -131,7 +129,7 @@ describe('registering for a parent', function (): void {
     it('registers a new family with an unconfirmed email and records who did it', function (): void {
         Notification::fake();
         ['org' => $org, 'htc' => $htc] = adminChurch();
-        $volunteer = staff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id);
+        $volunteer = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
 
         actingAs($volunteer)->post('/ccf/families', [
             'home_branch_id' => $htc->id, 'area_text' => 'Deira', 'privacy_consented' => true,
@@ -149,9 +147,9 @@ describe('registering for a parent', function (): void {
     it('lets any volunteer add a child to a family found in another satellite', function (): void {
         Notification::fake();
         ['org' => $org, 'htc' => $htc, 'house' => $house] = adminChurch();
-        $family = registeredFamily($org, $house, 'Janice', 'janice@example.com');
+        $family = registeredFamily($house, 'Janice', 'janice@example.com');
 
-        actingAs(staff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id))->post("/ccf/families/{$family->id}/children", [
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->post("/ccf/families/{$family->id}/children", [
             'first_name' => 'Baby', 'middle_name' => null, 'last_name' => 'Ramos', 'nickname' => 'Baby', 'gender' => 'girl', 'date_of_birth' => '2021-01-01', 'has_allergies' => false, 'allergies' => null,
         ])->assertRedirect()->assertSessionHas('success');
 
@@ -162,7 +160,7 @@ describe('registering for a parent', function (): void {
         ['org' => $org, 'htc' => $htc] = adminChurch();
         $foreign = Family::factory()->create();
 
-        actingAs(staff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id))->post("/ccf/families/{$foreign->id}/children", [
+        actingAs(staffMember(RoleEnum::Admin, atChurch($org)))->post("/ccf/families/{$foreign->id}/children", [
             'first_name' => 'X', 'last_name' => 'Y', 'nickname' => 'X', 'gender' => 'boy', 'date_of_birth' => '2018-01-01', 'has_allergies' => false,
         ])->assertNotFound();
     });
@@ -171,9 +169,9 @@ describe('registering for a parent', function (): void {
 describe('a family\'s page', function (): void {
     it('opens a family in scope and 404s one out of scope', function (): void {
         ['org' => $org, 'htc' => $htc, 'house' => $house] = adminChurch();
-        $mine = registeredFamily($org, $htc, 'Janice', 'janice@example.com');
-        $theirs = registeredFamily($org, $house, 'Mira', 'mira@example.com');
-        $lifeshaper = staff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id);
+        $mine = registeredFamily($htc, 'Janice', 'janice@example.com');
+        $theirs = registeredFamily($house, 'Mira', 'mira@example.com');
+        $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
 
         actingAs($lifeshaper)->get("/ccf/families/{$mine->id}")->assertOk()
             ->assertInertia(fn (AssertableInertia $p) => $p->component('Org/Families/Show')->where('family.children.0.nickname', 'Janice-kid'));
@@ -183,9 +181,9 @@ describe('a family\'s page', function (): void {
     it('resends the confirmation link for an unconfirmed email', function (): void {
         Notification::fake();
         ['org' => $org, 'htc' => $htc] = adminChurch();
-        $family = registeredFamily($org, $htc, 'Janice', 'janice@example.com', verified: false);
+        $family = registeredFamily($htc, 'Janice', 'janice@example.com', verified: false);
 
-        actingAs(staff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id))->post("/ccf/families/{$family->id}/resend")
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->post("/ccf/families/{$family->id}/resend")
             ->assertRedirect()->assertSessionHas('success', 'We sent the confirmation link to ja•••@example.com again.');
 
         expect(MagicLink::query()->latest('id')->first()?->purpose)->toBe(MagicLinkPurposeEnum::VerifyEmail);
@@ -194,9 +192,9 @@ describe('a family\'s page', function (): void {
 
 it('downloads the visible families as an Excel file', function (): void {
     ['org' => $org, 'htc' => $htc] = adminChurch();
-    registeredFamily($org, $htc, 'Janice', 'janice@example.com');
+    registeredFamily($htc, 'Janice', 'janice@example.com');
 
-    $response = actingAs(staff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id))->get('/ccf/families/export');
+    $response = actingAs(staffMember(RoleEnum::Admin, atChurch($org)))->get('/ccf/families/export');
 
     $response->assertOk();
     expect((string) $response->headers->get('content-type'))->toContain('spreadsheetml')
@@ -207,10 +205,10 @@ describe('review-spar fixes', function (): void {
     it('refuses resend for a family outside a satellite admin\'s scope, and issues nothing (review A2)', function (): void {
         Notification::fake();
         ['org' => $org, 'htc' => $htc, 'house' => $house] = adminChurch();
-        $theirs = registeredFamily($org, $house, 'Mira', 'mira@example.com', verified: false);
+        $theirs = registeredFamily($house, 'Mira', 'mira@example.com', verified: false);
         $before = MagicLink::query()->count();
 
-        actingAs(staff($org, RoleEnum::Admin, ScopeTypeEnum::Branch, $htc->id))->post("/ccf/families/{$theirs->id}/resend")->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->post("/ccf/families/{$theirs->id}/resend")->assertNotFound();
 
         expect(MagicLink::query()->count())->toBe($before);
         Notification::assertNothingSent();
@@ -218,16 +216,16 @@ describe('review-spar fixes', function (): void {
 
     it('refuses resend for a class admin', function (): void {
         ['org' => $org, 'htc' => $htc] = adminChurch();
-        $family = registeredFamily($org, $htc, 'Janice', 'janice@example.com', verified: false);
+        $family = registeredFamily($htc, 'Janice', 'janice@example.com', verified: false);
 
-        actingAs(staff($org, RoleEnum::Admin, ScopeTypeEnum::EventSeries, 99))->post("/ccf/families/{$family->id}/resend")->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, new RoleScope($org, ScopeTypeEnum::EventSeries, 99)))->post("/ccf/families/{$family->id}/resend")->assertNotFound();
     });
 
     it('says honestly when the email was NOT sent because of the per-address limit (review B3)', function (): void {
         Notification::fake();
         ['org' => $org, 'htc' => $htc] = adminChurch();
-        $family = registeredFamily($org, $htc, 'Janice', 'janice@example.com', verified: false);
-        $lifeshaper = staff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id);
+        $family = registeredFamily($htc, 'Janice', 'janice@example.com', verified: false);
+        $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
 
         foreach (range(1, 5) as $_) {
             actingAs($lifeshaper)->post("/ccf/families/{$family->id}/resend");
@@ -241,7 +239,7 @@ describe('review-spar fixes', function (): void {
         Notification::fake();
         ['org' => $org, 'htc' => $htc] = adminChurch();
 
-        actingAs(staff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id))->post('/ccf/families', [
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->post('/ccf/families', [
             'home_branch_id' => $htc->id, 'area_text' => 'Deira', 'privacy_consented' => true,
             'dgroup_area_text' => 'Barsha', 'dgroup_leader_phone' => '0501234567', 'lifestage' => 'Couple',
             'guardian' => ['first_name' => 'Mira', 'last_name' => 'Bonza', 'relationship' => 'mother', 'phone' => '0523508443', 'email' => 'mira2@example.com'],
@@ -262,9 +260,9 @@ describe('review-spar fixes', function (): void {
 describe('searching and filtering the list', function (): void {
     it('finds families by parent, email, phone or child — the same matching as the door search', function (): void {
         ['org' => $org, 'htc' => $htc] = adminChurch();
-        registeredFamily($org, $htc, 'Janice', 'janice@example.com');
-        registeredFamily($org, $htc, 'Mira', 'mira@example.com');
-        $admin = staff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id);
+        registeredFamily($htc, 'Janice', 'janice@example.com');
+        registeredFamily($htc, 'Mira', 'mira@example.com');
+        $admin = staffMember(RoleEnum::Admin, atChurch($org));
 
         foreach (['Janice', 'janice@exa', 'Janice-kid'] as $q) {
             actingAs($admin)->get('/ccf/families?q='.urlencode($q))->assertInertia(fn (AssertableInertia $p) => $p
@@ -274,11 +272,11 @@ describe('searching and filtering the list', function (): void {
 
     it('filters by satellite, child status and group, and offers those choices', function (): void {
         ['org' => $org, 'htc' => $htc, 'house' => $house] = adminChurch();
-        $a = registeredFamily($org, $htc, 'Janice', 'janice@example.com');
-        registeredFamily($org, $house, 'Mira', 'mira@example.com');
+        $a = registeredFamily($htc, 'Janice', 'janice@example.com');
+        registeredFamily($house, 'Mira', 'mira@example.com');
         $group = Group::factory()->create(['organization_id' => $org->id, 'name' => 'Level 2 Girls']);
         Child::query()->where('family_id', $a->id)->update(['status' => ChildStatusEnum::Inactive, 'group_id' => $group->id]);
-        $admin = staff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id);
+        $admin = staffMember(RoleEnum::Admin, atChurch($org));
 
         actingAs($admin)->get("/ccf/families?satellite={$house->id}")->assertInertia(fn (AssertableInertia $p) => $p
             ->has('families', 1)->where('families.0.primaryName', 'Mira Ramos')
@@ -291,12 +289,12 @@ describe('searching and filtering the list', function (): void {
 
     it('filters to families with an open possible duplicate, on either side', function (): void {
         ['org' => $org, 'htc' => $htc] = adminChurch();
-        $old = registeredFamily($org, $htc, 'Janice', 'janice@example.com');
-        $new = registeredFamily($org, $htc, 'Jan', 'jan@example.com');
-        registeredFamily($org, $htc, 'Mira', 'mira@example.com')->guardians()->update(['phone' => '0500000099']);
+        $old = registeredFamily($htc, 'Janice', 'janice@example.com');
+        $new = registeredFamily($htc, 'Jan', 'jan@example.com');
+        registeredFamily($htc, 'Mira', 'mira@example.com')->guardians()->update(['phone' => '0500000099']);
         (new CreateDuplicateCandidatesJob($new))->handle();
 
-        actingAs(staff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id))->get('/ccf/families?duplicates=1')
+        actingAs(staffMember(RoleEnum::Admin, atChurch($org)))->get('/ccf/families?duplicates=1')
             // Newest first: the new family, then the one it may duplicate; Mira (different phone) is not listed.
             ->assertInertia(fn (AssertableInertia $p) => $p->has('families', 2)
                 ->where('families.0.id', $new->id)->where('families.1.id', $old->id));
@@ -304,18 +302,18 @@ describe('searching and filtering the list', function (): void {
 
     it('never widens a satellite admin\'s view by picking another satellite', function (): void {
         ['org' => $org, 'htc' => $htc, 'house' => $house] = adminChurch();
-        registeredFamily($org, $house, 'Mira', 'mira@example.com');
+        registeredFamily($house, 'Mira', 'mira@example.com');
 
-        actingAs(staff($org, RoleEnum::Admin, ScopeTypeEnum::Branch, $htc->id))->get("/ccf/families?satellite={$house->id}")
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->get("/ccf/families?satellite={$house->id}")
             ->assertInertia(fn (AssertableInertia $p) => $p->has('families', 0)->has('options.satellites', 1));
     });
 
     it('downloads what the filters show', function (): void {
         ['org' => $org, 'htc' => $htc, 'house' => $house] = adminChurch();
-        registeredFamily($org, $htc, 'Janice', 'janice@example.com');
-        registeredFamily($org, $house, 'Mira', 'mira@example.com');
+        registeredFamily($htc, 'Janice', 'janice@example.com');
+        registeredFamily($house, 'Mira', 'mira@example.com');
 
-        $response = actingAs(staff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id))->get("/ccf/families/export?satellite={$house->id}");
+        $response = actingAs(staffMember(RoleEnum::Admin, atChurch($org)))->get("/ccf/families/export?satellite={$house->id}");
 
         $download = $response->baseResponse;
         if (! $download instanceof BinaryFileResponse) {
@@ -341,7 +339,7 @@ describe('searching and filtering the list', function (): void {
 it('shows the families list 50 at a time; the Excel download still has every family (Roy 2026-10-16)', function (): void {
     ['org' => $org, 'htc' => $htc] = adminChurch();
     Family::factory()->count(55)->create(['organization_id' => $org->id, 'home_branch_id' => $htc->id]);
-    $admin = staff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id);
+    $admin = staffMember(RoleEnum::Admin, atChurch($org));
 
     actingAs($admin)->get('/ccf/families')->assertInertia(fn (AssertableInertia $p) => $p
         ->has('families', 50)->where('pagination.total', 55)->where('pagination.lastPage', 2));

@@ -13,17 +13,21 @@ use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
+use function Tests\Support\childOf;
+use function Tests\Support\church;
+use function Tests\Support\familyAt;
 use function Tests\Support\familyEdit;
+use function Tests\Support\guardianOf;
+use function Tests\Support\satelliteOf;
 
 /** @return array{0: Organization, 1: Family, 2: User} */
 function familyWithParent(string $slug = 'ccf'): array
 {
-    $org = Organization::factory()->create(['slug' => $slug]);
-    $branch = Branch::factory()->for($org)->create(['name' => 'Holy Trinity Church']);
-    $family = Family::factory()->create(['organization_id' => $org->id, 'home_branch_id' => $branch->id, 'area_text' => 'Al Barsha']);
+    $org = church(['slug' => $slug]);
+    $branch = satelliteOf($org, ['name' => 'Holy Trinity Church']);
+    $family = familyAt($branch, ['area_text' => 'Al Barsha']);
     $user = User::factory()->create();
-    $guardian = Guardian::factory()->create(['family_id' => $family->id, 'organization_id' => $org->id, 'user_id' => $user->id, 'first_name' => 'Janice']);
-    $family->forceFill(['primary_guardian_id' => $guardian->id])->save();
+    $guardian = guardianOf($family, $user, ['first_name' => 'Janice']);
 
     return [$org, $family, $user];
 }
@@ -36,7 +40,7 @@ it('sends a guest to sign in', function (): void {
 
 it('shows a parent their own family, satellite and children with health details', function (): void {
     [, $family, $user] = familyWithParent();
-    Child::factory()->create(['family_id' => $family->id, 'organization_id' => $family->organization_id, 'nickname' => 'Amara', 'allergies' => 'Peanuts']);
+    childOf($family, ['nickname' => 'Amara', 'allergies' => 'Peanuts']);
 
     actingAs($user)->get('/ccf/family')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
         ->component('Family/Show')
@@ -80,7 +84,7 @@ it('validates a new child in plain words', function (): void {
 
 it('lets a parent edit their own child, but not the status or group', function (): void {
     [, $family, $user] = familyWithParent();
-    $child = Child::factory()->create(['family_id' => $family->id, 'organization_id' => $family->organization_id, 'allergies' => null]);
+    $child = childOf($family, ['allergies' => null]);
 
     actingAs($user)->put("/ccf/family/children/{$child->id}", [
         'first_name' => $child->first_name, 'middle_name' => null, 'last_name' => $child->last_name, 'nickname' => 'Igo',
@@ -114,8 +118,7 @@ it('refuses to edit a child from another family', function (): void {
 
 it('gives the page what the edit forms need, and every health detail', function (): void {
     [, $family, $user] = familyWithParent();
-    Child::factory()->create([
-        'family_id' => $family->id, 'organization_id' => $family->organization_id, 'nickname' => 'Amara',
+    childOf($family, ['nickname' => 'Amara',
         'allergies' => 'Peanuts', 'illnesses' => 'Asthma', 'dislikes' => 'Loud music', 'fears' => 'The dark', 'parent_notes' => 'Shy at first',
     ]);
 
@@ -133,7 +136,7 @@ it('gives the page what the edit forms need, and every health detail', function 
 
 it('lets a parent edit their family details and their own details', function (): void {
     [$org, $family, $user] = familyWithParent();
-    $other = Branch::factory()->for($org)->create(['name' => 'House Church']);
+    $other = satelliteOf($org, ['name' => 'House Church']);
 
     actingAs($user)->put('/ccf/family', familyEdit($other))->assertRedirect('/ccf/family')->assertSessionHas('success');
 
@@ -167,7 +170,7 @@ it('needs the parent\'s name and phone', function (): void {
 
 it('lets a parent fix a child\'s details but never the status or group', function (): void {
     [, $family, $user] = familyWithParent();
-    $child = Child::factory()->create(['family_id' => $family->id, 'organization_id' => $family->organization_id, 'status' => ChildStatusEnum::Active]);
+    $child = childOf($family, ['status' => ChildStatusEnum::Active]);
 
     actingAs($user)->put("/ccf/family/children/{$child->id}", [
         'first_name' => 'Gabriel', 'last_name' => 'Ramos', 'nickname' => 'Gab', 'gender' => 'boy', 'date_of_birth' => '2017-05-10',
@@ -182,7 +185,7 @@ it('lets a parent fix a child\'s details but never the status or group', functio
 it('does not let a parent edit another family', function (): void {
     [$org, , $user] = familyWithParent();
     $branch = Branch::query()->where('organization_id', $org->id)->firstOrFail();
-    $otherFamily = Family::factory()->create(['organization_id' => $org->id, 'home_branch_id' => $branch->id, 'area_text' => 'Untouched']);
+    $otherFamily = familyAt($branch, ['area_text' => 'Untouched']);
 
     // The family page edits only the signed-in parent's own family; there is no family id to point elsewhere.
     actingAs($user)->put('/ccf/family', familyEdit($branch))->assertRedirect();

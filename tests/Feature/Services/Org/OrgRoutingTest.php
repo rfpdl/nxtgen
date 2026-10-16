@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use App\Data\Models\Organization;
 use App\Data\Models\User;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
+use function Tests\Support\church;
 
 /*
  * The church's pages live at the top of the URL (/ccf/families), so the church slug is a wildcard
@@ -22,7 +22,7 @@ it('keeps the fixed top-level pages reachable', function (string $path, int $sta
 ]);
 
 it('serves the church pages without /admin in the address', function (): void {
-    $org = Organization::factory()->create(['slug' => 'ccf']);
+    $org = church(['slug' => 'ccf']);
 
     get('/ccf/families')->assertRedirect('/login');
     get('/ccf/admin/families')->assertNotFound();

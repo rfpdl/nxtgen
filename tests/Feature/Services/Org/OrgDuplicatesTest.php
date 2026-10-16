@@ -3,21 +3,25 @@
 declare(strict_types=1);
 
 use App\Data\Models\Branch;
-use App\Data\Models\Child;
 use App\Data\Models\DuplicateCandidate;
 use App\Data\Models\Family;
-use App\Data\Models\Guardian;
 use App\Data\Models\Note;
 use App\Data\Models\Organization;
-use App\Data\Models\RoleAssignment;
 use App\Data\Models\User;
 use App\Domains\Family\Jobs\CreateDuplicateCandidatesJob;
 use App\Enums\DuplicateStatusEnum;
 use App\Enums\RoleEnum;
-use App\Enums\ScopeTypeEnum;
 use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
+use function Tests\Support\atChurch;
+use function Tests\Support\atSatellite;
+use function Tests\Support\childOf;
+use function Tests\Support\church;
+use function Tests\Support\familyAt;
+use function Tests\Support\guardianOf;
+use function Tests\Support\satelliteOf;
+use function Tests\Support\staffMember;
 
 /*
  * Possible duplicates (plan §4.2, §6 "dismiss/confirm duplicate candidates (confirm = flag for the later
@@ -28,39 +32,30 @@ use function Pest\Laravel\actingAs;
 /** @return array{org: Organization, htc: Branch, house: Branch, new: Family, old: Family} */
 function dupChurch(): array
 {
-    $org = Organization::factory()->create(['slug' => 'ccf']);
-    $htc = Branch::factory()->for($org)->create(['name' => 'Holy Trinity Church']);
-    $house = Branch::factory()->for($org)->create(['name' => 'House Church']);
-    $old = dupFamily($org, $house, 'Maria', 'maria@old.com');
-    $new = dupFamily($org, $htc, 'Mary', 'mary@new.com');
+    $org = church(['slug' => 'ccf']);
+    $htc = satelliteOf($org, ['name' => 'Holy Trinity Church']);
+    $house = satelliteOf($org, ['name' => 'House Church']);
+    $old = dupFamily($house, 'Maria', 'maria@old.com');
+    $new = dupFamily($htc, 'Mary', 'mary@new.com');
     (new CreateDuplicateCandidatesJob($new))->handle();
 
     return ['org' => $org, 'htc' => $htc, 'house' => $house, 'new' => $new, 'old' => $old];
 }
 
-function dupFamily(Organization $org, Branch $branch, string $name, string $email): Family
+function dupFamily(Branch $branch, string $name, string $email): Family
 {
-    $family = Family::factory()->create(['organization_id' => $org->id, 'home_branch_id' => $branch->id]);
+    $family = familyAt($branch);
     $user = User::factory()->create(['email' => $email]);
-    $g = Guardian::factory()->create(['family_id' => $family->id, 'organization_id' => $org->id, 'user_id' => $user->id, 'first_name' => $name, 'last_name' => 'Santos', 'phone' => '+971 50 123 4567']);
-    $family->forceFill(['primary_guardian_id' => $g->id])->save();
-    Child::factory()->create(['family_id' => $family->id, 'organization_id' => $org->id, 'nickname' => "{$name}'s kid"]);
+    $g = guardianOf($family, $user, ['first_name' => $name, 'last_name' => 'Santos', 'phone' => '+971 50 123 4567']);
+    childOf($family, ['nickname' => "{$name}'s kid"]);
 
     return $family;
-}
-
-function dupStaff(Organization $org, RoleEnum $role, ScopeTypeEnum $type, int $id): User
-{
-    $u = User::factory()->create(['name' => 'Reviewer']);
-    RoleAssignment::factory()->create(['organization_id' => $org->id, 'user_id' => $u->id, 'role' => $role, 'scope_type' => $type, 'scope_id' => $id]);
-
-    return $u;
 }
 
 it('lists open possible duplicates side by side, with masked emails', function (): void {
     ['org' => $org] = dupChurch();
 
-    actingAs(dupStaff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id))->get('/ccf/duplicates')
+    actingAs(staffMember(RoleEnum::Admin, atChurch($org)))->get('/ccf/duplicates')
         ->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
         ->component('Org/Duplicates/Index')
         ->has('duplicates', 1)
@@ -75,21 +70,21 @@ it('lists open possible duplicates side by side, with masked emails', function (
 it('shows a satellite admin only the duplicates of families they may edit', function (): void {
     ['org' => $org, 'htc' => $htc, 'house' => $house] = dupChurch();
 
-    actingAs(dupStaff($org, RoleEnum::Admin, ScopeTypeEnum::Branch, $htc->id))->get('/ccf/duplicates')
+    actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->get('/ccf/duplicates')
         ->assertInertia(fn (AssertableInertia $p) => $p->has('duplicates', 1));
-    actingAs(dupStaff($org, RoleEnum::Admin, ScopeTypeEnum::Branch, $house->id))->get('/ccf/duplicates')
+    actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->get('/ccf/duplicates')
         ->assertInertia(fn (AssertableInertia $p) => $p->has('duplicates', 0));
 });
 
 it('is not there for a Lifeshaper', function (): void {
     ['org' => $org] = dupChurch();
 
-    actingAs(dupStaff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Organization, $org->id))->get('/ccf/duplicates')->assertNotFound();
+    actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($org)))->get('/ccf/duplicates')->assertNotFound();
 });
 
 it('dismisses a pair, records who, and notes it on the new family', function (): void {
     ['org' => $org, 'new' => $new] = dupChurch();
-    $admin = dupStaff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id);
+    $admin = staffMember(RoleEnum::Admin, atChurch($org));
     $pair = DuplicateCandidate::query()->sole();
 
     actingAs($admin)->put("/ccf/duplicates/{$pair->id}", ['status' => 'dismissed'])->assertRedirect()->assertSessionHas('success');
@@ -106,7 +101,7 @@ it('confirms a pair as the same family — flagged for the merge, nothing merged
     ['org' => $org] = dupChurch();
     $pair = DuplicateCandidate::query()->sole();
 
-    actingAs(dupStaff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id))
+    actingAs(staffMember(RoleEnum::Admin, atChurch($org)))
         ->put("/ccf/duplicates/{$pair->id}", ['status' => 'confirmed'])->assertSessionHas('success');
 
     expect($pair->fresh()?->status)->toBe(DuplicateStatusEnum::Confirmed)
@@ -117,11 +112,11 @@ it('refuses to review a pair outside the reviewer\'s satellite, or one already r
     ['org' => $org, 'house' => $house] = dupChurch();
     $pair = DuplicateCandidate::query()->sole();
 
-    actingAs(dupStaff($org, RoleEnum::Admin, ScopeTypeEnum::Branch, $house->id))
+    actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))
         ->put("/ccf/duplicates/{$pair->id}", ['status' => 'dismissed'])->assertNotFound();
 
     $pair->forceFill(['status' => DuplicateStatusEnum::Dismissed])->save();
-    actingAs(dupStaff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id))
+    actingAs(staffMember(RoleEnum::Admin, atChurch($org)))
         ->put("/ccf/duplicates/{$pair->id}", ['status' => 'confirmed'])->assertNotFound();
 });
 
@@ -129,6 +124,6 @@ it('only takes "dismissed" or "confirmed"', function (): void {
     ['org' => $org] = dupChurch();
     $pair = DuplicateCandidate::query()->sole();
 
-    actingAs(dupStaff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id))
+    actingAs(staffMember(RoleEnum::Admin, atChurch($org)))
         ->put("/ccf/duplicates/{$pair->id}", ['status' => 'open'])->assertSessionHasErrors('status');
 });

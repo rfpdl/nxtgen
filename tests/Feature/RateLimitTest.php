@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Data\Models\Organization;
-
 use function Pest\Laravel\post;
+use function Tests\Support\church;
 
 /*
  * Per-device limits on public forms and emailed links: one setting (`nxtgen.rate_limits.per_device_per_minute`,
@@ -17,7 +16,7 @@ it('defaults to 20 a minute per device', function (): void {
 });
 
 it('refuses the registration form past the per-device limit', function (): void {
-    Organization::factory()->create(['slug' => 'ccf']);
+    church(['slug' => 'ccf']);
     config(['nxtgen.rate_limits.per_device_per_minute' => 2]);
 
     post('/ccf/register', [])->assertStatus(302);

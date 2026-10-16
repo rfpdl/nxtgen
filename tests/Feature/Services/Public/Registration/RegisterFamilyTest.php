@@ -13,13 +13,15 @@ use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\get;
 use function Pest\Laravel\post;
+use function Tests\Support\church;
+use function Tests\Support\satelliteOf;
 
 /** @return array{0: Organization, 1: Branch} */
 function ccf(): array
 {
-    $org = Organization::factory()->create(['slug' => 'ccf', 'name' => 'CCF']);
+    $org = church(['slug' => 'ccf', 'name' => 'CCF']);
 
-    return [$org, Branch::factory()->for($org)->create(['name' => 'CCF DXB'])];
+    return [$org, satelliteOf($org, ['name' => 'CCF DXB'])];
 }
 
 /**

@@ -27,16 +27,19 @@ use App\Operations\Registration\RegisterFamilyOperation;
 use App\Operations\Registration\RegistrationResultData;
 use Illuminate\Support\Facades\Notification;
 
+use function Tests\Support\church;
+use function Tests\Support\satelliteOf;
+
 beforeEach(function (): void {
     Notification::fake();
 });
 
 /** @return array{0: Organization, 1: Branch} */
-function church(): array
+function registrationChurch(): array
 {
-    $org = Organization::factory()->create(['moving_up_reference_date' => '2027-02-01']);
+    $org = church(['moving_up_reference_date' => '2027-02-01']);
 
-    return [$org, Branch::factory()->for($org)->create()];
+    return [$org, satelliteOf($org)];
 }
 
 /** @param list<ChildDetailsData>|null $children */
@@ -66,7 +69,7 @@ function register(FamilyRegistrationData $data): RegistrationResultData
 }
 
 it('registers a new family: unverified login, linked primary guardian, children, confirm-email link', function (): void {
-    [$org, $branch] = church();
+    [$org, $branch] = registrationChurch();
     $result = register(registration($org, $branch));
 
     $user = User::query()->sole();
@@ -87,7 +90,7 @@ it('registers a new family: unverified login, linked primary guardian, children,
 });
 
 it('does not register a second family for an email already registered in this church', function (): void {
-    [$org, $branch] = church();
+    [$org, $branch] = registrationChurch();
     register(registration($org, $branch));
 
     $result = register(registration($org, $branch, email: 'janice@example.com'));
@@ -98,7 +101,7 @@ it('does not register a second family for an email already registered in this ch
 });
 
 it('creates a pending claim when the email belongs to a login with no family here (e.g. a Lifeshaper)', function (): void {
-    [$org, $branch] = church();
+    [$org, $branch] = registrationChurch();
     $staff = User::factory()->create(['email' => 'janice@example.com']);
 
     $result = register(registration($org, $branch));
@@ -117,7 +120,7 @@ it('creates a pending claim when the email belongs to a login with no family her
 });
 
 it('re-sends the pending claim instead of creating a second family', function (): void {
-    [$org, $branch] = church();
+    [$org, $branch] = registrationChurch();
     User::factory()->create(['email' => 'janice@example.com']);
     register(registration($org, $branch));
 
@@ -130,18 +133,18 @@ it('re-sends the pending claim instead of creating a second family', function ()
 });
 
 it('lets the same parent register separately in another church', function (): void {
-    [$org, $branch] = church();
+    [$org, $branch] = registrationChurch();
     register(registration($org, $branch));
-    $otherOrg = Organization::factory()->create();
+    $otherOrg = church();
 
-    $result = register(registration($otherOrg, Branch::factory()->for($otherOrg)->create()));
+    $result = register(registration($otherOrg, satelliteOf($otherOrg)));
 
     expect($result->outcome)->toBe(RegistrationOutcomeEnum::ClaimSent)
         ->and(Family::query()->count())->toBe(2);
 });
 
 it('suggests a group from age on the reference date and gender', function (): void {
-    [$org, $branch] = church();
+    [$org, $branch] = registrationChurch();
     Group::factory()->for($org)->create(['name' => 'Level 2 Girls', 'min_age' => 6, 'max_age' => 7, 'gender' => GenderEnum::Girl]);
     $boys = Group::factory()->for($org)->create(['name' => 'Level 2 Boys', 'min_age' => 6, 'max_age' => 7, 'gender' => GenderEnum::Boy]);
 
@@ -154,7 +157,7 @@ it('suggests a group from age on the reference date and gender', function (): vo
 });
 
 it('leaves the group empty when no group fits', function (): void {
-    [$org, $branch] = church();
+    [$org, $branch] = registrationChurch();
     Group::factory()->for($org)->create(['min_age' => 10, 'max_age' => 12, 'gender' => null]);
 
     register(registration($org, $branch));
@@ -163,7 +166,7 @@ it('leaves the group empty when no group fits', function (): void {
 });
 
 it('flags a possible duplicate child for review without blocking registration', function (): void {
-    [$org, $branch] = church();
+    [$org, $branch] = registrationChurch();
     register(registration($org, $branch));
 
     $result = register(registration($org, $branch, email: 'dad@example.com'));
@@ -175,7 +178,7 @@ it('flags a possible duplicate child for review without blocking registration', 
 });
 
 it('records who registered on the parent\'s behalf', function (): void {
-    [$org, $branch] = church();
+    [$org, $branch] = registrationChurch();
     $volunteer = User::factory()->create();
 
     register(registration($org, $branch, source: RegistrationSourceEnum::Staff, by: $volunteer));
@@ -187,7 +190,7 @@ it('records who registered on the parent\'s behalf', function (): void {
 });
 
 it('tells a returning parent in the email why they got a sign-in link (review B3)', function (): void {
-    [$org, $branch] = church();
+    [$org, $branch] = registrationChurch();
     register(registration($org, $branch));
 
     register(registration($org, $branch, email: 'janice@example.com'));

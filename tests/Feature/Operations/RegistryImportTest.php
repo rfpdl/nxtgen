@@ -2,20 +2,17 @@
 
 declare(strict_types=1);
 
-use App\Data\Models\Branch;
 use App\Data\Models\Child;
 use App\Data\Models\Family;
 use App\Data\Models\Group;
 use App\Data\Models\Guardian;
 use App\Data\Models\MagicLink;
 use App\Data\Models\Organization;
-use App\Data\Models\RoleAssignment;
 use App\Data\Models\User;
 use App\Enums\ChildStatusEnum;
 use App\Enums\MagicLinkPurposeEnum;
 use App\Enums\RegistrationSourceEnum;
 use App\Enums\RoleEnum;
-use App\Enums\ScopeTypeEnum;
 use App\Notifications\MagicLinkNotification;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\PendingCommand;
@@ -25,6 +22,10 @@ use OpenSpout\Writer\XLSX\Writer;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\artisan;
+use function Tests\Support\atChurch;
+use function Tests\Support\church;
+use function Tests\Support\grantRole;
+use function Tests\Support\satelliteOf;
 
 /** @param array<string, string> $args */
 function runCommand(string $command, array $args, bool $expectSuccess = true): void
@@ -39,9 +40,9 @@ function runCommand(string $command, array $args, bool $expectSuccess = true): v
 /** @return array{0: Organization, 1: string} */
 function proposeSample(): array
 {
-    $org = Organization::factory()->create(['slug' => 'ccf']);
-    Branch::factory()->for($org)->create(['name' => 'CCF DXB']);
-    Branch::factory()->for($org)->create(['name' => 'House Church']);
+    $org = church(['slug' => 'ccf']);
+    satelliteOf($org, ['name' => 'CCF DXB']);
+    satelliteOf($org, ['name' => 'House Church']);
     $out = sys_get_temp_dir().'/nxtgen-review-'.uniqid().'.xlsx';
 
     runCommand('nxtgen:registry-propose', ['csv' => base_path('tests/Fixtures/registry-sample.csv'), '--out' => $out]);
@@ -404,9 +405,9 @@ it('reports families waiting for an existing login to confirm, and the resend ge
     Notification::fake();
     [$org, $out] = proposeSample();
     $lifeshaper = User::factory()->create(['email' => 'janice@example.com']);
-    RoleAssignment::factory()->create(['organization_id' => $org->id, 'user_id' => $lifeshaper->id, 'role' => RoleEnum::Lifeshaper, 'scope_type' => ScopeTypeEnum::Organization, 'scope_id' => $org->id]);
+    grantRole($lifeshaper, RoleEnum::Lifeshaper, atChurch($org));
     $admin = User::factory()->create();
-    RoleAssignment::factory()->create(['organization_id' => $org->id, 'user_id' => $admin->id, 'role' => RoleEnum::Admin, 'scope_type' => ScopeTypeEnum::Organization, 'scope_id' => $org->id]);
+    grantRole($admin, RoleEnum::Admin, atChurch($org));
 
     $apply = artisan('nxtgen:registry-apply', ['xlsx' => $out, '--org' => 'ccf']);
     if (! $apply instanceof PendingCommand) {

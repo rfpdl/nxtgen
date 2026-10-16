@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 
 .PHONY: help up down fresh reseed seed migrate migrate-check \
-        pint analyse test test-parallel assert-parallel-grant test-pure test-arch \
+        pint analyse test test-parallel assert-parallel-grant test-unit test-arch \
         test-fe lint format format-check typecheck discipline build \
         check e2e e2e-ui e2e-report dev coverage coverage-fe
 
@@ -88,8 +88,8 @@ assert-parallel-grant:
 
 # No database, no booted application — these should finish in milliseconds. If this suite ever slows
 # down, something in it has reached for the framework.
-test-pure: ## Run only the pure unit tests
-	./vendor/bin/pest --testsuite=Pure
+test-unit: ## Run only the pure unit tests
+	./vendor/bin/pest --testsuite=Unit
 
 # Line coverage. Deliberately OUTSIDE `check`: it needs the pcov extension, which not every machine
 # has, and a missing driver would fail the gate for a reason unrelated to the code.
