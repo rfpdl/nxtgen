@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Family\Features\Child;
 
-use App\Domains\Family\Jobs\DeleteChildPhotoJob;
+use App\Data\Models\User;
 use App\Domains\Family\Jobs\GetFamilyChildJob;
 use App\Domains\Family\Jobs\UpdateChildPhotoConsentJob;
 use App\Enums\AccessRowEnum;
@@ -14,7 +14,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 
 /**
- * A parent takes photo consent back: the photo is deleted, and no one can add another until they agree again.
+ * A parent takes photo consent back: the photo is HIDDEN from everyone — no link, and the photo route refuses —
+ * but kept, so it comes back if they agree again (Roy 2026-10-16). Nobody can add a photo meanwhile.
  *
  * @extends BaseFamilyFeature<RedirectResponse>
  */
@@ -26,12 +27,11 @@ final class WithdrawPhotoConsentFeature extends BaseFamilyFeature
     public function handle(): RedirectResponse
     {
         $child = $this->run(new GetFamilyChildJob(family: $this->family(), childId: $this->childId));
+        $parent = request()->user();
+        abort_unless($parent instanceof User, 404);
 
-        DB::transaction(function () use ($child): void {
-            $this->run(new DeleteChildPhotoJob(child: $child));
-            $this->run(new UpdateChildPhotoConsentJob(child: $child, by: null));
-        });
+        DB::transaction(fn () => $this->run(new UpdateChildPhotoConsentJob(child: $child, given: false, by: $parent)));
 
-        return back()->with('success', "Done — no photo of {$child->displayName()} is kept.");
+        return back()->with('success', "Done — {$child->displayName()}'s photo is hidden. If you say yes again, it comes back.");
     }
 }

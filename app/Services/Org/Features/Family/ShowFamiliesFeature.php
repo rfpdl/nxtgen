@@ -13,6 +13,7 @@ use App\Domains\Organization\Jobs\GetBranchesJob;
 use App\Enums\AccessRowEnum;
 use App\Enums\ChildStatusEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Support\ListPage;
 use App\Services\Org\Data\FamilyListQuery;
 use App\Services\Org\Features\BaseOrgFeature;
 use Inertia\Inertia;
@@ -35,6 +36,7 @@ final class ShowFamiliesFeature extends BaseOrgFeature
         $visible = $scope->visibleBranchIds();
 
         $families = $this->run(new GetFamiliesJob(organizationId: $org->id, branchIds: $visible, filters: $filters));
+        $page = ListPage::of($families, requested: request()->integer('page', 1));
         $satellites = array_values(array_filter(
             $this->run(new GetBranchesJob(organization: $org)),
             fn (BranchOptionData $b): bool => $visible === null || in_array($b->id, $visible, true),
@@ -42,7 +44,8 @@ final class ShowFamiliesFeature extends BaseOrgFeature
 
         return Inertia::render('Org/Families/Index', [
             'church' => ['name' => $org->name, 'slug' => $org->slug],
-            'families' => array_values($families->map(fn (Family $f) => FamilyListRowData::fromModel($f, fullEmail: $scope->canEditFamily($f)))->all()),
+            'families' => array_map(fn (Family $f) => FamilyListRowData::fromModel($f, fullEmail: $scope->canEditFamily($f)), $page->items),
+            'pagination' => $page->meta(),
             'filters' => FamilyListQuery::toProps($filters),
             'options' => [
                 'satellites' => $satellites,

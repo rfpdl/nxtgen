@@ -18,6 +18,8 @@ test("a Lifeshaper records the parent's yes, then takes the photo", async ({ pag
 
     await expect(card.getByTestId('take-photo')).toHaveCount(0)
     await card.getByTestId('record-photo-consent').click()
+    await expect(card).toContainText('Are you sure the parent said yes')
+    await card.getByTestId('confirm-photo-consent').click()
     await expect(page.getByTestId('flash-success')).toContainText('Consent recorded')
 
     await card.getByTestId('take-photo').setInputFiles('tests/Fixtures/phone-photo-rotated-gps.jpg')

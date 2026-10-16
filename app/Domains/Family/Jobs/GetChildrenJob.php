@@ -36,8 +36,11 @@ final class GetChildrenJob extends BaseJob
             ->where('organization_id', $this->organizationId)
             ->when($this->branchIds !== null, fn (Builder $q) => $q->whereHas('family', fn (Builder $fam) => $fam->whereIn('home_branch_id', $this->branchIds ?? [])))
             ->when($f->branchId !== null, fn (Builder $q) => $q->whereHas('family', fn (Builder $fam) => $fam->where('home_branch_id', $f->branchId)))
+            // The child's own names, OR the family's parent (name, email, phone — Family::scopeMatchingContact), so
+            // "Janice" finds Janice's children; a child's name does not drag in their siblings (review 4).
             ->when($like !== null, fn (Builder $q) => $q->where(fn (Builder $n) => $n
-                ->where('nickname', 'like', $like)->orWhere('first_name', 'like', $like)->orWhere('last_name', 'like', $like)))
+                ->where('nickname', 'like', $like)->orWhere('first_name', 'like', $like)->orWhere('last_name', 'like', $like)
+                ->orWhereHas('family', fn (Builder $fam) => $fam->matchingContact((string) $f->query))))
             ->when($f->status !== null, fn (Builder $q) => $q->where('status', $f->status))
             ->when($f->groupId !== null, fn (Builder $q) => $q->where('group_id', $f->groupId))
             ->orderBy('nickname')

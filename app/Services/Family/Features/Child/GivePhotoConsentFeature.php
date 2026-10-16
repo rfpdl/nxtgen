@@ -11,6 +11,7 @@ use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Services\Family\Features\BaseFamilyFeature;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 
 /**
  * A parent agrees to a photo WITHOUT sending one — so a Lifeshaper can take the first photo at church (Roy
@@ -29,7 +30,8 @@ final class GivePhotoConsentFeature extends BaseFamilyFeature
         $parent = request()->user();
         abort_unless($parent instanceof User, 404);
 
-        $this->run(new UpdateChildPhotoConsentJob(child: $child, by: $parent));
+        // Consent and its history note together, or neither (review 4).
+        DB::transaction(fn () => $this->run(new UpdateChildPhotoConsentJob(child: $child, given: true, by: $parent)));
 
         return back()->with('success', "Thank you — you or a volunteer can now add {$child->displayName()}'s photo.");
     }

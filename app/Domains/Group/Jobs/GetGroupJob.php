@@ -8,7 +8,7 @@ use App\Data\Models\Group;
 use App\Foundation\Jobs\BaseJob;
 
 /**
- * A group by id, ONLY within this church — or null.
+ * An ACTIVE group by id, ONLY within this church — or null. Retired groups are never assigned (review 4).
  *
  * @extends BaseJob<Group|null>
  */
@@ -21,6 +21,6 @@ final class GetGroupJob extends BaseJob
 
     public function handle(): ?Group
     {
-        return Group::query()->where('organization_id', $this->organizationId)->find($this->id);
+        return Group::query()->where('organization_id', $this->organizationId)->where('is_active', true)->find($this->id);
     }
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\Org\Features\Child;
 
-use App\Domains\Family\Jobs\CreateSystemNoteJob;
 use App\Domains\Family\Jobs\GetOrganizationChildJob;
 use App\Domains\Family\Jobs\UpdateChildPhotoConsentJob;
 use App\Enums\AccessRowEnum;
@@ -30,14 +29,8 @@ final class RecordPhotoConsentFeature extends BaseOrgFeature
         abort_unless($this->scope()->canSeeFamily($child->family), 404);
         $staff = $this->staff();
 
-        DB::transaction(function () use ($child, $staff): void {
-            $this->run(new UpdateChildPhotoConsentJob(child: $child, by: $staff));
-            $this->run(new CreateSystemNoteJob(
-                about: $child,
-                body: "{$child->displayName()}: photo consent recorded by {$staff->name} — the parent said yes in person.",
-                by: $staff,
-            ));
-        });
+        // Consent and its history note together, or neither (review 4).
+        DB::transaction(fn () => $this->run(new UpdateChildPhotoConsentJob(child: $child, given: true, by: $staff, inPerson: true)));
 
         return back()->with('success', "Consent recorded. You can take {$child->displayName()}'s photo now.");
     }

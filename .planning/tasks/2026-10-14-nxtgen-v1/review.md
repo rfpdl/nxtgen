@@ -322,3 +322,94 @@ fixture with a real family · CI trigger · plan §10 / DECISIONS / README truth
 not report the model actually used.
 
 **Gate:** `make check` green — 285 Pest (incl. 31 arch), 99 Vitest, PHPStan L10; `make e2e` 41 runs green.
+
+---
+
+# Review 4 — staff consent, Cloud storage, children list, group correction (4adeb84..b1453b1)
+
+**Status:** fixed; 3 owner questions · **Date:** 2026-10-16 · **Reviewed:** `4adeb84..b1453b1` on `release-1`
+against plan §3.2/§3.3/§6, DECISIONS (2026-10-16 entries), Review 3 outcome, TODO #17–#23, Roy in chat (consent by
+parent or Lifeshaper; Laravel Cloud + private S3; first admin blivejesus@gmail.com; "complete the features first").
+
+## Intent ledger
+
+| # | Commitment | Source | Status (before fixes) |
+|---|---|---|---|
+| 1 | Consent recorded by parent OR Lifeshaper; no photo without it | Roy 10-16 · DECISIONS | DONE — Pest + E2E, scope revert-checked |
+| 2 | Staff-recorded consent saved with who + noted on the child's history | DECISIONS | DONE — test asserts `photo_consent_by` and the note |
+| 3 | Only the parent withdraws; withdrawal deletes | DECISIONS (Roy has not overruled) | DONE (Review 3) |
+| 4 | Photos disk uses the bucket Laravel Cloud attaches | Roy · README · .env.example | **PARTIAL** — a blank `PHOTOS_BUCKET` (as .env.example ships) defeated the fallback (round A) |
+| 5 | First admin blivejesus@gmail.com | Roy | DONE (config default + .env.example) |
+| 6 | Children list, scoped to the viewer's satellites, filters never widen | plan §6 · §3.2 | DONE — scope revert-checked |
+| 7 | Children list projection: allergy flag only, no health detail | §3.3 | DONE (ChildListRowData has no health fields) — UNTESTED as an absence assertion (→ TODO #18) |
+| 8 | Group correction: church admin only | §3.2 | DONE — revert-checked |
+| 9 | Group must be this church's and fit the child | build | DONE for church + gender (revert-checked); **PARTIAL** — retired groups accepted (round A) |
+| 10 | Group change recorded (who/when) + history note | build | DONE |
+| 11 | A refused group change shows on that child only | E2E finding | DONE — ChildAdminControls test |
+| 12 | Every consent change on the history (parent too), atomic with the change | DECISIONS (read broadly) · round B | **PARTIAL → DONE** — one owner `UpdateChildPhotoConsentJob` (+ `Note::system`), transactions; tests incl. forced note failure |
+| 13 | Children search finds what the box promises (parent name/email/phone) | UI copy · round B | **MISSING → DONE** — `Family::scopeMatchingContact`; siblings not dragged in (test) |
+
+**Tally after fixes (13 rows):** done 12 · untested 1 (#7 absence assertion → TODO #18) · partial 0 · missing 0 ·
+documented-only 0.
+
+## Reuse and debt ledger
+
+| New or changed concept | Closest existing | Old path removed? | Judgment |
+|---|---|---|---|
+| `GetChildrenJob` | `GetFamiliesJob` | n/a | necessary — different entity, same scoping rule (`visibleBranchIds`) |
+| `ChildListQuery` / `ChildListFiltersData` | `FamilyListQuery` / `FamilyListFiltersData` | n/a | second copy, justified (no family toggles); consolidate on a third |
+| `RegistrationListFilters` (was FamilyListFilters + `familyToggles`) | — | yes (renamed) | good refactor — one filter bar for both lists |
+| `Family::scopeMatchingContact` | inside `scopeMatching` | n/a | good refactor — `scopeMatching` = contact OR children names |
+| `Note::system()` | `CreateSystemNoteJob` body | yes — the Job calls it | good refactor — one way to write a system note |
+| `UpdateChildPhotoConsentJob` (now writes the note) | `RecordPhotoConsentFeature` wrote it itself | yes | good refactor — one owner for consent + history |
+| `GetGroupJob` | `GetGroupsJob` | n/a | necessary (one active group by id, church-scoped) |
+| `UpdateChildGroupJob` | `UpdateChildStatusJob` pattern | n/a | necessary |
+| `ChildAdminControls` | inline selects in `Org/Families/Show.vue` | yes | good refactor (page size + per-child error) |
+| `RecordPhotoConsentFeature` / `GivePhotoConsentFeature` | shared Job | n/a | necessary — different actors and rules |
+
+**Complexity delta:** ~14 public concepts added; 1 renamed (filters bar); 3 consolidations (contact matching,
+system-note writing, consent+history). Parallel paths retained: 1 (list query/filters DTOs, trigger above).
+
+## Rulings
+
+| Round | Finding | Ruling |
+|---|---|---|
+| A | [high] blank `PHOTOS_BUCKET` defeats the Cloud bucket fallback | **Accepted** — `?:` fallback; test sets it blank (failed before) |
+| A | [medium] retired groups can be assigned | **Accepted** — `GetGroupJob` active only; test |
+| B1 | parent consent leaves no history | **Accepted** — one owner for consent + note, every path |
+| B2 | blank bucket (same as A) | **Accepted** |
+| B3 | children search promises parent name/email/phone, searches only child names | **Accepted** — parent contact matching; siblings excluded |
+| B nb | consolidate the two list-query parsers / filter DTOs | **Rejected for now** — second copy for a different entity; a shared object would carry family-only toggles into the children path; consolidate on a third |
+| B nb | staff consent E2E on phones | **Reclassified** — needs isolated per-run state; TODO #12 (breakpoints) |
+| B nb | fixtures: real guardians, production age bands | Partly fixed (search test uses a real guardian + login); rest logged |
+| B nb | owner questions (confirmation, volume, no-group) | **Needs Roy** — below |
+| 2 | consent could commit without its note (no transaction) | **Accepted** — transactions in both consent-only Features; forced-failure test (failed before) |
+| 3 | — | **agree**, nothing new |
+
+Not everything accepted (one rejection, one reclassification). The acceptances were mostly real: a promised
+history the parent path never wrote, and a search box promising more than it searched.
+
+## Outcome
+
+**Fixed now:** blank-bucket fallback · retired groups refused · consent history on every path, atomic · children
+search by parent contact. Each test failed before its fix.
+
+**Needs a decision (Roy):**
+1. **One-tap staff consent.** A Lifeshaper's tap records "the parent said yes in person" with no confirm step. Options:
+   (a) keep one tap — it is named, noted and the parent can take it back; (b) add "Are you sure the parent said
+   yes?". Recommend (b): a mis-tap otherwise records consent the parent never gave.
+2. **Children list size.** Fine at today's ~200 children (all on one page, filters help); at 500+ it gets long on a
+   phone. Options: page it now (half a day) or when the list passes ~400. Recommend: later — log the trigger.
+3. **A "no group" filter / clearing a group.** Children without a group cannot be filtered for, and a group cannot be
+   cleared. Recommend: add the filter (small); clearing only if you want it.
+(Still open from before: photo withdrawal **deletes** — say if you want hide-only.)
+
+**Logged:** TODO #24 children list paging at ~400 children (if Roy agrees to defer).
+
+**Codex:** rounds A + B, then 2 resumed rounds; final **agree**. Requested `gpt-6-astra`; actual model not reported.
+**Gate:** `make check` green — 304 Pest (incl. 31 arch), 103 Vitest, PHPStan L10; `make e2e` 43 green.
+
+**Roy's answers (2026-10-16), built:** 1 staff consent asks "Are you sure the parent said yes?" first · 2 families and
+children lists paged, 50 per page (`ListPage`, `Pager`; Excel still has every filtered row) · 4 withdrawal HIDES the
+photo (kept, shown to nobody, back on a new yes) — SECURITY #19, TODO #25 (delete action) · 3 "no group" filter:
+explained why a child can be groupless (outside 4–12 on the Moving-Up date, or a mistyped birthday); awaiting Roy.

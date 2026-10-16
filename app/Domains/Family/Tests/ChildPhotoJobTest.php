@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Data\Models\Child;
 use App\Domains\Family\Jobs\CreateChildPhotoJob;
-use App\Domains\Family\Jobs\DeleteChildPhotoJob;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -57,17 +56,4 @@ it('keeps nothing when consent is gone at the moment of saving (an upload racing
     expect($kept)->toBeFalse()
         ->and($child->fresh()?->photo_path)->toBeNull()
         ->and(Storage::disk('photos')->allFiles())->toBe([]);
-});
-
-it('removes EVERY stored photo of the child, not just the current one (review 3: a failed save can leave an orphan)', function (): void {
-    Storage::fake('photos');
-    $child = Child::factory()->create(['photo_consent_at' => now()]);
-    (new CreateChildPhotoJob(child: $child, file: phonePhoto()))->handle();
-    Storage::disk('photos')->put("children/{$child->organization_id}/{$child->id}-leftover.jpg", 'x');
-    Storage::disk('photos')->put("children/{$child->organization_id}/9{$child->id}-someone-else.jpg", 'x');
-
-    (new DeleteChildPhotoJob(child: $child->fresh() ?? $child))->handle();
-
-    expect(Storage::disk('photos')->allFiles())->toBe(["children/{$child->organization_id}/9{$child->id}-someone-else.jpg"])
-        ->and($child->fresh()?->photo_path)->toBeNull();
 });

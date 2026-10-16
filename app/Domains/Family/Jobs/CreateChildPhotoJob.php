@@ -19,8 +19,8 @@ use Throwable;
  * avatar flow. The image is RE-ENCODED, never stored as uploaded: turned upright from the phone's orientation
  * tag, shrunk to 600px, saved as JPEG — which also drops every EXIF field, including where it was taken.
  * The image is prepared first; then the child is LOCKED (the caller runs this in a transaction) and consent
- * re-checked before the file is written, so an upload racing a withdrawal can neither leave a photo behind nor be
- * swept away half-saved. Returns whether the photo was kept.
+ * re-checked before the file is written, so an upload racing a withdrawal cannot store a photo nobody agreed to.
+ * Returns whether the photo was kept.
  *
  * @extends BaseJob<bool>
  */
@@ -65,8 +65,8 @@ final class CreateChildPhotoJob extends BaseJob
         }
         $this->child->setRawAttributes($locked->getAttributes(), true);
 
-        // The old file goes only once the new pointer is committed; if that delete fails, the file is an orphan that
-        // consent withdrawal still removes (DeleteChildPhotoJob deletes every file of the child).
+        // The old file goes only once the new pointer is committed; if that delete fails, the file is an orphan
+        // (storage tidiness — TODO #22).
         if ($old !== null && $old !== $path) {
             DB::afterCommit(function () use ($old): void {
                 try {

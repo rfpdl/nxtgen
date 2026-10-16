@@ -120,8 +120,16 @@ describe('ChildPhotoForm', () => {
         expect(wrapper.text()).toContain('The parent has not agreed to a photo yet')
         expect(wrapper.find('[data-testid="take-photo"]').exists()).toBe(false)
 
+        // One tap only ASKS — a mis-tap must not record a yes the parent never gave (Roy 2026-10-16).
         await wrapper.find('[data-testid="record-photo-consent"]').trigger('click')
+        expect(put).not.toHaveBeenCalled()
+        expect(wrapper.text()).toContain('Are you sure the parent said yes to a photo of Amara?')
 
+        await wrapper.find('[data-testid="cancel-photo-consent"]').trigger('click')
+        expect(wrapper.find('[data-testid="confirm-photo-consent"]').exists()).toBe(false)
+
+        await wrapper.find('[data-testid="record-photo-consent"]').trigger('click')
+        await wrapper.find('[data-testid="confirm-photo-consent"]').trigger('click')
         expect(put).toHaveBeenCalledWith('/sc', {}, expect.anything())
     })
 

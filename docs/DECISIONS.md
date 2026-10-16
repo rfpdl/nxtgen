@@ -6,9 +6,12 @@ describes the design; this records the choices that shaped or changed it.
 
 ## 2026-10-16
 
+- **Staff consent needs a confirmation step** (Roy): "Are you sure the parent said yes?" before it is recorded.
+- **Families and children lists are paged** (Roy).
+
 - **Photos: a parent or a Lifeshaper can take or upload a child's photo** (Roy) — only once consent is recorded.
   **Consent can be recorded by the parent, or by a Lifeshaper the parent told in person** (Roy, later the same day,
-  replacing "staff never agree") — saved with who recorded it and noted on the child's history. The parent can take consent back, which deletes the photo. Photos are private
+  replacing "staff never agree") — saved with who recorded it and noted on the child's history. The parent can take consent back, which **hides** the photo (kept, shown to nobody, back if they agree again) — Roy chose hide over delete, against the review's recommendation. Photos are private
   (signed 30-minute links, checked against who is asking), re-encoded on upload (upright, 600px, no location or
   camera data). Consent wording approved by Roy. Photos are converted to an upright ~1600px JPEG ON THE PHONE before upload
   (iPhone HEIC included; much smaller uploads on church wifi); the server still re-processes every photo.

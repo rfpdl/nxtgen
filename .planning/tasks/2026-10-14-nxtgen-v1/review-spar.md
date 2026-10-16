@@ -65,3 +65,19 @@ Requested model: `gpt-6-astra` on every call (runner did not report the actual m
 
 Stopped after Fix 3: findings had narrowed to failure-of-the-database edges with no privacy consequence, and the
 main thread had agreed. Rulings and evidence: `review.md` → Review 3 → Rulings.
+
+
+---
+
+# Review 4 — 2026-10-16 (4adeb84..b1453b1)
+
+Requested model `gpt-6-astra` on every call (actual model not reported by the runner).
+
+| Round | Shape | Verdict | Caught |
+|---|---|---|---|
+| A | `adversarial-review --base 4adeb84` | needs-attention | blank PHOTOS_BUCKET breaks the Cloud fallback (high); retired groups assignable (medium) |
+| B | `task --fresh` (absences + debt) | changes_requested | parent consent has no history (high); blank bucket (high); children search promises parent contact (high); owner questions; consolidation suggestion |
+| 2 | `task --resume-last` | changes_requested | consent-only paths not atomic with their note (high) → fixed |
+| 3 | `task --resume-last` | **agree** | nothing |
+
+Rulings and evidence: `review.md` → Review 4 → Rulings.

@@ -6,6 +6,7 @@ use App\Data\Models\Branch;
 use App\Data\Models\Child;
 use App\Data\Models\Family;
 use App\Data\Models\Group;
+use App\Data\Models\Guardian;
 use App\Data\Models\Note;
 use App\Data\Models\Organization;
 use App\Data\Models\RoleAssignment;
@@ -86,6 +87,21 @@ describe('the children list', function (): void {
             ->assertInertia(fn (AssertableInertia $p) => $p->has('children', 0));
     });
 
+    it('finds children by their family\'s parent name, email or phone too — as the search box says (review 4)', function (): void {
+        ['org' => $org, 'amara' => $amara] = kidsChurch();
+        $user = User::factory()->create(['email' => 'janice@example.com']);
+        Guardian::factory()->create(['family_id' => $amara->family_id, 'organization_id' => $org->id, 'user_id' => $user->id, 'first_name' => 'Janice', 'last_name' => 'Ramos', 'phone' => '0544897346']);
+        $admin = kidsStaff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id);
+
+        foreach (['Janice', 'janice@exam', '4489734'] as $q) {
+            actingAs($admin)->get('/ccf/children?q='.urlencode($q))->assertInertia(fn (AssertableInertia $p) => $p
+                ->has('children', 1)->where('children.0.nickname', 'Amara'));
+        }
+        // A child's own name finds that child, not their brothers and sisters.
+        Child::factory()->create(['family_id' => $amara->family_id, 'organization_id' => $org->id, 'first_name' => 'Ben', 'nickname' => 'Ben', 'gender' => GenderEnum::Boy]);
+        actingAs($admin)->get('/ccf/children?q=Amara')->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Amara'));
+    });
+
     it('is not there for someone with no role in the church', function (): void {
         kidsChurch();
 
@@ -120,6 +136,16 @@ describe('setting a child\'s group', function (): void {
         expect($amara->fresh()?->group_id)->toBe($girls2->id);
     });
 
+    it('refuses a retired group (review 4)', function (): void {
+        ['org' => $org, 'amara' => $amara, 'girls2' => $girls2] = kidsChurch();
+        $retired = Group::factory()->create(['organization_id' => $org->id, 'name' => 'Old Level', 'gender' => null, 'is_active' => false]);
+
+        actingAs(kidsStaff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id))
+            ->put("/ccf/children/{$amara->id}/group", ['group_id' => $retired->id])->assertSessionHasErrors('group_id');
+
+        expect($amara->fresh()?->group_id)->toBe($girls2->id)->and(Note::query()->count())->toBe(0);
+    });
+
     it('refuses a group of another church', function (): void {
         ['org' => $org, 'amara' => $amara] = kidsChurch();
         $foreign = Group::factory()->create();
@@ -146,4 +172,16 @@ describe('setting a child\'s group', function (): void {
         actingAs(kidsStaff($org, RoleEnum::Admin, ScopeTypeEnum::Branch, $dxb->id))->get("/ccf/families/{$amara->family_id}")
             ->assertInertia(fn (AssertableInertia $p) => $p->where('canSetGroup', false)->where('groups', []));
     });
+});
+
+it('shows the children list 50 at a time, filters and all (Roy 2026-10-16)', function (): void {
+    ['org' => $org, 'dxb' => $dxb] = kidsChurch();
+    $family = Family::factory()->create(['organization_id' => $org->id, 'home_branch_id' => $dxb->id]);
+    Child::factory()->count(58)->create(['family_id' => $family->id, 'organization_id' => $org->id, 'status' => ChildStatusEnum::Active]);
+    $admin = kidsStaff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id);
+
+    actingAs($admin)->get('/ccf/children?status=active')->assertInertia(fn (AssertableInertia $p) => $p
+        ->has('children', 50)->where('pagination.total', 59)->where('pagination.page', 1)->where('pagination.lastPage', 2));
+    actingAs($admin)->get('/ccf/children?status=active&page=2')->assertInertia(fn (AssertableInertia $p) => $p
+        ->has('children', 9)->where('pagination.page', 2));
 });

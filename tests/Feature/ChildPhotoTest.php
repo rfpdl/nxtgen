@@ -20,11 +20,13 @@ use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
+use function Pest\Laravel\withoutExceptionHandling;
 
 /*
  * Children's photos (plan §5 + Roy 2026-10-16): a parent OR a Lifeshaper may take or upload one — but only once
- * the parent has agreed. Only a parent can agree (or take it back, which removes the photo). Photos are private:
- * seen only by the child's own family and staff who can see the family, through short-lived signed links.
+ * consent is recorded (by the parent, or by a Lifeshaper the parent told). Only the parent takes it back, which
+ * HIDES the photo until they agree again. Photos are private: seen only by the child's own family and staff who
+ * can see the family, through short-lived signed links.
  */
 
 /** @return array{org: Organization, htc: Branch, house: Branch, family: Family, parent: User, child: Child} */
@@ -86,16 +88,24 @@ describe('a parent', function (): void {
             ->assertSessionHasErrors('photo');
     });
 
-    it('takes consent back, which removes the photo', function (): void {
-        ['parent' => $parent, 'child' => $child] = photoFamily();
+    it('takes consent back, which HIDES the photo — and saying yes again brings it back (Roy 2026-10-16)', function (): void {
+        ['org' => $org, 'htc' => $htc, 'parent' => $parent, 'child' => $child] = photoFamily();
         actingAs($parent)->post("/ccf/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true]);
         $path = (string) $child->fresh()?->photo_path;
+        $url = URL::temporarySignedRoute('photos.child', now()->addMinutes(5), ['child' => $child->id]);
 
         actingAs($parent)->delete("/ccf/family/children/{$child->id}/photo-consent")->assertSessionHas('success');
 
         $child->refresh();
-        expect($child->photo_path)->toBeNull()->and($child->photo_consent_at)->toBeNull()->and($child->photo_consent_by)->toBeNull();
-        Storage::disk('photos')->assertMissing($path);
+        expect($child->photo_consent_at)->toBeNull()->and($child->photo_path)->toBe($path);
+        Storage::disk('photos')->assertExists($path);
+        // Hidden from everyone: no link, and the photo itself refuses — for the family and for staff.
+        actingAs($parent)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('family.children.0.photoUrl', null));
+        actingAs($parent)->get($url)->assertNotFound();
+        actingAs(photoStaff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id))->get($url)->assertNotFound();
+
+        actingAs($parent)->put("/ccf/family/children/{$child->id}/photo-consent");
+        actingAs($parent)->get($url)->assertOk();
     });
 
     it('cannot touch another family\'s child', function (): void {
@@ -103,6 +113,43 @@ describe('a parent', function (): void {
         $stranger = Child::factory()->create();
 
         actingAs($parent)->post("/ccf/family/children/{$stranger->id}/photo", ['photo' => photoFile(), 'consent' => true])->assertNotFound();
+    });
+});
+
+describe('the consent history (review 4)', function (): void {
+    it('notes every consent change on the child — given by the parent, then withdrawn — and keeps the notes', function (): void {
+        ['parent' => $parent, 'child' => $child] = photoFamily();
+        $parent->forceFill(['name' => 'Janice Ramos'])->save();
+
+        actingAs($parent)->put("/ccf/family/children/{$child->id}/photo-consent");
+        actingAs($parent)->delete("/ccf/family/children/{$child->id}/photo-consent");
+
+        expect(Note::query()->where('noteable_type', 'child')->where('noteable_id', $child->id)->orderBy('id')->pluck('body')->all())->toBe([
+            'Amara: photo consent given by Janice Ramos.',
+            'Amara: photo consent withdrawn by Janice Ramos — the photo is hidden.',
+        ]);
+    });
+
+    it('never records consent without its note — both or neither (review 4, round 2)', function (string $who): void {
+        ['org' => $org, 'htc' => $htc, 'parent' => $parent, 'child' => $child] = photoFamily();
+        Note::creating(fn () => throw new RuntimeException('note store down'));
+        withoutExceptionHandling();
+
+        $request = fn () => $who === 'parent'
+            ? actingAs($parent)->put("/ccf/family/children/{$child->id}/photo-consent")
+            : actingAs(photoStaff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id))->put("/ccf/children/{$child->id}/photo-consent");
+
+        expect($request)->toThrow(RuntimeException::class, 'note store down');
+        expect($child->fresh()?->photo_consent_at)->toBeNull();
+    })->with(['parent', 'staff']);
+
+    it('notes consent given together with the first photo', function (): void {
+        ['parent' => $parent, 'child' => $child] = photoFamily();
+        $parent->forceFill(['name' => 'Janice Ramos'])->save();
+
+        actingAs($parent)->post("/ccf/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true]);
+
+        expect(Note::query()->where('noteable_id', $child->id)->sole()->body)->toBe('Amara: photo consent given by Janice Ramos.');
     });
 });
 

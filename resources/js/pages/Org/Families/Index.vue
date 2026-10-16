@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import OrgShell from '@/components/layout/OrgShell.vue'
+import Pager from '@/components/molecules/Pager.vue'
 import RegistrationListFilters, {
     type RegistrationListFilterValues,
 } from '@/components/molecules/RegistrationListFilters.vue'
@@ -12,12 +13,19 @@ const props = defineProps<{
     church: { name: string; slug: string }
     families: FamilyListRow[]
     filters: RegistrationListFilterValues
+    pagination: { page: number; lastPage: number; total: number; perPage: number }
     options: {
         satellites: BranchOption[]
         groups: { id: number; name: string }[]
         statuses: { value: string; label: string }[]
     }
 }>()
+
+/** Another page of the same filtered list: the filters stay in the address. */
+function goTo(page: number): void {
+    const current = Object.fromEntries(new URLSearchParams(window.location.search))
+    router.get(route('org.families.index', props.church.slug), { ...current, page })
+}
 
 function apply(params: Record<string, string | number>): void {
     router.get(route('org.families.index', props.church.slug), params, { preserveScroll: true })
@@ -34,7 +42,7 @@ const exportHref = computed(() => {
     <Head title="Families" />
     <OrgShell :church="church">
         <div class="flex flex-wrap items-center gap-4">
-            <h1 class="text-text text-2xl font-semibold">Families ({{ families.length }})</h1>
+            <h1 class="text-text text-2xl font-semibold">Families ({{ pagination.total }})</h1>
             <a
                 :href="exportHref"
                 class="min-h-touch border-border bg-surface text-text ml-auto flex items-center rounded-md border px-4"
@@ -73,6 +81,12 @@ const exportHref = computed(() => {
                 </p>
             </li>
         </ul>
+        <Pager
+            :page="pagination.page"
+            :last-page="pagination.lastPage"
+            :total="pagination.total"
+            @go="goTo"
+        />
         <p v-if="families.length === 0" class="text-text-muted">No families match.</p>
     </OrgShell>
 </template>

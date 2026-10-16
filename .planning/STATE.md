@@ -119,3 +119,8 @@
   this church's group, fits the child's gender, noted) — revert-checked; E2E found and fixed a refused-group message
   showing under every child (`ChildAdminControls`). Staff can record a parent's in-person photo consent. First admin
   blivejesus@gmail.com. Gate: 298 Pest, 103 Vitest, PHPStan L10; E2E 43 green.
+- **Review 4 (2026-10-16, uncommitted):** Codex agrees after 4 rounds. Fixed: blank PHOTOS_BUCKET fallback, retired
+  groups refused, consent history on every path (atomic), children search by parent contact. Owner questions: staff
+  consent confirm step, list paging, "no group" filter (+ withdrawal delete vs hide). Gate: 304 Pest, 103 Vitest; E2E 43.
+- **Roy's answers built (2026-10-16):** staff consent confirm step; lists paged (50); withdrawal hides the photo (kept,
+  never shown; returns on a new yes). Gate: 310 Pest, 106 Vitest, PHPStan L10; E2E 43 green.

@@ -13,6 +13,7 @@ use App\Domains\Organization\Jobs\GetBranchesJob;
 use App\Enums\AccessRowEnum;
 use App\Enums\ChildStatusEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Support\ListPage;
 use App\Services\Org\Data\ChildListQuery;
 use App\Services\Org\Features\BaseOrgFeature;
 use Inertia\Inertia;
@@ -34,10 +35,12 @@ final class ShowChildrenFeature extends BaseOrgFeature
         $filters = ChildListQuery::from(request());
 
         $children = $this->run(new GetChildrenJob(organizationId: $org->id, branchIds: $visible, filters: $filters));
+        $page = ListPage::of($children, requested: request()->integer('page', 1));
 
         return Inertia::render('Org/Children/Index', [
             'church' => ['name' => $org->name, 'slug' => $org->slug],
-            'children' => array_values($children->map(fn (Child $c): ChildListRowData => ChildListRowData::fromModel($c))->all()),
+            'children' => array_map(fn (Child $c): ChildListRowData => ChildListRowData::fromModel($c), $page->items),
+            'pagination' => $page->meta(),
             'filters' => ChildListQuery::toProps($filters),
             'options' => [
                 'satellites' => array_values(array_filter(

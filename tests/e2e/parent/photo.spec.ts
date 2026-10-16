@@ -52,8 +52,8 @@ test('a parent agrees; a Lifeshaper takes the first photo; the parent replaces i
     await card.getByTestId('choose-photo').setInputFiles(PHOTO)
     await expect(page.getByTestId('flash-success')).toContainText("Noah's photo is saved")
 
-    // The parent takes consent back: the photo is gone.
+    // The parent takes consent back: the photo is hidden.
     await card.getByTestId('withdraw-photo-consent').click()
-    await expect(page.getByTestId('flash-success')).toContainText('no photo of Noah is kept')
+    await expect(page.getByTestId('flash-success')).toContainText("Noah's photo is hidden")
     await expect(card.getByTestId('child-photo-img')).toHaveCount(0)
 })

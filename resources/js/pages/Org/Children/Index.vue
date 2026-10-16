@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import OrgShell from '@/components/layout/OrgShell.vue'
+import Pager from '@/components/molecules/Pager.vue'
 import RegistrationListFilters, {
     type RegistrationListFilterValues,
 } from '@/components/molecules/RegistrationListFilters.vue'
@@ -15,12 +16,19 @@ const props = defineProps<{
     church: { name: string; slug: string }
     children: ChildListRow[]
     filters: RegistrationListFilterValues
+    pagination: { page: number; lastPage: number; total: number; perPage: number }
     options: {
         satellites: BranchOption[]
         groups: { id: number; name: string }[]
         statuses: { value: string; label: string }[]
     }
 }>()
+
+/** Another page of the same filtered list: the filters stay in the address. */
+function goTo(page: number): void {
+    const current = Object.fromEntries(new URLSearchParams(window.location.search))
+    router.get(route('org.children.index', props.church.slug), { ...current, page })
+}
 
 function apply(params: Record<string, string | number>): void {
     router.get(route('org.children.index', props.church.slug), params, { preserveScroll: true })
@@ -30,7 +38,7 @@ function apply(params: Record<string, string | number>): void {
 <template>
     <Head title="Children" />
     <OrgShell :church="church">
-        <h1 class="text-text text-2xl font-semibold">Children ({{ children.length }})</h1>
+        <h1 class="text-text text-2xl font-semibold">Children ({{ pagination.total }})</h1>
         <RegistrationListFilters
             :key="JSON.stringify(filters)"
             :filters="filters"
@@ -62,6 +70,12 @@ function apply(params: Record<string, string | number>): void {
                 >
             </li>
         </ul>
+        <Pager
+            :page="pagination.page"
+            :last-page="pagination.lastPage"
+            :total="pagination.total"
+            @go="goTo"
+        />
         <p v-if="children.length === 0" class="text-text-muted">No children match.</p>
     </OrgShell>
 </template>

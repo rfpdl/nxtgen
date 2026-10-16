@@ -8,8 +8,6 @@ use App\Data\Models\Child;
 use App\Data\Models\Family;
 use App\Data\Models\Note;
 use App\Data\Models\User;
-use App\Enums\NoteKindEnum;
-use App\Enums\NoteVisibilityEnum;
 use App\Foundation\Jobs\BaseJob;
 
 /**
@@ -28,14 +26,6 @@ final class CreateSystemNoteJob extends BaseJob
 
     public function handle(): Note
     {
-        return Note::query()->create([
-            'organization_id' => $this->about->organization_id,
-            'noteable_type' => $this->about->getMorphClass(),
-            'noteable_id' => $this->about->id,
-            'author_id' => $this->by?->id,
-            'kind' => NoteKindEnum::System,
-            'body' => $this->body,
-            'visibility' => NoteVisibilityEnum::Staff,
-        ]);
+        return Note::system(about: $this->about, body: $this->body, by: $this->by);
     }
 }

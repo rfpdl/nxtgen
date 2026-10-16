@@ -337,3 +337,13 @@ describe('searching and filtering the list', function (): void {
         expect(str_contains($sheet, 'Mira'))->toBeTrue()->and(str_contains($sheet, 'Janice'))->toBeFalse();
     });
 });
+
+it('shows the families list 50 at a time; the Excel download still has every family (Roy 2026-10-16)', function (): void {
+    ['org' => $org, 'htc' => $htc] = adminChurch();
+    Family::factory()->count(55)->create(['organization_id' => $org->id, 'home_branch_id' => $htc->id]);
+    $admin = staff($org, RoleEnum::Admin, ScopeTypeEnum::Organization, $org->id);
+
+    actingAs($admin)->get('/ccf/families')->assertInertia(fn (AssertableInertia $p) => $p
+        ->has('families', 50)->where('pagination.total', 55)->where('pagination.lastPage', 2));
+    actingAs($admin)->get('/ccf/families?page=2')->assertInertia(fn (AssertableInertia $p) => $p->has('families', 5));
+});

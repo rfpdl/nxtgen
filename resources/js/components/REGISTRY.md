@@ -25,3 +25,4 @@ fails when one is missing. Reuse before you build: search this list first.
 | PasswordLoginForm       | organism | "Use a password instead" on sign-in: the staff backup, collapsed by default                                                   |
 | ChildPhotoForm          | organism | A child's photo: take (camera) or choose; parent agrees/takes back consent, staff only after consent                          |
 | ChildAdminControls      | molecule | Staff status + group pickers under a child; a refused group change shows only on that child                                   |
+| Pager                   | molecule | "Page 2 of 3" with Previous / Next for the registration lists; hidden when one page holds all                                 |

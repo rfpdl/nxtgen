@@ -119,34 +119,58 @@ final class Family extends Model
     }
 
     /**
-     * Families matching a typed search: a parent's name, email (login or guardian) or phone digits, or a child's
-     * name or nickname. The ONE matching rule, used by the door search and the registration list. Under two
-     * characters matches nothing.
+     * Families matching a typed search: a parent's contact (see scopeMatchingContact), or a child's name or
+     * nickname. The ONE matching rule for the door search and the families list. Under two characters matches
+     * nothing.
      *
      * @param  Builder<Family>  $query
      */
     public function scopeMatching(Builder $query, string $term): void
     {
-        $term = trim($term);
-        if (mb_strlen($term) < 2) {
+        $like = self::like($term);
+        if ($like === null) {
             $query->whereRaw('1 = 0');
 
             return;
         }
 
-        $like = '%'.str_replace(['%', '_'], ['\\%', '\\_'], $term).'%';
-        $digits = (string) preg_replace('/\D+/', '', $term);
-
         $query->where(fn (Builder $q) => $q
-            ->whereHas('guardians', fn (Builder $g) => $g
-                ->where('first_name', 'like', $like)
-                ->orWhere('last_name', 'like', $like)
-                ->orWhere('email', 'like', $like)
-                ->when(strlen($digits) >= 4, fn (Builder $p) => $p->orWhere('phone', 'like', '%'.$digits.'%'))
-                ->orWhereHas('user', fn (Builder $u) => $u->where('email', 'like', $like)))
+            ->matchingContact($term)
             ->orWhereHas('children', fn (Builder $c) => $c
                 ->where('first_name', 'like', $like)
                 ->orWhere('last_name', 'like', $like)
                 ->orWhere('nickname', 'like', $like)));
+    }
+
+    /**
+     * Families whose PARENT matches: name, email (login or guardian) or phone digits. Also used by the children
+     * list, so "Janice" finds Janice's children without a child's name dragging in their siblings (review 4).
+     *
+     * @param  Builder<Family>  $query
+     */
+    public function scopeMatchingContact(Builder $query, string $term): void
+    {
+        $like = self::like($term);
+        if ($like === null) {
+            $query->whereRaw('1 = 0');
+
+            return;
+        }
+        $digits = (string) preg_replace('/\D+/', '', $term);
+
+        $query->whereHas('guardians', fn (Builder $g) => $g
+            ->where(fn (Builder $w) => $w
+                ->where('first_name', 'like', $like)
+                ->orWhere('last_name', 'like', $like)
+                ->orWhere('email', 'like', $like)
+                ->when(strlen($digits) >= 4, fn (Builder $p) => $p->orWhere('phone', 'like', '%'.$digits.'%'))
+                ->orWhereHas('user', fn (Builder $u) => $u->where('email', 'like', $like))));
+    }
+
+    private static function like(string $term): ?string
+    {
+        $term = trim($term);
+
+        return mb_strlen($term) < 2 ? null : '%'.str_replace(['%', '_'], ['\\%', '\\_'], $term).'%';
     }
 }

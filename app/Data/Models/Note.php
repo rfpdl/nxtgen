@@ -50,6 +50,20 @@ final class Note extends Model
         ];
     }
 
+    /** A staff-only system note about a family or a child — the ONE way the app writes one. */
+    public static function system(Family|Child $about, string $body, ?User $by): self
+    {
+        return self::query()->create([
+            'organization_id' => $about->organization_id,
+            'noteable_type' => $about->getMorphClass(),
+            'noteable_id' => $about->id,
+            'author_id' => $by?->id,
+            'kind' => NoteKindEnum::System,
+            'body' => $body,
+            'visibility' => NoteVisibilityEnum::Staff,
+        ]);
+    }
+
     /** @return MorphTo<Model, $this> */
     public function noteable(): MorphTo
     {
