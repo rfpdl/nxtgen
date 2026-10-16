@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import FamilySearchResultCard from '@/components/molecules/FamilySearchResultCard.vue'
-import type { DuplicatePair } from '@/types'
+import { useChurch } from '@/composables/useChurch'
+import type { DuplicatePair, ResolveDuplicateInput } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
@@ -9,22 +10,23 @@ import { route } from 'ziggy-js'
  * Possible duplicates to review (plan §6): the new family beside the existing one. "Not the same" dismisses;
  * "Same family" flags the pair for the later merge — nothing is merged here.
  */
-const props = defineProps<{ church: { name: string; slug: string }; duplicates: DuplicatePair[] }>()
+defineProps<{ duplicates: DuplicatePair[] }>()
 
-const familyHref = (id: number): string => route('church.families.show', [props.church.slug, id])
+const church = useChurch()
+
+const familyHref = (id: number): string => route('church.families.show', [church.value.slug, id])
 
 function resolve(pairId: number, status: 'dismissed' | 'confirmed'): void {
-    router.put(
-        route('church.duplicates.resolve', [props.church.slug, pairId]),
-        { status },
-        { preserveScroll: true },
-    )
+    const body: ResolveDuplicateInput = { status }
+    router.put(route('church.duplicates.resolve', [church.value.slug, pairId]), body, {
+        preserveScroll: true,
+    })
 }
 </script>
 
 <template>
     <Head title="Possible duplicates" />
-    <ChurchShell :church="church">
+    <ChurchShell>
         <h1 class="text-text text-2xl font-semibold">
             Possible duplicates ({{ duplicates.length }})
         </h1>
@@ -35,7 +37,7 @@ function resolve(pairId: number, status: 'dismissed' | 'confirmed'): void {
             class="border-border bg-surface flex flex-col gap-3 rounded-lg border p-4"
             data-testid="duplicate-pair"
         >
-            <p class="text-text font-semibold">{{ pair.reason }}</p>
+            <p class="text-text font-semibold">{{ pair.reason_label }}</p>
             <div class="grid gap-3 md:grid-cols-2">
                 <div class="flex flex-col gap-1">
                     <p class="text-text-muted">Just registered</p>

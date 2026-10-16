@@ -150,26 +150,26 @@ final class ApplyRegistryImportOperation extends Operation
     {
         $result = $this->run(new RegisterFamilyOperation(new FamilyRegistrationData(
             church: $this->church,
-            homeSatellite: $satellite,
+            home_satellite: $satellite,
             primary: new GuardianDetailsData(
-                firstName: $p->get('Parent first name'),
-                lastName: $p->get('Parent last name'),
+                first_name: $p->get('Parent first name'),
+                last_name: $p->get('Parent last name'),
                 relationship: RelationshipEnum::tryFrom($p->get('Relationship')) ?? RelationshipEnum::Other,
                 phone: $p->orNull('Phone'),
                 email: $p->get('Parent email'),
                 ministries: $p->orNull('Ministry') !== null ? [$p->get('Ministry')] : [],
             ),
             children: [],
-            areaText: $p->orNull('Area'),
-            privacyConsented: $p->yes('Privacy consented'),
+            area_text: $p->orNull('Area'),
+            privacy_consented: $p->yes('Privacy consented'),
             source: RegistrationSourceEnum::Import,
-            fbAccount: $p->orNull('FB account'),
-            wantsFbGroup: $p->yes('FB group'),
-            inDgroup: $p->yes('In DGroup'),
-            dgroupAreaText: $p->orNull('DGroup area'),
-            dgroupLeaderName: $p->orNull('DGroup leader'),
-            dgroupLeaderPhone: $p->orNull('DGroup leader phone'),
-            wantsDgroup: $p->yes('Wants DGroup'),
+            fb_account: $p->orNull('FB account'),
+            wants_fb_group: $p->yes('FB group'),
+            in_dgroup: $p->yes('In DGroup'),
+            dgroup_area_text: $p->orNull('DGroup area'),
+            dgroup_leader_name: $p->orNull('DGroup leader'),
+            dgroup_leader_phone: $p->orNull('DGroup leader phone'),
+            wants_dgroup: $p->yes('Wants DGroup'),
             lifestage: $p->orNull('Lifestage'),
             notify: false,
         )));
@@ -191,17 +191,17 @@ final class ApplyRegistryImportOperation extends Operation
     private function child(ApprovedChildRowData $row): ChildDetailsData
     {
         return new ChildDetailsData(
-            firstName: $row->get('Child first name'),
-            middleName: null,
-            lastName: $row->get('Child last name'),
+            first_name: $row->get('Child first name'),
+            middle_name: null,
+            last_name: $row->get('Child last name'),
             nickname: $row->get('Nickname'),
             gender: GenderEnum::from($row->get('Gender')),
-            dateOfBirth: $row->get('Birthday'),
+            date_of_birth: $row->get('Birthday'),
             allergies: $row->orNull('Allergies'),
             dislikes: $row->orNull('Dislikes'),
             fears: $row->orNull('Fears'),
-            parentNotes: $row->orNull('Notes'),
-            status: ChildStatusEnum::tryFrom($row->get('Status')) ?? ChildStatusEnum::Active,
+            guardian_notes: $row->orNull('Notes'),
+            status: ChildStatusEnum::tryFrom($row->get('Status')) ?? ChildStatusEnum::default(),
         );
     }
 

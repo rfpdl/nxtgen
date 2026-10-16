@@ -4,8 +4,15 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-enum RelationshipEnum: string
+use App\Enums\Concerns\HasEnumMetadata;
+use App\Enums\Concerns\ProvidesEnumMetadata;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
+
+#[TypeScript]
+enum RelationshipEnum: string implements HasEnumMetadata
 {
+    use ProvidesEnumMetadata;
+
     case Mother = 'mother';
     case Father = 'father';
     case Guardian = 'guardian';
@@ -27,14 +34,9 @@ enum RelationshipEnum: string
         };
     }
 
-    /**
-     * @return list<array{value: string, label: string}>
-     */
-    public static function toFrontend(): array
+    /** Shown as plain text, never as a coloured badge. */
+    public function color(): string
     {
-        return array_map(
-            static fn (self $case): array => ['value' => $case->value, 'label' => $case->label()],
-            self::cases(),
-        );
+        return 'muted';
     }
 }

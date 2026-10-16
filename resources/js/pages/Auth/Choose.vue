@@ -2,6 +2,7 @@
 import type { LandingOption } from '@/types'
 import SignOutButton from '@/components/atoms/SignOutButton.vue'
 import { Head, Link } from '@inertiajs/vue3'
+import { route } from 'ziggy-js'
 
 /** One login, more than one place: pick one. The pick is remembered on this device (POST /home/choice). */
 defineProps<{ options: LandingOption[] }>()
@@ -14,7 +15,7 @@ defineProps<{ options: LandingOption[] }>()
         <Link
             v-for="option in options"
             :key="option.url"
-            href="/home/choice"
+            :href="route('home.choice')"
             method="post"
             as="button"
             :data="{ url: option.url }"
@@ -22,7 +23,7 @@ defineProps<{ options: LandingOption[] }>()
             class="min-h-touch border-border bg-surface flex flex-col justify-center rounded-md border px-4 py-3"
         >
             <span class="text-text text-lg font-semibold">{{ option.label }}</span>
-            <span class="text-text-muted">{{ option.churchName }}</span>
+            <span class="text-text-muted">{{ option.church_name }}</span>
         </Link>
         <SignOutButton class="self-start" />
     </main>

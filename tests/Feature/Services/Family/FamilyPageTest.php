@@ -13,6 +13,7 @@ use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
+use function Tests\Support\childEdit;
 use function Tests\Support\childOf;
 use function Tests\Support\church;
 use function Tests\Support\familyAt;
@@ -44,9 +45,9 @@ it('shows a parent their own family, satellite and children with health details'
 
     actingAs($user)->get('/ccf/family')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
         ->component('Family/Show')
-        ->where('family.homeSatellite', 'Holy Trinity Church')
+        ->where('family.home_satellite', 'Holy Trinity Church')
         ->where('family.area', 'Al Barsha')
-        ->where('family.guardians.0.firstName', 'Janice')
+        ->where('family.guardians.0.first_name', 'Janice')
         ->where('family.children.0.nickname', 'Amara')
         ->where('family.children.0.allergies', 'Peanuts'));
 });
@@ -81,6 +82,20 @@ it('validates a new child in plain words', function (): void {
 
     actingAs($user)->post('/ccf/family/children', ['first_name' => ''])
         ->assertSessionHasErrors(['first_name' => 'Please enter the first name.', 'gender' => 'Please choose boy or girl.', 'date_of_birth' => 'Please enter the birthday.']);
+});
+
+it('keeps Laravel\'s own words for a too-long "Anything else we should know" (refactor 06 renamed the field)', function (): void {
+    [, , $user] = familyWithGuardian();
+
+    actingAs($user)->post('/ccf/family/children', [...childEdit(), 'guardian_notes' => str_repeat('a', 1001)])
+        ->assertSessionHasErrors(['guardian_notes' => 'The parent notes field must not be greater than 1000 characters.']);
+});
+
+it('keeps Laravel\'s own words when "Anything else we should know" is not text', function (): void {
+    [, , $user] = familyWithGuardian();
+
+    actingAs($user)->post('/ccf/family/children', [...childEdit(), 'guardian_notes' => ['not', 'text']])
+        ->assertSessionHasErrors(['guardian_notes' => 'The parent notes field must be a string.']);
 });
 
 it('lets a parent edit their own child, but not the status or Level', function (): void {
@@ -120,19 +135,19 @@ it('refuses to edit a child from another family', function (): void {
 it('gives the page what the edit forms need, and every health detail', function (): void {
     [, $family, $user] = familyWithGuardian();
     childOf($family, ['nickname' => 'Amara',
-        'allergies' => 'Peanuts', 'illnesses' => 'Asthma', 'dislikes' => 'Loud music', 'fears' => 'The dark', 'parent_notes' => 'Shy at first',
+        'allergies' => 'Peanuts', 'illnesses' => 'Asthma', 'dislikes' => 'Loud music', 'fears' => 'The dark', 'guardian_notes' => 'Shy at first',
     ]);
 
     actingAs($user)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p
-        ->where('details.homeSatelliteId', $family->home_satellite_id)
-        ->where('details.areaText', 'Al Barsha')
-        ->where('me.firstName', 'Janice')
+        ->where('details.home_satellite_id', $family->home_satellite_id)
+        ->where('details.area_text', 'Al Barsha')
+        ->where('me.first_name', 'Janice')
         ->has('satellites', 1)
-        ->has('relationships')
+        ->has('enums.relationship')
         ->where('family.children.0.illnesses', 'Asthma')
         ->where('family.children.0.dislikes', 'Loud music')
         ->where('family.children.0.fears', 'The dark')
-        ->where('family.children.0.parentNotes', 'Shy at first'));
+        ->where('family.children.0.guardian_notes', 'Shy at first'));
 });
 
 it('lets a parent edit their family details and their own details', function (): void {

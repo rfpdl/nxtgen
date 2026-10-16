@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import ChildFieldset, { type ChildForm } from '@/components/molecules/ChildFieldset.vue'
-import type { ChildPortal } from '@/types'
+import ChildFieldset from '@/components/molecules/ChildFieldset.vue'
+import type { ChildDraft, ChildPortal } from '@/types'
 import { useForm } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
@@ -12,24 +12,23 @@ import { ref } from 'vue'
 const props = defineProps<{
     action: string
     child: ChildPortal
-    genders: { value: string; label: string }[]
 }>()
 
 const open = ref(false)
 
-const form = useForm<ChildForm>({
-    first_name: props.child.firstName,
-    middle_name: props.child.middleName ?? '',
-    last_name: props.child.lastName,
+const form = useForm<ChildDraft>({
+    first_name: props.child.first_name,
+    middle_name: props.child.middle_name ?? '',
+    last_name: props.child.last_name,
     nickname: props.child.nickname,
     gender: props.child.gender,
-    date_of_birth: props.child.dateOfBirth,
+    date_of_birth: props.child.date_of_birth,
     has_allergies: props.child.allergies !== null,
     allergies: props.child.allergies ?? '',
     illnesses: props.child.illnesses ?? '',
     dislikes: props.child.dislikes ?? '',
     fears: props.child.fears ?? '',
-    parent_notes: props.child.parentNotes ?? '',
+    guardian_notes: props.child.guardian_notes ?? '',
 })
 
 const errors = (): Record<string, string | undefined> =>
@@ -56,13 +55,7 @@ function submit(): void {
         Edit {{ child.nickname }}'s details
     </button>
     <form v-else class="flex flex-col gap-4" novalidate @submit.prevent="submit">
-        <ChildFieldset
-            v-model="form"
-            :index="0"
-            :genders="genders"
-            :errors="errors()"
-            :removable="false"
-        />
+        <ChildFieldset v-model="form" :index="0" :errors="errors()" :removable="false" />
         <div class="flex gap-3">
             <button
                 type="submit"

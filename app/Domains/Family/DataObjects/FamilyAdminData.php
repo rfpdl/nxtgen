@@ -19,15 +19,15 @@ final class FamilyAdminData extends Data
      */
     public function __construct(
         public int $id,
-        public string $primaryName,
+        public string $primary_name,
         public string $email,
-        public bool $emailConfirmed,
+        public bool $email_confirmed,
         public string $satellite,
         public ?string $area,
-        public string $registeredBy,
+        public string $registered_by,
         public array $guardians,
         public array $children,
-        public bool $canEdit,
+        public bool $can_edit,
     ) {}
 
     public static function fromModel(Family $family, bool $canEdit): self
@@ -36,15 +36,15 @@ final class FamilyAdminData extends Data
 
         return new self(
             id: $family->id,
-            primaryName: $family->contactName(),
+            primary_name: $family->contactName(),
             email: $canEdit ? $email : EmailMask::mask($email),
-            emailConfirmed: $family->contactEmailConfirmed(),
+            email_confirmed: $family->contactEmailConfirmed(),
             satellite: $family->homeSatellite->name,
             area: $family->area_text,
-            registeredBy: $family->registration_source->label(),
+            registered_by: $family->registration_source->label(),
             guardians: array_values($family->guardians->map(fn ($g) => GuardianPortalData::fromModel($g))->all()),
             children: array_values($family->children->sortBy('date_of_birth')->map(fn ($c) => ChildPortalData::fromModel($c))->all()),
-            canEdit: $canEdit,
+            can_edit: $canEdit,
         );
     }
 }

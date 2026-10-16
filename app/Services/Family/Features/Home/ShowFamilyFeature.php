@@ -11,9 +11,8 @@ use App\Domains\Family\DataObjects\GuardianEditData;
 use App\Domains\Family\Jobs\GetFamilyPortalJob;
 use App\Domains\Family\Jobs\GetGuardianForUserJob;
 use App\Enums\AccessRowEnum;
-use App\Enums\GenderEnum;
-use App\Enums\RelationshipEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Support\FamilyFormEnums;
 use App\Services\Family\Features\BaseFamilyFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -36,13 +35,11 @@ final class ShowFamilyFeature extends BaseFamilyFeature
         abort_if($me === null, 404);
 
         return Inertia::render('Family/Show', [
-            'church' => ['name' => $family->church->name, 'slug' => $family->church->slug],
             'family' => $this->run(new GetFamilyPortalJob(family: $family)),
             'details' => FamilyDetailsData::fromModel($family),
             'me' => GuardianEditData::fromModel($me),
             'satellites' => $this->run(new GetSatellitesJob(church: $family->church)),
-            'relationships' => RelationshipEnum::toFrontend(),
-            'genders' => GenderEnum::toFrontend(),
+            'enums' => FamilyFormEnums::toFrontend(),
         ]);
     }
 }

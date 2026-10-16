@@ -7,8 +7,10 @@ namespace App\Services\Church\Data;
 use App\Enums\DuplicateStatusEnum;
 use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /** A reviewer's answer on a possible duplicate: only "dismissed" or "confirmed" — never back to open. */
+#[TypeScript]
 final class ResolveDuplicateInput extends Data
 {
     public function __construct(public DuplicateStatusEnum $status) {}

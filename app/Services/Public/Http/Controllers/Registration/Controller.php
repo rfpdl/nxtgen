@@ -23,8 +23,9 @@ final class Controller extends \Lucid\Units\Controller
         return $this->serve(RegisterFamilyFeature::class, ['church' => $church]);
     }
 
+    /** The `{church:slug}` binding is what turns an unknown church into a 404; the page reads the shared `church`. */
     public function thanks(Church $church): Response
     {
-        return $this->serve(ShowRegisterThanksFeature::class, ['church' => $church]);
+        return $this->serve(ShowRegisterThanksFeature::class);
     }
 }

@@ -71,7 +71,7 @@ final class CreateDuplicateCandidatesJob extends BaseJob
     {
         $model = DuplicateCandidate::query()->firstOrCreate(
             ['subject_type' => $type, 'subject_id' => $subjectId, 'candidate_id' => $candidateId],
-            ['church_id' => $this->family->church_id, 'reason' => $reason, 'status' => DuplicateStatusEnum::Open],
+            ['church_id' => $this->family->church_id, 'reason' => $reason, 'status' => DuplicateStatusEnum::default()],
         );
 
         return $model->wasRecentlyCreated ? 1 : 0;

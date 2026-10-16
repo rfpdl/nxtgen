@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import FormField from '@/components/atoms/FormField.vue'
-import type { GrantOption } from '@/types'
+import type { AddStaffInput, Draft, GrantOption } from '@/types'
 import { useForm } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
@@ -12,11 +12,11 @@ const props = defineProps<{ action: string; options: GrantOption[] }>()
 
 const choice = ref('0')
 
-const form = useForm({
+const form = useForm<Draft<AddStaffInput>>({
     name: '',
     email: '',
-    role: '' as string,
-    scope_type: '' as string,
+    role: '',
+    scope_type: '',
     scope_id: 0,
 })
 
@@ -24,8 +24,8 @@ function submit(): void {
     const picked = props.options[Number(choice.value)]
     if (picked === undefined) return
     form.role = picked.role
-    form.scope_type = picked.scopeType
-    form.scope_id = picked.scopeId
+    form.scope_type = picked.scope_type
+    form.scope_id = picked.scope_id
     form.post(props.action, { preserveScroll: true, onSuccess: () => form.reset() })
 }
 </script>

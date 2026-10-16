@@ -5,12 +5,12 @@ import { describe, expect, it } from 'vitest'
 
 const result = (over: Partial<FamilySearchResult> = {}): FamilySearchResult => ({
     id: 3,
-    primaryName: 'Janice Ramos',
-    maskedEmail: 'ja•••@example.com',
-    emailConfirmed: false,
+    primary_name: 'Janice Ramos',
+    masked_email: 'ja•••@example.com',
+    email_confirmed: false,
     satellite: 'House Church',
     children: ['Amara', 'Aaron'],
-    canOpen: false,
+    can_open: false,
     ...over,
 })
 
@@ -32,7 +32,7 @@ describe('FamilySearchResultCard', () => {
         ).toContain('Email not confirmed')
         expect(
             mount(FamilySearchResultCard, {
-                props: { result: result({ emailConfirmed: true }), href: '/x' },
+                props: { result: result({ email_confirmed: true }), href: '/x' },
             }).text(),
         ).not.toContain('Email not confirmed')
     })
@@ -45,7 +45,7 @@ describe('FamilySearchResultCard', () => {
         ).toBe(false)
         expect(
             mount(FamilySearchResultCard, {
-                props: { result: result({ canOpen: true }), href: '/x' },
+                props: { result: result({ can_open: true }), href: '/x' },
             })
                 .find('a')
                 .attributes('href'),

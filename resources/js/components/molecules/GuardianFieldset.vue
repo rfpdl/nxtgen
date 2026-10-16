@@ -1,28 +1,23 @@
 <script setup lang="ts">
 import FormField from '@/components/atoms/FormField.vue'
+import { useEnum } from '@/composables/useEnum'
+import type { GuardianDraft } from '@/types'
 import { computed } from 'vue'
 
 /**
  * A parent's own fields, on registration (with the email) and on editing (without: the email changes only
- * through the confirm-by-link flow, plan §4.4). Field names match GuardianDetailsInput / GuardianInput; errors
- * arrive keyed `guardian.{field}`. Writes IN PLACE on the shared object (see ChildFieldset: autofill).
+ * through the confirm-by-link flow, plan §4.4). The model is GuardianDetailsInput / GuardianInput as a draft;
+ * errors arrive keyed `guardian.{field}`. Writes IN PLACE on the shared object (see ChildFieldset: autofill).
+ * The relationships come from the page's `enums.relationship`.
  */
-export type GuardianFields = {
-    first_name: string
-    last_name: string
-    relationship: string
-    phone: string
-    email?: string
-    ministries: string[]
-}
-
 const props = defineProps<{
-    relationships: { value: string; label: string }[]
     errors: Record<string, string | undefined>
     withEmail: boolean
 }>()
 
-const guardian = defineModel<GuardianFields>({ required: true })
+const guardian = defineModel<GuardianDraft>({ required: true })
+
+const { options: relationships } = useEnum('relationship')
 
 const error = (field: string): string | undefined => props.errors[`guardian.${field}`]
 

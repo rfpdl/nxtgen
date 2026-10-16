@@ -23,8 +23,8 @@ final class UpdateGuardianDetailsJob extends BaseJob
     public function handle(): Guardian
     {
         $this->guardian->update([
-            'first_name' => $this->details->firstName,
-            'last_name' => $this->details->lastName,
+            'first_name' => $this->details->first_name,
+            'last_name' => $this->details->last_name,
             'relationship' => $this->details->relationship,
             'phone' => $this->details->phone,
             'ministries' => $this->details->ministries,

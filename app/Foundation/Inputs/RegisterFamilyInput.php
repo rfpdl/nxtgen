@@ -11,12 +11,14 @@ use App\Domains\Family\DataObjects\FamilyRegistrationData;
 use App\Enums\RegistrationSourceEnum;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
  * The registration form — parent self-registration AND staff registering for a parent (plan §6 R1):
  * today's Google Form fields + home satellite.
  * The satellite must belong to THIS church — an id from the body never reaches another church.
  */
+#[TypeScript]
 final class RegisterFamilyInput extends Data
 {
     /** @param list<ChildInput> $children */
@@ -46,20 +48,20 @@ final class RegisterFamilyInput extends Data
     {
         return new FamilyRegistrationData(
             church: $church,
-            homeSatellite: $homeSatellite,
+            home_satellite: $homeSatellite,
             primary: $this->guardian->toDetails(),
             children: array_map(fn (ChildInput $c) => $c->toDetails(), $this->children),
-            areaText: $this->area_text,
-            privacyConsented: $this->privacy_consented,
+            area_text: $this->area_text,
+            privacy_consented: $this->privacy_consented,
             source: $source,
-            registeredBy: $registeredBy,
-            fbAccount: $this->fb_account,
-            wantsFbGroup: $this->wants_fb_group,
-            inDgroup: $this->in_dgroup,
-            dgroupAreaText: $this->dgroup_area_text,
-            dgroupLeaderName: $this->dgroup_leader_name,
-            dgroupLeaderPhone: $this->dgroup_leader_phone,
-            wantsDgroup: $this->wants_dgroup,
+            registered_by: $registeredBy,
+            fb_account: $this->fb_account,
+            wants_fb_group: $this->wants_fb_group,
+            in_dgroup: $this->in_dgroup,
+            dgroup_area_text: $this->dgroup_area_text,
+            dgroup_leader_name: $this->dgroup_leader_name,
+            dgroup_leader_phone: $this->dgroup_leader_phone,
+            wants_dgroup: $this->wants_dgroup,
             lifestage: $this->lifestage,
             notes: $this->notes,
         );
@@ -73,6 +75,13 @@ final class RegisterFamilyInput extends Data
             'privacy_consented.accepted' => 'Please agree so we can keep these details.',
             'children.required' => 'Please add at least one child.',
             'children.min' => 'Please add at least one child.',
+            // Laravel's own wording from when the field was `parent_notes` (renamed in refactor 06), kept word for
+            // word. Messages, not a wildcard attribute name, because an attribute cannot do it: a nested Data's
+            // attributes() win over its parent's for the same key, and ChildInput's must say "parent notes" for the
+            // add/edit-a-child forms, which post a child on its own. `:index` gives back the "children.0." the
+            // old default message had.
+            'children.*.guardian_notes.string' => 'The children.:index.parent notes field must be a string.',
+            'children.*.guardian_notes.max' => 'The children.:index.parent notes field must not be greater than :max characters.',
         ];
     }
 

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Domains\Church\DataObjects;
 
-use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -17,7 +16,6 @@ final class StaffMemberData extends Data
         public int $id,
         public string $name,
         public string $email,
-        #[DataCollectionOf(StaffRoleData::class)]
         public array $roles,
     ) {}
 }

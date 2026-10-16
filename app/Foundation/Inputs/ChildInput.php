@@ -10,12 +10,14 @@ use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Attributes\Validation\RequiredIf;
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
  * One child on any form that creates or edits a child (parent registration, staff registration, add a child,
  * edit a child). The allergy question is an explicit yes/no (review B6): a blank box must never be read as
  * "no allergies", and a "no" keeps no details even if some were typed first.
  */
+#[TypeScript]
 final class ChildInput extends Data
 {
     public function __construct(
@@ -32,7 +34,7 @@ final class ChildInput extends Data
         public ?string $illnesses = null,
         public ?string $dislikes = null,
         public ?string $fears = null,
-        public ?string $parent_notes = null,
+        public ?string $guardian_notes = null,
     ) {}
 
     /**
@@ -57,6 +59,17 @@ final class ChildInput extends Data
         ];
     }
 
+    /**
+     * The name Laravel's own messages use for a field (`The … field must not be greater than …`). The field was
+     * `parent_notes` until refactor 06 renamed it to the glossary word; this keeps the words people read the same.
+     *
+     * @return array<string, string>
+     */
+    public static function attributes(): array
+    {
+        return ['guardian_notes' => 'parent notes'];
+    }
+
     /** @return array<string, list<mixed>> */
     public static function rules(): array
     {
@@ -71,24 +84,24 @@ final class ChildInput extends Data
             'illnesses' => ['nullable', 'string', 'max:500'],
             'dislikes' => ['nullable', 'string', 'max:500'],
             'fears' => ['nullable', 'string', 'max:500'],
-            'parent_notes' => ['nullable', 'string', 'max:1000'],
+            'guardian_notes' => ['nullable', 'string', 'max:1000'],
         ];
     }
 
     public function toDetails(): ChildDetailsData
     {
         return new ChildDetailsData(
-            firstName: $this->first_name,
-            middleName: $this->middle_name,
-            lastName: $this->last_name,
+            first_name: $this->first_name,
+            middle_name: $this->middle_name,
+            last_name: $this->last_name,
             nickname: $this->nickname,
             gender: $this->gender,
-            dateOfBirth: $this->date_of_birth,
+            date_of_birth: $this->date_of_birth,
             allergies: $this->has_allergies ? $this->allergies : null,
             illnesses: $this->illnesses,
             dislikes: $this->dislikes,
             fears: $this->fears,
-            parentNotes: $this->parent_notes,
+            guardian_notes: $this->guardian_notes,
         );
     }
 }

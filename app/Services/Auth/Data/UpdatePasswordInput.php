@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Services\Auth\Data;
 
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
+#[TypeScript]
 final class UpdatePasswordInput extends Data
 {
     public function __construct(#[\SensitiveParameter] public string $password) {}

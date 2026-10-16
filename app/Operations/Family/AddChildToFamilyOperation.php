@@ -33,7 +33,7 @@ final class AddChildToFamilyOperation extends Operation
     {
         return DB::transaction(function (): Child {
             // A reviewed import placement wins (plan §5); otherwise the child's age suggests the Level.
-            $level = $this->level ?? $this->run(new GetSuggestedLevelJob(church: $this->family->church, dateOfBirth: $this->details->dateOfBirth));
+            $level = $this->level ?? $this->run(new GetSuggestedLevelJob(church: $this->family->church, dateOfBirth: $this->details->date_of_birth));
 
             $child = $this->run(new CreateChildJob(family: $this->family, details: $this->details, level: $level, source: $this->source));
             $this->run(new CreateDuplicateCandidatesJob(family: $this->family));

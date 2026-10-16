@@ -7,8 +7,10 @@ namespace App\Services\Church\Data;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /** "Add someone": who, and which role where. Whether the viewer may give that role is AccessScope::canGrant. */
+#[TypeScript]
 final class AddStaffInput extends Data
 {
     public function __construct(

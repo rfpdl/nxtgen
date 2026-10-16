@@ -1,6 +1,10 @@
 import RegistrationListFilters from '@/components/molecules/RegistrationListFilters.vue'
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+vi.mock('@inertiajs/vue3', async (original) =>
+    (await import('@/tests/enumPage')).withEnums(await original<object>()),
+)
 
 const options = {
     satellites: [
@@ -10,10 +14,6 @@ const options = {
     levels: [
         { level: 1, name: 'Level 1' },
         { level: 2, name: 'Level 2' },
-    ],
-    statuses: [
-        { value: 'active', label: 'Active' },
-        { value: 'inactive', label: 'Inactive' },
     ],
 }
 const empty = {
@@ -45,6 +45,14 @@ describe('RegistrationListFilters', () => {
             (wrapper.find('[data-testid="filter-unconfirmed"]').element as HTMLInputElement)
                 .checked,
         ).toBe(true)
+    })
+
+    it("offers the child statuses the page's enums carry", () => {
+        const wrapper = mount(RegistrationListFilters, { props: { filters: empty, options } })
+
+        expect(
+            wrapper.findAll('[data-testid="filter-status"] option').map((o) => o.text()),
+        ).toEqual(['Any status', 'Active', 'Inactive', 'Graduated'])
     })
 
     it('hides the satellite choice when there is only one', () => {

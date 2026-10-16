@@ -5,8 +5,9 @@ import { describe, expect, it, vi } from 'vitest'
 const page = {
     props: {
         flash: {},
-        auth: { user: null, canSwitch: false },
-        churchNav: { canManagePeople: false, canReviewDuplicates: false },
+        church: { name: 'CCF', slug: 'ccf' },
+        auth: { user: null, can_switch: false },
+        churchNav: { can_manage_people: false, can_review_duplicates: false },
     },
 }
 
@@ -18,9 +19,8 @@ vi.mock('@inertiajs/vue3', () => ({
 vi.mock('ziggy-js', () => ({ route: (name: string, slug?: string) => `/${slug ?? ''}#${name}` }))
 
 describe('ChurchShell', () => {
-    it('names the church and links to the registration tools', () => {
+    it('names the church it shares, and links to the registration tools', () => {
         const wrapper = mount(ChurchShell, {
-            props: { church: { name: 'CCF', slug: 'ccf' } },
             slots: { default: '<p>body</p>' },
         })
 
@@ -32,32 +32,24 @@ describe('ChurchShell', () => {
     })
 
     it('offers sign out', () => {
-        const wrapper = mount(ChurchShell, { props: { church: { name: 'CCF', slug: 'ccf' } } })
+        const wrapper = mount(ChurchShell)
 
         expect(wrapper.find('[data-testid="sign-out"]').exists()).toBe(true)
     })
 
     it('shows People only to someone who may manage people', () => {
-        page.props.churchNav.canManagePeople = false
-        expect(
-            mount(ChurchShell, { props: { church: { name: 'CCF', slug: 'ccf' } } }).text(),
-        ).not.toContain('People')
+        page.props.churchNav.can_manage_people = false
+        expect(mount(ChurchShell).text()).not.toContain('People')
 
-        page.props.churchNav.canManagePeople = true
-        expect(
-            mount(ChurchShell, { props: { church: { name: 'CCF', slug: 'ccf' } } }).text(),
-        ).toContain('People')
+        page.props.churchNav.can_manage_people = true
+        expect(mount(ChurchShell).text()).toContain('People')
     })
 
     it('shows Duplicates only to someone who may review them', () => {
-        page.props.churchNav.canReviewDuplicates = false
-        expect(
-            mount(ChurchShell, { props: { church: { name: 'CCF', slug: 'ccf' } } }).text(),
-        ).not.toContain('Duplicates')
+        page.props.churchNav.can_review_duplicates = false
+        expect(mount(ChurchShell).text()).not.toContain('Duplicates')
 
-        page.props.churchNav.canReviewDuplicates = true
-        expect(
-            mount(ChurchShell, { props: { church: { name: 'CCF', slug: 'ccf' } } }).text(),
-        ).toContain('Duplicates')
+        page.props.churchNav.can_review_duplicates = true
+        expect(mount(ChurchShell).text()).toContain('Duplicates')
     })
 })

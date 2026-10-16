@@ -59,11 +59,11 @@ it('lists open possible duplicates side by side, with masked emails', function (
         ->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
         ->component('Church/Duplicates/Index')
         ->has('duplicates', 1)
-        ->where('duplicates.0.reason', 'Same phone')
-        ->where('duplicates.0.subject.primaryName', 'Mary Santos')
+        ->where('duplicates.0.reason_label', 'Same phone')
+        ->where('duplicates.0.subject.primary_name', 'Mary Santos')
         ->where('duplicates.0.subject.satellite', 'Holy Trinity Church')
-        ->where('duplicates.0.subject.maskedEmail', 'ma•••@new.com')
-        ->where('duplicates.0.candidate.primaryName', 'Maria Santos')
+        ->where('duplicates.0.subject.masked_email', 'ma•••@new.com')
+        ->where('duplicates.0.candidate.primary_name', 'Maria Santos')
         ->where('duplicates.0.candidate.children.0', "Maria's kid"));
 });
 

@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import ChildFieldset, { type ChildForm } from '@/components/molecules/ChildFieldset.vue'
+import ChildFieldset from '@/components/molecules/ChildFieldset.vue'
+import type { ChildDraft } from '@/types'
 import { useForm } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
 /** "Add a child": the same fields as registration, posted to `action` (the parent's family page or a staff route). */
 const props = defineProps<{
     action: string
-    genders: { value: string; label: string }[]
     startOpen?: boolean
 }>()
 
 const open = ref(props.startOpen ?? false)
 
-const form = useForm<ChildForm>({
+const form = useForm<ChildDraft>({
     first_name: '',
     middle_name: '',
     last_name: '',
@@ -24,7 +24,7 @@ const form = useForm<ChildForm>({
     illnesses: '',
     dislikes: '',
     fears: '',
-    parent_notes: '',
+    guardian_notes: '',
 })
 
 const errors = (): Record<string, string | undefined> =>
@@ -58,13 +58,7 @@ function submit(): void {
             + Add a child
         </button>
         <form v-else class="flex flex-col gap-4" novalidate @submit.prevent="submit">
-            <ChildFieldset
-                v-model="form"
-                :index="0"
-                :genders="genders"
-                :errors="errors()"
-                :removable="false"
-            />
+            <ChildFieldset v-model="form" :index="0" :errors="errors()" :removable="false" />
             <div class="flex gap-3">
                 <button
                     type="submit"

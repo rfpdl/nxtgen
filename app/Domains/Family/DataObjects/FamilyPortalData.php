@@ -17,7 +17,7 @@ final class FamilyPortalData extends Data
      * @param  list<ChildPortalData>  $children
      */
     public function __construct(
-        public string $homeSatellite,
+        public string $home_satellite,
         public ?string $area,
         public array $guardians,
         public array $children,
@@ -26,7 +26,7 @@ final class FamilyPortalData extends Data
     public static function fromModel(Family $family): self
     {
         return new self(
-            homeSatellite: $family->homeSatellite->name,
+            home_satellite: $family->homeSatellite->name,
             area: $family->area_text,
             guardians: array_values($family->guardians->map(fn ($g) => GuardianPortalData::fromModel($g))->all()),
             children: array_values($family->children->sortBy('date_of_birth')->map(fn ($c) => ChildPortalData::fromModel($c))->all()),

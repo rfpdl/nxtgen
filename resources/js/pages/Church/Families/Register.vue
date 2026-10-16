@@ -3,21 +3,19 @@ import ChurchShell from '@/components/layout/ChurchShell.vue'
 import FamilySearchResultCard from '@/components/molecules/FamilySearchResultCard.vue'
 import AddChildForm from '@/components/organisms/AddChildForm.vue'
 import RegisterFamilyForm from '@/components/organisms/RegisterFamilyForm.vue'
-import type { SatelliteOption, FamilySearchResult } from '@/types'
+import { useChurch } from '@/composables/useChurch'
+import type { FamilySearchResult, SatelliteOption } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import { route } from 'ziggy-js'
 
-type Option = { value: string; label: string }
-
 const props = defineProps<{
-    church: { name: string; slug: string }
     query: string
     results: FamilySearchResult[]
     satellites: SatelliteOption[]
-    relationships: Option[]
-    genders: Option[]
 }>()
+
+const church = useChurch()
 
 const q = ref(props.query)
 const addingTo = ref<number | null>(null)
@@ -25,7 +23,7 @@ const showNew = ref(false)
 
 function search(): void {
     router.get(
-        route('church.families.register', props.church.slug),
+        route('church.families.register', church.value.slug),
         { q: q.value },
         { preserveState: true, preserveScroll: true },
     )
@@ -34,7 +32,7 @@ function search(): void {
 
 <template>
     <Head title="Register a family" />
-    <ChurchShell :church="church">
+    <ChurchShell>
         <h1 class="text-text text-2xl font-semibold">Register a family</h1>
         <p class="text-text text-lg">
             First, check if the family is already registered. Search the parent's name, email or
@@ -69,7 +67,6 @@ function search(): void {
                 <AddChildForm
                     v-if="addingTo === result.id"
                     :action="route('church.families.children.store', [church.slug, result.id])"
-                    :genders="genders"
                     start-open
                 />
             </template>
@@ -89,8 +86,6 @@ function search(): void {
                 v-else
                 :action="route('church.families.store', church.slug)"
                 :satellites="satellites"
-                :relationships="relationships"
-                :genders="genders"
             />
         </section>
     </ChurchShell>

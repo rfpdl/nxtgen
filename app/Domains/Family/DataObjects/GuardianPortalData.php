@@ -12,18 +12,18 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 final class GuardianPortalData extends Data
 {
     public function __construct(
-        public string $firstName,
-        public string $lastName,
-        public string $relationship,
+        public string $first_name,
+        public string $last_name,
+        public string $relationship_label,
         public ?string $phone,
     ) {}
 
     public static function fromModel(Guardian $guardian): self
     {
         return new self(
-            firstName: $guardian->first_name,
-            lastName: $guardian->last_name,
-            relationship: $guardian->relationship->label(),
+            first_name: $guardian->first_name,
+            last_name: $guardian->last_name,
+            relationship_label: $guardian->relationship->label(),
             phone: $guardian->phone,
         );
     }

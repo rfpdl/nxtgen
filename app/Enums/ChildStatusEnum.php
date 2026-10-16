@@ -4,8 +4,16 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-enum ChildStatusEnum: string
+use App\Enums\Concerns\HasDefault;
+use App\Enums\Concerns\HasEnumMetadata;
+use App\Enums\Concerns\ProvidesEnumMetadata;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
+
+#[TypeScript]
+enum ChildStatusEnum: string implements HasDefault, HasEnumMetadata
 {
+    use ProvidesEnumMetadata;
+
     case Active = 'active';
     case Inactive = 'inactive';
     case Graduated = 'graduated';
@@ -19,14 +27,17 @@ enum ChildStatusEnum: string
         };
     }
 
-    /**
-     * @return list<array{value: string, label: string}>
-     */
-    public static function toFrontend(): array
+    public static function default(): self
     {
-        return array_map(
-            static fn (self $case): array => ['value' => $case->value, 'label' => $case->label()],
-            self::cases(),
-        );
+        return self::Active;
+    }
+
+    public function color(): string
+    {
+        return match ($this) {
+            self::Active => 'success',
+            self::Inactive => 'muted',
+            self::Graduated => 'info',
+        };
     }
 }

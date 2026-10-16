@@ -53,8 +53,8 @@ it('shows the registration form with the church satellites', function (): void {
         ->where('church.name', 'CCF')
         ->where('satellites.0.id', $satellite->id)
         ->where('satellites.0.name', 'CCF DXB')
-        ->has('relationships')
-        ->has('genders'));
+        ->has('enums.relationship')
+        ->has('enums.gender'));
 });
 
 it('404s for a church that does not exist', function (): void {
@@ -210,4 +210,22 @@ it('keeps the rest of the Google Form: DGroup area and leader phone, lifestage, 
         ->and($family->dgroup_leader_phone)->toBe('0501231234')
         ->and($family->lifestage)->toBe('Married with kids')
         ->and($family->primaryGuardian?->ministries)->toBe(['Music']);
+});
+
+it('keeps Laravel\'s own words for a too-long "Anything else we should know" (refactor 06 renamed the field)', function (): void {
+    [, $satellite] = ccf();
+    $form = validForm($satellite);
+    $form['children'][0]['guardian_notes'] = str_repeat('a', 1001);
+
+    post('/ccf/register', $form)
+        ->assertSessionHasErrors(['children.0.guardian_notes' => 'The children.0.parent notes field must not be greater than 1000 characters.']);
+});
+
+it('keeps Laravel\'s own words when "Anything else we should know" is not text', function (): void {
+    [, $satellite] = ccf();
+    $form = validForm($satellite);
+    $form['children'][0]['guardian_notes'] = ['not', 'text'];
+
+    post('/ccf/register', $form)
+        ->assertSessionHasErrors(['children.0.guardian_notes' => 'The children.0.parent notes field must be a string.']);
 });

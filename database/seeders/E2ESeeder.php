@@ -51,11 +51,11 @@ final class E2ESeeder extends Seeder
     {
         (new RegisterFamilyOperation(new FamilyRegistrationData(
             church: $church,
-            homeSatellite: $satellite,
-            primary: new GuardianDetailsData(firstName: $guardianName, lastName: $surname, relationship: RelationshipEnum::Mother, phone: $phone, email: $email),
-            children: [new ChildDetailsData(firstName: $child, middleName: null, lastName: $surname, nickname: $nickname, gender: $gender, dateOfBirth: $dob, allergies: null)],
-            areaText: 'Al Barsha',
-            privacyConsented: true,
+            home_satellite: $satellite,
+            primary: new GuardianDetailsData(first_name: $guardianName, last_name: $surname, relationship: RelationshipEnum::Mother, phone: $phone, email: $email),
+            children: [new ChildDetailsData(first_name: $child, middle_name: null, last_name: $surname, nickname: $nickname, gender: $gender, date_of_birth: $dob, allergies: null)],
+            area_text: 'Al Barsha',
+            privacy_consented: true,
             source: RegistrationSourceEnum::Import,
             notify: false,
         )))->handle();

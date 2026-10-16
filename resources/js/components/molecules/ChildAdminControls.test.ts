@@ -1,8 +1,12 @@
 import ChildAdminControls from '@/components/molecules/ChildAdminControls.vue'
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
-const child = { id: 4, level: 'Level 3', status: 'Active' }
+vi.mock('@inertiajs/vue3', async (original) =>
+    (await import('@/tests/enumPage')).withEnums(await original<object>()),
+)
+
+const child = { id: 4, level: 'Level 3', status_label: 'Active' }
 const levels = [
     { level: 3, name: 'Level 3' },
     { level: 4, name: 'Level 4' },
@@ -33,6 +37,14 @@ describe('ChildAdminControls', () => {
 
         expect(wrapper.emitted('level')).toEqual([[4, 4]])
         expect(wrapper.emitted('status')).toEqual([[4, 'inactive']])
+    })
+
+    it("shows the child's status, and offers the statuses the page's enums carry", () => {
+        const options = mount(ChildAdminControls, {
+            props: { child, canSetStatus: true, canSetLevel: false, levels: [] },
+        }).findAll('[data-testid="status-4"] option')
+
+        expect(options.map((o) => o.text())).toEqual(['Active', 'Active', 'Inactive', 'Graduated'])
     })
 
     it("shows the child's Level, or that they have none yet", () => {

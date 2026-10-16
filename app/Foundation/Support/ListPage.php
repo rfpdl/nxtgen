@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Foundation\Support;
 
+use App\Foundation\DataObjects\PaginationData;
 use Illuminate\Support\Collection;
 
 /**
@@ -38,9 +39,9 @@ final readonly class ListPage
         return new self(array_values($all->forPage($page, $perPage)->all()), $page, $lastPage, $total, $perPage);
     }
 
-    /** @return array{page: int, lastPage: int, total: int, perPage: int} */
-    public function meta(): array
+    /** Where this page sits, as a list page's `pagination` prop. */
+    public function meta(): PaginationData
     {
-        return ['page' => $this->page, 'lastPage' => $this->lastPage, 'total' => $this->total, 'perPage' => $this->perPage];
+        return PaginationData::fromListPage($this);
     }
 }

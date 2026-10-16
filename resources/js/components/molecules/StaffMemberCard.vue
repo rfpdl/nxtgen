@@ -20,7 +20,7 @@ defineEmits<{ remove: [roleId: number] }>()
                     role.label
                 }}</span>
                 <button
-                    v-if="role.canRemove"
+                    v-if="role.can_remove"
                     type="button"
                     class="min-h-touch text-danger px-2 underline"
                     data-testid="remove-role"

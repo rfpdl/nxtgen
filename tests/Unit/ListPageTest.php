@@ -23,3 +23,9 @@ it('has one page even when the list is empty', function (): void {
 
     expect([$page->items, $page->page, $page->lastPage, $page->total])->toBe([[], 1, 1, 0]);
 });
+
+it('describes itself to the page as the one pagination shape, in snake_case', function (): void {
+    $meta = ListPage::of(new Collection(range(1, 120)), requested: 2)->meta();
+
+    expect([$meta->page, $meta->last_page, $meta->total, $meta->per_page])->toBe([2, 3, 120, 50]);
+});

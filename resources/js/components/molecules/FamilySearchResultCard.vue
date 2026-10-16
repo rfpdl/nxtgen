@@ -19,15 +19,15 @@ defineEmits<{ addChild: [] }>()
         data-testid="search-result"
     >
         <a
-            v-if="result.canOpen"
+            v-if="result.can_open"
             :href="href"
             class="text-primary text-xl font-semibold underline"
-            >{{ result.primaryName }}</a
+            >{{ result.primary_name }}</a
         >
-        <h3 v-else class="text-text text-xl font-semibold">{{ result.primaryName }}</h3>
+        <h3 v-else class="text-text text-xl font-semibold">{{ result.primary_name }}</h3>
         <p class="text-text">
-            {{ result.maskedEmail
-            }}<span v-if="!result.emailConfirmed" class="text-warning ml-2 font-semibold"
+            {{ result.masked_email
+            }}<span v-if="!result.email_confirmed" class="text-warning ml-2 font-semibold"
                 >Email not confirmed</span
             >
         </p>

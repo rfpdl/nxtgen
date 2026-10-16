@@ -37,10 +37,10 @@ final class GetLandingOptionsJob extends BaseJob
         $options = [];
         foreach ($churches as $church) {
             if (in_array($church->id, $familyChurchIds, true)) {
-                $options[] = new LandingOptionData(churchName: $church->name, label: 'My family', url: "/{$church->slug}/family");
+                $options[] = new LandingOptionData(church_name: $church->name, label: 'My family', url: "/{$church->slug}/family");
             }
             if (in_array($church->id, $staffChurchIds, true)) {
-                $options[] = new LandingOptionData(churchName: $church->name, label: 'Serve', url: "/{$church->slug}");
+                $options[] = new LandingOptionData(church_name: $church->name, label: 'Serve', url: "/{$church->slug}");
             }
         }
 

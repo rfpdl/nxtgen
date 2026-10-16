@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3'
 import FlashBanner from '@/components/molecules/FlashBanner.vue'
+import { useChurch } from '@/composables/useChurch'
 import { useFlashMessages } from '@/composables/useFlashMessages'
 
-defineProps<{ church: { name: string; slug: string } }>()
+const church = useChurch()
 
 const { message, dismiss } = useFlashMessages()
 </script>

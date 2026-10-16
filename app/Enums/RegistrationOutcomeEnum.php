@@ -4,8 +4,15 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-enum RegistrationOutcomeEnum: string
+use App\Enums\Concerns\HasEnumMetadata;
+use App\Enums\Concerns\ProvidesEnumMetadata;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
+
+#[TypeScript]
+enum RegistrationOutcomeEnum: string implements HasEnumMetadata
 {
+    use ProvidesEnumMetadata;
+
     case Registered = 'registered';
     case AlreadyRegistered = 'already_registered';
     case ClaimSent = 'claim_sent';
@@ -29,5 +36,15 @@ enum RegistrationOutcomeEnum: string
     public function guardianMessage(): string
     {
         return 'Thank you! Please check your email to finish. If nothing arrives in a few minutes, check your spam folder or ask a Lifeshaper at church.';
+    }
+
+    public function color(): string
+    {
+        return match ($this) {
+            self::Registered => 'success',
+            self::AlreadyRegistered => 'info',
+            self::ClaimSent => 'info',
+            self::ClaimResent => 'info',
+        };
     }
 }

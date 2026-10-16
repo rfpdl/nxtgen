@@ -7,11 +7,13 @@ namespace App\Foundation\Inputs;
 use App\Domains\Family\DataObjects\GuardianEditData;
 use App\Enums\RelationshipEnum;
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
  * A parent's own details, without the email — the email changes only through the confirm-by-link flow (plan
  * §4.4). The ONE owner of these rules: GuardianInput (registration) adds the email on top of them.
  */
+#[TypeScript]
 final class GuardianDetailsInput extends Data
 {
     /** @param list<string> $ministries */
@@ -48,8 +50,8 @@ final class GuardianDetailsInput extends Data
     public function toEdit(): GuardianEditData
     {
         return new GuardianEditData(
-            firstName: trim($this->first_name),
-            lastName: trim($this->last_name),
+            first_name: trim($this->first_name),
+            last_name: trim($this->last_name),
             relationship: $this->relationship,
             phone: trim($this->phone),
             ministries: array_values(array_filter(array_map('trim', $this->ministries), fn (string $m): bool => $m !== '')),

@@ -3,10 +3,11 @@ import { Head, useForm } from '@inertiajs/vue3'
 import FlashBanner from '@/components/molecules/FlashBanner.vue'
 import PasswordLoginForm from '@/components/organisms/PasswordLoginForm.vue'
 import { useFlashMessages } from '@/composables/useFlashMessages'
+import type { RequestMagicLinkInput } from '@/types'
 import { route } from 'ziggy-js'
 
 const { message, dismiss } = useFlashMessages()
-const form = useForm({ email: '' })
+const form = useForm<RequestMagicLinkInput>({ email: '' })
 
 function submit(): void {
     form.post(route('auth.link.request'), { preserveScroll: true, onSuccess: () => form.reset() })

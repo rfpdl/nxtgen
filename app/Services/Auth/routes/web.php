@@ -10,6 +10,7 @@ declare(strict_types=1);
 | Links are emailed per purpose so the URL says what it does: /magic/login, /magic/verify, /magic/claim.
 */
 
+use App\Enums\MagicLinkRouteEnum;
 use App\Services\Auth\Http\Controllers\Account\Controller as AccountController;
 use App\Services\Auth\Http\Controllers\Landing\Controller as LandingController;
 use App\Services\Auth\Http\Controllers\Link\Controller as LinkController;
@@ -23,7 +24,7 @@ Route::post('/login/link', [LoginController::class, 'requestLink'])->middleware(
 Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
 
 // GET only shows a Continue button (email scanners fetch links); the POST is what uses the link.
-Route::get('/magic/{purpose}/{token}', [LinkController::class, 'confirm'])->whereIn('purpose', ['login', 'verify', 'claim'])->name('auth.magic.confirm');
+Route::get('/magic/{purpose}/{token}', [LinkController::class, 'confirm'])->whereIn('purpose', MagicLinkRouteEnum::segments())->name('auth.magic.confirm');
 Route::post('/magic/login/{token}', [LinkController::class, 'login'])->middleware('throttle:per-device')->name('auth.magic.login');
 Route::post('/magic/verify/{token}', [LinkController::class, 'verify'])->middleware('throttle:per-device')->name('auth.magic.verify');
 Route::post('/magic/claim/{token}', [LinkController::class, 'claim'])->middleware('throttle:per-device')->name('auth.magic.claim');

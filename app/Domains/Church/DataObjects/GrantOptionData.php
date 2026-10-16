@@ -16,7 +16,7 @@ final class GrantOptionData extends Data
     public function __construct(
         public string $label,
         public RoleEnum $role,
-        public ScopeTypeEnum $scopeType,
-        public int $scopeId,
+        public ScopeTypeEnum $scope_type,
+        public int $scope_id,
     ) {}
 }

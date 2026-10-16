@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domains\Registry\DataObjects;
 
+use App\Foundation\Attributes\NonClientFacing;
+
 /** One approved row read back from the reviewed spreadsheet, keyed by column name. */
+#[NonClientFacing]
 final readonly class ApprovedChildRowData
 {
     /** @param array<string, string> $values */

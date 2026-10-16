@@ -1,33 +1,27 @@
 <script setup lang="ts">
-import type { LevelOption } from '@/types'
+import { useEnum } from '@/composables/useEnum'
+import type { LevelOption, ListFilters, SatelliteOption } from '@/types'
 import { reactive } from 'vue'
 
 /**
  * Search and filters for the registration lists — families and children (plan §6). The two family-only filters
  * (unconfirmed email, possible duplicate) show only with `familyToggles`. Emits `apply` with only the filters in use, shaped as
  * the address parameters the server reads (FamilyListQuery), so a filtered list can be bookmarked and the Excel
- * download matches it. The satellite choice appears only when there is more than one to choose.
+ * download matches it. The satellite choice appears only when there is more than one to choose. The statuses
+ * come from the page's `enums.child_status`.
  */
-export type RegistrationListFilterValues = {
-    q: string
-    satellite: number | null
-    status: string | null
-    level: number | null
-    unconfirmed: boolean
-    duplicates: boolean
-}
-
 const props = defineProps<{
     familyToggles?: boolean
-    filters: RegistrationListFilterValues
+    filters: ListFilters
     options: {
-        satellites: { id: number; name: string }[]
+        satellites: SatelliteOption[]
         levels: LevelOption[]
-        statuses: { value: string; label: string }[]
     }
 }>()
 
 const emit = defineEmits<{ apply: [params: Record<string, string | number>] }>()
+
+const { options: statuses } = useEnum('child_status')
 
 const f = reactive({ ...props.filters })
 
@@ -78,7 +72,7 @@ const control = 'min-h-touch border-border bg-surface text-text rounded-md borde
             @change="apply"
         >
             <option :value="null">Any status</option>
-            <option v-for="s in options.statuses" :key="s.value" :value="s.value">
+            <option v-for="s in statuses" :key="s.value" :value="s.value">
                 {{ s.label }}
             </option>
         </select>

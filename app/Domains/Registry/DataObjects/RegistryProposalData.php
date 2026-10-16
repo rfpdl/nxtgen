@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Domains\Registry\DataObjects;
 
+use App\Foundation\Attributes\NonClientFacing;
+
+#[NonClientFacing]
 final readonly class RegistryProposalData
 {
     /**
@@ -12,7 +15,7 @@ final readonly class RegistryProposalData
      */
     public function __construct(
         public array $families,
-        public int $droppedDuplicates,
+        public int $dropped_duplicates,
         public array $quarantined,
     ) {}
 }

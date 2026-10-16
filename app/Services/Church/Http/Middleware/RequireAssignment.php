@@ -34,8 +34,8 @@ final class RequireAssignment
         $request->attributes->set('scope', $scope);
         // What the staff frame shows (ChurchShell). Navigation only — every Feature still asks the scope itself.
         Inertia::share('churchNav', [
-            'canManagePeople' => $scope->canManagePeople(),
-            'canReviewDuplicates' => $scope->canReviewDuplicates(),
+            'can_manage_people' => $scope->canManagePeople(),
+            'can_review_duplicates' => $scope->canReviewDuplicates(),
         ]);
 
         return $next($request);

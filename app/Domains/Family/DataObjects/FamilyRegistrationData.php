@@ -8,27 +8,29 @@ use App\Data\Models\Church;
 use App\Data\Models\Satellite;
 use App\Data\Models\User;
 use App\Enums\RegistrationSourceEnum;
+use App\Foundation\Attributes\NonClientFacing;
 
 /** Everything one registration carries — the single shape used by parent, staff and import (plan §4.2). */
+#[NonClientFacing]
 final readonly class FamilyRegistrationData
 {
     /** @param list<ChildDetailsData> $children */
     public function __construct(
         public Church $church,
-        public Satellite $homeSatellite,
+        public Satellite $home_satellite,
         public GuardianDetailsData $primary,
         public array $children,
-        public ?string $areaText,
-        public bool $privacyConsented,
+        public ?string $area_text,
+        public bool $privacy_consented,
         public RegistrationSourceEnum $source,
-        public ?User $registeredBy = null,
-        public ?string $fbAccount = null,
-        public bool $wantsFbGroup = false,
-        public bool $inDgroup = false,
-        public ?string $dgroupAreaText = null,
-        public ?string $dgroupLeaderName = null,
-        public ?string $dgroupLeaderPhone = null,
-        public bool $wantsDgroup = false,
+        public ?User $registered_by = null,
+        public ?string $fb_account = null,
+        public bool $wants_fb_group = false,
+        public bool $in_dgroup = false,
+        public ?string $dgroup_area_text = null,
+        public ?string $dgroup_leader_name = null,
+        public ?string $dgroup_leader_phone = null,
+        public bool $wants_dgroup = false,
         public ?string $lifestage = null,
         public ?string $notes = null,
         public bool $notify = true,

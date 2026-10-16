@@ -8,6 +8,7 @@ use App\Domains\Family\DataObjects\FamilyDetailsData;
 use App\Foundation\Support\RouteChurch;
 use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
  * Editing a family — by the parent on their family page, or by staff who may edit it (plan §3.2): the
@@ -16,6 +17,7 @@ use Spatie\LaravelData\Data;
  * The ONE owner of the family-field rules: RegisterFamilyInput spreads them, so the two forms cannot drift
  * (they did once — review-spar R4). The satellite must belong to THIS church.
  */
+#[TypeScript]
 final class FamilyDetailsInput extends Data
 {
     public function __construct(
@@ -62,15 +64,15 @@ final class FamilyDetailsInput extends Data
     public function toDetails(): FamilyDetailsData
     {
         return new FamilyDetailsData(
-            homeSatelliteId: $this->home_satellite_id,
-            areaText: $this->area_text,
-            fbAccount: $this->fb_account,
-            wantsFbGroup: $this->wants_fb_group,
-            inDgroup: $this->in_dgroup,
-            dgroupAreaText: $this->dgroup_area_text,
-            dgroupLeaderName: $this->dgroup_leader_name,
-            dgroupLeaderPhone: $this->dgroup_leader_phone,
-            wantsDgroup: $this->wants_dgroup,
+            home_satellite_id: $this->home_satellite_id,
+            area_text: $this->area_text,
+            fb_account: $this->fb_account,
+            wants_fb_group: $this->wants_fb_group,
+            in_dgroup: $this->in_dgroup,
+            dgroup_area_text: $this->dgroup_area_text,
+            dgroup_leader_name: $this->dgroup_leader_name,
+            dgroup_leader_phone: $this->dgroup_leader_phone,
+            wants_dgroup: $this->wants_dgroup,
             lifestage: $this->lifestage,
             notes: $this->notes,
         );

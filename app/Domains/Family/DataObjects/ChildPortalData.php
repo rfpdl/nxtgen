@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Family\DataObjects;
 
 use App\Data\Models\Child;
+use App\Enums\GenderEnum;
 use Illuminate\Support\Facades\URL;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -19,42 +20,42 @@ final class ChildPortalData extends Data
 {
     public function __construct(
         public int $id,
-        public string $firstName,
-        public ?string $middleName,
-        public string $lastName,
+        public string $first_name,
+        public ?string $middle_name,
+        public string $last_name,
         public string $nickname,
-        public string $gender,
-        public string $dateOfBirth,
+        public GenderEnum $gender,
+        public string $date_of_birth,
         public ?string $allergies,
         public ?string $illnesses,
         public ?string $dislikes,
         public ?string $fears,
-        public ?string $parentNotes,
+        public ?string $guardian_notes,
         public ?string $level,
-        public string $status,
-        public bool $photoConsent,
-        public ?string $photoUrl,
+        public string $status_label,
+        public bool $photo_consent,
+        public ?string $photo_url,
     ) {}
 
     public static function fromModel(Child $child): self
     {
         return new self(
             id: $child->id,
-            firstName: $child->first_name,
-            middleName: $child->middle_name,
-            lastName: $child->last_name,
+            first_name: $child->first_name,
+            middle_name: $child->middle_name,
+            last_name: $child->last_name,
             nickname: $child->nickname,
-            gender: $child->gender->value,
-            dateOfBirth: $child->date_of_birth->toDateString(),
+            gender: $child->gender,
+            date_of_birth: $child->date_of_birth->toDateString(),
             allergies: $child->allergies,
             illnesses: $child->illnesses,
             dislikes: $child->dislikes,
             fears: $child->fears,
-            parentNotes: $child->parent_notes,
+            guardian_notes: $child->guardian_notes,
             level: $child->levelName(),
-            status: $child->status->label(),
-            photoConsent: $child->photo_consent_at !== null,
-            photoUrl: $child->photo_path === null || $child->photo_consent_at === null ? null
+            status_label: $child->status->label(),
+            photo_consent: $child->photo_consent_at !== null,
+            photo_url: $child->photo_path === null || $child->photo_consent_at === null ? null
                 : URL::temporarySignedRoute('photos.child', now()->addMinutes(30), ['child' => $child->id, 'v' => md5($child->photo_path)]),
         );
     }

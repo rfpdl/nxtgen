@@ -18,8 +18,8 @@ final class GuardianEditData extends Data
 {
     /** @param list<string> $ministries */
     public function __construct(
-        public string $firstName,
-        public string $lastName,
+        public string $first_name,
+        public string $last_name,
         public RelationshipEnum $relationship,
         public string $phone,
         public array $ministries,
@@ -28,8 +28,8 @@ final class GuardianEditData extends Data
     public static function fromModel(Guardian $guardian): self
     {
         return new self(
-            firstName: $guardian->first_name,
-            lastName: $guardian->last_name,
+            first_name: $guardian->first_name,
+            last_name: $guardian->last_name,
             relationship: $guardian->relationship,
             phone: (string) $guardian->phone,
             ministries: $guardian->ministries ?? [],

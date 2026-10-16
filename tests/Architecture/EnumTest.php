@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Architecture;
 
+use App\Enums\Concerns\HasEnumMetadata;
+use App\Enums\Concerns\ProvidesEnumMetadata;
 use ReflectionEnum;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use UnitEnum;
@@ -13,17 +15,16 @@ use UnitEnum;
  *
  * Decided 2026-10-17: enums carry `#[TypeScript]` and aegis's `App\Enums\Concerns` (`HasEnumMetadata` interface,
  * `ProvidesEnumMetadata` trait), so a page gets `{value, label, color}` rows from one place instead of each enum
- * hand-writing its own `toFrontend()`. Batch 06 ports the concerns; until then every enum is a known gap, and the
- * concerns are named by string because they do not exist yet.
+ * hand-writing its own `toFrontend()`. Batch 06 ported the concerns and gave them to every enum.
  */
 function hasEnumMetadataInterface(): string
 {
-    return 'App\Enums\Concerns\HasEnumMetadata';
+    return HasEnumMetadata::class;
 }
 
 function providesEnumMetadataTrait(): string
 {
-    return 'App\Enums\Concerns\ProvidesEnumMetadata';
+    return ProvidesEnumMetadata::class;
 }
 
 /** @return list<ReflectionEnum<UnitEnum>> */
@@ -85,13 +86,7 @@ it('never uses ProvidesEnumMetadata without implementing HasEnumMetadata', funct
     expect($offenders)->toBe([], 'Uses ProvidesEnumMetadata, does not implement HasEnumMetadata: '.implode(', ', $offenders));
 });
 
-it('gives a value, label and color for every case of a HasEnumMetadata enum (inert until batch 06)', function (): void {
-    /*
-     * HONEST NOTE: today this asserts nothing about any enum. No enum implements HasEnumMetadata yet (all 14 are
-     * in KnownGaps::ENUM_NO_METADATA), so the loop below skips every one; the expect() on the next line only
-     * keeps Pest from calling the test risky. It starts checking the moment batch 06 gives an enum the
-     * interface, which is why it is written now rather than then.
-     */
+it('gives a value, label and color for every case of a HasEnumMetadata enum', function (): void {
     expect(appEnums())->not->toBeEmpty();
 
     foreach (appEnums() as $enum) {

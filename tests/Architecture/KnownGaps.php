@@ -16,36 +16,17 @@ namespace Tests\Architecture;
  * Grouped by the refactor batch that empties each list (`.planning/tasks/2026-10-17-refactor/spec.md`):
  * 04 renames, 05 groups → Levels, 06 enums / DTOs / generated TS, 07 Feature clean-up, 08 tests per Job and enum
  * and the rest. Batch 04 renamed classes to the GLOSSARY words (Church, Satellite) and rewrote the FQCNs here
- * without paying anything off; batch 05 deleted the `Group` entries with the classes.
+ * without paying anything off; batch 05 deleted the `Group` entries with the classes; batch 06 emptied its lists.
  *
  * Keys: an FQCN where the rule is about a class, a path relative to `app/` (or a migration's filename) where it
  * is about a file.
  */
 final class KnownGaps
 {
-    // ─── Batch 06 — enums, DTOs and generated TS ────────────────────────────────────────────────────────
+    // ─── Batch 06 — enums, DTOs and generated TS (emptied by batch 06) ──────────────────────────────────
 
-    /**
-     * Response DTOs with neither #[TypeScript] nor #[NonClientFacing] (DataObjectTest). Mostly internal hand-offs
-     * — registry rows, registration payloads, list filters — that batch 06 marks #[NonClientFacing].
-     *
-     * @var list<string>
-     */
-    public const array DATA_NO_TYPESCRIPT = [
-        'App\Domains\Auth\DataObjects\IssuedMagicLinkData',
-        'App\Domains\Family\DataObjects\ChildDetailsData',
-        'App\Domains\Family\DataObjects\ChildListFiltersData',
-        'App\Domains\Family\DataObjects\FamilyListFiltersData',
-        'App\Domains\Family\DataObjects\FamilyRegistrationData',
-        'App\Domains\Family\DataObjects\GuardianDetailsData',
-        'App\Domains\Registry\DataObjects\ApprovedChildRowData',
-        'App\Domains\Registry\DataObjects\ImportResultData',
-        'App\Domains\Registry\DataObjects\ProposedFamilyData',
-        'App\Domains\Registry\DataObjects\QuarantinedRowData',
-        'App\Domains\Registry\DataObjects\RegistryApprovalData',
-        'App\Domains\Registry\DataObjects\RegistryProposalData',
-        'App\Domains\Registry\DataObjects\RegistryRowData',
-    ];
+    /** @var list<string> response DTOs with neither #[TypeScript] nor #[NonClientFacing] (DataObjectTest) */
+    public const array DATA_NO_TYPESCRIPT = [];
 
     /** @var list<string> {Model}Data without fromModel() (DataObjectTest) */
     public const array DATA_NO_FROM_MODEL = [];
@@ -57,42 +38,19 @@ final class KnownGaps
     public const array DATA_PATH_PROPS = [];
 
     /** @var list<string> response DTOs typed with DataCollection rather than a list (DataObjectTest) */
-    public const array DATA_COLLECTION = [
-        'App\Domains\Church\DataObjects\StaffMemberData',
-    ];
+    public const array DATA_COLLECTION = [];
 
     /** @var list<string> *Data classes declared outside a DataObjects folder (DataObjectTest) */
-    public const array DATA_OUTSIDE_DATA_OBJECTS = [
-        'App\Operations\Registration\RegistrationResultData',
-    ];
+    public const array DATA_OUTSIDE_DATA_OBJECTS = [];
 
-    /**
-     * Inputs without #[TypeScript] (DataObjectTest) — all of them; batch 06 generates them and deletes the
-     * hand-written form types.
-     *
-     * @var list<string>
-     */
-    public const array INPUT_NO_TYPESCRIPT = [
-        'App\Services\Auth\Data\PasswordLoginInput',
-        'App\Services\Auth\Data\RequestMagicLinkInput',
-        'App\Services\Auth\Data\UpdatePasswordInput',
-        'App\Services\Church\Data\AddStaffInput',
-        'App\Services\Church\Data\CorrectFamilyEmailInput',
-        'App\Services\Church\Data\ResolveDuplicateInput',
-        'App\Services\Church\Data\UpdateChildStatusInput',
-        'App\Foundation\Inputs\ChildInput',
-        'App\Foundation\Inputs\ChildPhotoInput',
-        'App\Foundation\Inputs\FamilyDetailsInput',
-        'App\Foundation\Inputs\GuardianDetailsInput',
-        'App\Foundation\Inputs\GuardianInput',
-        'App\Foundation\Inputs\RegisterFamilyInput',
-    ];
+    /** @var list<string> Inputs without #[TypeScript] (DataObjectTest) */
+    public const array INPUT_NO_TYPESCRIPT = [];
 
-    /** @var list<string> enums without #[TypeScript] (EnumTest) — all 14 */
-    public const array ENUM_NO_TYPESCRIPT = self::ALL_ENUMS;
+    /** @var list<string> enums without #[TypeScript] (EnumTest) */
+    public const array ENUM_NO_TYPESCRIPT = [];
 
-    /** @var list<string> enums not implementing HasEnumMetadata (EnumTest) — all 14; the concerns arrive in 06 */
-    public const array ENUM_NO_METADATA = self::ALL_ENUMS;
+    /** @var list<string> enums not implementing HasEnumMetadata (EnumTest) */
+    public const array ENUM_NO_METADATA = [];
 
     // ─── Batch 07 — Feature clean-up ────────────────────────────────────────────────────────────────────
 
@@ -303,23 +261,5 @@ final class KnownGaps
     public const array MIGRATION_PLAIN_TIMESTAMP = [
         // Laravel's own failed_jobs stub: `$table->timestamp('failed_at')->useCurrent()`.
         '0001_01_01_000002_create_jobs_table.php',
-    ];
-
-    /** @var list<string> */
-    private const array ALL_ENUMS = [
-        'App\Enums\AccessRowEnum',
-        'App\Enums\ChildStatusEnum',
-        'App\Enums\DuplicateReasonEnum',
-        'App\Enums\DuplicateStatusEnum',
-        'App\Enums\FamilyClaimStatusEnum',
-        'App\Enums\GenderEnum',
-        'App\Enums\MagicLinkPurposeEnum',
-        'App\Enums\NoteKindEnum',
-        'App\Enums\NoteVisibilityEnum',
-        'App\Enums\RegistrationOutcomeEnum',
-        'App\Enums\RegistrationSourceEnum',
-        'App\Enums\RelationshipEnum',
-        'App\Enums\RoleEnum',
-        'App\Enums\ScopeTypeEnum',
     ];
 }

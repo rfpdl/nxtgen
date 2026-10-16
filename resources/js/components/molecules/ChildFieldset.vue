@@ -1,38 +1,27 @@
 <script setup lang="ts">
 import FormField from '@/components/atoms/FormField.vue'
+import { useEnum } from '@/composables/useEnum'
+import type { ChildDraft } from '@/types'
 
 /**
- * The fields for one child on the registration form. Field names match the server's ChildInput, and errors
- * arrive keyed `children.{index}.{field}`, so each child shows only its own.
+ * The fields for one child on the registration form. The model is the server's ChildInput as a draft
+ * (`has_allergies` stays null until the parent answers: a blank must never be read as "no allergies", review
+ * B6). Errors arrive keyed `children.{index}.{field}`, so each child shows only its own. Boy/girl come from
+ * the page's `enums.gender`.
  */
-export type ChildForm = {
-    first_name: string
-    middle_name: string
-    last_name: string
-    nickname: string
-    gender: string
-    date_of_birth: string
-    /** Null until the parent answers: a blank must never be read as "no allergies" (review B6). */
-    has_allergies: boolean | null
-    allergies: string
-    illnesses: string
-    dislikes: string
-    fears: string
-    parent_notes: string
-}
-
 const props = defineProps<{
     index: number
-    genders: { value: string; label: string }[]
     errors: Record<string, string | undefined>
     removable: boolean
 }>()
 
-const child = defineModel<ChildForm>({ required: true })
+const child = defineModel<ChildDraft>({ required: true })
 
 defineEmits<{ remove: [] }>()
 
-const error = (field: keyof ChildForm): string | undefined =>
+const { options: genders } = useEnum('gender')
+
+const error = (field: keyof ChildDraft): string | undefined =>
     props.errors[`children.${props.index}.${field}`]
 
 /*
@@ -155,9 +144,9 @@ const input = 'min-h-touch rounded-md border border-border bg-surface px-4 text-
         <FormField label="Things your child is afraid of" :error="error('fears')">
             <input v-model="child.fears" :class="input" />
         </FormField>
-        <FormField label="Anything else we should know" :error="error('parent_notes')">
+        <FormField label="Anything else we should know" :error="error('guardian_notes')">
             <textarea
-                v-model="child.parent_notes"
+                v-model="child.guardian_notes"
                 rows="3"
                 class="border-border bg-surface text-text rounded-md border p-4 text-lg"
             />

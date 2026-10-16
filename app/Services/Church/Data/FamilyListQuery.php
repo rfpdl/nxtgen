@@ -21,24 +21,11 @@ final class FamilyListQuery
 
         return new FamilyListFiltersData(
             query: $q === '' ? null : $q,
-            satelliteId: $request->integer('satellite') ?: null,
+            satellite_id: $request->integer('satellite') ?: null,
             status: ChildStatusEnum::tryFrom($request->string('status')->value()),
             level: $request->integer('level') ?: null,
-            unconfirmedOnly: $request->boolean('unconfirmed'),
-            duplicatesOnly: $request->boolean('duplicates'),
+            unconfirmed_only: $request->boolean('unconfirmed'),
+            duplicates_only: $request->boolean('duplicates'),
         );
-    }
-
-    /** @return array{q: string, satellite: int|null, status: string|null, level: int|null, unconfirmed: bool, duplicates: bool} */
-    public static function toProps(FamilyListFiltersData $f): array
-    {
-        return [
-            'q' => $f->query ?? '',
-            'satellite' => $f->satelliteId,
-            'status' => $f->status?->value,
-            'level' => $f->level,
-            'unconfirmed' => $f->unconfirmedOnly,
-            'duplicates' => $f->duplicatesOnly,
-        ];
     }
 }

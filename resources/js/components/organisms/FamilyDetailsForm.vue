@@ -1,7 +1,13 @@
 <script setup lang="ts">
-import FamilyFieldset, { type FamilyFields } from '@/components/molecules/FamilyFieldset.vue'
-import GuardianFieldset, { type GuardianFields } from '@/components/molecules/GuardianFieldset.vue'
-import type { FamilyDetails, GuardianEdit } from '@/types'
+import FamilyFieldset from '@/components/molecules/FamilyFieldset.vue'
+import GuardianFieldset from '@/components/molecules/GuardianFieldset.vue'
+import type {
+    Draft,
+    FamilyDetails,
+    FamilyDetailsInput,
+    GuardianEdit,
+    SatelliteOption,
+} from '@/types'
 import { useForm } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
@@ -14,27 +20,26 @@ const props = defineProps<{
     action: string
     details: FamilyDetails
     guardian: GuardianEdit
-    satellites: { id: number; name: string }[]
-    relationships: { value: string; label: string }[]
+    satellites: SatelliteOption[]
 }>()
 
 const open = ref(false)
 
-const form = useForm<FamilyFields & { notes: string; guardian: GuardianFields }>({
-    home_satellite_id: props.details.homeSatelliteId,
-    area_text: props.details.areaText ?? '',
-    fb_account: props.details.fbAccount ?? '',
-    wants_fb_group: props.details.wantsFbGroup,
-    in_dgroup: props.details.inDgroup,
-    dgroup_area_text: props.details.dgroupAreaText ?? '',
-    dgroup_leader_name: props.details.dgroupLeaderName ?? '',
-    dgroup_leader_phone: props.details.dgroupLeaderPhone ?? '',
-    wants_dgroup: props.details.wantsDgroup,
+const form = useForm<Draft<FamilyDetailsInput>>({
+    home_satellite_id: props.details.home_satellite_id,
+    area_text: props.details.area_text ?? '',
+    fb_account: props.details.fb_account ?? '',
+    wants_fb_group: props.details.wants_fb_group,
+    in_dgroup: props.details.in_dgroup,
+    dgroup_area_text: props.details.dgroup_area_text ?? '',
+    dgroup_leader_name: props.details.dgroup_leader_name ?? '',
+    dgroup_leader_phone: props.details.dgroup_leader_phone ?? '',
+    wants_dgroup: props.details.wants_dgroup,
     lifestage: props.details.lifestage ?? '',
     notes: props.details.notes ?? '',
     guardian: {
-        first_name: props.guardian.firstName,
-        last_name: props.guardian.lastName,
+        first_name: props.guardian.first_name,
+        last_name: props.guardian.last_name,
         relationship: props.guardian.relationship,
         phone: props.guardian.phone,
         ministries: [...props.guardian.ministries],
@@ -60,12 +65,7 @@ function submit(): void {
         Edit family details
     </button>
     <form v-else class="flex flex-col gap-4" novalidate @submit.prevent="submit">
-        <GuardianFieldset
-            v-model="form.guardian"
-            :relationships="relationships"
-            :errors="errors()"
-            :with-email="false"
-        />
+        <GuardianFieldset v-model="form.guardian" :errors="errors()" :with-email="false" />
         <FamilyFieldset v-model="form" :satellites="satellites" :errors="errors()" />
         <div class="flex gap-3">
             <button

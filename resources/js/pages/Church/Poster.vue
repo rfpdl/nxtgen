@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useChurch } from '@/composables/useChurch'
 import { Head, Link } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
@@ -6,7 +7,9 @@ import { route } from 'ziggy-js'
  * The registration poster for the foyer (plan §6 R1): print it. Plain big words for parents, the QR code to scan,
  * and the address for anyone whose camera will not. The buttons are hidden on paper.
  */
-defineProps<{ church: { name: string; slug: string }; registerUrl: string; qr: string }>()
+defineProps<{ registerUrl: string; qr: string }>()
+
+const church = useChurch()
 
 function print(): void {
     window.print()

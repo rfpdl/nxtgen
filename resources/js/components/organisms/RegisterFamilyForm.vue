@@ -1,23 +1,21 @@
 <script setup lang="ts">
-import ChildFieldset, { type ChildForm } from '@/components/molecules/ChildFieldset.vue'
+import ChildFieldset from '@/components/molecules/ChildFieldset.vue'
 import FamilyFieldset from '@/components/molecules/FamilyFieldset.vue'
 import GuardianFieldset from '@/components/molecules/GuardianFieldset.vue'
+import type { ChildDraft, Draft, RegisterFamilyInput, SatelliteOption } from '@/types'
 import { useForm } from '@inertiajs/vue3'
 
 /**
  * The parent registration form (plan §6 R1): today's Google Form fields plus the home satellite.
- * Field names match RegisterFamilyInput, so server errors land on the right control.
+ * The form is a draft of RegisterFamilyInput (no `notes`: registration never asks), so server errors land on
+ * the right control.
  */
-type Option = { value: string; label: string }
-
 const props = defineProps<{
     action: string
-    satellites: { id: number; name: string }[]
-    relationships: Option[]
-    genders: Option[]
+    satellites: SatelliteOption[]
 }>()
 
-const blankChild = (): ChildForm => ({
+const blankChild = (): ChildDraft => ({
     first_name: '',
     middle_name: '',
     last_name: '',
@@ -29,11 +27,11 @@ const blankChild = (): ChildForm => ({
     illnesses: '',
     dislikes: '',
     fears: '',
-    parent_notes: '',
+    guardian_notes: '',
 })
 
-const form = useForm({
-    home_satellite_id: '' as number | '',
+const form = useForm<Omit<Draft<RegisterFamilyInput>, 'notes'>>({
+    home_satellite_id: '',
     area_text: '',
     privacy_consented: false,
     fb_account: '',
@@ -50,7 +48,7 @@ const form = useForm({
         relationship: 'mother',
         phone: '',
         email: '',
-        ministries: [] as string[],
+        ministries: [],
     },
     children: [blankChild()],
 })
@@ -75,12 +73,7 @@ function submit(): void {
     <form class="flex flex-col gap-6" novalidate @submit.prevent="submit">
         <section class="flex flex-col gap-4">
             <h2 class="text-text text-2xl font-semibold">About you</h2>
-            <GuardianFieldset
-                v-model="form.guardian"
-                :relationships="relationships"
-                :errors="errors()"
-                with-email
-            />
+            <GuardianFieldset v-model="form.guardian" :errors="errors()" with-email />
         </section>
 
         <section class="flex flex-col gap-4">
@@ -98,7 +91,6 @@ function submit(): void {
                 :key="index"
                 v-model="form.children[index]!"
                 :index="index"
-                :genders="genders"
                 :errors="errors()"
                 :removable="form.children.length > 1"
                 @remove="removeChild(index)"

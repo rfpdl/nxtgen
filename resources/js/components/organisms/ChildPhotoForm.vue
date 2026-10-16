@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { photoForUpload } from '@/lib/photoForUpload'
-import type { ChildPortal } from '@/types'
+import type { ChildPhotoInput, ChildPortal, Draft } from '@/types'
 import { router, useForm } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
@@ -18,7 +18,7 @@ const props = defineProps<{
     withdrawAction?: string
 }>()
 
-const form = useForm<{ photo: File | null }>({ photo: null })
+const form = useForm<Pick<Draft<ChildPhotoInput>, 'photo'>>({ photo: null })
 
 async function send(event: Event): Promise<void> {
     const file = (event.target as HTMLInputElement).files?.[0]
@@ -50,7 +50,7 @@ const button =
 
 <template>
     <div class="flex flex-col gap-2" data-testid="child-photo">
-        <div v-if="who === 'staff' && !child.photoConsent" class="flex flex-col gap-2">
+        <div v-if="who === 'staff' && !child.photo_consent" class="flex flex-col gap-2">
             <p class="text-text-muted">The parent has not agreed to a photo yet.</p>
             <button
                 v-if="consentAction && !confirming"
@@ -89,7 +89,7 @@ const button =
             </div>
         </div>
         <div
-            v-if="who === 'guardian' && consentAction && !child.photoConsent"
+            v-if="who === 'guardian' && consentAction && !child.photo_consent"
             class="flex flex-col gap-2"
         >
             <p class="text-text">
@@ -106,10 +106,10 @@ const button =
                 Yes, I agree to a photo
             </button>
         </div>
-        <div v-if="child.photoConsent" class="flex flex-wrap gap-3">
+        <div v-if="child.photo_consent" class="flex flex-wrap gap-3">
             <!-- `image/*` (not a list of types) so iPhones offer every photo, HEIC included. -->
             <label :class="button">
-                {{ child.photoUrl ? 'Take a new photo' : 'Take a photo' }}
+                {{ child.photo_url ? 'Take a new photo' : 'Take a photo' }}
                 <input
                     type="file"
                     accept="image/*"
@@ -130,7 +130,7 @@ const button =
                 />
             </label>
             <button
-                v-if="who === 'guardian' && child.photoConsent"
+                v-if="who === 'guardian' && child.photo_consent"
                 type="button"
                 class="min-h-touch text-danger px-2 underline"
                 data-testid="withdraw-photo-consent"

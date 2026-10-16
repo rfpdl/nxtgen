@@ -6,7 +6,9 @@ const post = vi.fn()
 
 vi.mock('@inertiajs/vue3', async () => {
     const { reactive } = await import('vue')
+    const { enums } = await import('@/tests/enumPage')
     return {
+        usePage: () => ({ props: { enums } }),
         useForm: (data: Record<string, unknown>) =>
             reactive({ ...data, errors: {}, processing: false, post }),
     }
@@ -17,14 +19,6 @@ const props = {
     satellites: [
         { id: 7, name: 'CCF DXB' },
         { id: 8, name: 'House Church' },
-    ],
-    relationships: [
-        { value: 'mother', label: 'Mother' },
-        { value: 'father', label: 'Father' },
-    ],
-    genders: [
-        { value: 'boy', label: 'Boy' },
-        { value: 'girl', label: 'Girl' },
     ],
 }
 

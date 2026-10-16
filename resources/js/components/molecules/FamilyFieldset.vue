@@ -1,30 +1,18 @@
 <script setup lang="ts">
 import FormField from '@/components/atoms/FormField.vue'
+import type { FamilyFieldsDraft, SatelliteOption } from '@/types'
 
 /**
  * The family's own fields — today's Google Form plus the home satellite — on registration and on editing.
- * Field names match FamilyDetailsInput (whose rules registration shares); errors arrive by field name. Writes
- * IN PLACE on the shared form object.
+ * The model is FamilyDetailsInput's family fields as a draft (registration shares its rules); errors arrive by
+ * field name. Writes IN PLACE on the shared form object.
  */
-export type FamilyFields = {
-    home_satellite_id: number | ''
-    area_text: string
-    fb_account: string
-    wants_fb_group: boolean
-    in_dgroup: boolean
-    dgroup_area_text: string
-    dgroup_leader_name: string
-    dgroup_leader_phone: string
-    wants_dgroup: boolean
-    lifestage: string
-}
-
 defineProps<{
-    satellites: { id: number; name: string }[]
+    satellites: SatelliteOption[]
     errors: Record<string, string | undefined>
 }>()
 
-const family = defineModel<FamilyFields>({ required: true })
+const family = defineModel<FamilyFieldsDraft>({ required: true })
 
 const input = 'min-h-touch rounded-md border border-border bg-surface px-4 text-lg text-text'
 const check = 'min-h-touch text-text flex items-center gap-3 text-lg'

@@ -18,14 +18,14 @@ final class ChildListRowData extends Data
     public function __construct(
         public int $id,
         public string $nickname,
-        public string $fullName,
+        public string $full_name,
         public int $age,
-        public string $dateOfBirth,
+        public string $date_of_birth,
         public ?string $level,
-        public string $status,
-        public bool $hasAllergies,
+        public string $status_label,
+        public bool $has_allergies,
         public string $satellite,
-        public int $familyId,
+        public int $family_id,
     ) {}
 
     public static function fromModel(Child $child): self
@@ -33,14 +33,14 @@ final class ChildListRowData extends Data
         return new self(
             id: $child->id,
             nickname: $child->nickname,
-            fullName: trim(implode(' ', array_filter([$child->first_name, $child->middle_name, $child->last_name]))),
+            full_name: trim(implode(' ', array_filter([$child->first_name, $child->middle_name, $child->last_name]))),
             age: (int) $child->date_of_birth->diffInYears(now()),
-            dateOfBirth: $child->date_of_birth->toDateString(),
+            date_of_birth: $child->date_of_birth->toDateString(),
             level: $child->levelName(),
-            status: $child->status->label(),
-            hasAllergies: $child->allergies !== null,
+            status_label: $child->status->label(),
+            has_allergies: $child->allergies !== null,
             satellite: $child->family->homeSatellite->name,
-            familyId: $child->family_id,
+            family_id: $child->family_id,
         );
     }
 }

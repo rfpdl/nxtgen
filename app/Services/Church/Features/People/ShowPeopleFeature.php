@@ -59,7 +59,6 @@ final class ShowPeopleFeature extends BaseChurchFeature
         })->sortBy(fn (StaffMemberData $p): string => mb_strtolower($p->name))->values();
 
         return Inertia::render('Church/People/Index', [
-            'church' => ['name' => $church->name, 'slug' => $church->slug],
             'people' => $people->all(),
             'grantOptions' => $this->grantOptions($church->id, $satellites),
         ]);
@@ -80,7 +79,7 @@ final class ShowPeopleFeature extends BaseChurchFeature
         foreach ($places as [$type, $id, $name]) {
             foreach ([RoleEnum::Admin, RoleEnum::Lifeshaper] as $role) {
                 if ($this->scope()->canGrant($role, $type, $id)) {
-                    $options[] = new GrantOptionData(label: StaffRoleData::label($role, $type, $name), role: $role, scopeType: $type, scopeId: $id);
+                    $options[] = new GrantOptionData(label: StaffRoleData::label($role, $type, $name), role: $role, scope_type: $type, scope_id: $id);
                 }
             }
         }

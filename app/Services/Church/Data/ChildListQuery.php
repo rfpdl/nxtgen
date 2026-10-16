@@ -17,16 +17,9 @@ final class ChildListQuery
 
         return new ChildListFiltersData(
             query: $q === '' ? null : $q,
-            satelliteId: $request->integer('satellite') ?: null,
+            satellite_id: $request->integer('satellite') ?: null,
             status: ChildStatusEnum::tryFrom($request->string('status')->value()),
             level: $request->integer('level') ?: null,
         );
-    }
-
-    /** @return array{q: string, satellite: int|null, status: string|null, level: int|null, unconfirmed: bool, duplicates: bool} */
-    public static function toProps(ChildListFiltersData $f): array
-    {
-        // Same shape as the families list's filters, so one filter bar serves both lists.
-        return ['q' => $f->query ?? '', 'satellite' => $f->satelliteId, 'status' => $f->status?->value, 'level' => $f->level, 'unconfirmed' => false, 'duplicates' => false];
     }
 }

@@ -53,11 +53,11 @@ describe('the children list', function (): void {
             ->where('children.0.nickname', 'Amara')
             ->where('children.0.level', 'Level 2')
             ->where('children.0.age', 7)
-            ->where('children.0.status', 'Active')
-            ->where('children.0.hasAllergies', true)
+            ->where('children.0.status_label', 'Active')
+            ->where('children.0.has_allergies', true)
             ->where('children.0.satellite', 'CCF DXB')
-            ->where('children.0.familyId', $amara->family_id)
-            ->has('options.levels', 4)->has('options.satellites', 2)->has('options.statuses', 3));
+            ->where('children.0.family_id', $amara->family_id)
+            ->has('options.levels', 4)->has('options.satellites', 2)->has('enums.child_status', 3));
     });
 
     it('shows a Lifeshaper only their satellite', function (): void {
@@ -187,7 +187,7 @@ it('shows the children list 50 at a time, filters and all (Roy 2026-10-16)', fun
     $admin = staffMember(RoleEnum::Admin, atChurch($church));
 
     actingAs($admin)->get('/ccf/children?status=active')->assertInertia(fn (AssertableInertia $p) => $p
-        ->has('children', 50)->where('pagination.total', 59)->where('pagination.page', 1)->where('pagination.lastPage', 2));
+        ->has('children', 50)->where('pagination.total', 59)->where('pagination.page', 1)->where('pagination.last_page', 2));
     actingAs($admin)->get('/ccf/children?status=active&page=2')->assertInertia(fn (AssertableInertia $p) => $p
         ->has('children', 9)->where('pagination.page', 2));
 });

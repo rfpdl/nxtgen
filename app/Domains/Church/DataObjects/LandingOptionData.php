@@ -12,7 +12,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 final class LandingOptionData extends Data
 {
     public function __construct(
-        public string $churchName,
+        public string $church_name,
         public string $label,
         public string $url,
     ) {}

@@ -27,7 +27,7 @@ final class CreateFamilyClaimJob extends BaseJob
             'guardian_id' => $this->guardian->id,
             'email_normalised' => mb_strtolower(trim($this->email)),
             'revision' => 1,
-            'status' => FamilyClaimStatusEnum::Pending,
+            'status' => FamilyClaimStatusEnum::default(),
         ]);
     }
 }

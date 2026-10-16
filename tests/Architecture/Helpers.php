@@ -174,10 +174,10 @@ function inputFiles(): array
     ];
 }
 
-/** @return list<string> */
+/** @return list<string> the enums — not `Enums/Concerns`, which holds the interfaces and trait they share */
 function enumFiles(): array
 {
-    return phpFiles('Enums');
+    return array_values(array_filter(phpFiles('Enums'), fn (string $f): bool => ! str_contains($f, '/Enums/Concerns/')));
 }
 
 /** @return list<string> the model basenames, e.g. `Family` — the classes a static query can start from */

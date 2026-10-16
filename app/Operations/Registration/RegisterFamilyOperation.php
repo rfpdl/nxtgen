@@ -10,6 +10,7 @@ use App\Domains\Auth\DataObjects\IssuedMagicLinkData;
 use App\Domains\Auth\Jobs\CreateMagicLinkJob;
 use App\Domains\Auth\Jobs\SendMagicLinkJob;
 use App\Domains\Family\DataObjects\FamilyRegistrationData;
+use App\Domains\Family\DataObjects\RegistrationResultData;
 use App\Domains\Family\Jobs\CreateChildJob;
 use App\Domains\Family\Jobs\CreateDuplicateCandidatesJob;
 use App\Domains\Family\Jobs\CreateFamilyClaimJob;
@@ -98,7 +99,7 @@ final class RegisterFamilyOperation extends Operation
             $issued = $this->link(new CreateMagicLinkJob(purpose: MagicLinkPurposeEnum::ClaimFamily, email: $email, claim: $claim));
             $outcome = RegistrationOutcomeEnum::ClaimSent;
         } else {
-            $user = $this->run(new CreateUserJob(name: $r->primary->firstName.' '.$r->primary->lastName, email: $email));
+            $user = $this->run(new CreateUserJob(name: $r->primary->first_name.' '.$r->primary->last_name, email: $email));
             $guardian = $this->run(new CreateGuardianJob(family: $family, details: $r->primary, user: $user));
             $this->run(new UpdateFamilyPrimaryGuardianJob(family: $family, guardian: $guardian));
             $issued = $this->link(new CreateMagicLinkJob(purpose: MagicLinkPurposeEnum::VerifyEmail, email: $email, user: $user));
@@ -114,7 +115,7 @@ final class RegisterFamilyOperation extends Operation
     private function addChildren(Family $family): void
     {
         foreach ($this->registration->children as $child) {
-            $level = $this->run(new GetSuggestedLevelJob(church: $this->registration->church, dateOfBirth: $child->dateOfBirth));
+            $level = $this->run(new GetSuggestedLevelJob(church: $this->registration->church, dateOfBirth: $child->date_of_birth));
 
             $this->run(new CreateChildJob(family: $family, details: $child, level: $level, source: $this->registration->source));
         }

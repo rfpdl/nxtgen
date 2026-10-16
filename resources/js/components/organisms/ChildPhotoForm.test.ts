@@ -27,21 +27,21 @@ vi.mock('@inertiajs/vue3', async () => {
 
 const child = (over: Partial<ChildPortal> = {}): ChildPortal => ({
     id: 4,
-    firstName: 'Alexis',
-    middleName: null,
-    lastName: 'Ramos',
+    first_name: 'Alexis',
+    middle_name: null,
+    last_name: 'Ramos',
     nickname: 'Amara',
     gender: 'girl',
-    dateOfBirth: '2019-05-10',
+    date_of_birth: '2019-05-10',
     allergies: null,
     illnesses: null,
     dislikes: null,
     fears: null,
-    parentNotes: null,
+    guardian_notes: null,
     level: null,
-    status: 'Active',
-    photoConsent: false,
-    photoUrl: null,
+    status_label: 'Active',
+    photo_consent: false,
+    photo_url: null,
     ...over,
 })
 
@@ -81,7 +81,7 @@ describe('ChildPhotoForm', () => {
     it('lets a parent who agreed take or choose a photo', async () => {
         const wrapper = mount(ChildPhotoForm, {
             props: {
-                child: child({ photoConsent: true }),
+                child: child({ photo_consent: true }),
                 who: 'guardian',
                 action: '/p',
                 consentAction: '/c',
@@ -100,7 +100,7 @@ describe('ChildPhotoForm', () => {
     it('lets a parent who agreed take it back', async () => {
         const wrapper = mount(ChildPhotoForm, {
             props: {
-                child: child({ photoConsent: true, photoUrl: '/x' }),
+                child: child({ photo_consent: true, photo_url: '/x' }),
                 who: 'guardian',
                 action: '/p',
                 withdrawAction: '/w',
@@ -135,7 +135,7 @@ describe('ChildPhotoForm', () => {
 
     it('lets staff take one once the parent agreed', async () => {
         const wrapper = mount(ChildPhotoForm, {
-            props: { child: child({ photoConsent: true }), who: 'staff', action: '/s' },
+            props: { child: child({ photo_consent: true }), who: 'staff', action: '/s' },
         })
 
         await pick(wrapper, 'take-photo')

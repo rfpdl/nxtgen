@@ -2,6 +2,7 @@
 import FormField from '@/components/atoms/FormField.vue'
 import FlashBanner from '@/components/molecules/FlashBanner.vue'
 import { useFlashMessages } from '@/composables/useFlashMessages'
+import type { UpdatePasswordInput } from '@/types'
 import { Head, Link, useForm } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
@@ -9,7 +10,10 @@ import { route } from 'ziggy-js'
 defineProps<{ hasPassword: boolean }>()
 
 const { message, dismiss } = useFlashMessages()
-const form = useForm({ password: '', password_confirmation: '' })
+const form = useForm<UpdatePasswordInput & { password_confirmation: string }>({
+    password: '',
+    password_confirmation: '',
+})
 
 function submit(): void {
     form.put(route('account.password.update'), {
@@ -63,6 +67,6 @@ const input = 'min-h-touch border-border bg-surface text-text rounded-md border 
                 Save password
             </button>
         </form>
-        <Link href="/home" class="text-text-muted underline">Back</Link>
+        <Link :href="route('home')" class="text-text-muted underline">Back</Link>
     </main>
 </template>

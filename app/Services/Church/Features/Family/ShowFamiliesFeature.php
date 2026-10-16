@@ -8,6 +8,7 @@ use App\Data\Models\Family;
 use App\Domains\Church\DataObjects\SatelliteOptionData;
 use App\Domains\Church\Jobs\GetSatellitesJob;
 use App\Domains\Family\DataObjects\FamilyListRowData;
+use App\Domains\Family\DataObjects\ListFiltersData;
 use App\Domains\Family\Jobs\GetFamiliesJob;
 use App\Domains\Level\Jobs\GetLevelsJob;
 use App\Enums\AccessRowEnum;
@@ -43,15 +44,14 @@ final class ShowFamiliesFeature extends BaseChurchFeature
         ));
 
         return Inertia::render('Church/Families/Index', [
-            'church' => ['name' => $church->name, 'slug' => $church->slug],
             'families' => array_map(fn (Family $f) => FamilyListRowData::fromModel($f, fullEmail: $scope->canEditFamily($f)), $page->items),
             'pagination' => $page->meta(),
-            'filters' => FamilyListQuery::toProps($filters),
+            'filters' => ListFiltersData::fromFamilyFilters($filters),
             'options' => [
                 'satellites' => $satellites,
                 'levels' => $this->run(new GetLevelsJob),
-                'statuses' => ChildStatusEnum::toFrontend(),
             ],
+            'enums' => ['child_status' => ChildStatusEnum::toFrontend()],
         ]);
     }
 }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import FormField from '@/components/atoms/FormField.vue'
+import type { PasswordLoginInput } from '@/types'
 import { useForm } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
@@ -10,7 +11,7 @@ import { ref } from 'vue'
 const props = defineProps<{ action: string }>()
 
 const open = ref(false)
-const form = useForm({ email: '', password: '' })
+const form = useForm<PasswordLoginInput>({ email: '', password: '' })
 
 function submit(): void {
     form.post(props.action, { preserveScroll: true, onFinish: () => form.reset('password') })

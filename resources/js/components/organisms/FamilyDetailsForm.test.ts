@@ -8,7 +8,9 @@ let form: Record<string, unknown>
 
 vi.mock('@inertiajs/vue3', async () => {
     const { reactive } = await import('vue')
+    const { enums } = await import('@/tests/enumPage')
     return {
+        usePage: () => ({ props: { enums } }),
         useForm: (data: Record<string, unknown>) => {
             form = reactive({ ...data, errors: {}, processing: false, put })
             return form
@@ -17,21 +19,21 @@ vi.mock('@inertiajs/vue3', async () => {
 })
 
 const details: FamilyDetails = {
-    homeSatelliteId: 7,
-    areaText: 'Al Barsha',
-    fbAccount: null,
-    wantsFbGroup: false,
-    inDgroup: true,
-    dgroupAreaText: 'Barsha',
-    dgroupLeaderName: 'Leah',
-    dgroupLeaderPhone: null,
-    wantsDgroup: false,
+    home_satellite_id: 7,
+    area_text: 'Al Barsha',
+    fb_account: null,
+    wants_fb_group: false,
+    in_dgroup: true,
+    dgroup_area_text: 'Barsha',
+    dgroup_leader_name: 'Leah',
+    dgroup_leader_phone: null,
+    wants_dgroup: false,
     lifestage: null,
     notes: null,
 }
 const guardian: GuardianEdit = {
-    firstName: 'Janice',
-    lastName: 'Ramos',
+    first_name: 'Janice',
+    last_name: 'Ramos',
     relationship: 'mother',
     phone: '0501234567',
     ministries: ['Music'],
@@ -41,7 +43,6 @@ const props = {
     details,
     guardian,
     satellites: [{ id: 7, name: 'CCF DXB' }],
-    relationships: [{ value: 'mother', label: 'Mother' }],
 }
 
 describe('FamilyDetailsForm', () => {

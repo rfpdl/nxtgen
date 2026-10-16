@@ -12,9 +12,9 @@ use App\Domains\Family\Jobs\GetFamilyByIdJob;
 use App\Domains\Family\Jobs\GetFamilyNotesJob;
 use App\Domains\Level\Jobs\GetLevelsJob;
 use App\Enums\AccessRowEnum;
-use App\Enums\GenderEnum;
-use App\Enums\RelationshipEnum;
+use App\Enums\ChildStatusEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Support\FamilyFormEnums;
 use App\Services\Church\Features\BaseChurchFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -39,16 +39,14 @@ final class ShowFamilyFeature extends BaseChurchFeature
         $primary = $family->primaryGuardian;
 
         return Inertia::render('Church/Families/Show', [
-            'church' => ['name' => $church->name, 'slug' => $church->slug],
             'family' => FamilyAdminData::fromModel($family, canEdit: $canEdit),
             'notes' => $this->run(new GetFamilyNotesJob(family: $family)),
             'details' => $canEdit ? FamilyDetailsData::fromModel($family) : null,
             'primary' => $canEdit && $primary !== null ? GuardianEditData::fromModel($primary) : null,
             'satellites' => $canEdit ? $this->run(new GetSatellitesJob(church: $church)) : [],
-            'relationships' => RelationshipEnum::toFrontend(),
             'canSetLevel' => $this->scope()->canSetLevel(),
             'levels' => $this->scope()->canSetLevel() ? $this->run(new GetLevelsJob) : [],
-            'genders' => GenderEnum::toFrontend(),
+            'enums' => [...FamilyFormEnums::toFrontend(), 'child_status' => ChildStatusEnum::toFrontend()],
         ]);
     }
 }

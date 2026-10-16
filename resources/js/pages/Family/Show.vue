@@ -8,19 +8,19 @@ import AddChildForm from '@/components/organisms/AddChildForm.vue'
 import ChildPhotoForm from '@/components/organisms/ChildPhotoForm.vue'
 import EditChildForm from '@/components/organisms/EditChildForm.vue'
 import FamilyDetailsForm from '@/components/organisms/FamilyDetailsForm.vue'
+import { useChurch } from '@/composables/useChurch'
 import { useFlashMessages } from '@/composables/useFlashMessages'
-import type { SatelliteOption, FamilyDetails, FamilyPortal, GuardianEdit } from '@/types'
+import type { FamilyDetails, FamilyPortal, GuardianEdit, SatelliteOption } from '@/types'
 import { route } from 'ziggy-js'
 
 defineProps<{
-    church: { name: string; slug: string }
     family: FamilyPortal
     details: FamilyDetails
     me: GuardianEdit
     satellites: SatelliteOption[]
-    relationships: { value: string; label: string }[]
-    genders: { value: string; label: string }[]
 }>()
+
+const church = useChurch()
 
 const { message, dismiss } = useFlashMessages()
 </script>
@@ -37,7 +37,7 @@ const { message, dismiss } = useFlashMessages()
                     <SignOutButton />
                 </div>
             </div>
-            <p class="text-text text-lg">{{ church.name }} · {{ family.homeSatellite }}</p>
+            <p class="text-text text-lg">{{ church.name }} · {{ family.home_satellite }}</p>
             <p v-if="family.area" class="text-text-muted">Lives in {{ family.area }}</p>
         </header>
 
@@ -45,11 +45,11 @@ const { message, dismiss } = useFlashMessages()
             <h2 class="text-text text-2xl font-semibold">Parents and guardians</h2>
             <p
                 v-for="g in family.guardians"
-                :key="`${g.firstName}-${g.lastName}`"
+                :key="`${g.first_name}-${g.last_name}`"
                 class="text-text text-lg"
                 data-testid="guardian"
             >
-                {{ g.firstName }} {{ g.lastName }} · {{ g.relationship
+                {{ g.first_name }} {{ g.last_name }} · {{ g.relationship_label
                 }}<span v-if="g.phone"> · {{ g.phone }}</span>
             </p>
             <FamilyDetailsForm
@@ -57,7 +57,6 @@ const { message, dismiss } = useFlashMessages()
                 :details="details"
                 :guardian="me"
                 :satellites="satellites"
-                :relationships="relationships"
             />
         </section>
 
@@ -78,13 +77,9 @@ const { message, dismiss } = useFlashMessages()
                 <EditChildForm
                     :action="route('family.children.update', [church.slug, child.id])"
                     :child="child"
-                    :genders="genders"
                 />
             </FamilyChildCard>
-            <AddChildForm
-                :action="route('family.children.store', church.slug)"
-                :genders="genders"
-            />
+            <AddChildForm :action="route('family.children.store', church.slug)" />
         </section>
     </main>
 </template>

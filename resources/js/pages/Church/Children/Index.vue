@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import Pager from '@/components/molecules/Pager.vue'
-import RegistrationListFilters, {
-    type RegistrationListFilterValues,
-} from '@/components/molecules/RegistrationListFilters.vue'
-import type { LevelOption, SatelliteOption, ChildListRow } from '@/types'
+import RegistrationListFilters from '@/components/molecules/RegistrationListFilters.vue'
+import { useChurch } from '@/composables/useChurch'
+import type { ChildListRow, LevelOption, ListFilters, Pagination, SatelliteOption } from '@/types'
 import { Head, Link, router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
@@ -12,32 +11,29 @@ import { route } from 'ziggy-js'
  * The children list (plan §6): every child in the satellites the viewer can see — Level, age, status, an allergy
  * flag — with the same search and filters as the families list. Each child opens their family.
  */
-const props = defineProps<{
-    church: { name: string; slug: string }
+defineProps<{
     children: ChildListRow[]
-    filters: RegistrationListFilterValues
-    pagination: { page: number; lastPage: number; total: number; perPage: number }
-    options: {
-        satellites: SatelliteOption[]
-        levels: LevelOption[]
-        statuses: { value: string; label: string }[]
-    }
+    filters: ListFilters
+    pagination: Pagination
+    options: { satellites: SatelliteOption[]; levels: LevelOption[] }
 }>()
+
+const church = useChurch()
 
 /** Another page of the same filtered list: the filters stay in the address. */
 function goTo(page: number): void {
     const current = Object.fromEntries(new URLSearchParams(window.location.search))
-    router.get(route('church.children.index', props.church.slug), { ...current, page })
+    router.get(route('church.children.index', church.value.slug), { ...current, page })
 }
 
 function apply(params: Record<string, string | number>): void {
-    router.get(route('church.children.index', props.church.slug), params, { preserveScroll: true })
+    router.get(route('church.children.index', church.value.slug), params, { preserveScroll: true })
 }
 </script>
 
 <template>
     <Head title="Children" />
-    <ChurchShell :church="church">
+    <ChurchShell>
         <h1 class="text-text text-2xl font-semibold">Children ({{ pagination.total }})</h1>
         <RegistrationListFilters
             :key="JSON.stringify(filters)"
@@ -53,17 +49,17 @@ function apply(params: Record<string, string | number>): void {
                 data-testid="child-row"
             >
                 <Link
-                    :href="route('church.families.show', [church.slug, child.familyId])"
+                    :href="route('church.families.show', [church.slug, child.family_id])"
                     class="text-primary text-lg font-semibold underline"
                     >{{ child.nickname }}</Link
                 >
-                <span class="text-text">{{ child.fullName }} · {{ child.age }} years</span>
+                <span class="text-text">{{ child.full_name }} · {{ child.age }} years</span>
                 <span class="text-text-muted"
-                    >{{ child.level ?? 'No Level' }} · {{ child.status }} ·
+                    >{{ child.level ?? 'No Level' }} · {{ child.status_label }} ·
                     {{ child.satellite }}</span
                 >
                 <span
-                    v-if="child.hasAllergies"
+                    v-if="child.has_allergies"
                     class="text-danger font-semibold"
                     data-testid="allergy-flag"
                     >Allergies</span
@@ -72,7 +68,7 @@ function apply(params: Record<string, string | number>): void {
         </ul>
         <Pager
             :page="pagination.page"
-            :last-page="pagination.lastPage"
+            :last-page="pagination.last_page"
             :total="pagination.total"
             @go="goTo"
         />

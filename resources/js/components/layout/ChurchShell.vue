@@ -2,19 +2,23 @@
 import SignOutButton from '@/components/atoms/SignOutButton.vue'
 import SwitchLink from '@/components/atoms/SwitchLink.vue'
 import FlashBanner from '@/components/molecules/FlashBanner.vue'
+import { useChurch } from '@/composables/useChurch'
 import { useFlashMessages } from '@/composables/useFlashMessages'
 import type { SharedProps } from '@/types'
 import { Link, usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { route } from 'ziggy-js'
 
-/** The church staff frame: church name, the Release 1 tools, People (admins), sign out, and the flash message. */
-defineProps<{ church: { name: string; slug: string } }>()
+/**
+ * The church staff frame: church name, the Release 1 tools, People (admins), sign out, and the flash message.
+ * The church is the page's shared `church`; what to show comes from the shared `churchNav`.
+ */
+const church = useChurch()
 
 const { message, dismiss } = useFlashMessages()
 const page = usePage<SharedProps>()
-const canManagePeople = computed(() => page.props.churchNav?.canManagePeople === true)
-const canReviewDuplicates = computed(() => page.props.churchNav?.canReviewDuplicates === true)
+const canManagePeople = computed(() => page.props.churchNav?.can_manage_people === true)
+const canReviewDuplicates = computed(() => page.props.churchNav?.can_review_duplicates === true)
 </script>
 
 <template>
@@ -55,7 +59,7 @@ const canReviewDuplicates = computed(() => page.props.churchNav?.canReviewDuplic
                     >People</Link
                 >
                 <Link
-                    href="/account/password"
+                    :href="route('account.password')"
                     class="min-h-touch text-text-muted ml-auto flex items-center underline-offset-4 hover:underline"
                     data-testid="backup-password"
                     >Password</Link

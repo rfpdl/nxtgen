@@ -31,7 +31,7 @@ final class ChildFactory extends Factory
             'nickname' => $first,
             'gender' => $gender,
             'date_of_birth' => fake()->dateTimeBetween('-12 years', '-4 years')->format('Y-m-d'),
-            'status' => ChildStatusEnum::Active,
+            'status' => ChildStatusEnum::default(),
             'registration_source' => RegistrationSourceEnum::Self,
         ];
     }

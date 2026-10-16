@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Auth\Jobs;
 
 use App\Domains\Auth\DataObjects\IssuedMagicLinkData;
-use App\Enums\MagicLinkPurposeEnum;
+use App\Enums\MagicLinkRouteEnum;
 use App\Foundation\Jobs\BaseJob;
 use App\Notifications\MagicLinkNotification;
 use Illuminate\Support\Facades\Notification;
@@ -37,7 +37,7 @@ final class SendMagicLinkJob extends BaseJob
         RateLimiter::hit($key, 600);
 
         Notification::route('mail', $this->issued->link->email_snapshot)->notify(new MagicLinkNotification(
-            url: url('/magic/'.$this->pathFor($this->issued->link->purpose).'/'.$this->issued->token),
+            url: route('auth.magic.confirm', ['purpose' => MagicLinkRouteEnum::fromPurpose($this->issued->link->purpose), 'token' => $this->issued->token]),
             purpose: $this->issued->link->purpose,
             churchName: $this->churchName,
             alreadyRegistered: $this->alreadyRegistered,
@@ -45,14 +45,5 @@ final class SendMagicLinkJob extends BaseJob
         ));
 
         return true;
-    }
-
-    private function pathFor(MagicLinkPurposeEnum $purpose): string
-    {
-        return match ($purpose) {
-            MagicLinkPurposeEnum::Login => 'login',
-            MagicLinkPurposeEnum::VerifyEmail => 'verify',
-            MagicLinkPurposeEnum::ClaimFamily => 'claim',
-        };
     }
 }

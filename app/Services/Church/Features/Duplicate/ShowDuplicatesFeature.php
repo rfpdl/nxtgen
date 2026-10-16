@@ -37,7 +37,6 @@ final class ShowDuplicatesFeature extends BaseChurchFeature
             ));
 
         return Inertia::render('Church/Duplicates/Index', [
-            'church' => ['name' => $church->name, 'slug' => $church->slug],
             'duplicates' => array_values($pairs->all()),
         ]);
     }

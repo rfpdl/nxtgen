@@ -1,46 +1,42 @@
 <script setup lang="ts">
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import Pager from '@/components/molecules/Pager.vue'
-import RegistrationListFilters, {
-    type RegistrationListFilterValues,
-} from '@/components/molecules/RegistrationListFilters.vue'
-import type { LevelOption, SatelliteOption, FamilyListRow } from '@/types'
+import RegistrationListFilters from '@/components/molecules/RegistrationListFilters.vue'
+import { useChurch } from '@/composables/useChurch'
+import type { FamilyListRow, LevelOption, ListFilters, Pagination, SatelliteOption } from '@/types'
 import { Head, Link, router } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { route } from 'ziggy-js'
 
-const props = defineProps<{
-    church: { name: string; slug: string }
+defineProps<{
     families: FamilyListRow[]
-    filters: RegistrationListFilterValues
-    pagination: { page: number; lastPage: number; total: number; perPage: number }
-    options: {
-        satellites: SatelliteOption[]
-        levels: LevelOption[]
-        statuses: { value: string; label: string }[]
-    }
+    filters: ListFilters
+    pagination: Pagination
+    options: { satellites: SatelliteOption[]; levels: LevelOption[] }
 }>()
+
+const church = useChurch()
 
 /** Another page of the same filtered list: the filters stay in the address. */
 function goTo(page: number): void {
     const current = Object.fromEntries(new URLSearchParams(window.location.search))
-    router.get(route('church.families.index', props.church.slug), { ...current, page })
+    router.get(route('church.families.index', church.value.slug), { ...current, page })
 }
 
 function apply(params: Record<string, string | number>): void {
-    router.get(route('church.families.index', props.church.slug), params, { preserveScroll: true })
+    router.get(route('church.families.index', church.value.slug), params, { preserveScroll: true })
 }
 
 /** The download is what the list shows: the same filters, as the same address parameters. */
 const exportHref = computed(() => {
     const query = new URLSearchParams(window.location.search).toString()
-    return route('church.families.export', props.church.slug) + (query === '' ? '' : `?${query}`)
+    return route('church.families.export', church.value.slug) + (query === '' ? '' : `?${query}`)
 })
 </script>
 
 <template>
     <Head title="Families" />
-    <ChurchShell :church="church">
+    <ChurchShell>
         <div class="flex flex-wrap items-center gap-4">
             <h1 class="text-text text-2xl font-semibold">Families ({{ pagination.total }})</h1>
             <a
@@ -67,23 +63,23 @@ const exportHref = computed(() => {
                 <Link
                     :href="route('church.families.show', [church.slug, family.id])"
                     class="text-primary text-lg font-semibold underline"
-                    >{{ family.primaryName }}</Link
+                    >{{ family.primary_name }}</Link
                 >
                 <p class="text-text">
                     {{ family.email
-                    }}<span v-if="!family.emailConfirmed" class="text-warning ml-2 font-semibold"
+                    }}<span v-if="!family.email_confirmed" class="text-warning ml-2 font-semibold"
                         >Email not confirmed</span
                     >
                 </p>
                 <p class="text-text-muted">
                     {{ family.satellite }} · {{ family.children.join(', ') }} ·
-                    {{ family.registeredBy }} · {{ family.registeredOn }}
+                    {{ family.registered_by }} · {{ family.registered_on }}
                 </p>
             </li>
         </ul>
         <Pager
             :page="pagination.page"
-            :last-page="pagination.lastPage"
+            :last-page="pagination.last_page"
             :total="pagination.total"
             @go="goTo"
         />

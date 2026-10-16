@@ -27,7 +27,7 @@ final class NoteFactory extends Factory
             'author_id' => null,
             'kind' => NoteKindEnum::System,
             'body' => fake()->sentence(),
-            'visibility' => NoteVisibilityEnum::Staff,
+            'visibility' => NoteVisibilityEnum::default(),
         ];
     }
 }

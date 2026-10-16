@@ -88,7 +88,7 @@ describe('the family list', function (): void {
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get('/ccf/families')
             ->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
             ->has('families', 1)
-            ->where('families.0.primaryName', 'Janice Ramos')
+            ->where('families.0.primary_name', 'Janice Ramos')
             ->where('families.0.email', 'ja•••@example.com'));
     });
 
@@ -98,7 +98,7 @@ describe('the family list', function (): void {
         registeredFamily($htc, 'Mira', 'mira@example.com');
 
         actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/families?unconfirmed=1')
-            ->assertInertia(fn (AssertableInertia $p) => $p->has('families', 1)->where('families.0.emailConfirmed', false));
+            ->assertInertia(fn (AssertableInertia $p) => $p->has('families', 1)->where('families.0.email_confirmed', false));
     });
 });
 
@@ -112,7 +112,7 @@ describe('registering for a parent', function (): void {
             ->component('Church/Families/Register')
             ->has('results', 1)
             ->where('results.0.satellite', 'House Church')
-            ->where('results.0.maskedEmail', 'ja•••@example.com')
+            ->where('results.0.masked_email', 'ja•••@example.com')
             ->missing('results.0.phone'));
     });
 
@@ -265,7 +265,7 @@ describe('searching and filtering the list', function (): void {
 
         foreach (['Janice', 'janice@exa', 'Janice-kid'] as $q) {
             actingAs($admin)->get('/ccf/families?q='.urlencode($q))->assertInertia(fn (AssertableInertia $p) => $p
-                ->has('families', 1)->where('families.0.primaryName', 'Janice Ramos')->where('filters.q', $q));
+                ->has('families', 1)->where('families.0.primary_name', 'Janice Ramos')->where('filters.q', $q));
         }
     });
 
@@ -278,12 +278,12 @@ describe('searching and filtering the list', function (): void {
         $admin = staffMember(RoleEnum::Admin, atChurch($church));
 
         actingAs($admin)->get("/ccf/families?satellite={$house->id}")->assertInertia(fn (AssertableInertia $p) => $p
-            ->has('families', 1)->where('families.0.primaryName', 'Mira Ramos')
-            ->has('options.satellites', 2)->has('options.levels', 4)->has('options.statuses', 3));
+            ->has('families', 1)->where('families.0.primary_name', 'Mira Ramos')
+            ->has('options.satellites', 2)->has('options.levels', 4)->has('enums.child_status', 3));
         actingAs($admin)->get('/ccf/families?status=inactive')->assertInertia(fn (AssertableInertia $p) => $p
-            ->has('families', 1)->where('families.0.primaryName', 'Janice Ramos'));
+            ->has('families', 1)->where('families.0.primary_name', 'Janice Ramos'));
         actingAs($admin)->get('/ccf/families?level=2')->assertInertia(fn (AssertableInertia $p) => $p
-            ->has('families', 1)->where('families.0.primaryName', 'Janice Ramos')->where('filters.level', 2));
+            ->has('families', 1)->where('families.0.primary_name', 'Janice Ramos')->where('filters.level', 2));
     });
 
     it('filters to families with an open possible duplicate, on either side', function (): void {
@@ -341,6 +341,6 @@ it('shows the families list 50 at a time; the Excel download still has every fam
     $admin = staffMember(RoleEnum::Admin, atChurch($church));
 
     actingAs($admin)->get('/ccf/families')->assertInertia(fn (AssertableInertia $p) => $p
-        ->has('families', 50)->where('pagination.total', 55)->where('pagination.lastPage', 2));
+        ->has('families', 50)->where('pagination.total', 55)->where('pagination.last_page', 2));
     actingAs($admin)->get('/ccf/families?page=2')->assertInertia(fn (AssertableInertia $p) => $p->has('families', 5));
 });

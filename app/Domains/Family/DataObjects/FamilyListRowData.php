@@ -16,13 +16,13 @@ final class FamilyListRowData extends Data
     /** @param list<string> $children */
     public function __construct(
         public int $id,
-        public string $primaryName,
+        public string $primary_name,
         public string $email,
-        public bool $emailConfirmed,
+        public bool $email_confirmed,
         public string $satellite,
         public array $children,
-        public string $registeredBy,
-        public string $registeredOn,
+        public string $registered_by,
+        public string $registered_on,
     ) {}
 
     public static function fromModel(Family $family, bool $fullEmail): self
@@ -31,13 +31,13 @@ final class FamilyListRowData extends Data
 
         return new self(
             id: $family->id,
-            primaryName: $family->contactName(),
+            primary_name: $family->contactName(),
             email: $fullEmail ? $email : EmailMask::mask($email),
-            emailConfirmed: $family->contactEmailConfirmed(),
+            email_confirmed: $family->contactEmailConfirmed(),
             satellite: $family->homeSatellite->name,
             children: array_values($family->children->map(fn ($c): string => $c->nickname)->all()),
-            registeredBy: $family->registration_source->label(),
-            registeredOn: $family->created_at?->toDateString() ?? '',
+            registered_by: $family->registration_source->label(),
+            registered_on: $family->created_at?->toDateString() ?? '',
         );
     }
 }

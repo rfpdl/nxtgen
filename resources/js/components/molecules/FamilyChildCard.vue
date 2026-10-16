@@ -15,7 +15,7 @@ const health = computed(() =>
         ['Sickness or illness', props.child.illnesses],
         ['Dislikes', props.child.dislikes],
         ['Afraid of', props.child.fears],
-        ['From the family', props.child.parentNotes],
+        ['From the family', props.child.guardian_notes],
     ].filter((row): row is [string, string] => typeof row[1] === 'string' && row[1] !== ''),
 )
 </script>
@@ -26,18 +26,18 @@ const health = computed(() =>
         data-testid="family-child"
     >
         <img
-            v-if="child.photoUrl"
-            :src="child.photoUrl"
+            v-if="child.photo_url"
+            :src="child.photo_url"
             :alt="`Photo of ${child.nickname}`"
             class="size-28 rounded-lg object-cover"
             data-testid="child-photo-img"
         />
         <h3 class="text-text text-xl font-semibold">{{ child.nickname }}</h3>
         <p class="text-text text-lg">
-            {{ [child.firstName, child.middleName, child.lastName].filter(Boolean).join(' ') }}
+            {{ [child.first_name, child.middle_name, child.last_name].filter(Boolean).join(' ') }}
         </p>
         <p class="text-text-muted">
-            Born {{ child.dateOfBirth }} · {{ child.level ?? 'No Level yet' }}
+            Born {{ child.date_of_birth }} · {{ child.level ?? 'No Level yet' }}
         </p>
         <p v-if="child.allergies" class="text-danger font-semibold" data-testid="allergy">
             Allergies: {{ child.allergies }}

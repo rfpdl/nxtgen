@@ -30,7 +30,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $illnesses
  * @property string|null $dislikes
  * @property string|null $fears
- * @property string|null $parent_notes
+ * @property string|null $guardian_notes
  * @property ChildStatusEnum $status
  * @property CarbonImmutable|null $status_changed_at
  * @property int|null $status_changed_by

@@ -25,7 +25,7 @@ final class FamilyClaimFactory extends Factory
             'guardian_id' => fn (array $a): int => Guardian::factory()->create(['family_id' => self::id($a['family_id']), 'user_id' => null])->id,
             'email_normalised' => fake()->unique()->safeEmail(),
             'revision' => 1,
-            'status' => FamilyClaimStatusEnum::Pending,
+            'status' => FamilyClaimStatusEnum::default(),
         ];
     }
 

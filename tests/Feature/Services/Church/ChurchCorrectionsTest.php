@@ -167,9 +167,9 @@ it('gives the staff page the edit details only to someone who may edit', functio
     ['church' => $church, 'htc' => $htc, 'family' => $family] = correctionChurch();
 
     actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->get("/ccf/families/{$family->id}")
-        ->assertInertia(fn (AssertableInertia $p) => $p->where('family.canEdit', true)->has('details')->has('primary'));
+        ->assertInertia(fn (AssertableInertia $p) => $p->where('family.can_edit', true)->has('details')->has('primary'));
     actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get("/ccf/families/{$family->id}")
-        ->assertInertia(fn (AssertableInertia $p) => $p->where('family.canEdit', false)->where('details', null)->where('primary', null));
+        ->assertInertia(fn (AssertableInertia $p) => $p->where('family.can_edit', false)->where('details', null)->where('primary', null));
 });
 
 it('refuses a Lifeshaper and an admin of another satellite', function (RoleEnum $role, string $where): void {

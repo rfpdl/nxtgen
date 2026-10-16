@@ -95,7 +95,7 @@ describe('a parent', function (): void {
         expect($child->photo_consent_at)->toBeNull()->and($child->photo_path)->toBe($path);
         Storage::disk('photos')->assertExists($path);
         // Hidden from everyone: no link, and the photo itself refuses — for the family and for staff.
-        actingAs($guardian)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('family.children.0.photoUrl', null));
+        actingAs($guardian)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('family.children.0.photo_url', null));
         actingAs($guardian)->get($url)->assertNotFound();
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get($url)->assertNotFound();
 
@@ -168,7 +168,7 @@ describe('consent first, photo later (review 3)', function (): void {
         $child->forceFill(['photo_consent_at' => null, 'photo_consent_by' => null])->save();
 
         actingAs($guardian)->get($url)->assertNotFound();
-        actingAs($guardian)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('family.children.0.photoUrl', null));
+        actingAs($guardian)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('family.children.0.photo_url', null));
     });
 });
 
@@ -233,7 +233,7 @@ describe('seeing a photo', function (): void {
 
         $url = '';
         actingAs($guardian)->get('/ccf/family')->assertInertia(function (AssertableInertia $p) use (&$url) {
-            $p->where('family.children.0.photoConsent', true)->where('family.children.0.photoUrl', function (string $u) use (&$url): bool {
+            $p->where('family.children.0.photo_consent', true)->where('family.children.0.photo_url', function (string $u) use (&$url): bool {
                 $url = $u;
 
                 return str_contains($u, 'signature=') && str_contains($u, 'expires=');
@@ -253,6 +253,6 @@ describe('seeing a photo', function (): void {
         ['guardian' => $guardian] = photoFamily();
 
         actingAs($guardian)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p
-            ->where('family.children.0.photoUrl', null)->where('family.children.0.photoConsent', false));
+            ->where('family.children.0.photo_url', null)->where('family.children.0.photo_consent', false));
     });
 });

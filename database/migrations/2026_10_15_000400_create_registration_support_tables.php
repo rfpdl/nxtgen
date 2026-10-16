@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Enums\DuplicateStatusEnum;
+use App\Enums\FamilyClaimStatusEnum;
+use App\Enums\NoteVisibilityEnum;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +24,7 @@ return new class extends Migration
             $table->foreignId('guardian_id')->comment('Unlinked primary guardian the login will attach to')->constrained()->restrictOnDelete();
             $table->string('email_normalised')->comment('Lowercase, trimmed email the claim was sent to');
             $table->unsignedInteger('revision')->default(1)->comment('Bumped on contact change; old links stop working');
-            $table->string('status')->default('pending')->comment('FamilyClaimStatusEnum: pending | accepted | revoked');
+            $table->string('status')->default(FamilyClaimStatusEnum::default()->value)->comment('FamilyClaimStatusEnum: pending | accepted | revoked');
             $table->timestampTz('resolved_at')->nullable()->comment('When accepted or revoked');
             $table->timestampsTz();
         });
@@ -54,7 +57,7 @@ return new class extends Migration
             $table->unsignedBigInteger('subject_id')->comment('The new record');
             $table->unsignedBigInteger('candidate_id')->comment('The existing record it may duplicate');
             $table->string('reason')->comment('DuplicateReasonEnum: same_phone | same_name_dob | same_email');
-            $table->string('status')->default('open')->comment('open | dismissed | confirmed');
+            $table->string('status')->default(DuplicateStatusEnum::default()->value)->comment('DuplicateStatusEnum: open | dismissed | confirmed');
             $table->foreignId('resolved_by')->nullable()->comment('Staff who reviewed it')->constrained('users')->nullOnDelete();
             $table->timestampTz('resolved_at')->nullable()->comment('When reviewed');
             $table->timestampsTz();
@@ -71,7 +74,7 @@ return new class extends Migration
             $table->foreignId('author_id')->nullable()->comment('Null for system notes')->constrained('users')->nullOnDelete();
             $table->string('kind')->comment('NoteKindEnum: system | observation');
             $table->text('body')->comment('The note');
-            $table->string('visibility')->default('staff')->comment('staff | family');
+            $table->string('visibility')->default(NoteVisibilityEnum::default()->value)->comment('NoteVisibilityEnum: staff | family');
             $table->timestampsTz();
 
             $table->index(['noteable_type', 'noteable_id']);

@@ -17,12 +17,12 @@ vi.mock('@inertiajs/vue3', async () => {
 })
 
 const options: GrantOption[] = [
-    { label: 'Admin · whole church', role: 'admin', scopeType: 'church', scopeId: 1 },
+    { label: 'Admin · whole church', role: 'admin', scope_type: 'church', scope_id: 1 },
     {
         label: 'Lifeshaper · Holy Trinity Church',
         role: 'lifeshaper',
-        scopeType: 'satellite',
-        scopeId: 3,
+        scope_type: 'satellite',
+        scope_id: 3,
     },
 ]
 

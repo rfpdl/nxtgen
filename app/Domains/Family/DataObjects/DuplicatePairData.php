@@ -17,7 +17,7 @@ final class DuplicatePairData extends Data
 {
     public function __construct(
         public int $id,
-        public string $reason,
+        public string $reason_label,
         public FamilySearchResultData $subject,
         public FamilySearchResultData $candidate,
     ) {}
@@ -26,7 +26,7 @@ final class DuplicatePairData extends Data
     {
         return new self(
             id: $pair->id,
-            reason: $pair->reason->label(),
+            reason_label: $pair->reason->label(),
             subject: FamilySearchResultData::fromModel(DuplicateCandidate::familyOf($pair->subject), $canOpenSubject),
             candidate: FamilySearchResultData::fromModel(DuplicateCandidate::familyOf($pair->candidate), $canOpenCandidate),
         );

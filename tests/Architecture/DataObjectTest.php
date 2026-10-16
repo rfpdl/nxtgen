@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Architecture;
 
+use App\Foundation\Attributes\NonClientFacing;
 use ReflectionClass;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -18,12 +19,11 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
  *
  * **One deliberate difference from aegis** (DECISIONS 2026-10-17): Inputs ALSO carry `#[TypeScript]`. Aegis
  * forbids it; here the form a page posts is typed from the same class that validates it, so the hand-written
- * `ChildForm` / `FamilyFieldset` types can go (batch 06).
+ * `ChildForm` / `FamilyFields` / `GuardianFields` types went in batch 06.
  *
- * `#[NonClientFacing]` does not exist yet — batch 06 adds it (aegis's `App\Foundation\Attributes\NonClientFacing`).
- * The guard names it by string so it can be required today; reflection reads attributes by name, not by class.
+ * `#[NonClientFacing]` is aegis's `App\Foundation\Attributes\NonClientFacing`, added in batch 06.
  */
-const NON_CLIENT_FACING = 'App\Foundation\Attributes\NonClientFacing';
+const NON_CLIENT_FACING = NonClientFacing::class;
 
 /** @return list<ReflectionClass<object>> concrete response DTOs */
 function responseDtos(): array

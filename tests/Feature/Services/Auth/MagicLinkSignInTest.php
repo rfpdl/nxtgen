@@ -75,7 +75,8 @@ describe('opening a link', function (): void {
 
         get('/magic/login/'.$token)->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
             ->component('Auth/ConfirmLink')
-            ->where('purpose', 'login'));
+            ->where('purpose', 'login')
+            ->where('action', url('/magic/login/'.$token)));
 
         assertGuest();
         expect(MagicLink::query()->sole()->used_at)->toBeNull();

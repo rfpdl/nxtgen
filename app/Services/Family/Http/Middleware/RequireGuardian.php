@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Family routes: the signed-in user must be a linked guardian of a family in THIS church (plan §3.1).
  * Anyone else gets 404, not 403 — the page does not confirm the church or family exists.
- * The family is put on the request so Features never look it up from user input.
+ * The church and the family are put on the request so Features never look them up from user input.
  */
 final class RequireGuardian
 {
@@ -35,6 +35,7 @@ final class RequireGuardian
 
         abort_if($guardian === null, 404);
 
+        $request->attributes->set('church', $church);
         $request->attributes->set('family', $guardian->family);
 
         return $next($request);

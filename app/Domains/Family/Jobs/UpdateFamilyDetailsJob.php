@@ -26,15 +26,15 @@ final class UpdateFamilyDetailsJob extends BaseJob
         $d = $this->details;
 
         $this->family->update([
-            'home_satellite_id' => $d->homeSatelliteId,
-            'area_text' => self::clean($d->areaText),
-            'fb_account' => self::clean($d->fbAccount),
-            'wants_fb_group' => $d->wantsFbGroup,
-            'in_dgroup' => $d->inDgroup,
-            'dgroup_area_text' => self::clean($d->dgroupAreaText),
-            'dgroup_leader_name' => self::clean($d->dgroupLeaderName),
-            'dgroup_leader_phone' => self::clean($d->dgroupLeaderPhone),
-            'wants_dgroup' => $d->wantsDgroup,
+            'home_satellite_id' => $d->home_satellite_id,
+            'area_text' => self::clean($d->area_text),
+            'fb_account' => self::clean($d->fb_account),
+            'wants_fb_group' => $d->wants_fb_group,
+            'in_dgroup' => $d->in_dgroup,
+            'dgroup_area_text' => self::clean($d->dgroup_area_text),
+            'dgroup_leader_name' => self::clean($d->dgroup_leader_name),
+            'dgroup_leader_phone' => self::clean($d->dgroup_leader_phone),
+            'wants_dgroup' => $d->wants_dgroup,
             'lifestage' => self::clean($d->lifestage),
             'notes' => self::clean($d->notes),
         ]);

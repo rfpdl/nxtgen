@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\ChildStatusEnum;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -84,8 +85,8 @@ return new class extends Migration
             $table->text('illnesses')->nullable()->comment('Health');
             $table->text('dislikes')->nullable()->comment('Things the child dislikes');
             $table->text('fears')->nullable()->comment('Things the child is afraid of');
-            $table->text('parent_notes')->nullable()->comment('Anything else the parent shared');
-            $table->string('status')->default('active')->comment('ChildStatusEnum: active | inactive | graduated');
+            $table->text('guardian_notes')->nullable()->comment('Anything else the guardian shared ("Anything else we should know")');
+            $table->string('status')->default(ChildStatusEnum::default()->value)->comment('ChildStatusEnum: active | inactive | graduated');
             $table->timestampTz('status_changed_at')->nullable()->comment('When the status last changed');
             $table->foreignId('status_changed_by')->nullable()->comment('Who changed it')->constrained('users')->nullOnDelete();
             $table->unsignedTinyInteger('level')->nullable()->comment('Stored Level (config nxtgen.levels), null = none yet; changes only at Moving-Up or by a church admin');

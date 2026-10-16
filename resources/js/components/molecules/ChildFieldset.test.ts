@@ -1,31 +1,31 @@
 import ChildFieldset from '@/components/molecules/ChildFieldset.vue'
+import type { ChildDraft } from '@/types'
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { reactive } from 'vue'
 
-const genders = [
-    { value: 'boy', label: 'Boy' },
-    { value: 'girl', label: 'Girl' },
-]
+vi.mock('@inertiajs/vue3', async (original) =>
+    (await import('@/tests/enumPage')).withEnums(await original<object>()),
+)
 
-const blank = () => ({
+const blank = (): ChildDraft => ({
     first_name: '',
     middle_name: '',
     last_name: '',
     nickname: '',
     gender: '',
     date_of_birth: '',
-    has_allergies: null as boolean | null,
+    has_allergies: null,
     allergies: '',
     illnesses: '',
     dislikes: '',
     fears: '',
-    parent_notes: '',
+    guardian_notes: '',
 })
 
 const fieldset = (props: Record<string, unknown> = {}) =>
     mount(ChildFieldset, {
-        props: { modelValue: blank(), index: 0, genders, errors: {}, removable: false, ...props },
+        props: { modelValue: blank(), index: 0, errors: {}, removable: false, ...props },
     })
 
 describe('ChildFieldset', () => {
@@ -60,7 +60,7 @@ describe('ChildFieldset', () => {
         expect(child).toMatchObject({ first_name: 'Alexis', last_name: 'Ramos', nickname: 'Amara' })
     })
 
-    it('offers the genders the server sent', () => {
+    it("offers the genders the page's enums carry", () => {
         const options = fieldset().findAll('[data-testid="child-0-gender"] option')
 
         expect(options.map((o) => o.text())).toEqual(['Choose…', 'Boy', 'Girl'])

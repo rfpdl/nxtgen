@@ -8,8 +8,8 @@ const leo: StaffMember = {
     name: 'Leo Lifeshaper',
     email: 'leo@example.com',
     roles: [
-        { id: 1, label: 'Lifeshaper · Holy Trinity Church', canRemove: true },
-        { id: 2, label: 'Admin · whole church', canRemove: false },
+        { id: 1, label: 'Lifeshaper · Holy Trinity Church', can_remove: true },
+        { id: 2, label: 'Admin · whole church', can_remove: false },
     ],
 }
 

@@ -6,12 +6,14 @@ namespace App\Foundation\Inputs;
 
 use Illuminate\Http\UploadedFile;
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
  * A child's photo, taken with the phone camera or chosen from the gallery. `consent` is honoured ONLY when a
  * parent sends it. Staff record a parent's in-person yes only through its own confirmed step
  * (RecordPhotoConsentFeature), never by sending `consent` with a photo.
  */
+#[TypeScript]
 final class ChildPhotoInput extends Data
 {
     public function __construct(

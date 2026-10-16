@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import type { LevelOption } from '@/types'
+import { useEnum } from '@/composables/useEnum'
+import type { ChildPortal, ChildStatus, LevelOption } from '@/types'
+import { ref, watch } from 'vue'
 
 /**
  * Staff controls under a child on the family page: status (who may edit the family) and Level (church admins,
  * plan §3.2 — a correction outside Moving-Up). A refused Level change shows only on the child it was for — the
- * page passes `levelError` to that child alone.
+ * page passes `levelError` to that child alone. The statuses come from the page's `enums.child_status`.
  */
-defineProps<{
-    child: { id: number; level: string | null; status: string }
+const props = defineProps<{
+    child: Pick<ChildPortal, 'id' | 'level' | 'status_label'>
     canSetStatus: boolean
     canSetLevel: boolean
     levels: LevelOption[]
@@ -15,9 +17,22 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-    status: [childId: number, status: string]
+    status: [childId: number, status: ChildStatus]
     level: [childId: number, level: number]
 }>()
+
+const { options: statuses } = useEnum('child_status')
+
+/** What the person just picked; blank shows the child's current value as the (disabled) first option. */
+const level = ref<number | ''>('')
+const status = ref<ChildStatus | ''>('')
+
+watch(level, (picked) => {
+    if (picked !== '') emit('level', props.child.id, picked)
+})
+watch(status, (picked) => {
+    if (picked !== '') emit('status', props.child.id, picked)
+})
 
 const select = 'min-h-touch border-border bg-surface text-text rounded-md border px-3'
 </script>
@@ -25,12 +40,8 @@ const select = 'min-h-touch border-border bg-surface text-text rounded-md border
 <template>
     <label v-if="canSetLevel" class="text-text flex items-center gap-2">
         Level
-        <select
-            :class="select"
-            :data-testid="`level-${child.id}`"
-            @change="emit('level', child.id, Number(($event.target as HTMLSelectElement).value))"
-        >
-            <option value="" selected disabled>{{ child.level ?? 'No Level' }}</option>
+        <select v-model="level" :class="select" :data-testid="`level-${child.id}`">
+            <option value="" disabled>{{ child.level ?? 'No Level' }}</option>
             <option v-for="l in levels" :key="l.level" :value="l.level">{{ l.name }}</option>
         </select>
     </label>
@@ -39,15 +50,9 @@ const select = 'min-h-touch border-border bg-surface text-text rounded-md border
     </p>
     <label v-if="canSetStatus" class="text-text flex items-center gap-2">
         Status
-        <select
-            :class="select"
-            :data-testid="`status-${child.id}`"
-            @change="emit('status', child.id, ($event.target as HTMLSelectElement).value)"
-        >
-            <option value="" selected disabled>{{ child.status }}</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="graduated">Graduated</option>
+        <select v-model="status" :class="select" :data-testid="`status-${child.id}`">
+            <option value="" disabled>{{ child.status_label }}</option>
+            <option v-for="s in statuses" :key="s.value" :value="s.value">{{ s.label }}</option>
         </select>
     </label>
 </template>

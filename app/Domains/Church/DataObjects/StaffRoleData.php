@@ -17,7 +17,7 @@ final class StaffRoleData extends Data
     public function __construct(
         public int $id,
         public string $label,
-        public bool $canRemove,
+        public bool $can_remove,
     ) {}
 
     /** @param array<int, string> $satelliteNames id => name, this church's satellites */
@@ -26,7 +26,7 @@ final class StaffRoleData extends Data
         return new self(
             id: $assignment->id,
             label: self::label($assignment->role, $assignment->scope_type, $satelliteNames[$assignment->scope_id] ?? null),
-            canRemove: $canRemove,
+            can_remove: $canRemove,
         );
     }
 

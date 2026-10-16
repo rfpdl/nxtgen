@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Auth\Http\Controllers\Link;
 
 use App\Enums\MagicLinkPurposeEnum;
+use App\Enums\MagicLinkRouteEnum;
 use App\Services\Auth\Features\Link\AcceptClaimLinkFeature;
 use App\Services\Auth\Features\Link\RedeemLoginLinkFeature;
 use App\Services\Auth\Features\Link\ShowConfirmLinkFeature;
@@ -28,7 +29,7 @@ final class Controller extends \Lucid\Units\Controller
         return $this->serve(AcceptClaimLinkFeature::class, ['token' => $token]);
     }
 
-    public function confirm(string $purpose, string $token): Response
+    public function confirm(MagicLinkRouteEnum $purpose, string $token): Response
     {
         return $this->serve(ShowConfirmLinkFeature::class, ['purpose' => $purpose, 'token' => $token]);
     }

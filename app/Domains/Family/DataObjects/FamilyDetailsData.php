@@ -16,15 +16,15 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 final class FamilyDetailsData extends Data
 {
     public function __construct(
-        public int $homeSatelliteId,
-        public ?string $areaText,
-        public ?string $fbAccount,
-        public bool $wantsFbGroup,
-        public bool $inDgroup,
-        public ?string $dgroupAreaText,
-        public ?string $dgroupLeaderName,
-        public ?string $dgroupLeaderPhone,
-        public bool $wantsDgroup,
+        public int $home_satellite_id,
+        public ?string $area_text,
+        public ?string $fb_account,
+        public bool $wants_fb_group,
+        public bool $in_dgroup,
+        public ?string $dgroup_area_text,
+        public ?string $dgroup_leader_name,
+        public ?string $dgroup_leader_phone,
+        public bool $wants_dgroup,
         public ?string $lifestage,
         public ?string $notes,
     ) {}
@@ -32,15 +32,15 @@ final class FamilyDetailsData extends Data
     public static function fromModel(Family $family): self
     {
         return new self(
-            homeSatelliteId: $family->home_satellite_id,
-            areaText: $family->area_text,
-            fbAccount: $family->fb_account,
-            wantsFbGroup: $family->wants_fb_group,
-            inDgroup: $family->in_dgroup,
-            dgroupAreaText: $family->dgroup_area_text,
-            dgroupLeaderName: $family->dgroup_leader_name,
-            dgroupLeaderPhone: $family->dgroup_leader_phone,
-            wantsDgroup: $family->wants_dgroup,
+            home_satellite_id: $family->home_satellite_id,
+            area_text: $family->area_text,
+            fb_account: $family->fb_account,
+            wants_fb_group: $family->wants_fb_group,
+            in_dgroup: $family->in_dgroup,
+            dgroup_area_text: $family->dgroup_area_text,
+            dgroup_leader_name: $family->dgroup_leader_name,
+            dgroup_leader_phone: $family->dgroup_leader_phone,
+            wants_dgroup: $family->wants_dgroup,
             lifestage: $family->lifestage,
             notes: $family->notes,
         );

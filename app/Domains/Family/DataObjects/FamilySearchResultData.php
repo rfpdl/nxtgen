@@ -19,12 +19,12 @@ final class FamilySearchResultData extends Data
     /** @param list<string> $children */
     public function __construct(
         public int $id,
-        public string $primaryName,
-        public string $maskedEmail,
-        public bool $emailConfirmed,
+        public string $primary_name,
+        public string $masked_email,
+        public bool $email_confirmed,
         public string $satellite,
         public array $children,
-        public bool $canOpen,
+        public bool $can_open,
     ) {}
 
     public static function fromModel(Family $family, bool $canOpen): self
@@ -32,12 +32,12 @@ final class FamilySearchResultData extends Data
 
         return new self(
             id: $family->id,
-            primaryName: $family->contactName(),
-            maskedEmail: EmailMask::mask($family->contactEmail()),
-            emailConfirmed: $family->contactEmailConfirmed(),
+            primary_name: $family->contactName(),
+            masked_email: EmailMask::mask($family->contactEmail()),
+            email_confirmed: $family->contactEmailConfirmed(),
             satellite: $family->homeSatellite->name,
             children: array_values($family->children->map(fn ($c): string => $c->nickname)->all()),
-            canOpen: $canOpen,
+            can_open: $canOpen,
         );
     }
 }

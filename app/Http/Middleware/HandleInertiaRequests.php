@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Data\Models\User;
+use App\Domains\Church\DataObjects\ChurchData;
 use App\Domains\Church\Jobs\GetLandingOptionsJob;
+use App\Foundation\Support\RouteChurch;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
 /**
- * Props every page receives.
+ * Props every page receives. Like every prop, their fields are snake_case (DECISIONS 2026-10-17); the
+ * frontend's `SharedProps` (resources/js/types) mirrors this method.
  *
  * Every flash key here must also be READ by a screen — the FlashContractTest enforces both legs, because a
  * key flashed and shared but read by nothing is a message nobody ever sees (PoC lesson).
@@ -35,8 +38,12 @@ final class HandleInertiaRequests extends Middleware
                     'name' => $user->name,
                 ] : null,
                 // More than one place to go (a parent who serves, or two churches) → the "Switch" link.
-                'canSwitch' => fn (): bool => $user instanceof User && count((new GetLandingOptionsJob(user: $user))->handle()) > 1,
+                'can_switch' => fn (): bool => $user instanceof User && count((new GetLandingOptionsJob(user: $user))->handle()) > 1,
             ],
+
+            // The church the address names (/{church}/…), for every page under it — staff, family and public
+            // registration alike. Read after the route's middleware has resolved and checked it; null elsewhere.
+            'church' => fn (): ?ChurchData => ($church = RouteChurch::from($request)) !== null ? ChurchData::fromModel($church) : null,
 
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

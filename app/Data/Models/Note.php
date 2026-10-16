@@ -60,7 +60,7 @@ final class Note extends Model
             'author_id' => $by?->id,
             'kind' => NoteKindEnum::System,
             'body' => $body,
-            'visibility' => NoteVisibilityEnum::Staff,
+            'visibility' => NoteVisibilityEnum::default(),
         ]);
     }
 

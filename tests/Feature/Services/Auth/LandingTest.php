@@ -130,7 +130,7 @@ describe('remembering the choice', function (): void {
         $ccf = Church::query()->where('slug', 'ccf')->firstOrFail();
         guardianOf(familyAt(satelliteOf($ccf)), $guardianOnly);
 
-        actingAs($user)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('auth.canSwitch', true));
-        actingAs($guardianOnly)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('auth.canSwitch', false));
+        actingAs($user)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('auth.can_switch', true));
+        actingAs($guardianOnly)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('auth.can_switch', false));
     });
 });

@@ -32,7 +32,7 @@ final class GetRegistryProposalJob extends BaseJob
         $byEmail = [];
 
         foreach ($this->rows as $row) {
-            if ($row->isDuplicate) {
+            if ($row->is_duplicate) {
                 $dropped++;
 
                 continue;
@@ -40,14 +40,14 @@ final class GetRegistryProposalJob extends BaseJob
 
             $reason = match (true) {
                 $row->email === '' => 'No parent email',
-                $row->childFirstName === '' || $row->childLastName === '' => 'Child name missing',
+                $row->child_first_name === '' || $row->child_last_name === '' => 'Child name missing',
                 $row->gender === null => 'Boy or girl missing',
-                $row->dateOfBirth === null => 'Birthday missing or invalid',
+                $row->date_of_birth === null => 'Birthday missing or invalid',
                 default => null,
             };
 
             if ($reason !== null) {
-                $quarantined[] = new QuarantinedRowData($row->rowNumber, trim("{$row->childFirstName} {$row->childLastName}"), $reason);
+                $quarantined[] = new QuarantinedRowData($row->row_number, trim("{$row->child_first_name} {$row->child_last_name}"), $reason);
 
                 continue;
             }
@@ -61,7 +61,7 @@ final class GetRegistryProposalJob extends BaseJob
             $suggestions = [];
 
             foreach ($byEmail as $otherEmail => $others) {
-                if ($otherEmail !== $email && $primary->phoneKey !== '' && $others[0]->phoneKey === $primary->phoneKey) {
+                if ($otherEmail !== $email && $primary->phone_key !== '' && $others[0]->phone_key === $primary->phone_key) {
                     $suggestions[] = "Shares a phone number with {$otherEmail}";
                 }
             }
@@ -76,12 +76,12 @@ final class GetRegistryProposalJob extends BaseJob
                 key: substr(hash('sha256', $email), 0, 16),
                 email: $email,
                 primary: $primary,
-                homeSatellite: $onlyHouseChurch ? 'House Church' : 'CCF DXB',
+                home_satellite: $onlyHouseChurch ? 'House Church' : 'CCF DXB',
                 children: $children,
                 suggestions: $suggestions,
             );
         }
 
-        return new RegistryProposalData(families: $families, droppedDuplicates: $dropped, quarantined: $quarantined);
+        return new RegistryProposalData(families: $families, dropped_duplicates: $dropped, quarantined: $quarantined);
     }
 }

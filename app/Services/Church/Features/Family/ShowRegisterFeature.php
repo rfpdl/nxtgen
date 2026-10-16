@@ -9,9 +9,8 @@ use App\Domains\Church\Jobs\GetSatellitesJob;
 use App\Domains\Family\DataObjects\FamilySearchResultData;
 use App\Domains\Family\Jobs\SearchFamiliesJob;
 use App\Enums\AccessRowEnum;
-use App\Enums\GenderEnum;
-use App\Enums\RelationshipEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Support\FamilyFormEnums;
 use App\Services\Church\Features\BaseChurchFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -34,12 +33,10 @@ final class ShowRegisterFeature extends BaseChurchFeature
         $results = $this->run(new SearchFamiliesJob(churchId: $church->id, query: $query));
 
         return Inertia::render('Church/Families/Register', [
-            'church' => ['name' => $church->name, 'slug' => $church->slug],
             'query' => $query,
             'results' => array_values($results->map(fn (Family $f) => FamilySearchResultData::fromModel($f, canOpen: $scope->canSeeFamily($f)))->all()),
             'satellites' => $this->run(new GetSatellitesJob(church: $church)),
-            'relationships' => RelationshipEnum::toFrontend(),
-            'genders' => GenderEnum::toFrontend(),
+            'enums' => FamilyFormEnums::toFrontend(),
         ]);
     }
 }

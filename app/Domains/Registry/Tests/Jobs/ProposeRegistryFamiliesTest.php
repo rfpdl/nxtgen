@@ -24,12 +24,12 @@ it('reads and normalises every row', function (): void {
     $alexis = $rows[0];
 
     expect($rows)->toHaveCount(6)
-        ->and($alexis->childFirstName)->toBe('Alexis')
+        ->and($alexis->child_first_name)->toBe('Alexis')
         ->and($alexis->nickname)->toBe('Amara')
         ->and($alexis->gender)->toBe(GenderEnum::Girl)
-        ->and($alexis->dateOfBirth)->toBe('2019-05-10')
+        ->and($alexis->date_of_birth)->toBe('2019-05-10')
         ->and($alexis->email)->toBe('janice@example.com')
-        ->and($alexis->phoneKey)->toBe('544897346')
+        ->and($alexis->phone_key)->toBe('544897346')
         ->and($alexis->allergies)->toBe('Peanuts')
         ->and($alexis->status)->toBe(ChildStatusEnum::Active);
 });
@@ -38,14 +38,14 @@ it('gives every child a stable key that does not depend on row order', function 
     $rows = sampleRows();
     $again = sampleRows();
 
-    expect($rows[0]->sourceKey)->toBe($again[0]->sourceKey)
-        ->and($rows[0]->sourceKey)->not->toBe($rows[1]->sourceKey);
+    expect($rows[0]->source_key)->toBe($again[0]->source_key)
+        ->and($rows[0]->source_key)->not->toBe($rows[1]->source_key);
 });
 
 it('maps the status column', function (): void {
     $rows = sampleRows();
 
-    expect($rows[2]->isDuplicate)->toBeTrue()
+    expect($rows[2]->is_duplicate)->toBeTrue()
         ->and($rows[3]->status)->toBe(ChildStatusEnum::Graduated)
         ->and($rows[4]->status)->toBe(ChildStatusEnum::Inactive);
 });
@@ -57,7 +57,7 @@ it('groups siblings by parent email, drops duplicates, and quarantines rows with
 
     expect($proposal->families)->toHaveCount(3)
         ->and($ramos?->children)->toHaveCount(2)
-        ->and($proposal->droppedDuplicates)->toBe(1)
+        ->and($proposal->dropped_duplicates)->toBe(1)
         ->and($proposal->quarantined)->toHaveCount(1)
         ->and($proposal->quarantined[0]->reason)->toBe('No parent email');
 });
@@ -76,7 +76,7 @@ it('balances: every input row is accepted, dropped or quarantined', function ():
 
     $accepted = array_sum(array_map(fn ($f) => count($f->children), $proposal->families));
 
-    expect($accepted + $proposal->droppedDuplicates + count($proposal->quarantined))->toBe(6);
+    expect($accepted + $proposal->dropped_duplicates + count($proposal->quarantined))->toBe(6);
 });
 
 it('picks the home satellite from the worship schedule and flags an "either"', function (): void {
@@ -84,15 +84,15 @@ it('picks the home satellite from the worship schedule and flags an "either"', f
 
     $rala = collect($proposal->families)->firstWhere('email', 'rala@example.com');
 
-    expect($rala?->homeSatellite)->toBe('House Church');
+    expect($rala?->home_satellite)->toBe('House Church');
 });
 
 it('quarantines a blank or unknown birth month instead of guessing January (Codex diff review, medium)', function (): void {
     $rows = (new GetRegistryRowsJob(path: base_path('tests/Fixtures/registry-bad-months.csv')))->handle();
     $proposal = (new GetRegistryProposalJob(rows: $rows))->handle();
 
-    expect($rows[0]->dateOfBirth)->toBeNull()
-        ->and($rows[1]->dateOfBirth)->toBeNull()
+    expect($rows[0]->date_of_birth)->toBeNull()
+        ->and($rows[1]->date_of_birth)->toBeNull()
         ->and($proposal->families)->toBe([])
         ->and(array_map(fn ($q) => $q->reason, $proposal->quarantined))->toBe(['Birthday missing or invalid', 'Birthday missing or invalid']);
 });

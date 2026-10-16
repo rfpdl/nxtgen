@@ -1,30 +1,30 @@
 import GuardianFieldset from '@/components/molecules/GuardianFieldset.vue'
+import type { GuardianDraft } from '@/types'
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { reactive } from 'vue'
 
-const relationships = [
-    { value: 'mother', label: 'Mother' },
-    { value: 'father', label: 'Father' },
-]
+vi.mock('@inertiajs/vue3', async (original) =>
+    (await import('@/tests/enumPage')).withEnums(await original<object>()),
+)
 
 const guardian = () =>
-    reactive({
+    reactive<GuardianDraft>({
         first_name: '',
         last_name: '',
         relationship: 'mother',
         phone: '',
         email: '',
-        ministries: [] as string[],
+        ministries: [],
     })
 
 describe('GuardianFieldset', () => {
     it('asks for the email only on registration', () => {
         const withEmail = mount(GuardianFieldset, {
-            props: { modelValue: guardian(), relationships, errors: {}, withEmail: true },
+            props: { modelValue: guardian(), errors: {}, withEmail: true },
         })
         const without = mount(GuardianFieldset, {
-            props: { modelValue: guardian(), relationships, errors: {}, withEmail: false },
+            props: { modelValue: guardian(), errors: {}, withEmail: false },
         })
 
         expect(withEmail.find('[data-testid="guardian-email"]').exists()).toBe(true)
@@ -34,7 +34,7 @@ describe('GuardianFieldset', () => {
     it('writes the parent details and the one ministry back in place', async () => {
         const g = guardian()
         const wrapper = mount(GuardianFieldset, {
-            props: { modelValue: g, relationships, errors: {}, withEmail: false },
+            props: { modelValue: g, errors: {}, withEmail: false },
         })
 
         await wrapper.find('[data-testid="guardian-first-name"]').setValue('Janice')
@@ -46,11 +46,28 @@ describe('GuardianFieldset', () => {
         expect(g.ministries).toEqual([])
     })
 
+    it("offers the relationships the page's enums carry", () => {
+        const wrapper = mount(GuardianFieldset, {
+            props: { modelValue: guardian(), errors: {}, withEmail: false },
+        })
+
+        expect(
+            wrapper.findAll('[data-testid="guardian-relationship"] option').map((o) => o.text()),
+        ).toEqual([
+            'Mother',
+            'Father',
+            'Guardian',
+            'Grandparent',
+            'Aunt / uncle',
+            'Sibling',
+            'Other',
+        ])
+    })
+
     it('shows the server errors for the parent fields', () => {
         const wrapper = mount(GuardianFieldset, {
             props: {
                 modelValue: guardian(),
-                relationships,
                 errors: { 'guardian.phone': 'Please enter your mobile number.' },
                 withEmail: false,
             },

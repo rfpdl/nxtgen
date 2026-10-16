@@ -5,21 +5,21 @@ import { describe, expect, it } from 'vitest'
 
 const child = (over: Partial<ChildPortal> = {}): ChildPortal => ({
     id: 1,
-    firstName: 'Alexis',
-    middleName: 'Amara',
-    lastName: 'Ramos',
+    first_name: 'Alexis',
+    middle_name: 'Amara',
+    last_name: 'Ramos',
     nickname: 'Amara',
     gender: 'girl',
-    dateOfBirth: '2019-05-10',
+    date_of_birth: '2019-05-10',
     allergies: null,
     illnesses: null,
     dislikes: null,
     fears: null,
-    parentNotes: null,
+    guardian_notes: null,
     level: 'Level 2',
-    status: 'Active',
-    photoConsent: false,
-    photoUrl: null,
+    status_label: 'Active',
+    photo_consent: false,
+    photo_url: null,
     ...over,
 })
 
@@ -58,7 +58,7 @@ describe('FamilyChildCard', () => {
                     illnesses: 'Asthma',
                     dislikes: 'Loud music',
                     fears: 'The dark',
-                    parentNotes: 'Shy at first',
+                    guardian_notes: 'Shy at first',
                 }),
             },
         })
@@ -85,7 +85,7 @@ describe('FamilyChildCard', () => {
 
     it('shows the photo when there is one', () => {
         const wrapper = mount(FamilyChildCard, {
-            props: { child: child({ photoUrl: '/photos/children/1?signature=x' }) },
+            props: { child: child({ photo_url: '/photos/children/1?signature=x' }) },
         })
 
         expect(wrapper.find('[data-testid="child-photo-img"]').attributes('src')).toBe(

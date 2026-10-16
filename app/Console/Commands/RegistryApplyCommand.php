@@ -26,13 +26,13 @@ final class RegistryApplyCommand extends Command
         }
 
         $approval = (new GetApprovedRegistryRowsJob(path: (string) $this->argument('xlsx')))->handle();
-        $result = (new ApplyRegistryImportOperation(church: $church, rowsByFamily: $approval->rowsByFamily))->handle();
+        $result = (new ApplyRegistryImportOperation(church: $church, rowsByFamily: $approval->rows_by_family))->handle();
         $problems = [...$approval->problems, ...$result->problems];
 
-        $this->info("Families created: {$result->familiesCreated}. Children loaded: {$result->childrenCreated}. Already loaded, skipped: {$result->childrenSkipped}.");
-        if ($result->awaitingClaim !== []) {
-            $count = count($result->awaitingClaim);
-            $this->warn(($count === 1 ? '1 family waits' : "{$count} families wait").' for an existing login to confirm (no email was sent): '.implode(', ', $result->awaitingClaim));
+        $this->info("Families created: {$result->families_created}. Children loaded: {$result->children_created}. Already loaded, skipped: {$result->children_skipped}.");
+        if ($result->awaiting_claim !== []) {
+            $count = count($result->awaiting_claim);
+            $this->warn(($count === 1 ? '1 family waits' : "{$count} families wait").' for an existing login to confirm (no email was sent): '.implode(', ', $result->awaiting_claim));
             $this->line('Open each family and use "Send the confirmation link again" — they confirm from that email.');
         }
         foreach ($problems as $problem) {
