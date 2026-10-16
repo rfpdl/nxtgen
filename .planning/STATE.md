@@ -114,3 +114,8 @@
   withdrawal + consent-checked reads, production mailer guard, create-only ChurchSeeder reruns, import "awaiting
   claim" report, AccessRow on the photo route, CI release-*. Logged: TODO #17–#22 (#18 and #21 before R1 ships).
   Gate: 285 Pest, 99 Vitest, PHPStan L10; E2E 41 green.
+- **R1 features complete (2026-10-16):** children list `/{church}/children` (scoped, search + group/status/satellite
+  filters, allergy flag; shared `RegistrationListFilters`) and church-admin group correction (`PUT …/children/{id}/group`:
+  this church's group, fits the child's gender, noted) — revert-checked; E2E found and fixed a refused-group message
+  showing under every child (`ChildAdminControls`). Staff can record a parent's in-person photo consent. First admin
+  blivejesus@gmail.com. Gate: 298 Pest, 103 Vitest, PHPStan L10; E2E 43 green.

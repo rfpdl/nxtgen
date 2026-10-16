@@ -2,11 +2,12 @@
 import { reactive } from 'vue'
 
 /**
- * Search and filters for the registration list (plan §6). Emits `apply` with only the filters in use, shaped as
+ * Search and filters for the registration lists — families and children (plan §6). The two family-only filters
+ * (unconfirmed email, possible duplicate) show only with `familyToggles`. Emits `apply` with only the filters in use, shaped as
  * the address parameters the server reads (FamilyListQuery), so a filtered list can be bookmarked and the Excel
  * download matches it. The satellite choice appears only when there is more than one to choose.
  */
-export type FamilyListFilterValues = {
+export type RegistrationListFilterValues = {
     q: string
     satellite: number | null
     status: string | null
@@ -16,7 +17,8 @@ export type FamilyListFilterValues = {
 }
 
 const props = defineProps<{
-    filters: FamilyListFilterValues
+    familyToggles?: boolean
+    filters: RegistrationListFilterValues
     options: {
         satellites: { id: number; name: string }[]
         groups: { id: number; name: string }[]
@@ -89,7 +91,7 @@ const control = 'min-h-touch border-border bg-surface text-text rounded-md borde
             <option :value="null">Any group</option>
             <option v-for="g in options.groups" :key="g.id" :value="g.id">{{ g.name }}</option>
         </select>
-        <label class="min-h-touch text-text flex items-center gap-2">
+        <label v-if="familyToggles" class="min-h-touch text-text flex items-center gap-2">
             <input
                 v-model="f.unconfirmed"
                 type="checkbox"
@@ -99,7 +101,7 @@ const control = 'min-h-touch border-border bg-surface text-text rounded-md borde
             />
             Email not confirmed
         </label>
-        <label class="min-h-touch text-text flex items-center gap-2">
+        <label v-if="familyToggles" class="min-h-touch text-text flex items-center gap-2">
             <input
                 v-model="f.duplicates"
                 type="checkbox"

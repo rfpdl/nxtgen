@@ -26,6 +26,7 @@ describe('OrgShell', () => {
 
         expect(wrapper.text()).toContain('CCF')
         expect(wrapper.text()).toContain('Families')
+        expect(wrapper.text()).toContain('Children')
         expect(wrapper.text()).toContain('Register a family')
         expect(wrapper.text()).toContain('body')
     })

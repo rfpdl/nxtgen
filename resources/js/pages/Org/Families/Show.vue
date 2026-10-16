@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import OrgShell from '@/components/layout/OrgShell.vue'
+import ChildAdminControls from '@/components/molecules/ChildAdminControls.vue'
 import FamilyChildCard from '@/components/molecules/FamilyChildCard.vue'
 import AddChildForm from '@/components/organisms/AddChildForm.vue'
 import ChildPhotoForm from '@/components/organisms/ChildPhotoForm.vue'
 import EditChildForm from '@/components/organisms/EditChildForm.vue'
 import FamilyDetailsForm from '@/components/organisms/FamilyDetailsForm.vue'
 import type { BranchOption, FamilyAdmin, FamilyDetails, GuardianEdit, Note } from '@/types'
-import { Head, router, useForm } from '@inertiajs/vue3'
+import { Head, router, useForm, usePage } from '@inertiajs/vue3'
+import { ref } from 'vue'
 import { route } from 'ziggy-js'
 
 const props = defineProps<{
@@ -20,6 +22,9 @@ const props = defineProps<{
     satellites: BranchOption[]
     relationships: { value: string; label: string }[]
     genders: { value: string; label: string }[]
+    /** Church admins only (plan §3.2): correct a child's group outside Moving-Up. */
+    canSetGroup: boolean
+    groups: { id: number; name: string }[]
 }>()
 
 function resend(): void {
@@ -37,6 +42,20 @@ function correctEmail(): void {
         preserveScroll: true,
         onSuccess: () => emailForm.reset(),
     })
+}
+
+/** A refused group change ("Level 2 Boys is for boys") comes back as a validation error on the page. */
+const page = usePage<{ errors: Record<string, string | undefined> }>()
+
+const lastGroupChild = ref<number | null>(null)
+
+function setGroup(childId: number, groupId: number): void {
+    lastGroupChild.value = childId
+    router.put(
+        route('org.children.group', [props.church.slug, childId]),
+        { group_id: groupId },
+        { preserveScroll: true },
+    )
 }
 
 function setStatus(childId: number, status: string): void {
@@ -138,19 +157,17 @@ function setStatus(childId: number, status: string): void {
                         :genders="genders"
                     />
                 </FamilyChildCard>
-                <label v-if="family.canEdit" class="text-text flex items-center gap-2">
-                    Status
-                    <select
-                        class="min-h-touch border-border bg-surface text-text rounded-md border px-3"
-                        :data-testid="`status-${child.id}`"
-                        @change="setStatus(child.id, ($event.target as HTMLSelectElement).value)"
-                    >
-                        <option value="" selected disabled>{{ child.status }}</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                        <option value="graduated">Graduated</option>
-                    </select>
-                </label>
+                <ChildAdminControls
+                    :child="child"
+                    :can-set-status="family.canEdit"
+                    :can-set-group="canSetGroup"
+                    :groups="groups"
+                    :group-error="
+                        lastGroupChild === child.id ? page.props.errors.group_id : undefined
+                    "
+                    @status="setStatus"
+                    @group="setGroup"
+                />
             </div>
             <AddChildForm
                 :action="route('org.families.children.store', [church.slug, family.id])"

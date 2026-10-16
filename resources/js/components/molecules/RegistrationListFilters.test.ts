@@ -1,4 +1,4 @@
-import FamilyListFilters from '@/components/molecules/FamilyListFilters.vue'
+import RegistrationListFilters from '@/components/molecules/RegistrationListFilters.vue'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
@@ -22,10 +22,14 @@ const empty = {
     duplicates: false,
 }
 
-describe('FamilyListFilters', () => {
+describe('RegistrationListFilters', () => {
     it('shows the current filters', () => {
-        const wrapper = mount(FamilyListFilters, {
-            props: { filters: { ...empty, q: 'Ramos', satellite: 8, unconfirmed: true }, options },
+        const wrapper = mount(RegistrationListFilters, {
+            props: {
+                filters: { ...empty, q: 'Ramos', satellite: 8, unconfirmed: true },
+                options,
+                familyToggles: true,
+            },
         })
 
         expect((wrapper.find('[data-testid="filter-q"]').element as HTMLInputElement).value).toBe(
@@ -41,7 +45,7 @@ describe('FamilyListFilters', () => {
     })
 
     it('hides the satellite choice when there is only one', () => {
-        const wrapper = mount(FamilyListFilters, {
+        const wrapper = mount(RegistrationListFilters, {
             props: {
                 filters: empty,
                 options: { ...options, satellites: [options.satellites[0]!] },
@@ -52,7 +56,9 @@ describe('FamilyListFilters', () => {
     })
 
     it('sends only the filters in use, as address parameters', async () => {
-        const wrapper = mount(FamilyListFilters, { props: { filters: empty, options } })
+        const wrapper = mount(RegistrationListFilters, {
+            props: { filters: empty, options, familyToggles: true },
+        })
 
         await wrapper.find('[data-testid="filter-q"]').setValue('Ramos')
         await wrapper.find('[data-testid="filter-status"]').setValue('inactive')
@@ -65,12 +71,20 @@ describe('FamilyListFilters', () => {
     })
 
     it('clears everything', async () => {
-        const wrapper = mount(FamilyListFilters, {
+        const wrapper = mount(RegistrationListFilters, {
             props: { filters: { ...empty, q: 'x', group: 3 }, options },
         })
 
         await wrapper.find('[data-testid="filter-clear"]').trigger('click')
 
         expect(wrapper.emitted('apply')?.at(-1)).toEqual([{}])
+    })
+
+    it('leaves out the family-only filters on the children list', () => {
+        const wrapper = mount(RegistrationListFilters, { props: { filters: empty, options } })
+
+        expect(wrapper.find('[data-testid="filter-unconfirmed"]').exists()).toBe(false)
+        expect(wrapper.find('[data-testid="filter-duplicates"]').exists()).toBe(false)
+        expect(wrapper.find('[data-testid="filter-group"]').exists()).toBe(true)
     })
 })

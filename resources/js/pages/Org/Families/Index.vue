@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import OrgShell from '@/components/layout/OrgShell.vue'
-import FamilyListFilters, {
-    type FamilyListFilterValues,
-} from '@/components/molecules/FamilyListFilters.vue'
+import RegistrationListFilters, {
+    type RegistrationListFilterValues,
+} from '@/components/molecules/RegistrationListFilters.vue'
 import type { BranchOption, FamilyListRow } from '@/types'
 import { Head, Link, router } from '@inertiajs/vue3'
 import { computed } from 'vue'
@@ -11,7 +11,7 @@ import { route } from 'ziggy-js'
 const props = defineProps<{
     church: { name: string; slug: string }
     families: FamilyListRow[]
-    filters: FamilyListFilterValues
+    filters: RegistrationListFilterValues
     options: {
         satellites: BranchOption[]
         groups: { id: number; name: string }[]
@@ -42,8 +42,9 @@ const exportHref = computed(() => {
                 >Download Excel</a
             >
         </div>
-        <FamilyListFilters
+        <RegistrationListFilters
             :key="JSON.stringify(filters)"
+            family-toggles
             :filters="filters"
             :options="options"
             @apply="apply"

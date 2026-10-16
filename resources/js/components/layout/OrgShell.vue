@@ -28,6 +28,11 @@ const canReviewDuplicates = computed(() => page.props.orgNav?.canReviewDuplicate
                     >Families</Link
                 >
                 <Link
+                    :href="route('org.children.index', church.slug)"
+                    class="min-h-touch text-text flex items-center underline-offset-4 hover:underline"
+                    >Children</Link
+                >
+                <Link
                     :href="route('org.families.register', church.slug)"
                     class="min-h-touch text-text flex items-center underline-offset-4 hover:underline"
                     >Register a family</Link

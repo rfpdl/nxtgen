@@ -2,6 +2,18 @@ declare namespace App {
     namespace Domains {
         namespace Family {
             namespace DataObjects {
+                export type ChildListRowData = {
+                    id: number
+                    nickname: string
+                    fullName: string
+                    age: number
+                    dateOfBirth: string
+                    group: string | null
+                    status: string
+                    hasAllergies: boolean
+                    satellite: string
+                    familyId: number
+                }
                 export type ChildPortalData = {
                     id: number
                     firstName: string
@@ -148,10 +160,12 @@ declare namespace App {
             | 'resend_link'
             | 'correct_contact'
             | 'set_child_status'
+            | 'set_child_group'
             | 'review_duplicates'
             | 'grant_roles'
             | 'own_family'
             | 'child_photo'
+            | 'see_child_photo'
         export type ChildStatusEnum = 'active' | 'inactive' | 'graduated'
         export type DuplicateReasonEnum = 'same_phone' | 'same_name_dob' | 'same_email'
         export type DuplicateStatusEnum = 'open' | 'dismissed' | 'confirmed'

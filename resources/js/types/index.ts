@@ -22,3 +22,4 @@ export type FamilyDetails = App.Domains.Family.DataObjects.FamilyDetailsData
 export type GuardianEdit = App.Domains.Family.DataObjects.GuardianEditData
 export type Note = App.Domains.Family.DataObjects.NoteData
 export type DuplicatePair = App.Domains.Family.DataObjects.DuplicatePairData
+export type ChildListRow = App.Domains.Family.DataObjects.ChildListRowData

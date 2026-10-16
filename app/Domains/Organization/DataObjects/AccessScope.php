@@ -87,6 +87,12 @@ final readonly class AccessScope
                 || in_array($family->home_branch_id, $this->adminBranchIds, true));
     }
 
+    /** Set a child's group outside Moving-Up (plan §3.2): church admin only. */
+    public function canSetGroup(): bool
+    {
+        return $this->isChurchAdmin;
+    }
+
     public function canMergeRecords(): bool
     {
         return $this->isChurchAdmin;

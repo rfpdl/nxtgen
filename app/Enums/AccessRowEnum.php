@@ -21,6 +21,7 @@ enum AccessRowEnum: string
     case ResendLink = 'resend_link';
     case CorrectContact = 'correct_contact';
     case SetChildStatus = 'set_child_status';
+    case SetChildGroup = 'set_child_group';
     case ReviewDuplicates = 'review_duplicates';
     case GrantRoles = 'grant_roles';
     case OwnFamily = 'own_family';
@@ -35,12 +36,13 @@ enum AccessRowEnum: string
             self::DoorSearch => 'Door search, church-wide lite view: any staff',
             self::RegisterFamily => 'Register a new family + child: any staff',
             self::AddChild => 'Add a child to a family found by search: any staff',
-            self::FamilyList => 'Registration list + Excel: own satellites (church-wide roles: all)',
+            self::FamilyList => 'Registration lists (families, children) + Excel: own satellites (church-wide roles: all)',
             self::ViewFamily => 'Open a family: staff who can see its home satellite',
             self::EditFamily => 'Edit family/guardian/child details: church admin; admin of the home satellite',
             self::ResendLink => 'Resend confirmation link: church admin; home-satellite admin; any Lifeshaper',
             self::CorrectContact => 'Correct family contact (§4.4): church admin; home-satellite admin',
             self::SetChildStatus => 'Set child status: church admin; home-satellite admin',
+            self::SetChildGroup => 'Set child group outside Moving-Up: church admin only',
             self::ReviewDuplicates => 'Review possible duplicates: admins, for families they may edit',
             self::GrantRoles => 'Grant roles: church admin any; satellite admin Lifeshaper in own satellite',
             self::ChildPhoto => 'Record the parent\'s in-person photo consent, and take or upload a child\'s photo once consent is recorded: staff who can see the family',
