@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Family\Jobs;
 
 use App\Data\Models\Child;
+use App\Data\Models\Church;
 use App\Foundation\Jobs\BaseJob;
 
 /**
@@ -16,7 +17,7 @@ use App\Foundation\Jobs\BaseJob;
 final class GetMatchingChildJob extends BaseJob
 {
     public function __construct(
-        private readonly int $churchId,
+        private readonly Church $church,
         private readonly string $firstName,
         private readonly string $lastName,
         private readonly string $dateOfBirth,
@@ -25,7 +26,7 @@ final class GetMatchingChildJob extends BaseJob
     public function handle(): ?Child
     {
         return Child::query()
-            ->where('church_id', $this->churchId)
+            ->where('church_id', $this->church->id)
             ->whereRaw('LOWER(first_name) = ?', [mb_strtolower(trim($this->firstName))])
             ->whereRaw('LOWER(last_name) = ?', [mb_strtolower(trim($this->lastName))])
             ->whereDate('date_of_birth', $this->dateOfBirth)

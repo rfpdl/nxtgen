@@ -27,7 +27,7 @@ final class AddChildFeature extends BaseChurchFeature
     public function handle(ChildInput $input): RedirectResponse
     {
         abort_unless($this->scope()->canRegisterFamilies(), 404);
-        $family = $this->run(new GetFamilyByIdJob(churchId: $this->church()->id, id: $this->familyId));
+        $family = $this->run(new GetFamilyByIdJob(church: $this->church(), id: $this->familyId));
 
         $child = $this->run(new AddChildToFamilyOperation(family: $family, details: $input->toDetails(), source: RegistrationSourceEnum::Staff));
 

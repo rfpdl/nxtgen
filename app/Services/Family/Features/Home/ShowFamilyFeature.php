@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services\Family\Features\Home;
 
-use App\Data\Models\User;
 use App\Domains\Church\Jobs\GetSatellitesJob;
 use App\Domains\Family\DataObjects\FamilyDetailsData;
 use App\Domains\Family\DataObjects\GuardianEditData;
 use App\Domains\Family\Jobs\GetFamilyPortalJob;
-use App\Domains\Family\Jobs\GetGuardianForUserJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Support\FamilyFormEnums;
@@ -29,10 +27,7 @@ final class ShowFamilyFeature extends BaseFamilyFeature
     public function handle(): Response
     {
         $family = $this->family();
-        $user = request()->user();
-        abort_unless($user instanceof User, 404);
-        $me = $this->run(new GetGuardianForUserJob(user: $user, church: $family->church));
-        abort_if($me === null, 404);
+        $me = $this->guardian();
 
         return Inertia::render('Family/Show', [
             'family' => $this->run(new GetFamilyPortalJob(family: $family)),

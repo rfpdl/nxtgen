@@ -31,11 +31,11 @@ final class RedeemLoginLinkFeature extends BaseAuthFeature
     {
         $user = DB::transaction(function (): ?User {
             $link = $this->run(new RedeemMagicLinkJob(token: $this->token, purpose: $this->purpose));
-            if ($link === null || $link->user_id === null || $link->credential_version === null) {
+            if ($link?->user === null || $link->credential_version === null) {
                 return null;
             }
 
-            $user = $this->run(new GetUserForUpdateJob(userId: $link->user_id));
+            $user = $this->run(new GetUserForUpdateJob(user: $link->user));
             $bound = $this->run(new UpdateUserEmailVerifiedJob(user: $user, boundEmail: $link->email_snapshot, boundVersion: $link->credential_version));
 
             return $bound ? $user : null;

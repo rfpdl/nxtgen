@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Family;
 
-use App\Domains\Family\Jobs\GetFamilyByIdJob;
 use App\Domains\Family\Jobs\UpdateFamilyDetailsJob;
 use App\Domains\Family\Jobs\UpdateGuardianDetailsJob;
 use App\Enums\AccessRowEnum;
@@ -27,8 +26,7 @@ final class UpdateFamilyFeature extends BaseChurchFeature
 
     public function handle(FamilyDetailsInput $input): RedirectResponse
     {
-        $family = $this->run(new GetFamilyByIdJob(churchId: $this->church()->id, id: $this->familyId));
-        abort_unless($this->scope()->canEditFamily($family), 404);
+        $family = $this->scopedFamily($this->familyId, $this->scope()->canEditFamily(...));
         $primary = $family->primaryGuardian;
         abort_if($primary === null, 404);
 

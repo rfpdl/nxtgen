@@ -7,10 +7,12 @@ namespace App\Services\Church\Http\Middleware;
 use App\Data\Models\Church;
 use App\Data\Models\User;
 use App\Domains\Church\Jobs\GetAccessScopeJob;
+use App\Foundation\Support\RequestContext;
 use App\Foundation\Support\RouteChurch;
 use Closure;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Lucid\Bus\UnitDispatcher;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -19,6 +21,8 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class RequireAssignment
 {
+    use UnitDispatcher;
+
     /** @param Closure(Request): Response $next */
     public function handle(Request $request, Closure $next): Response
     {
@@ -27,11 +31,11 @@ final class RequireAssignment
 
         abort_unless($church instanceof Church && $user instanceof User, 404);
 
-        $scope = (new GetAccessScopeJob(user: $user, church: $church))->handle();
+        $scope = $this->run(new GetAccessScopeJob(user: $user, church: $church));
         abort_unless($scope->canWorkHere(), 404);
 
-        $request->attributes->set('church', $church);
-        $request->attributes->set('scope', $scope);
+        RequestContext::putChurch($request, $church);
+        RequestContext::putScope($request, $scope);
         // What the staff frame shows (ChurchShell). Navigation only — every Feature still asks the scope itself.
         Inertia::share('churchNav', [
             'can_manage_people' => $scope->canManagePeople(),

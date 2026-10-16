@@ -27,6 +27,16 @@ enum DuplicateStatusEnum: string implements HasDefault, HasEnumMetadata
         };
     }
 
+    /** What the answer means, in the one wording the family's history note and the reviewer's reply both use. */
+    public function answer(): string
+    {
+        return match ($this) {
+            self::Open => 'not answered yet',
+            self::Dismissed => 'not the same family',
+            self::Confirmed => 'the same family, flagged for merging',
+        };
+    }
+
     public static function default(): self
     {
         return self::Open;

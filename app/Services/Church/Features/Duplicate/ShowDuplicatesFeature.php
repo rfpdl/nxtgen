@@ -28,7 +28,7 @@ final class ShowDuplicatesFeature extends BaseChurchFeature
         $scope = $this->scope();
         abort_unless($scope->canReviewDuplicates(), 404);
 
-        $pairs = $this->run(new GetOpenDuplicatesJob(churchId: $church->id))
+        $pairs = $this->run(new GetOpenDuplicatesJob(church: $church))
             ->filter(fn (DuplicateCandidate $p): bool => $scope->canEditFamily(DuplicateCandidate::familyOf($p->subject)))
             ->map(fn (DuplicateCandidate $p): DuplicatePairData => DuplicatePairData::fromModel(
                 $p,

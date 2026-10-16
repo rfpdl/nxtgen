@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services\Church\Features\Child;
 
 use App\Domains\Family\Jobs\CreateChildPhotoJob;
-use App\Domains\Family\Jobs\GetChurchChildJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Inputs\ChildPhotoInput;
@@ -27,8 +26,7 @@ final class StaffAddChildPhotoFeature extends BaseChurchFeature
 
     public function handle(ChildPhotoInput $input): RedirectResponse
     {
-        $child = $this->run(new GetChurchChildJob(churchId: $this->church()->id, childId: $this->childId));
-        abort_unless($this->scope()->canSeeFamily($child->family), 404);
+        $child = $this->scopedChild($this->childId, $this->scope()->canSeeFamily(...));
 
         if ($child->photo_consent_at === null) {
             return back()->with('error', 'The parent has not agreed to a photo yet. If they say yes to you, record it first.');

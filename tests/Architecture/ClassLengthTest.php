@@ -12,9 +12,10 @@ namespace Tests\Architecture;
  * **Code lines, not total lines**: comments and blanks are free. Docblocks here carry the "why" a reader would
  * otherwise undo, and a budget that charged for them would punish the habit the project wants.
  *
- * Measured 2026-10-17 the whole of `app/` is small — the largest unit is `ApplyRegistryImportOperation` at 174 of its
- * 180 — so today the budgets bite on one file. They are outlier detectors, not targets: aegis's own note is that
- * they were "chosen to pass today and bite on extremes", and a failure is a prompt to look, not a verdict.
+ * Measured 2026-10-17 the whole of `app/` is small — the largest unit was `ApplyRegistryImportOperation` at 174 of its
+ * 180 (batch 07 made it `ApplyRegistryImportFeature`) — so today the budgets bite on one file. They are outlier
+ * detectors, not targets: aegis's own note is that they were "chosen to pass today and bite on extremes", and a
+ * failure is a prompt to look, not a verdict.
  *
  * Not ported: aegis measures through an app Job (`MeasureClassLengthsJob`) because its `make check-class-length`
  * ranks units for people. Nothing here needs the ranking, so the count lives in the test helpers.
@@ -68,7 +69,7 @@ function unitsOverBudget(): array
 
 it('measures the units it is supposed to be guarding', function (): void {
     // The guard on the guard: a counter that returned 0 would pass everything.
-    expect(codeLineCount(base_path('app/Operations/Registry/ApplyRegistryImportOperation.php')))->toBeGreaterThan(100);
+    expect(codeLineCount(base_path('app/Services/Console/Features/Registry/ApplyRegistryImportFeature.php')))->toBeGreaterThan(100);
 });
 
 it('keeps every unit within its layer budget', function (): void {
@@ -86,7 +87,7 @@ it('files representative paths in the right layer', function (string $path, stri
     // A Job's name ending in Operation is still a Job — path beats suffix.
     ['Domains/Family/Jobs/BuildOperation.php', 'Job'],
     ['Services/Church/Features/Family/ShowFamiliesFeature.php', 'Feature'],
-    ['Operations/Registry/ApplyRegistryImportOperation.php', 'Operation'],
+    ['Operations/Registration/RegisterFamilyOperation.php', 'Operation'],
     ['Domains/Family/DataObjects/FamilyPortalData.php', 'DTO'],
     ['Services/Church/Data/AddStaffInput.php', 'DTO'],
     ['Foundation/Inputs/ChildInput.php', 'DTO'],

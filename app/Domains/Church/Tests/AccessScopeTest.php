@@ -6,6 +6,7 @@ use App\Data\Models\Church;
 use App\Data\Models\Family;
 use App\Data\Models\Satellite;
 use App\Data\Models\User;
+use App\Domains\Church\DataObjects\RoleScope;
 use App\Domains\Church\Jobs\GetAccessScopeJob;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
@@ -123,10 +124,10 @@ it('lets a church admin grant any role anywhere in the church', function (): voi
     $scope = (new GetAccessScopeJob(user: $user, church: $church))->handle();
 
     expect($scope->canManagePeople())->toBeTrue()
-        ->and($scope->canGrant(RoleEnum::Admin, ScopeTypeEnum::Church, $church->id))->toBeTrue()
-        ->and($scope->canGrant(RoleEnum::Admin, ScopeTypeEnum::Satellite, $htc->id))->toBeTrue()
-        ->and($scope->canGrant(RoleEnum::Lifeshaper, ScopeTypeEnum::Church, $church->id))->toBeTrue()
-        ->and($scope->canGrant(RoleEnum::Admin, ScopeTypeEnum::Church, $church->id + 999))->toBeFalse();
+        ->and($scope->canGrant(RoleEnum::Admin, new RoleScope(ScopeTypeEnum::Church, $church->id)))->toBeTrue()
+        ->and($scope->canGrant(RoleEnum::Admin, new RoleScope(ScopeTypeEnum::Satellite, $htc->id)))->toBeTrue()
+        ->and($scope->canGrant(RoleEnum::Lifeshaper, new RoleScope(ScopeTypeEnum::Church, $church->id)))->toBeTrue()
+        ->and($scope->canGrant(RoleEnum::Admin, new RoleScope(ScopeTypeEnum::Church, $church->id + 999)))->toBeFalse();
 });
 
 it('caps a satellite admin at Lifeshaper in their own satellite', function (): void {
@@ -137,10 +138,10 @@ it('caps a satellite admin at Lifeshaper in their own satellite', function (): v
     $scope = (new GetAccessScopeJob(user: $user, church: $church))->handle();
 
     expect($scope->canManagePeople())->toBeTrue()
-        ->and($scope->canGrant(RoleEnum::Lifeshaper, ScopeTypeEnum::Satellite, $htc->id))->toBeTrue()
-        ->and($scope->canGrant(RoleEnum::Lifeshaper, ScopeTypeEnum::Satellite, $house->id))->toBeFalse()
-        ->and($scope->canGrant(RoleEnum::Admin, ScopeTypeEnum::Satellite, $htc->id))->toBeFalse()
-        ->and($scope->canGrant(RoleEnum::Lifeshaper, ScopeTypeEnum::Church, $church->id))->toBeFalse();
+        ->and($scope->canGrant(RoleEnum::Lifeshaper, new RoleScope(ScopeTypeEnum::Satellite, $htc->id)))->toBeTrue()
+        ->and($scope->canGrant(RoleEnum::Lifeshaper, new RoleScope(ScopeTypeEnum::Satellite, $house->id)))->toBeFalse()
+        ->and($scope->canGrant(RoleEnum::Admin, new RoleScope(ScopeTypeEnum::Satellite, $htc->id)))->toBeFalse()
+        ->and($scope->canGrant(RoleEnum::Lifeshaper, new RoleScope(ScopeTypeEnum::Church, $church->id)))->toBeFalse();
 });
 
 it('does not let a Lifeshaper manage people', function (): void {
@@ -151,5 +152,5 @@ it('does not let a Lifeshaper manage people', function (): void {
     $scope = (new GetAccessScopeJob(user: $user, church: $church))->handle();
 
     expect($scope->canManagePeople())->toBeFalse()
-        ->and($scope->canGrant(RoleEnum::Lifeshaper, ScopeTypeEnum::Satellite, $htc->id))->toBeFalse();
+        ->and($scope->canGrant(RoleEnum::Lifeshaper, new RoleScope(ScopeTypeEnum::Satellite, $htc->id)))->toBeFalse();
 });

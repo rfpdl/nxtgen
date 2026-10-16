@@ -9,9 +9,9 @@ namespace Tests\Architecture;
  * aegis's `OperationArchTest` rules 10 and 11.
  *
  * An Operation exists for work that spans domains (plan §5.4), which makes it the most tempting place to "just
- * query": it already knows about families AND satellites. That is how `ApplyRegistryImportOperation`
- * came to look satellites (and, until batch 05, groups) up itself. The rows an Operation needs come from Jobs, so they are reusable,
- * unit tested, and counted by `ReachabilityTest`.
+ * query": it already knows about families AND satellites. That is how `ApplyRegistryImportOperation` came to look
+ * satellites (and, until batch 05, groups) up itself, until batch 07. The rows an Operation needs come from Jobs, so
+ * they are reusable, unit tested, and counted by `ReachabilityTest`.
  *
  * Allowed, as in a Feature: run Jobs, wrap them in `DB::transaction` (plan §5.4 — "Transactions wrap in the
  * Feature or Operation, never in a Job"), take a lock, shape a result.
@@ -57,8 +57,8 @@ it('never runs one Operation from another', function (): void {
     /*
      * Aegis rule 10, and the Lucid principle behind it: an Operation composes Jobs. Two Operations that share
      * work share the Jobs; nesting them hides a transaction inside a transaction and makes the call graph the
-     * thing a reader has to hold. `RegisterFamilyOperation` and `AddChildToFamilyOperation` are run from inside
-     * `ApplyRegistryImportOperation` today — batch 07 unpicks that.
+     * thing a reader has to hold. The registry import, which ran `RegisterFamilyOperation` and
+     * `AddChildToFamilyOperation` from inside an Operation, became a Feature served from its command in batch 07.
      */
     $offenders = [];
 

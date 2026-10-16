@@ -30,7 +30,7 @@ final class ShowRegisterFeature extends BaseChurchFeature
         $scope = $this->scope();
         $query = trim(request()->string('q')->value());
 
-        $results = $this->run(new SearchFamiliesJob(churchId: $church->id, query: $query));
+        $results = $this->run(new SearchFamiliesJob(church: $church, query: $query));
 
         return Inertia::render('Church/Families/Register', [
             'query' => $query,

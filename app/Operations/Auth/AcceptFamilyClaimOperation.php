@@ -65,7 +65,7 @@ final class AcceptFamilyClaimOperation extends Operation
         // Lock the login and re-check its email UNDER the lock: an email correction elsewhere must not let a
         // claim attach to an account that no longer owns this address (Codex diff review, high).
         $user = $found !== null
-            ? $this->run(new GetUserForUpdateJob(userId: $found->id))
+            ? $this->run(new GetUserForUpdateJob(user: $found))
             : $this->run(new CreateUserJob(name: $claim->guardian->first_name.' '.$claim->guardian->last_name, email: $claim->email_normalised));
 
         if ($user->email !== $claim->email_normalised) {

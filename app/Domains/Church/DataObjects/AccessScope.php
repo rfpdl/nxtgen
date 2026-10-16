@@ -129,17 +129,17 @@ final readonly class AccessScope
      * satellite id belongs to this church (GetSatelliteJob) — this object knows ids, not ownership. Schedule roles
      * (shown as "class") arrive with Release 2.
      */
-    public function canGrant(RoleEnum $role, ScopeTypeEnum $type, int $scopeId): bool
+    public function canGrant(RoleEnum $role, RoleScope $scope): bool
     {
-        if ($type === ScopeTypeEnum::Schedule) {
+        if ($scope->type === ScopeTypeEnum::Schedule) {
             return false;
         }
 
         if ($this->isChurchAdmin) {
-            return $type !== ScopeTypeEnum::Church || $scopeId === $this->churchId;
+            return $scope->type !== ScopeTypeEnum::Church || $scope->id === $this->churchId;
         }
 
-        return $role === RoleEnum::Lifeshaper && $type === ScopeTypeEnum::Satellite
-            && in_array($scopeId, $this->adminSatelliteIds, true);
+        return $role === RoleEnum::Lifeshaper && $scope->type === ScopeTypeEnum::Satellite
+            && in_array($scope->id, $this->adminSatelliteIds, true);
     }
 }

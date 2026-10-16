@@ -15,7 +15,6 @@ use App\Services\Auth\Http\Controllers\Account\Controller as AccountController;
 use App\Services\Auth\Http\Controllers\Landing\Controller as LandingController;
 use App\Services\Auth\Http\Controllers\Link\Controller as LinkController;
 use App\Services\Auth\Http\Controllers\Login\Controller as LoginController;
-use App\Services\Auth\Http\Controllers\Photo\Controller as PhotoController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/login', [LoginController::class, 'show'])->name('login');
@@ -34,6 +33,3 @@ Route::post('/home/choice', [LandingController::class, 'choose'])->middleware('a
 
 Route::get('/account/password', [AccountController::class, 'showPassword'])->middleware('auth')->name('account.password');
 Route::put('/account/password', [AccountController::class, 'updatePassword'])->middleware('auth')->name('account.password.update');
-
-// A child's photo: a signed, short-lived link AND a check of who is asking (ShowChildPhotoFeature).
-Route::get('/photos/children/{child}', [PhotoController::class, 'child'])->whereNumber('child')->middleware(['auth', 'signed'])->name('photos.child');

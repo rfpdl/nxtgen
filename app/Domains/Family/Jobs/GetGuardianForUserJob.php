@@ -10,7 +10,8 @@ use App\Data\Models\User;
 use App\Foundation\Jobs\BaseJob;
 
 /**
- * The user's guardian row in this church, if any. At most one (database-enforced).
+ * The user's guardian row in this church, if any, with its family and church — what RequireGuardian puts on the
+ * request for the parent pages. At most one (database-enforced).
  *
  * @extends BaseJob<Guardian|null>
  */
@@ -24,6 +25,7 @@ final class GetGuardianForUserJob extends BaseJob
     public function handle(): ?Guardian
     {
         return Guardian::query()
+            ->with('family.church')
             ->where('church_id', $this->church->id)
             ->where('user_id', $this->user->id)
             ->first();

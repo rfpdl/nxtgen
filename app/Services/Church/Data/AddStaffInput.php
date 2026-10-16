@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Data;
 
+use App\Domains\Church\DataObjects\RoleScope;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
 use Spatie\LaravelData\Data;
@@ -20,6 +21,12 @@ final class AddStaffInput extends Data
         public ScopeTypeEnum $scope_type,
         public int $scope_id,
     ) {}
+
+    /** Where the role is to be given — the shape AccessScope::canGrant and StaffRoleData::label read. */
+    public function scope(): RoleScope
+    {
+        return new RoleScope($this->scope_type, $this->scope_id);
+    }
 
     /** @return array<string, list<string>> */
     public static function rules(): array

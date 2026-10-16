@@ -16,8 +16,9 @@ use Symfony\Component\Finder\Finder;
 function scopedFeatures(): array
 {
     $classes = [];
-    // Church + Family: every Feature. Auth/Features/Photo: the photo route decides who may see a child (review 3).
-    foreach (['Church' => 'Features', 'Family' => 'Features', 'Auth' => 'Features/Photo'] as $service => $dir) {
+    // Church + Family: every Feature — the Family one includes the photo route, which decides who may see a child
+    // (review 3).
+    foreach (['Church' => 'Features', 'Family' => 'Features'] as $service => $dir) {
         foreach (Finder::create()->files()->in(base_path("app/Services/{$service}/{$dir}"))->name('*Feature.php') as $file) {
             $relative = str_replace(['/', '.php'], ['\\', ''], $file->getRelativePathname());
             $namespace = str_replace('/', '\\', $dir);

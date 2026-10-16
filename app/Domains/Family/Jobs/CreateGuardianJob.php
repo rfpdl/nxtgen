@@ -9,6 +9,7 @@ use App\Data\Models\Guardian;
 use App\Data\Models\User;
 use App\Domains\Family\DataObjects\GuardianDetailsData;
 use App\Foundation\Jobs\BaseJob;
+use App\Foundation\Support\EmailAddress;
 
 /**
  * An adult on a family. Linked to a login (`user`) when the email is new or confirmed; otherwise the email
@@ -36,7 +37,7 @@ final class CreateGuardianJob extends BaseJob
             'first_name' => trim($this->details->first_name),
             'last_name' => trim($this->details->last_name),
             'phone' => $phone === '' ? null : $phone,
-            'email' => $this->user === null ? mb_strtolower(trim($this->details->email)) : null,
+            'email' => $this->user === null ? EmailAddress::normalise($this->details->email) : null,
             'ministries' => $this->details->ministries,
             'can_pick_up' => true,
         ]);

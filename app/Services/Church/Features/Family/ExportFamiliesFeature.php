@@ -24,7 +24,7 @@ final class ExportFamiliesFeature extends BaseChurchFeature
     {
         $scope = $this->scope();
         // The same filters as the screen, so the download is what the list shows.
-        $families = $this->run(new GetFamiliesJob(churchId: $this->church()->id, satelliteIds: $scope->visibleSatelliteIds(), filters: FamilyListQuery::from(request())));
+        $families = $this->run(new GetFamiliesJob(church: $this->church(), satelliteIds: $scope->visibleSatelliteIds(), filters: FamilyListQuery::from(request())));
         $path = $this->run(new CreateFamiliesSpreadsheetJob(families: $families, fullEmail: $scope->isChurchAdmin));
 
         return response()->download($path, 'nxtgen-families-'.now()->format('Y-m-d').'.xlsx', [

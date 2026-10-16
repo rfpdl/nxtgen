@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domains\Family\Jobs;
 
+use App\Data\Models\Church;
 use App\Data\Models\Family;
 use App\Foundation\Jobs\BaseJob;
 use Illuminate\Database\Eloquent\Collection;
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\Collection;
 final class SearchFamiliesJob extends BaseJob
 {
     public function __construct(
-        private readonly int $churchId,
+        private readonly Church $church,
         private readonly string $query,
     ) {}
 
@@ -30,7 +31,7 @@ final class SearchFamiliesJob extends BaseJob
 
         return Family::query()
             ->with(['primaryGuardian.user', 'homeSatellite', 'children'])
-            ->where('church_id', $this->churchId)
+            ->where('church_id', $this->church->id)
             ->matching($this->query)
             ->limit(20)
             ->get();

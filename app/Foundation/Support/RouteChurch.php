@@ -30,7 +30,7 @@ final class RouteChurch
 
     public static function from(Request $request): ?Church
     {
-        $resolved = $request->attributes->get('church') ?? $request->route('church');
+        $resolved = RequestContext::church($request) ?? $request->route('church');
 
         if (is_string($resolved)) {
             $resolved = Church::query()->where('slug', $resolved)->first();

@@ -15,5 +15,7 @@ final class RouteServiceProvider extends ServiceProvider
         Route::middleware(['web', 'auth', RequireGuardian::class])
             ->prefix('{church:slug}/family')
             ->group(__DIR__.'/../routes/web.php');
+
+        Route::middleware(['web'])->group(__DIR__.'/../routes/photos.php');
     }
 }

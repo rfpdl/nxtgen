@@ -6,11 +6,9 @@ namespace App\Services\Church\Features\Family;
 
 use App\Domains\Auth\Jobs\CreateMagicLinkJob;
 use App\Domains\Auth\Jobs\SendMagicLinkJob;
-use App\Domains\Family\Jobs\CreateSystemNoteJob;
-use App\Domains\Family\Jobs\GetFamilyByIdJob;
+use App\Domains\Family\Jobs\UpdateFamilyEmailJob;
 use App\Domains\User\Jobs\GetUserForUpdateJob;
 use App\Domains\User\Jobs\GetUserIsFamilyOnlyJob;
-use App\Domains\User\Jobs\UpdateUserEmailJob;
 use App\Enums\AccessRowEnum;
 use App\Enums\MagicLinkPurposeEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -34,20 +32,17 @@ final class CorrectFamilyEmailFeature extends BaseChurchFeature
     public function handle(CorrectFamilyEmailInput $input): RedirectResponse
     {
         $church = $this->church();
-        $family = $this->run(new GetFamilyByIdJob(churchId: $church->id, id: $this->familyId));
-        abort_unless($this->scope()->canEditFamily($family), 404);
+        $family = $this->scopedFamily($this->familyId, $this->scope()->canEditFamily(...));
 
-        $userId = $family->primaryGuardian?->user_id;
+        $login = $family->primaryGuardian?->user;
 
         // Lock the login and re-check eligibility UNDER the lock, so a link redemption cannot interleave.
-        $issued = $userId === null ? null : DB::transaction(function () use ($userId, $input, $family) {
-            $user = $this->run(new GetUserForUpdateJob(userId: $userId));
+        $issued = $login === null ? null : DB::transaction(function () use ($login, $input, $family) {
+            $user = $this->run(new GetUserForUpdateJob(user: $login));
             if (! $this->run(new GetUserIsFamilyOnlyJob(user: $user))) {
                 return null;
             }
-            $from = $user->email;
-            $this->run(new UpdateUserEmailJob(user: $user, email: $input->email));
-            $this->run(new CreateSystemNoteJob(about: $family, body: "Email corrected from {$from} to {$user->email}.", by: $this->staff()));
+            $this->run(new UpdateFamilyEmailJob(family: $family, login: $user, email: $input->email, by: $this->staff()));
 
             return $this->run(new CreateMagicLinkJob(purpose: MagicLinkPurposeEnum::VerifyEmail, email: $user->email, user: $user));
         });

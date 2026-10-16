@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\Family\Features\Child;
 
-use App\Data\Models\User;
-use App\Domains\Family\Jobs\GetFamilyChildJob;
 use App\Domains\Family\Jobs\UpdateChildPhotoConsentJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -26,9 +24,8 @@ final class WithdrawPhotoConsentFeature extends BaseFamilyFeature
 
     public function handle(): RedirectResponse
     {
-        $child = $this->run(new GetFamilyChildJob(family: $this->family(), childId: $this->childId));
-        $guardian = request()->user();
-        abort_unless($guardian instanceof User, 404);
+        $child = $this->ownChild($this->childId);
+        $guardian = $this->guardianUser();
 
         DB::transaction(fn () => $this->run(new UpdateChildPhotoConsentJob(child: $child, given: false, by: $guardian)));
 

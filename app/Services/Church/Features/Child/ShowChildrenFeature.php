@@ -35,7 +35,7 @@ final class ShowChildrenFeature extends BaseChurchFeature
         $visible = $this->scope()->visibleSatelliteIds();
         $filters = ChildListQuery::from(request());
 
-        $children = $this->run(new GetChildrenJob(churchId: $church->id, satelliteIds: $visible, filters: $filters));
+        $children = $this->run(new GetChildrenJob(church: $church, satelliteIds: $visible, filters: $filters));
         $page = ListPage::of($children, requested: request()->integer('page', 1));
 
         return Inertia::render('Church/Children/Index', [

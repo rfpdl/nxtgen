@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Family\Jobs;
 
 use App\Data\Models\Child;
+use App\Data\Models\Church;
 use App\Foundation\Jobs\BaseJob;
 
 /**
@@ -15,12 +16,12 @@ use App\Foundation\Jobs\BaseJob;
 final class GetChurchChildJob extends BaseJob
 {
     public function __construct(
-        private readonly int $churchId,
-        private readonly int $childId,
+        private readonly Church $church,
+        private readonly int $id,
     ) {}
 
     public function handle(): Child
     {
-        return Child::query()->with('family')->where('church_id', $this->churchId)->findOrFail($this->childId);
+        return Child::query()->with('family')->where('church_id', $this->church->id)->findOrFail($this->id);
     }
 }

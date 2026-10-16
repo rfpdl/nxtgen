@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\People;
 
+use App\Domains\Church\DataObjects\RoleScope;
 use App\Domains\Church\Jobs\GetChurchAdminCountJob;
 use App\Domains\Church\Jobs\GetRoleAssignmentJob;
 use App\Domains\Church\Jobs\UpdateRoleAssignmentAsInactiveJob;
@@ -33,7 +34,7 @@ final class RemoveStaffRoleFeature extends BaseChurchFeature
         abort_unless($scope->canManagePeople(), 404);
 
         $assignment = $this->run(new GetRoleAssignmentJob(church: $church, id: $this->assignmentId));
-        abort_unless($assignment->is_active && $scope->canGrant($assignment->role, $assignment->scope_type, $assignment->scope_id), 404);
+        abort_unless($assignment->is_active && $scope->canGrant($assignment->role, RoleScope::ofAssignment($assignment)), 404);
 
         $isChurchAdmin = $assignment->role === RoleEnum::Admin && $assignment->scope_type === ScopeTypeEnum::Church;
 

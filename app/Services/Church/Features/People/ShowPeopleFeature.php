@@ -6,6 +6,7 @@ namespace App\Services\Church\Features\People;
 
 use App\Data\Models\RoleAssignment;
 use App\Domains\Church\DataObjects\GrantOptionData;
+use App\Domains\Church\DataObjects\RoleScope;
 use App\Domains\Church\DataObjects\SatelliteOptionData;
 use App\Domains\Church\DataObjects\StaffMemberData;
 use App\Domains\Church\DataObjects\StaffRoleData;
@@ -53,7 +54,7 @@ final class ShowPeopleFeature extends BaseChurchFeature
                 roles: array_values($held->map(fn (RoleAssignment $a): StaffRoleData => StaffRoleData::fromModel(
                     $a,
                     $satelliteNames,
-                    canRemove: $scope->canGrant($a->role, $a->scope_type, $a->scope_id),
+                    canRemove: $scope->canGrant($a->role, RoleScope::ofAssignment($a)),
                 ))->all()),
             );
         })->sortBy(fn (StaffMemberData $p): string => mb_strtolower($p->name))->values();
@@ -70,16 +71,16 @@ final class ShowPeopleFeature extends BaseChurchFeature
      */
     private function grantOptions(int $churchId, array $satellites): array
     {
-        $places = [[ScopeTypeEnum::Church, $churchId, null]];
+        $places = [[new RoleScope(ScopeTypeEnum::Church, $churchId), null]];
         foreach ($satellites as $satellite) {
-            $places[] = [ScopeTypeEnum::Satellite, $satellite->id, $satellite->name];
+            $places[] = [new RoleScope(ScopeTypeEnum::Satellite, $satellite->id), $satellite->name];
         }
 
         $options = [];
-        foreach ($places as [$type, $id, $name]) {
+        foreach ($places as [$place, $name]) {
             foreach ([RoleEnum::Admin, RoleEnum::Lifeshaper] as $role) {
-                if ($this->scope()->canGrant($role, $type, $id)) {
-                    $options[] = new GrantOptionData(label: StaffRoleData::label($role, $type, $name), role: $role, scope_type: $type, scope_id: $id);
+                if ($this->scope()->canGrant($role, $place)) {
+                    $options[] = new GrantOptionData(label: StaffRoleData::label($role, $place, $name), role: $role, scope_type: $place->type, scope_id: $place->id);
                 }
             }
         }

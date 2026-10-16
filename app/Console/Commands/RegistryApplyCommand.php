@@ -5,13 +5,18 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Data\Models\Church;
-use App\Domains\Registry\Jobs\GetApprovedRegistryRowsJob;
-use App\Operations\Registry\ApplyRegistryImportOperation;
+use App\Services\Console\Features\Registry\ApplyRegistryImportFeature;
 use Illuminate\Console\Command;
+use Lucid\Bus\ServesFeatures;
 
-/** Step 2 (plan §7): load the REVIEWED file. Sends no emails; safe to run twice. */
+/**
+ * Step 2 (plan §7): load the REVIEWED file. Sends no emails; safe to run twice. The work is a Feature served from
+ * here (aegis's `ServesFeatures` commands); this only finds the church and tells the operator what happened.
+ */
 final class RegistryApplyCommand extends Command
 {
+    use ServesFeatures;
+
     protected $signature = 'nxtgen:registry-apply {xlsx : The reviewed file} {--church= : Church slug, e.g. ccf}';
 
     protected $description = 'Load the reviewed registry families into a church';
@@ -25,9 +30,8 @@ final class RegistryApplyCommand extends Command
             return self::FAILURE;
         }
 
-        $approval = (new GetApprovedRegistryRowsJob(path: (string) $this->argument('xlsx')))->handle();
-        $result = (new ApplyRegistryImportOperation(church: $church, rowsByFamily: $approval->rows_by_family))->handle();
-        $problems = [...$approval->problems, ...$result->problems];
+        $result = $this->serve(ApplyRegistryImportFeature::class, ['church' => $church, 'path' => (string) $this->argument('xlsx')]);
+        $problems = $result->problems;
 
         $this->info("Families created: {$result->families_created}. Children loaded: {$result->children_created}. Already loaded, skipped: {$result->children_skipped}.");
         if ($result->awaiting_claim !== []) {

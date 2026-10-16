@@ -15,10 +15,10 @@ use App\Foundation\Jobs\BaseJob;
  */
 final class GetUserForUpdateJob extends BaseJob
 {
-    public function __construct(private readonly int $userId) {}
+    public function __construct(private readonly User $user) {}
 
     public function handle(): User
     {
-        return User::query()->lockForUpdate()->findOrFail($this->userId);
+        return User::query()->lockForUpdate()->findOrFail($this->user->id);
     }
 }

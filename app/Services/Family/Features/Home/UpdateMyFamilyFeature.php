@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\Family\Features\Home;
 
-use App\Data\Models\User;
-use App\Domains\Family\Jobs\GetGuardianForUserJob;
 use App\Domains\Family\Jobs\UpdateFamilyDetailsJob;
 use App\Domains\Family\Jobs\UpdateGuardianDetailsJob;
 use App\Enums\AccessRowEnum;
@@ -27,10 +25,7 @@ final class UpdateMyFamilyFeature extends BaseFamilyFeature
     public function handle(FamilyDetailsInput $input): RedirectResponse
     {
         $family = $this->family();
-        $user = request()->user();
-        abort_unless($user instanceof User, 404);
-        $me = $this->run(new GetGuardianForUserJob(user: $user, church: $family->church));
-        abort_if($me === null, 404);
+        $me = $this->guardian();
 
         DB::transaction(function () use ($family, $me, $input): void {
             $this->run(new UpdateFamilyDetailsJob(family: $family, details: $input->toDetails()));

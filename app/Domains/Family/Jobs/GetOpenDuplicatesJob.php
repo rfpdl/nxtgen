@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Family\Jobs;
 
 use App\Data\Models\Child;
+use App\Data\Models\Church;
 use App\Data\Models\DuplicateCandidate;
 use App\Data\Models\Family;
 use App\Enums\DuplicateStatusEnum;
@@ -20,7 +21,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 final class GetOpenDuplicatesJob extends BaseJob
 {
-    public function __construct(private readonly int $churchId) {}
+    public function __construct(private readonly Church $church) {}
 
     /** @return Collection<int, DuplicateCandidate> */
     public function handle(): Collection
@@ -33,7 +34,7 @@ final class GetOpenDuplicatesJob extends BaseJob
 
         return DuplicateCandidate::query()
             ->with(['subject' => $sides, 'candidate' => $sides])
-            ->where('church_id', $this->churchId)
+            ->where('church_id', $this->church->id)
             ->where('status', DuplicateStatusEnum::Open)
             ->latest('id')
             ->get();

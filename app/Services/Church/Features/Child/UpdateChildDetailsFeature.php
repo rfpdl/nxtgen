@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Child;
 
-use App\Domains\Family\Jobs\GetChurchChildJob;
 use App\Domains\Family\Jobs\UpdateChildDetailsJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -25,8 +24,7 @@ final class UpdateChildDetailsFeature extends BaseChurchFeature
 
     public function handle(ChildInput $input): RedirectResponse
     {
-        $child = $this->run(new GetChurchChildJob(churchId: $this->church()->id, childId: $this->childId));
-        abort_unless($this->scope()->canEditFamily($child->family), 404);
+        $child = $this->scopedChild($this->childId, $this->scope()->canEditFamily(...));
 
         $this->run(new UpdateChildDetailsJob(child: $child, details: $input->toDetails()));
 

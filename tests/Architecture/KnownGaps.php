@@ -16,7 +16,8 @@ namespace Tests\Architecture;
  * Grouped by the refactor batch that empties each list (`.planning/tasks/2026-10-17-refactor/spec.md`):
  * 04 renames, 05 groups → Levels, 06 enums / DTOs / generated TS, 07 Feature clean-up, 08 tests per Job and enum
  * and the rest. Batch 04 renamed classes to the GLOSSARY words (Church, Satellite) and rewrote the FQCNs here
- * without paying anything off; batch 05 deleted the `Group` entries with the classes; batch 06 emptied its lists.
+ * without paying anything off; batch 05 deleted the `Group` entries with the classes; batches 06 and 07 emptied
+ * theirs.
  *
  * Keys: an FQCN where the rule is about a class, a path relative to `app/` (or a migration's filename) where it
  * is about a file.
@@ -52,70 +53,33 @@ final class KnownGaps
     /** @var list<string> enums not implementing HasEnumMetadata (EnumTest) */
     public const array ENUM_NO_METADATA = [];
 
-    // ─── Batch 07 — Feature clean-up ────────────────────────────────────────────────────────────────────
+    // ─── Batch 07 — Feature clean-up (emptied by batch 07) ──────────────────────────────────────────────
 
     /**
-     * Jobs taking a non-nullable `int $…Id` instead of the Model (JobConstructorTest) — 12 Jobs, 13 parameters
-     * (`GetChurchChildJob` takes two). `CreateRoleAssignmentJob::$scopeId` is the polymorphic scope; batch
-     * 04 decides whether that scope becomes a real relation (issue 04), and 07 whether it stays an id.
+     * Jobs taking a non-nullable `int $…Id` instead of the Model (JobConstructorTest). A lookup Job's own `$id`
+     * (GetFamilyByIdJob, GetChurchChildJob…) is the id it resolves, as in aegis's GetCompanyByIdJob, and is not one.
      *
      * @var list<string>
      */
-    public const array JOB_ID_PARAMS = [
-        'App\Domains\Church\Jobs\CreateRoleAssignmentJob',
-        'App\Domains\Family\Jobs\GetChildWithFamilyJob',
-        'App\Domains\Family\Jobs\GetChildrenJob',
-        'App\Domains\Family\Jobs\GetChurchChildJob',
-        'App\Domains\Family\Jobs\GetDuplicateCandidateJob',
-        'App\Domains\Family\Jobs\GetFamiliesJob',
-        'App\Domains\Family\Jobs\GetFamilyByIdJob',
-        'App\Domains\Family\Jobs\GetFamilyChildJob',
-        'App\Domains\Family\Jobs\GetMatchingChildJob',
-        'App\Domains\Family\Jobs\GetOpenDuplicatesJob',
-        'App\Domains\Family\Jobs\SearchFamiliesJob',
-        'App\Domains\User\Jobs\GetUserForUpdateJob',
-    ];
+    public const array JOB_ID_PARAMS = [];
 
     /** @var list<string> Job constructor properties that are not private readonly (JobConstructorTest) */
     public const array JOB_PROPS_NOT_PRIVATE_READONLY = [];
 
-    /**
-     * Operations querying a model directly (OperationBoundariesTest) — `Satellite::query()` (line ~47).
-     *
-     * @var list<string>
-     */
-    public const array OPERATION_ELOQUENT = [
-        'App\Operations\Registry\ApplyRegistryImportOperation',
-    ];
+    /** @var list<string> Operations querying a model directly (OperationBoundariesTest) */
+    public const array OPERATION_ELOQUENT = [];
 
     /** @var list<string> Operations writing a loaded model (OperationBoundariesTest) */
     public const array OPERATION_MODEL_WRITE = [];
 
-    /**
-     * Operations running another Operation (OperationBoundariesTest) — `AddChildToFamilyOperation` and
-     * `RegisterFamilyOperation` from inside the import.
-     *
-     * @var list<string>
-     */
-    public const array OPERATION_RUNS_OPERATION = [
-        'App\Operations\Registry\ApplyRegistryImportOperation',
-    ];
+    /** @var list<string> Operations running another Operation (OperationBoundariesTest) */
+    public const array OPERATION_RUNS_OPERATION = [];
 
-    /** @var list<string> middleware querying a model directly (MiddlewareBoundariesTest) — `Guardian::query()` */
-    public const array MIDDLEWARE_ELOQUENT = [
-        'App\Services\Family\Http\Middleware\RequireGuardian',
-    ];
+    /** @var list<string> middleware querying a model directly (MiddlewareBoundariesTest) */
+    public const array MIDDLEWARE_ELOQUENT = [];
 
-    /**
-     * Middleware calling `(new XJob(…))->handle()` by hand (MiddlewareBoundariesTest): `GetAccessScopeJob` in
-     * `RequireAssignment`, and `GetLandingOptionsJob` in the shared `canSwitch` prop.
-     *
-     * @var list<string>
-     */
-    public const array MIDDLEWARE_RUNS_JOB_BY_HAND = [
-        'App\Http\Middleware\HandleInertiaRequests',
-        'App\Services\Church\Http\Middleware\RequireAssignment',
-    ];
+    /** @var list<string> middleware calling `(new XJob(…))->handle()` by hand (MiddlewareBoundariesTest) */
+    public const array MIDDLEWARE_RUNS_JOB_BY_HAND = [];
 
     /** @var list<string> Features not extending their own service's Base{Service}Feature (BaseClassTest) */
     public const array FEATURE_WRONG_BASE = [];
@@ -123,9 +87,11 @@ final class KnownGaps
     // ─── Batch 08 — tests per Job and enum; ClassLength / PhpStyle / Migration lists emptied ────────────
 
     /**
-     * Jobs with no `app/Domains/<Domain>/Tests/Jobs/<Job>Test.php` (TestCoverageTest) — 60 of 66. The six
-     * with one: CreateChildPhotoJob, CreateFamiliesSpreadsheetJob, UpdateUserEmailVerifiedJob, and batch 05's
-     * GetLevelsJob, GetSuggestedLevelJob and UpdateChildLevelJob. Three listed here
+     * Jobs with no `app/Domains/<Domain>/Tests/Jobs/<Job>Test.php` (TestCoverageTest) — 54 of 66. The twelve
+     * with one: CreateChildPhotoJob, CreateFamiliesSpreadsheetJob, UpdateUserEmailVerifiedJob, batch 05's
+     * GetLevelsJob, GetSuggestedLevelJob and UpdateChildLevelJob, and batch 07's CreateRoleAssignmentJob,
+     * GetGuardianForUserJob, GetSatellitesByNameJob, UpdateChildStatusJob, UpdateDuplicateCandidateStatusJob and
+     * UpdateFamilyEmailJob. Three listed here
      * (Create-, Redeem- and SendMagicLinkJob) ARE exercised, by the bundled `MagicLinkJobsTest`, which attributes
      * to none of them; GetRegistryProposalJob and GetRegistryRowsJob likewise by `ProposeRegistryFamiliesTest`.
      *
@@ -142,7 +108,6 @@ final class KnownGaps
         // Card
         'CreateQrCodeSvgJob',
         // Church
-        'CreateRoleAssignmentJob',
         'GetAccessScopeJob',
         'GetChurchAdminCountJob',
         'GetLandingOptionsJob',
@@ -157,7 +122,6 @@ final class KnownGaps
         'CreateFamilyClaimJob',
         'CreateFamilyJob',
         'CreateGuardianJob',
-        'CreateSystemNoteJob',
         'GetChildWithFamilyJob',
         'GetChildrenJob',
         'GetChurchChildJob',
@@ -167,7 +131,6 @@ final class KnownGaps
         'GetFamilyChildJob',
         'GetFamilyNotesJob',
         'GetFamilyPortalJob',
-        'GetGuardianForUserJob',
         'GetMatchingChildJob',
         'GetOpenDuplicatesJob',
         'GetPendingClaimForFamilyJob',
@@ -175,8 +138,6 @@ final class KnownGaps
         'SearchFamiliesJob',
         'UpdateChildDetailsJob',
         'UpdateChildPhotoConsentJob',
-        'UpdateChildStatusJob',
-        'UpdateDuplicateCandidateStatusJob',
         'UpdateFamilyClaimStatusJob',
         'UpdateFamilyDetailsJob',
         'UpdateFamilyPrimaryGuardianJob',
@@ -196,16 +157,14 @@ final class KnownGaps
         'GetUserForUpdateJob',
         'GetUserIsFamilyOnlyJob',
         'GetUserIsStaffJob',
-        'UpdateUserEmailJob',
         'UpdateUserPasswordJob',
     ];
 
-    /** @var list<string> enums with no `tests/Unit/Enums/<Enum>Test.php` (TestCoverageTest) — all 14 */
+    /** @var list<string> enums with no `tests/Unit/Enums/<Enum>Test.php` (TestCoverageTest) — 13 of 14 */
     public const array ENUMS_WITHOUT_TESTS = [
         'AccessRowEnum',
         'ChildStatusEnum',
         'DuplicateReasonEnum',
-        'DuplicateStatusEnum',
         'FamilyClaimStatusEnum',
         'GenderEnum',
         'MagicLinkPurposeEnum',

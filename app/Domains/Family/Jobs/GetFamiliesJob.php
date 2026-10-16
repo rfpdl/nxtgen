@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domains\Family\Jobs;
 
+use App\Data\Models\Church;
 use App\Data\Models\Family;
 use App\Domains\Family\DataObjects\FamilyListFiltersData;
 use App\Enums\DuplicateStatusEnum;
@@ -22,7 +23,7 @@ final class GetFamiliesJob extends BaseJob
 {
     /** @param list<int>|null $satelliteIds */
     public function __construct(
-        private readonly int $churchId,
+        private readonly Church $church,
         private readonly ?array $satelliteIds,
         private readonly FamilyListFiltersData $filters = new FamilyListFiltersData,
     ) {}
@@ -34,7 +35,7 @@ final class GetFamiliesJob extends BaseJob
 
         return Family::query()
             ->with(['primaryGuardian.user', 'homeSatellite', 'children'])
-            ->where('church_id', $this->churchId)
+            ->where('church_id', $this->church->id)
             ->when($this->satelliteIds !== null, fn (Builder $q) => $q->whereIn('home_satellite_id', $this->satelliteIds ?? []))
             ->when($f->satellite_id !== null, fn (Builder $q) => $q->where('home_satellite_id', $f->satellite_id))
             ->when($f->query !== null, fn (Builder $q) => $q->matching((string) $f->query))

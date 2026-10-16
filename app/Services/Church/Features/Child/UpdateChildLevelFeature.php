@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Child;
 
-use App\Domains\Family\Jobs\CreateSystemNoteJob;
 use App\Domains\Family\Jobs\GetChurchChildJob;
 use App\Domains\Family\Jobs\UpdateChildLevelJob;
 use App\Enums\AccessRowEnum;
@@ -30,15 +29,11 @@ final class UpdateChildLevelFeature extends BaseChurchFeature
     public function handle(UpdateChildLevelInput $input): RedirectResponse
     {
         abort_unless($this->scope()->canSetLevel(), 404);
-        $child = $this->run(new GetChurchChildJob(churchId: $this->church()->id, childId: $this->childId));
+        $child = $this->run(new GetChurchChildJob(church: $this->church(), id: $this->childId));
 
-        $from = $child->levelName() ?? 'no Level';
-        $to = LevelChart::name($input->level);
-        DB::transaction(function () use ($child, $input, $from, $to): void {
-            $this->run(new UpdateChildLevelJob(child: $child, level: $input->level, by: $this->staff()));
-            $this->run(new CreateSystemNoteJob(about: $child, body: "{$child->displayName()}: Level changed from {$from} to {$to}.", by: $this->staff()));
-        });
+        // The Level and its history note together, or neither.
+        DB::transaction(fn () => $this->run(new UpdateChildLevelJob(child: $child, level: $input->level, by: $this->staff())));
 
-        return back()->with('success', "{$child->displayName()} is now in {$to}.");
+        return back()->with('success', "{$child->displayName()} is now in ".LevelChart::name($input->level).'.');
     }
 }

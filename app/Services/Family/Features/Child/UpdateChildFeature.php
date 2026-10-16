@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\Family\Features\Child;
 
-use App\Domains\Family\Jobs\GetFamilyChildJob;
 use App\Domains\Family\Jobs\UpdateChildDetailsJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -21,7 +20,7 @@ final class UpdateChildFeature extends BaseFamilyFeature
     public function handle(ChildInput $input): RedirectResponse
     {
         $family = $this->family();
-        $child = $this->run(new GetFamilyChildJob(family: $family, childId: $this->childId));
+        $child = $this->ownChild($this->childId);
         $this->run(new UpdateChildDetailsJob(child: $child, details: $input->toDetails()));
 
         return redirect()->route('family.show', $family->church)->with('success', "{$child->displayName()}'s details are saved.");

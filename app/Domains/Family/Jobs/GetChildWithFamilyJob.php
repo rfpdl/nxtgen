@@ -15,10 +15,10 @@ use App\Foundation\Jobs\BaseJob;
  */
 final class GetChildWithFamilyJob extends BaseJob
 {
-    public function __construct(private readonly int $childId) {}
+    public function __construct(private readonly int $id) {}
 
     public function handle(): ?Child
     {
-        return Child::query()->with(['family.church'])->find($this->childId);
+        return Child::query()->with(['family.church'])->find($this->id);
     }
 }

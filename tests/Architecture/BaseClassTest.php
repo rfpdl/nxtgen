@@ -60,7 +60,7 @@ it('has every Operation extend Lucid\'s Operation', function (): void {
     expect($offenders)->toBe([], 'Extend Lucid\Units\Operation: '.implode(', ', $offenders));
 });
 
-it('has every Feature extend its own service\'s Base…Feature', function (): void {
+it('has every Feature extend its own service\'s Base…Feature (or one of that service\'s own bases)', function (): void {
     $offenders = [];
 
     foreach (classesIn(featureFiles()) as $class) {
@@ -70,8 +70,16 @@ it('has every Feature extend its own service\'s Base…Feature', function (): vo
 
         $service = explode('\\', $class->getName())[2];
         $base = "App\\Services\\{$service}\\Features\\Base{$service}Feature";
+        $parent = $class->getParentClass();
 
-        if (! class_exists($base) || ! $class->isSubclassOf($base)) {
+        // Or a route the service's middleware does not guard gets its own abstract Base…Feature inside the same
+        // service (Family's BaseChildPhotoFeature: the photo link, opened by parents AND staff, outside
+        // RequireGuardian). Deliberate, and narrow: the base must live in this service's Features and be abstract.
+        $ownServiceBase = $parent !== false && $parent->isAbstract()
+            && str_starts_with($parent->getShortName(), 'Base')
+            && str_starts_with($parent->getName(), "App\\Services\\{$service}\\Features\\");
+
+        if (! (class_exists($base) && $class->isSubclassOf($base)) && ! $ownServiceBase) {
             $offenders[] = $class->getName();
         }
     }

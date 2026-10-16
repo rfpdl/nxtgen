@@ -8,7 +8,6 @@ use App\Domains\Church\Jobs\GetSatellitesJob;
 use App\Domains\Family\DataObjects\FamilyAdminData;
 use App\Domains\Family\DataObjects\FamilyDetailsData;
 use App\Domains\Family\DataObjects\GuardianEditData;
-use App\Domains\Family\Jobs\GetFamilyByIdJob;
 use App\Domains\Family\Jobs\GetFamilyNotesJob;
 use App\Domains\Level\Jobs\GetLevelsJob;
 use App\Enums\AccessRowEnum;
@@ -33,8 +32,7 @@ final class ShowFamilyFeature extends BaseChurchFeature
     public function handle(): Response
     {
         $church = $this->church();
-        $family = $this->run(new GetFamilyByIdJob(churchId: $church->id, id: $this->familyId));
-        abort_unless($this->scope()->canSeeFamily($family), 404);
+        $family = $this->scopedFamily($this->familyId, $this->scope()->canSeeFamily(...));
         $canEdit = $this->scope()->canEditFamily($family);
         $primary = $family->primaryGuardian;
 

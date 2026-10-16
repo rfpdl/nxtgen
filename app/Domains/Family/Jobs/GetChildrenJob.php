@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Family\Jobs;
 
 use App\Data\Models\Child;
+use App\Data\Models\Church;
 use App\Domains\Family\DataObjects\ChildListFiltersData;
 use App\Foundation\Jobs\BaseJob;
 use Illuminate\Database\Eloquent\Builder;
@@ -20,7 +21,7 @@ final class GetChildrenJob extends BaseJob
 {
     /** @param list<int>|null $satelliteIds */
     public function __construct(
-        private readonly int $churchId,
+        private readonly Church $church,
         private readonly ?array $satelliteIds,
         private readonly ChildListFiltersData $filters = new ChildListFiltersData,
     ) {}
@@ -33,7 +34,7 @@ final class GetChildrenJob extends BaseJob
 
         return Child::query()
             ->with(['family.homeSatellite'])
-            ->where('church_id', $this->churchId)
+            ->where('church_id', $this->church->id)
             ->when($this->satelliteIds !== null, fn (Builder $q) => $q->whereHas('family', fn (Builder $fam) => $fam->whereIn('home_satellite_id', $this->satelliteIds ?? [])))
             ->when($f->satellite_id !== null, fn (Builder $q) => $q->whereHas('family', fn (Builder $fam) => $fam->where('home_satellite_id', $f->satellite_id)))
             // The child's own names, OR the family's parent (name, email, phone — Family::scopeMatchingContact), so

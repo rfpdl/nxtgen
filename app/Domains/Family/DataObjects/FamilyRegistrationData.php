@@ -9,6 +9,7 @@ use App\Data\Models\Satellite;
 use App\Data\Models\User;
 use App\Enums\RegistrationSourceEnum;
 use App\Foundation\Attributes\NonClientFacing;
+use App\Foundation\Support\EmailAddress;
 
 /** Everything one registration carries — the single shape used by parent, staff and import (plan §4.2). */
 #[NonClientFacing]
@@ -38,6 +39,6 @@ final readonly class FamilyRegistrationData
 
     public function normalisedEmail(): string
     {
-        return mb_strtolower(trim($this->primary->email));
+        return EmailAddress::normalise($this->primary->email);
     }
 }

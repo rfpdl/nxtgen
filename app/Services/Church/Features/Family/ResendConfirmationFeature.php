@@ -6,7 +6,6 @@ namespace App\Services\Church\Features\Family;
 
 use App\Domains\Auth\Jobs\CreateMagicLinkJob;
 use App\Domains\Auth\Jobs\SendMagicLinkJob;
-use App\Domains\Family\Jobs\GetFamilyByIdJob;
 use App\Domains\Family\Jobs\GetPendingClaimForFamilyJob;
 use App\Enums\AccessRowEnum;
 use App\Enums\MagicLinkPurposeEnum;
@@ -29,8 +28,7 @@ final class ResendConfirmationFeature extends BaseChurchFeature
     public function handle(): RedirectResponse
     {
         $church = $this->church();
-        $family = $this->run(new GetFamilyByIdJob(churchId: $church->id, id: $this->familyId));
-        abort_unless($this->scope()->canResendLink($family), 404);
+        $family = $this->scopedFamily($this->familyId, $this->scope()->canResendLink(...));
         $user = $family->primaryGuardian?->user;
 
         $claim = $this->run(new GetPendingClaimForFamilyJob(family: $family));

@@ -10,6 +10,7 @@ use App\Domains\Church\Jobs\GetLandingOptionsJob;
 use App\Foundation\Support\RouteChurch;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Lucid\Bus\UnitDispatcher;
 
 /**
  * Props every page receives. Like every prop, their fields are snake_case (DECISIONS 2026-10-17); the
@@ -20,6 +21,8 @@ use Inertia\Middleware;
  */
 final class HandleInertiaRequests extends Middleware
 {
+    use UnitDispatcher;
+
     protected $rootView = 'app';
 
     /**
@@ -38,7 +41,7 @@ final class HandleInertiaRequests extends Middleware
                     'name' => $user->name,
                 ] : null,
                 // More than one place to go (a parent who serves, or two churches) → the "Switch" link.
-                'can_switch' => fn (): bool => $user instanceof User && count((new GetLandingOptionsJob(user: $user))->handle()) > 1,
+                'can_switch' => fn (): bool => $user instanceof User && count($this->run(new GetLandingOptionsJob(user: $user))) > 1,
             ],
 
             // The church the address names (/{church}/…), for every page under it — staff, family and public

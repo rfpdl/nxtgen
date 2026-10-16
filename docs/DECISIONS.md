@@ -33,6 +33,11 @@ Grilling session on refactoring Release 1 (Roy). Terms live in `GLOSSARY.md`; th
   (`grantOptions`, `churchNav`) — they are Vue props, and `vue/prop-name-casing` and aegis agree; EVERYTHING
   inside them is snake_case (DTO fields, `auth.can_switch`, `enums.child_status`). Internal DTOs
   (`#[NonClientFacing]`, Input → DTO hand-offs) are snake_case too, so every mapper reads one way.
+- **A Console service serves the registry import** (Claude — for Roy to confirm). `nxtgen:registry-apply` serves
+  `ApplyRegistryImportFeature` from `app/Services/Console`. The service is named, like Public, Family and Church, for
+  who it serves: the person at the terminal. Aegis serves a command's Feature from an existing service instead. Here
+  that would be Church, where every Feature must declare an access-matrix row, and no staff row fits a terminal
+  import with no signed-in user.
 - **Workflow for the refactor: the mattpocock skill chain** (grill-with-docs → local issues → tdd → code-review)
   instead of review-spar — Roy is trying it out.
 

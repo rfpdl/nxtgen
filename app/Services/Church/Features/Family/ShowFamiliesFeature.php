@@ -36,7 +36,7 @@ final class ShowFamiliesFeature extends BaseChurchFeature
         $filters = FamilyListQuery::from(request());
         $visible = $scope->visibleSatelliteIds();
 
-        $families = $this->run(new GetFamiliesJob(churchId: $church->id, satelliteIds: $visible, filters: $filters));
+        $families = $this->run(new GetFamiliesJob(church: $church, satelliteIds: $visible, filters: $filters));
         $page = ListPage::of($families, requested: request()->integer('page', 1));
         $satellites = array_values(array_filter(
             $this->run(new GetSatellitesJob(church: $church)),

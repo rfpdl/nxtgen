@@ -25,15 +25,15 @@ final class StaffRoleData extends Data
     {
         return new self(
             id: $assignment->id,
-            label: self::label($assignment->role, $assignment->scope_type, $satelliteNames[$assignment->scope_id] ?? null),
+            label: self::label($assignment->role, RoleScope::ofAssignment($assignment), $satelliteNames[$assignment->scope_id] ?? null),
             can_remove: $canRemove,
         );
     }
 
     /** The ONE wording for a role, used by the list, the "give a role" choices and the invite email. */
-    public static function label(RoleEnum $role, ScopeTypeEnum $type, ?string $satelliteName): string
+    public static function label(RoleEnum $role, RoleScope $scope, ?string $satelliteName): string
     {
-        $where = match ($type) {
+        $where = match ($scope->type) {
             ScopeTypeEnum::Church => 'whole church',
             ScopeTypeEnum::Satellite => $satelliteName ?? 'a satellite',
             ScopeTypeEnum::Schedule => 'a class',

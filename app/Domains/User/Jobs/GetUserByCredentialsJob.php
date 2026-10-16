@@ -6,6 +6,7 @@ namespace App\Domains\User\Jobs;
 
 use App\Data\Models\User;
 use App\Foundation\Jobs\BaseJob;
+use App\Foundation\Support\EmailAddress;
 use Illuminate\Support\Facades\Hash;
 
 /**
@@ -23,7 +24,7 @@ final class GetUserByCredentialsJob extends BaseJob
 
     public function handle(): ?User
     {
-        $user = User::query()->where('email', mb_strtolower(trim($this->email)))->first();
+        $user = User::query()->where('email', EmailAddress::normalise($this->email))->first();
         // A login with no password (parents, most staff) is checked against a throwaway hash too: same time taken.
         $hash = $user->password ?? Hash::make('no-such-login');
         $matches = Hash::check($this->password, $hash);

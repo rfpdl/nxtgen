@@ -36,23 +36,21 @@ final class AddStaffFeature extends BaseChurchFeature
         $scope = $this->scope();
         abort_unless($scope->canManagePeople(), 404);
 
-        $satelliteName = $input->scope_type === ScopeTypeEnum::Satellite
-            ? $this->run(new GetSatelliteJob(church: $church, id: $input->scope_id))->name
+        $satellite = $input->scope_type === ScopeTypeEnum::Satellite
+            ? $this->run(new GetSatelliteJob(church: $church, id: $input->scope_id))
             : null;
-        abort_unless($scope->canGrant($input->role, $input->scope_type, $input->scope_id), 404);
+        abort_unless($scope->canGrant($input->role, $input->scope()), 404);
 
-        $label = StaffRoleData::label($input->role, $input->scope_type, $satelliteName);
+        $label = StaffRoleData::label($input->role, $input->scope(), $satellite?->name);
 
-        $result = DB::transaction(function () use ($church, $input) {
+        $result = DB::transaction(function () use ($church, $satellite, $input) {
             $user = $this->run(new GetUserByEmailJob(email: $input->email))
                 ?? $this->run(new CreateUserJob(name: $input->name, email: $input->email));
 
             $added = $this->run(new CreateRoleAssignmentJob(
-                church: $church,
                 user: $user,
                 role: $input->role,
-                scopeType: $input->scope_type,
-                scopeId: $input->scope_id,
+                place: $satellite ?? $church,
                 grantedBy: $this->staff(),
             ));
 

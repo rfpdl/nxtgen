@@ -11,7 +11,7 @@ use App\Enums\NoteVisibilityEnum;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * A system note, as CreateSystemNoteJob writes one. Attach it with `->for($familyOrChild, 'noteable')`.
+ * A system note, as the change Jobs write one (Note::system). Attach it with `->for($familyOrChild, 'noteable')`.
  *
  * @extends Factory<Note>
  */

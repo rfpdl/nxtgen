@@ -17,11 +17,11 @@ final class GetFamilyChildJob extends BaseJob
 {
     public function __construct(
         private readonly Family $family,
-        private readonly int $childId,
+        private readonly int $id,
     ) {}
 
     public function handle(): Child
     {
-        return Child::query()->where('family_id', $this->family->id)->findOrFail($this->childId);
+        return Child::query()->where('family_id', $this->family->id)->findOrFail($this->id);
     }
 }

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Child;
 
-use App\Domains\Family\Jobs\CreateSystemNoteJob;
-use App\Domains\Family\Jobs\GetChurchChildJob;
 use App\Domains\Family\Jobs\UpdateChildStatusJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -26,21 +24,10 @@ final class UpdateChildStatusFeature extends BaseChurchFeature
 
     public function handle(UpdateChildStatusInput $input): RedirectResponse
     {
-        $child = $this->run(new GetChurchChildJob(churchId: $this->church()->id, childId: $this->childId));
-        abort_unless($this->scope()->canEditFamily($child->family), 404);
+        $child = $this->scopedChild($this->childId, $this->scope()->canEditFamily(...));
 
-        $from = $child->status;
-
-        DB::transaction(function () use ($child, $from, $input): void {
-            $this->run(new UpdateChildStatusJob(child: $child, status: $input->status, by: $this->staff()));
-            if ($from !== $input->status) {
-                $this->run(new CreateSystemNoteJob(
-                    about: $child,
-                    body: "{$child->displayName()}: status changed from {$from->label()} to {$input->status->label()}.",
-                    by: $this->staff(),
-                ));
-            }
-        });
+        // The status and its history note together, or neither.
+        DB::transaction(fn () => $this->run(new UpdateChildStatusJob(child: $child, status: $input->status, by: $this->staff())));
 
         return back()->with('success', "{$child->displayName()} is now {$input->status->label()}.");
     }

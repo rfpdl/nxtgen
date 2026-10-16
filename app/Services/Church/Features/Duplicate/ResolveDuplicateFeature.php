@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services\Church\Features\Duplicate;
 
 use App\Data\Models\DuplicateCandidate;
-use App\Domains\Family\Jobs\CreateSystemNoteJob;
 use App\Domains\Family\Jobs\GetDuplicateCandidateJob;
 use App\Domains\Family\Jobs\UpdateDuplicateCandidateStatusJob;
 use App\Enums\AccessRowEnum;
@@ -31,22 +30,12 @@ final class ResolveDuplicateFeature extends BaseChurchFeature
     {
         $scope = $this->scope();
         abort_unless($scope->canReviewDuplicates(), 404);
-        $pair = $this->run(new GetDuplicateCandidateJob(churchId: $this->church()->id, id: $this->pairId));
-        $newFamily = DuplicateCandidate::familyOf($pair->subject);
-        abort_unless($pair->status === DuplicateStatusEnum::Open && $scope->canEditFamily($newFamily), 404);
+        $pair = $this->run(new GetDuplicateCandidateJob(church: $this->church(), id: $this->pairId));
+        abort_unless($pair->status === DuplicateStatusEnum::Open && $scope->canEditFamily(DuplicateCandidate::familyOf($pair->subject)), 404);
 
-        $other = DuplicateCandidate::familyOf($pair->candidate)->contactName();
-        $answer = $input->status === DuplicateStatusEnum::Confirmed ? 'the same family, flagged for merging' : 'not the same family';
+        // The answer and its note on the new family together, or neither.
+        DB::transaction(fn () => $this->run(new UpdateDuplicateCandidateStatusJob(pair: $pair, status: $input->status, by: $this->staff())));
 
-        DB::transaction(function () use ($pair, $input, $newFamily, $other, $answer): void {
-            $this->run(new UpdateDuplicateCandidateStatusJob(pair: $pair, status: $input->status, by: $this->staff()));
-            $this->run(new CreateSystemNoteJob(
-                about: $newFamily,
-                body: "Possible duplicate of {$other} (".mb_strtolower($pair->reason->label())."): {$answer}.",
-                by: $this->staff(),
-            ));
-        });
-
-        return back()->with('success', "Saved: {$answer}.");
+        return back()->with('success', "Saved: {$input->status->answer()}.");
     }
 }

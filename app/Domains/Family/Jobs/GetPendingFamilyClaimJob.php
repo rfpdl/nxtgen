@@ -8,6 +8,7 @@ use App\Data\Models\Church;
 use App\Data\Models\FamilyClaim;
 use App\Enums\FamilyClaimStatusEnum;
 use App\Foundation\Jobs\BaseJob;
+use App\Foundation\Support\EmailAddress;
 
 /** @extends BaseJob<FamilyClaim|null> */
 final class GetPendingFamilyClaimJob extends BaseJob
@@ -21,7 +22,7 @@ final class GetPendingFamilyClaimJob extends BaseJob
     {
         return FamilyClaim::query()
             ->where('church_id', $this->church->id)
-            ->where('email_normalised', mb_strtolower(trim($this->email)))
+            ->where('email_normalised', EmailAddress::normalise($this->email))
             ->where('status', FamilyClaimStatusEnum::Pending)
             ->first();
     }

@@ -9,6 +9,7 @@ use App\Data\Models\FamilyClaim;
 use App\Data\Models\Guardian;
 use App\Enums\FamilyClaimStatusEnum;
 use App\Foundation\Jobs\BaseJob;
+use App\Foundation\Support\EmailAddress;
 
 /** @extends BaseJob<FamilyClaim> */
 final class CreateFamilyClaimJob extends BaseJob
@@ -25,7 +26,7 @@ final class CreateFamilyClaimJob extends BaseJob
             'church_id' => $this->family->church_id,
             'family_id' => $this->family->id,
             'guardian_id' => $this->guardian->id,
-            'email_normalised' => mb_strtolower(trim($this->email)),
+            'email_normalised' => EmailAddress::normalise($this->email),
             'revision' => 1,
             'status' => FamilyClaimStatusEnum::default(),
         ]);

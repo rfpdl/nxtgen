@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domains\Family\Jobs;
 
+use App\Data\Models\Church;
 use App\Data\Models\Family;
 use App\Foundation\Jobs\BaseJob;
 
@@ -15,7 +16,7 @@ use App\Foundation\Jobs\BaseJob;
 final class GetFamilyByIdJob extends BaseJob
 {
     public function __construct(
-        private readonly int $churchId,
+        private readonly Church $church,
         private readonly int $id,
     ) {}
 
@@ -23,7 +24,7 @@ final class GetFamilyByIdJob extends BaseJob
     {
         return Family::query()
             ->with(['primaryGuardian.user', 'homeSatellite', 'guardians', 'children', 'church'])
-            ->where('church_id', $this->churchId)
+            ->where('church_id', $this->church->id)
             ->findOrFail($this->id);
     }
 }

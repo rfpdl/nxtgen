@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Auth\Jobs;
 
 use App\Foundation\Jobs\BaseJob;
+use App\Foundation\Support\EmailAddress;
 use App\Notifications\NoAccountNotification;
 use Illuminate\Support\Facades\Notification;
 
@@ -15,6 +16,6 @@ final class SendNoAccountEmailJob extends BaseJob
 
     public function handle(): void
     {
-        Notification::route('mail', mb_strtolower(trim($this->email)))->notify(new NoAccountNotification);
+        Notification::route('mail', EmailAddress::normalise($this->email))->notify(new NoAccountNotification);
     }
 }
