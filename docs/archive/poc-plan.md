@@ -1,4 +1,4 @@
-> **SUPERSEDED 2026-10-14.** This was the first plan, which assumed building on the PoC. Roy chose a fresh build on the aegis stack. See `.planning/tasks/2026-10-14-nxtgen-v1/tech-spec.md`.
+> **SUPERSEDED 2026-10-14.** This was the first plan, which assumed building on the PoC. Roy chose a fresh build on the aegis stack. See `.planning/tasks/2026-10-14-nxtgen-v1/plan.md`.
 
 
 # NXTGEN — 2-week plan

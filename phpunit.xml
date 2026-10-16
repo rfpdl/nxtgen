@@ -9,8 +9,8 @@
 >
     <testsuites>
         <!--
-            Pure: no database, no booted application. The client-side ranker's PHP counterparts,
-            value objects and enum methods live here and should finish in milliseconds. If this
+            Pure: no database, no booted application. Value objects
+            and enum methods live here and should finish in milliseconds. If this
             suite ever slows down, something in it has reached for the framework.
         -->
         <testsuite name="Pure">

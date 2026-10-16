@@ -4,6 +4,33 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-10-17
+
+Grilling session on refactoring Release 1 (Roy). Terms live in `GLOSSARY.md`; the work is
+`.planning/tasks/2026-10-17-refactor/`.
+
+- **Refactor before check-in, and before going live** (Roy). 28 Oct is a target, not a hard date; check-in waits.
+  Laravel Cloud is set up after a local try-out.
+- **Code uses the church's words: `Church` and `Satellite`** replace `Organization` and `Branch` (Roy, reversing his
+  first instinct to keep "Organization" for non-church use). Both stay so another church can use the app.
+  **`Guardian`** in code, "parent" on screen.
+- **Groups are replaced by Levels and Squads** (Roy). A **Level** is a church-wide age band; the child's age only
+  suggests it, the child *stores* their Level and keeps it until **Moving-Up** (never automatic). A **Squad** is a
+  Satellite's split of a Level by gender (Level 1 mixed), taken from the age-level chart in config — no screen edits
+  them. At check-in a child joins the Squad for their Level and gender at that Satellite, so visiting another
+  Satellite needs nothing. **Supersedes 2026-10-16 "a church admin can correct a child's group"** — it becomes
+  "correct a child's Level"; TODO #1 (mixed-group Moving-Up) disappears. Moving up out of Level 4 = **Graduated**.
+- **Levels are one list for the whole Church**; per-Satellite Levels only if a Satellite ever needs them.
+- **Schedule** = a Satellite's regular class time (shown as "class"; `Class` is a PHP reserved word); **Session** =
+  one Schedule on one date — what children are checked into. A child has no "usual" Schedule.
+- **Migrations are edited in place until the first deploy**, then only ever added.
+- **Match aegis**, except: Features keep domain verbs (Add/Register/Withdraw — Jobs keep Create/Get/Update/Delete);
+  no Storybook yet (TODO #26); `CLAUDE.md` stays short (long rule files crowd an agent's context).
+- **Generated TS props are snake_case**, as in aegis. Jobs take Models, not ids. Enums and DTOs follow aegis's arch
+  rules; Inputs also generate TS. Features carry `#[UserStory]`; tests say `story#N` (numbered from 1).
+- **Workflow for the refactor: the mattpocock skill chain** (grill-with-docs → local issues → tdd → code-review)
+  instead of review-spar — Roy is trying it out.
+
 ## 2026-10-16
 
 - **Photos** (Roy):

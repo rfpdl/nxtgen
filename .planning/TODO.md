@@ -1,7 +1,7 @@
 # TODO
 
 Numbers are stable — reviews and code comments refer to them. Grouped by when they are needed.
-Updated 2026-10-16. Decisions behind these: `docs/DECISIONS.md`; security items: `SECURITY.md`.
+Updated 2026-10-17. **The refactor (`.planning/tasks/2026-10-17-refactor/`) comes first** — it absorbs #1, #17, #18, #19, #24. Decisions behind these: `docs/DECISIONS.md`; security items: `SECURITY.md`.
 
 ## Before Release 1 ships (exit criteria, plan §12)
 
@@ -35,12 +35,13 @@ Updated 2026-10-16. Decisions behind these: `docs/DECISIONS.md`; security items:
 
 | # | Item | Trigger |
 |---|---|---|
-| 1 | Moving-Up for a **mixed** group (Level 1 → Level 2 Boys/Girls): `next_group_id` cannot express a per-gender next group | before the February Moving-Up |
+| 1 | ~~Moving-Up for a mixed group~~ — goes away with Levels + Squads (refactor 05) | superseded 2026-10-17 |
 | 8 | A church slug must never be a reserved path — ChurchSeeder refuses one; enforce again in any create-church screen | with Platform screens |
 | 22 | Photo housekeeping: a scheduled sweep deleting stored photo files no `children.photo_path` points to (never shown — nothing points at them) | after R1 |
 | 24 | Lists are paged in memory (50 per page) — move paging into the query | if a church reaches thousands |
 | 25 | A "delete this photo for good" action (a parent asking for erasure) — withdrawal only hides (SECURITY #19) | when a parent asks, or before a data-protection review |
-| — | "No group" filter on the children list (plan §13 q5) | awaiting Roy |
+| — | "No group" filter on the children list (plan §13 q5) — now "no Level" | awaiting Roy |
+| 26 | Storybook, as aegis (a story per component) — not now (DECISIONS 2026-10-17) | when components grow |
 
 ## Done
 
