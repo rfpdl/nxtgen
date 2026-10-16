@@ -95,3 +95,14 @@ it('shows only families on an open possible duplicate, when asked — by family 
 
     expect($list())->toBe([]);
 });
+
+it('finds a family by phone whatever spaces or + the phone was saved with', function (): void {
+    $church = church();
+    $family = familyAt(satelliteOf($church));
+    guardianOf($family, User::factory()->create(), ['phone' => '+971 50 123 4567']);
+
+    $found = fn (string $q) => (new GetFamiliesJob(church: $church, satelliteIds: null, filters: new FamilyListFiltersData(query: $q)))->handle()->pluck('id')->all();
+
+    expect($found('501234567'))->toBe([$family->id])
+        ->and($found('50-123-4567'))->toBe([$family->id]);
+});

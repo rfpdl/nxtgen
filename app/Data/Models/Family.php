@@ -163,7 +163,8 @@ final class Family extends Model
                 ->where('first_name', 'like', $like)
                 ->orWhere('last_name', 'like', $like)
                 ->orWhere('email', 'like', $like)
-                ->when(strlen($digits) >= 4, fn (Builder $p) => $p->orWhere('phone', 'like', '%'.$digits.'%'))
+                // Phones are stored as typed ("+971 50 123 4567"), so compare digits with digits.
+                ->when(strlen($digits) >= 4, fn (Builder $p) => $p->orWhereRaw("REGEXP_REPLACE(phone, '[^0-9]', '') LIKE ?", ['%'.$digits.'%']))
                 ->orWhereHas('user', fn (Builder $u) => $u->where('email', 'like', $like))));
     }
 
