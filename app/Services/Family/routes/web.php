@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /*
 |--------------------------------------------------------------------------
-| Family — a parent's own family page (prefix /{organization}/family, RequireGuardian)
+| Family — a parent's own family page (prefix /{church}/family, RequireGuardian)
 |--------------------------------------------------------------------------
 |
 | Release 1: view the family, add a child, edit a child's details. The family always comes from the

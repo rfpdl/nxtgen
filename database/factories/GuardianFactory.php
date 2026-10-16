@@ -20,7 +20,7 @@ final class GuardianFactory extends Factory
     {
         return [
             'family_id' => Family::factory(),
-            'organization_id' => fn (array $attributes): mixed => Family::query()->whereKey(self::id($attributes['family_id']))->value('organization_id'),
+            'church_id' => fn (array $attributes): mixed => Family::query()->whereKey(self::id($attributes['family_id']))->value('church_id'),
             'user_id' => null,
             'relationship' => RelationshipEnum::Mother,
             'first_name' => fake()->firstName(),

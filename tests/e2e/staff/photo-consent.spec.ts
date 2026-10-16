@@ -3,7 +3,7 @@ import { CHURCH, FAMILIES, sessionFile } from '../support/world'
 
 /*
  * Roy 2026-10-16: consent can be recorded by the parent OR by a Lifeshaper the parent told in person — saved with
- * the volunteer's name and noted on the history. No photo until it is recorded.
+ * the staff member's name and noted on the history. No photo until it is recorded.
  */
 test.use({ storageState: sessionFile('lifeshaper') })
 
@@ -11,7 +11,7 @@ test("a Lifeshaper records the parent's yes, then takes the photo", async ({ pag
     await page.goto(`/${CHURCH}/families?q=Dela%20Cruz`)
     await page
         .getByTestId('family-row')
-        .filter({ hasText: FAMILIES.dxb.parent })
+        .filter({ hasText: FAMILIES.dxb.guardian })
         .getByRole('link')
         .click()
     const card = page.getByTestId('family-child').filter({ hasText: FAMILIES.dxb.child })

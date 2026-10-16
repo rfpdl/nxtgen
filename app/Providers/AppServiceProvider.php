@@ -6,7 +6,7 @@ namespace App\Providers;
 
 use App\Data\Models\Child;
 use App\Data\Models\Family;
-use App\Foundation\Support\RouteOrganization;
+use App\Foundation\Support\RouteChurch;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -36,7 +36,7 @@ final class AppServiceProvider extends ServiceProvider
         Relation::enforceMorphMap(['family' => Family::class, 'child' => Child::class]);
 
         // Every route starting with a church slug shares one rule, so /up, /login… never reach a church.
-        Route::pattern('organization', RouteOrganization::pattern());
+        Route::pattern('church', RouteChurch::pattern());
 
         // Public forms and emailed links: one per-device limit, from config (config/nxtgen.php).
         RateLimiter::for('per-device', fn (Request $request): Limit => Limit::perMinute(self::perDevicePerMinute())->by('device:'.$request->ip()));

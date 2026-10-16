@@ -27,11 +27,11 @@ final class GivePhotoConsentFeature extends BaseFamilyFeature
     public function handle(): RedirectResponse
     {
         $child = $this->run(new GetFamilyChildJob(family: $this->family(), childId: $this->childId));
-        $parent = request()->user();
-        abort_unless($parent instanceof User, 404);
+        $guardian = request()->user();
+        abort_unless($guardian instanceof User, 404);
 
         // Consent and its history note together, or neither (review 4).
-        DB::transaction(fn () => $this->run(new UpdateChildPhotoConsentJob(child: $child, given: true, by: $parent)));
+        DB::transaction(fn () => $this->run(new UpdateChildPhotoConsentJob(child: $child, given: true, by: $guardian)));
 
         return back()->with('success', "Thank you — you or a volunteer can now add {$child->displayName()}'s photo.");
     }

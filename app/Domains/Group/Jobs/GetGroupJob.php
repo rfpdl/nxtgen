@@ -15,12 +15,12 @@ use App\Foundation\Jobs\BaseJob;
 final class GetGroupJob extends BaseJob
 {
     public function __construct(
-        private readonly int $organizationId,
+        private readonly int $churchId,
         private readonly int $id,
     ) {}
 
     public function handle(): ?Group
     {
-        return Group::query()->where('organization_id', $this->organizationId)->where('is_active', true)->find($this->id);
+        return Group::query()->where('church_id', $this->churchId)->where('is_active', true)->find($this->id);
     }
 }

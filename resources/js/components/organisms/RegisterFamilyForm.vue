@@ -33,7 +33,7 @@ const blankChild = (): ChildForm => ({
 })
 
 const form = useForm({
-    home_branch_id: '' as number | '',
+    home_satellite_id: '' as number | '',
     area_text: '',
     privacy_consented: false,
     fb_account: '',

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use App\Data\Models\Branch;
+use App\Data\Models\Church;
 use App\Data\Models\Group;
-use App\Data\Models\Organization;
 use App\Data\Models\RoleAssignment;
+use App\Data\Models\Satellite;
 use App\Data\Models\User;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
@@ -37,16 +37,16 @@ it('creates the church, its satellites, its groups and the first church admin', 
 
     seed(ChurchSeeder::class);
 
-    $org = Organization::query()->where('slug', 'ccf')->firstOrFail();
+    $church = Church::query()->where('slug', 'ccf')->firstOrFail();
     $admin = User::query()->where('email', 'roy@example.com')->firstOrFail();
 
-    expect($org->name)->toBe('CCF')
-        ->and(Branch::query()->where('organization_id', $org->id)->orderBy('name')->pluck('name')->all())->toBe(['CCF DXB', 'House Church'])
-        ->and(Group::query()->where('organization_id', $org->id)->count())->toBe(7)
+    expect($church->name)->toBe('CCF')
+        ->and(Satellite::query()->where('church_id', $church->id)->orderBy('name')->pluck('name')->all())->toBe(['CCF DXB', 'House Church'])
+        ->and(Group::query()->where('church_id', $church->id)->count())->toBe(7)
         ->and($admin->password)->toBeNull()
         ->and($admin->is_platform_admin)->toBeFalse()
         ->and(RoleAssignment::query()->where('user_id', $admin->id)->where('role', RoleEnum::Admin)
-            ->where('scope_type', ScopeTypeEnum::Organization)->where('scope_id', $org->id)->where('is_active', true)->count())->toBe(1);
+            ->where('scope_type', ScopeTypeEnum::Church)->where('scope_id', $church->id)->where('is_active', true)->count())->toBe(1);
 });
 
 it('is safe to run again', function (): void {
@@ -55,8 +55,8 @@ it('is safe to run again', function (): void {
     seed(ChurchSeeder::class);
     seed(ChurchSeeder::class);
 
-    expect(Organization::query()->count())->toBe(1)
-        ->and(Branch::query()->count())->toBe(2)
+    expect(Church::query()->count())->toBe(1)
+        ->and(Satellite::query()->count())->toBe(2)
         ->and(Group::query()->count())->toBe(7)
         ->and(User::query()->count())->toBe(1)
         ->and(RoleAssignment::query()->count())->toBe(1);
@@ -66,7 +66,7 @@ it('refuses to start without a first admin', function (): void {
     churchSettings(['first_admin_email' => null]);
 
     expect(fn () => seed(ChurchSeeder::class))->toThrow(RuntimeException::class, 'NXTGEN_FIRST_ADMIN_EMAIL');
-    expect(Organization::query()->count())->toBe(0);
+    expect(Church::query()->count())->toBe(0);
 });
 
 it('refuses a church address that clashes with a page of the app', function (): void {
@@ -101,22 +101,22 @@ it('refuses to start production when emails would only go to the log — the fir
     app()->detectEnvironment(fn (): string => 'production');
 
     expect(fn () => app(DatabaseSeeder::class)->setContainer(app())->__invoke())->toThrow(RuntimeException::class, 'MAIL_MAILER');
-    expect(Organization::query()->count())->toBe(0);
+    expect(Church::query()->count())->toBe(0);
 })->with(['log', 'array']);
 
 it('adds what is missing on a second run, and changes nothing that exists (review 3)', function (): void {
     churchSettings();
     seed(ChurchSeeder::class);
-    $org = Organization::query()->sole();
-    $org->forceFill(['timezone' => 'Asia/Manila'])->save();
+    $church = Church::query()->sole();
+    $church->forceFill(['timezone' => 'Asia/Manila'])->save();
     Group::query()->where('name', 'Level 1')->update(['min_age' => 3]);
     RoleAssignment::query()->update(['is_active' => false]);          // the church removed that admin
 
     churchSettings(['satellites' => 'CCF DXB|House Church|Al Quoz']);
     seed(ChurchSeeder::class);
 
-    expect($org->fresh()?->timezone)->toBe('Asia/Manila')
+    expect($church->fresh()?->timezone)->toBe('Asia/Manila')
         ->and(Group::query()->where('name', 'Level 1')->sole()->min_age)->toBe(3)
         ->and(RoleAssignment::query()->where('is_active', true)->count())->toBe(0)
-        ->and(Branch::query()->pluck('name')->sort()->values()->all())->toBe(['Al Quoz', 'CCF DXB', 'House Church']);
+        ->and(Satellite::query()->pluck('name')->sort()->values()->all())->toBe(['Al Quoz', 'CCF DXB', 'House Church']);
 });

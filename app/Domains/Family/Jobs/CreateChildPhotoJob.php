@@ -45,11 +45,11 @@ final class CreateChildPhotoJob extends BaseJob
         imagejpeg($image, null, 82);
         $jpeg = (string) ob_get_clean();
 
-        $path = "children/{$this->child->organization_id}/{$this->child->id}-".Str::random(16).'.jpg';
+        $path = "children/{$this->child->church_id}/{$this->child->id}-".Str::random(16).'.jpg';
 
         // Lock and check consent BEFORE anything is stored: a withdrawal (which also locks) can then never sweep up
         // an upload that is still on its way, and nothing is written for a child whose consent is gone (review 3).
-        $locked = Child::query()->where('organization_id', $this->child->organization_id)->lockForUpdate()->findOrFail($this->child->id);
+        $locked = Child::query()->where('church_id', $this->child->church_id)->lockForUpdate()->findOrFail($this->child->id);
         if ($locked->photo_consent_at === null) {
             return false;
         }

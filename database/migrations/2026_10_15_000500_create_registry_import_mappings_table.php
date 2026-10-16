@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('registry_import_mappings', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('organization_id')->comment('Church imported into')->constrained()->restrictOnDelete();
+            $table->foreignId('church_id')->comment('Church imported into')->constrained()->restrictOnDelete();
             $table->string('source_child_key', 40)->comment('Stable key of the sheet row (email + child first name + birthday)');
             $table->string('approved_family_key', 40)->comment('Family key the reviewer approved');
             $table->foreignId('child_id')->comment('Child created from the row')->constrained('children')->restrictOnDelete();
@@ -21,7 +21,7 @@ return new class extends Migration
             $table->timestampTz('imported_at')->comment('When the row was loaded');
             $table->timestampsTz();
 
-            $table->unique(['organization_id', 'source_child_key']);
+            $table->unique(['church_id', 'source_child_key']);
         });
     }
 

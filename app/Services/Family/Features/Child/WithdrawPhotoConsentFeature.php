@@ -27,10 +27,10 @@ final class WithdrawPhotoConsentFeature extends BaseFamilyFeature
     public function handle(): RedirectResponse
     {
         $child = $this->run(new GetFamilyChildJob(family: $this->family(), childId: $this->childId));
-        $parent = request()->user();
-        abort_unless($parent instanceof User, 404);
+        $guardian = request()->user();
+        abort_unless($guardian instanceof User, 404);
 
-        DB::transaction(fn () => $this->run(new UpdateChildPhotoConsentJob(child: $child, given: false, by: $parent)));
+        DB::transaction(fn () => $this->run(new UpdateChildPhotoConsentJob(child: $child, given: false, by: $guardian)));
 
         return back()->with('success', "Done — {$child->displayName()}'s photo is hidden. If you say yes again, it comes back.");
     }

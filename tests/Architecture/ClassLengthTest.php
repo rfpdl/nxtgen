@@ -85,14 +85,14 @@ it('files representative paths in the right layer', function (string $path, stri
     ['Domains/Family/Jobs/GetFamiliesJob.php', 'Job'],
     // A Job's name ending in Operation is still a Job — path beats suffix.
     ['Domains/Family/Jobs/BuildOperation.php', 'Job'],
-    ['Services/Org/Features/Family/ShowFamiliesFeature.php', 'Feature'],
+    ['Services/Church/Features/Family/ShowFamiliesFeature.php', 'Feature'],
     ['Operations/Registry/ApplyRegistryImportOperation.php', 'Operation'],
     ['Domains/Family/DataObjects/FamilyPortalData.php', 'DTO'],
-    ['Services/Org/Data/AddStaffInput.php', 'DTO'],
+    ['Services/Church/Data/AddStaffInput.php', 'DTO'],
     ['Foundation/Inputs/ChildInput.php', 'DTO'],
     // Models live under Data/ and must not be swept up as DTOs.
     ['Data/Models/Family.php', 'Model'],
     ['Enums/GenderEnum.php', 'Enum'],
     ['Console/Commands/RegistryApplyCommand.php', 'Command'],
-    ['Services/Org/Http/Middleware/RequireAssignment.php', 'Other'],
+    ['Services/Church/Http/Middleware/RequireAssignment.php', 'Other'],
 ]);

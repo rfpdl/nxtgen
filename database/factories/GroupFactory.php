@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Data\Models\Church;
 use App\Data\Models\Group;
-use App\Data\Models\Organization;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<Group> */
@@ -17,7 +17,7 @@ final class GroupFactory extends Factory
     public function definition(): array
     {
         return [
-            'organization_id' => Organization::factory(),
+            'church_id' => Church::factory(),
             'name' => 'Level '.fake()->numberBetween(1, 4),
             'sort' => 0,
             'min_age' => 4,

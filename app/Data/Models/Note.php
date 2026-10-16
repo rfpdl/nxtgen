@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * (`family`, `child`), never a class name.
  *
  * @property int $id
- * @property int $organization_id
+ * @property int $church_id
  * @property string $noteable_type
  * @property int $noteable_id
  * @property int|null $author_id
@@ -54,7 +54,7 @@ final class Note extends Model
     public static function system(Family|Child $about, string $body, ?User $by): self
     {
         return self::query()->create([
-            'organization_id' => $about->organization_id,
+            'church_id' => $about->church_id,
             'noteable_type' => $about->getMorphClass(),
             'noteable_id' => $about->id,
             'author_id' => $by?->id,

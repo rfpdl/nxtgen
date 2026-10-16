@@ -37,7 +37,7 @@ final class CreateDuplicateCandidatesJob extends BaseJob
 
         if ($phones->isNotEmpty()) {
             $otherFamilies = Guardian::query()
-                ->where('organization_id', $this->family->organization_id)
+                ->where('church_id', $this->family->church_id)
                 ->where('family_id', '!=', $this->family->id)
                 ->whereNotNull('phone')
                 ->get(['family_id', 'phone'])
@@ -52,7 +52,7 @@ final class CreateDuplicateCandidatesJob extends BaseJob
 
         foreach ($this->family->children()->get() as $child) {
             $twins = Child::query()
-                ->where('organization_id', $this->family->organization_id)
+                ->where('church_id', $this->family->church_id)
                 ->where('family_id', '!=', $this->family->id)
                 ->whereRaw('LOWER(first_name) = ?', [mb_strtolower($child->first_name)])
                 ->whereRaw('LOWER(last_name) = ?', [mb_strtolower($child->last_name)])
@@ -71,7 +71,7 @@ final class CreateDuplicateCandidatesJob extends BaseJob
     {
         $model = DuplicateCandidate::query()->firstOrCreate(
             ['subject_type' => $type, 'subject_id' => $subjectId, 'candidate_id' => $candidateId],
-            ['organization_id' => $this->family->organization_id, 'reason' => $reason, 'status' => DuplicateStatusEnum::Open],
+            ['church_id' => $this->family->church_id, 'reason' => $reason, 'status' => DuplicateStatusEnum::Open],
         );
 
         return $model->wasRecentlyCreated ? 1 : 0;

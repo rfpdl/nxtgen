@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Operations\Registry;
 
-use App\Data\Models\Branch;
+use App\Data\Models\Church;
 use App\Data\Models\Family;
 use App\Data\Models\Group;
-use App\Data\Models\Organization;
+use App\Data\Models\Satellite;
 use App\Domains\Family\DataObjects\ChildDetailsData;
 use App\Domains\Family\DataObjects\FamilyRegistrationData;
 use App\Domains\Family\DataObjects\GuardianDetailsData;
@@ -40,14 +40,14 @@ final class ApplyRegistryImportOperation extends Operation
 
     /** @param array<string, list<ApprovedChildRowData>> $groups */
     public function __construct(
-        private readonly Organization $organization,
+        private readonly Church $church,
         private readonly array $groups,
     ) {}
 
     public function handle(): ImportResultData
     {
-        $mapped = $this->run(new GetImportedSourceKeysJob(organization: $this->organization));
-        $branches = Branch::query()->where('organization_id', $this->organization->id)->get()->keyBy(fn (Branch $b): string => mb_strtolower($b->name));
+        $mapped = $this->run(new GetImportedSourceKeysJob(church: $this->church));
+        $satellites = Satellite::query()->where('church_id', $this->church->id)->get()->keyBy(fn (Satellite $s): string => mb_strtolower($s->name));
         $families = $children = $skipped = 0;
         $awaitingClaim = [];
         $problems = [];
@@ -64,7 +64,7 @@ final class ApplyRegistryImportOperation extends Operation
                     return true;
                 }
                 $existing = $this->run(new GetMatchingChildJob(
-                    organizationId: $this->organization->id,
+                    churchId: $this->church->id,
                     firstName: $r->get('Child first name'),
                     lastName: $r->get('Child last name'),
                     dateOfBirth: $r->get('Birthday'),
@@ -100,21 +100,21 @@ final class ApplyRegistryImportOperation extends Operation
 
                 continue;
             }
-            if (count($mappedFamilies) === 1 && ! $this->sameParent($mappedFamilies[0], $primary->get('Parent email'))) {
+            if (count($mappedFamilies) === 1 && ! $this->sameGuardian($mappedFamilies[0], $primary->get('Parent email'))) {
                 $problems[] = "Family {$familyKey}: parent email differs from the family it was imported into — not loaded";
 
                 continue;
             }
 
-            $branch = $branches->get(mb_strtolower($primary->get('Home satellite')));
-            if (! $branch instanceof Branch) {
+            $satellite = $satellites->get(mb_strtolower($primary->get('Home satellite')));
+            if (! $satellite instanceof Satellite) {
                 $problems[] = "Family {$familyKey}: unknown satellite \"{$primary->get('Home satellite')}\" — not loaded";
 
                 continue;
             }
 
-            DB::transaction(function () use ($rows, $pending, $primary, $branch, $mapped, $familyKey, &$families, &$children, &$awaitingClaim): void {
-                $family = $this->existingFamily($rows, $mapped) ?? $this->register($primary, $branch, $families, $awaitingClaim);
+            DB::transaction(function () use ($rows, $pending, $primary, $satellite, $mapped, $familyKey, &$families, &$children, &$awaitingClaim): void {
+                $family = $this->existingFamily($rows, $mapped) ?? $this->register($primary, $satellite, $families, $awaitingClaim);
 
                 foreach ($pending as $row) {
                     $child = $this->run(new AddChildToFamilyOperation(
@@ -140,7 +140,7 @@ final class ApplyRegistryImportOperation extends Operation
     {
         foreach ($rows as $row) {
             if (isset($mapped[$row->get('Source key')])) {
-                return $this->run(new GetFamilyByIdJob(organizationId: $this->organization->id, id: $mapped[$row->get('Source key')]));
+                return $this->run(new GetFamilyByIdJob(churchId: $this->church->id, id: $mapped[$row->get('Source key')]));
             }
         }
 
@@ -148,11 +148,11 @@ final class ApplyRegistryImportOperation extends Operation
     }
 
     /** @param list<string> $awaitingClaim */
-    private function register(ApprovedChildRowData $p, Branch $branch, int &$families, array &$awaitingClaim): Family
+    private function register(ApprovedChildRowData $p, Satellite $satellite, int &$families, array &$awaitingClaim): Family
     {
         $result = $this->run(new RegisterFamilyOperation(new FamilyRegistrationData(
-            organization: $this->organization,
-            homeBranch: $branch,
+            church: $this->church,
+            homeSatellite: $satellite,
             primary: new GuardianDetailsData(
                 firstName: $p->get('Parent first name'),
                 lastName: $p->get('Parent last name'),
@@ -207,9 +207,9 @@ final class ApplyRegistryImportOperation extends Operation
         );
     }
 
-    private function sameParent(int $familyId, string $email): bool
+    private function sameGuardian(int $familyId, string $email): bool
     {
-        $family = $this->run(new GetFamilyByIdJob(organizationId: $this->organization->id, id: $familyId));
+        $family = $this->run(new GetFamilyByIdJob(churchId: $this->church->id, id: $familyId));
 
         return mb_strtolower(trim($family->contactEmail())) === mb_strtolower(trim($email));
     }
@@ -222,7 +222,7 @@ final class ApplyRegistryImportOperation extends Operation
         }
 
         return $this->groupCache[mb_strtolower($name)] ??= Group::query()
-            ->where('organization_id', $this->organization->id)
+            ->where('church_id', $this->church->id)
             ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])
             ->first();
     }

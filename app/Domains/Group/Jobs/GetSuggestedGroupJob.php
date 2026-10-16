@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domains\Group\Jobs;
 
+use App\Data\Models\Church;
 use App\Data\Models\Group;
-use App\Data\Models\Organization;
 use App\Enums\GenderEnum;
 use App\Foundation\Jobs\BaseJob;
 use Carbon\CarbonImmutable;
@@ -23,18 +23,18 @@ use Carbon\CarbonImmutable;
 final class GetSuggestedGroupJob extends BaseJob
 {
     public function __construct(
-        private readonly Organization $organization,
+        private readonly Church $church,
         private readonly GenderEnum $gender,
         private readonly string $dateOfBirth,
     ) {}
 
     public function handle(): ?Group
     {
-        $reference = CarbonImmutable::parse($this->organization->moving_up_reference_date ?? now());
+        $reference = CarbonImmutable::parse($this->church->moving_up_reference_date ?? now());
         $age = (int) floor(CarbonImmutable::parse($this->dateOfBirth)->diffInYears($reference, absolute: true));
 
         $matches = Group::query()
-            ->where('organization_id', $this->organization->id)
+            ->where('church_id', $this->church->id)
             ->where('is_active', true)
             ->where('min_age', '<=', $age)
             ->where('max_age', '>=', $age)

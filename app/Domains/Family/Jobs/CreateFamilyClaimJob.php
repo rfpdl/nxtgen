@@ -22,7 +22,7 @@ final class CreateFamilyClaimJob extends BaseJob
     public function handle(): FamilyClaim
     {
         return FamilyClaim::query()->create([
-            'organization_id' => $this->family->organization_id,
+            'church_id' => $this->family->church_id,
             'family_id' => $this->family->id,
             'guardian_id' => $this->guardian->id,
             'email_normalised' => mb_strtolower(trim($this->email)),

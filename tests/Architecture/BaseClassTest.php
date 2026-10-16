@@ -11,7 +11,7 @@ use ReflectionClass;
 /**
  * The base classes, ported from aegis's `BaseClassArchTest` (rules 19a, 19b) and extended to say every unit
  * EXTENDS its base — which in this codebase is what types `run()` and `serve()` (stubs/Lucid.stub), and, for a
- * Feature, what gives it the service's `organization()` / `scope()` / `family()` accessors.
+ * Feature, what gives it the service's `church()` / `scope()` / `family()` accessors.
  *
  * Also the home of the check that every file the reflection-based guards read actually LOADS: those guards skip
  * a file with no class to reflect, and without the test below that skip would be silent.

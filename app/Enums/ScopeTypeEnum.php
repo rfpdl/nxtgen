@@ -6,15 +6,15 @@ namespace App\Enums;
 
 enum ScopeTypeEnum: string
 {
-    case Organization = 'organization';
-    case Branch = 'branch';
+    case Church = 'church';
+    case Satellite = 'satellite';
     case EventSeries = 'event_series';
 
     public function label(): string
     {
         return match ($this) {
-            self::Organization => 'Church',
-            self::Branch => 'Satellite',
+            self::Church => 'Church',
+            self::Satellite => 'Satellite',
             self::EventSeries => 'Class',
         };
     }

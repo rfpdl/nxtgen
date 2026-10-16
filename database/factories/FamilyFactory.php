@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
-use App\Data\Models\Branch;
+use App\Data\Models\Church;
 use App\Data\Models\Family;
-use App\Data\Models\Organization;
+use App\Data\Models\Satellite;
 use App\Enums\RegistrationSourceEnum;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,8 +20,8 @@ final class FamilyFactory extends Factory
     public function definition(): array
     {
         return [
-            'organization_id' => Organization::factory(),
-            'home_branch_id' => fn (array $attributes): int => Branch::factory()->create(['organization_id' => self::id($attributes['organization_id'])])->id,
+            'church_id' => Church::factory(),
+            'home_satellite_id' => fn (array $attributes): int => Satellite::factory()->create(['church_id' => self::id($attributes['church_id'])])->id,
             'area_text' => fake()->randomElement(['Al Barsha', 'Deira', 'Karama', 'JVC', 'Al Nahda']),
             'registration_source' => RegistrationSourceEnum::Self,
             'privacy_consented_at' => now(),

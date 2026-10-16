@@ -139,8 +139,8 @@ describe('opening a link', function (): void {
     it('revokes a claim when the login already belongs to another family in that church', function (): void {
         $user = User::factory()->create(['email' => 'janice@example.com']);
         $claim = FamilyClaim::factory()->create(['email_normalised' => 'janice@example.com']);
-        Guardian::factory()->for(Family::factory()->state(['organization_id' => $claim->organization_id]))->create([
-            'organization_id' => $claim->organization_id,
+        Guardian::factory()->for(Family::factory()->state(['church_id' => $claim->church_id]))->create([
+            'church_id' => $claim->church_id,
             'user_id' => $user->id,
         ]);
 

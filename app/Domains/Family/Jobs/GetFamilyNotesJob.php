@@ -27,7 +27,7 @@ final class GetFamilyNotesJob extends BaseJob
 
         return array_values(Note::query()
             ->with('author')
-            ->where('organization_id', $this->family->organization_id)
+            ->where('church_id', $this->family->church_id)
             ->where('visibility', NoteVisibilityEnum::Staff)
             ->where(fn (Builder $q) => $q
                 ->where(fn (Builder $f) => $f->where('noteable_type', 'family')->where('noteable_id', $this->family->id))

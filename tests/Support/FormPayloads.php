@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Support;
 
-use App\Data\Models\Branch;
+use App\Data\Models\Satellite;
 
 /*
- * Valid edit-form payloads, shared by the parent (Family) and staff (Org) edit tests: the two edit the same
+ * Valid edit-form payloads, shared by the parent (Family) and staff (Church) edit tests: the two edit the same
  * fields through the same inputs, so their tests send the same shape.
  */
 
@@ -17,7 +17,7 @@ use App\Data\Models\Branch;
  * @param  array<string, mixed>  $overrides
  * @return array<string, mixed>
  */
-function familyEdit(Branch $branch, array $overrides = []): array
+function familyEdit(Satellite $satellite, array $overrides = []): array
 {
     $guardian = ['first_name' => 'Janice', 'last_name' => 'Ramos-Lee', 'relationship' => 'mother', 'phone' => '0559998888', 'ministries' => ['Music']];
     if (is_array($overrides['guardian'] ?? null)) {
@@ -27,7 +27,7 @@ function familyEdit(Branch $branch, array $overrides = []): array
 
     // Overrides replace top-level fields; a `guardian` override changes only the parent fields it names.
     return array_merge([
-        'home_branch_id' => $branch->id,
+        'home_satellite_id' => $satellite->id,
         'area_text' => 'Deira',
         'fb_account' => 'janice.r',
         'wants_fb_group' => true,

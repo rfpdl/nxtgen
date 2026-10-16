@@ -12,7 +12,7 @@ return new class extends Migration
     {
         Schema::create('groups', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('organization_id')->comment('Groups are per church')->constrained()->restrictOnDelete();
+            $table->foreignId('church_id')->comment('Groups are per church')->constrained()->restrictOnDelete();
             $table->string('name')->comment('e.g. Level 2 Boys');
             $table->unsignedSmallInteger('sort')->default(0)->comment('Display order');
             $table->unsignedTinyInteger('min_age')->comment('Youngest age in this group, on the moving-up reference date');

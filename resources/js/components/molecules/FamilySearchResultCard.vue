@@ -3,7 +3,7 @@ import type { FamilySearchResult } from '@/types'
 
 /**
  * A church-wide search hit when registering for a parent: "already registered?" at a glance. The email is
- * masked; the family opens only when the volunteer's scope allows it. Also one side of a possible duplicate,
+ * masked; the family opens only when the staff member's scope allows it. Also one side of a possible duplicate,
  * where "Add a child" does not belong (`canAddChild: false`).
  */
 withDefaults(defineProps<{ result: FamilySearchResult; href: string; canAddChild?: boolean }>(), {

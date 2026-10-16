@@ -39,7 +39,7 @@ final class CreateFamiliesSpreadsheetJob extends BaseJob
                 $family->contactName(),
                 $this->fullEmail ? $email : EmailMask::mask($email),
                 $family->contactEmailConfirmed() ? 'Yes' : 'No',
-                $family->homeBranch->name,
+                $family->homeSatellite->name,
             ];
 
             foreach ($family->children as $child) {

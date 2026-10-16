@@ -25,7 +25,7 @@ export async function fillChild(page: Page, index: number, child: Child): Promis
     }
 }
 
-export type Parent = {
+export type Guardian = {
     first: string
     last: string
     email: string
@@ -34,13 +34,13 @@ export type Parent = {
 }
 
 /** The registration form (RegisterFamilyForm) — the same form for parents and for staff. */
-export async function fillFamily(page: Page, parent: Parent, children: Child[]): Promise<void> {
-    await page.getByTestId('guardian-first-name').fill(parent.first)
-    await page.getByTestId('guardian-last-name').fill(parent.last)
+export async function fillFamily(page: Page, guardian: Guardian, children: Child[]): Promise<void> {
+    await page.getByTestId('guardian-first-name').fill(guardian.first)
+    await page.getByTestId('guardian-last-name').fill(guardian.last)
     await page.getByTestId('guardian-relationship').selectOption('mother')
-    await page.getByTestId('guardian-phone').fill(parent.phone)
-    await page.getByTestId('guardian-email').fill(parent.email)
-    await page.getByTestId('home-branch').selectOption({ label: parent.satellite })
+    await page.getByTestId('guardian-phone').fill(guardian.phone)
+    await page.getByTestId('guardian-email').fill(guardian.email)
+    await page.getByTestId('home-satellite').selectOption({ label: guardian.satellite })
     await page.getByTestId('area').fill('Al Barsha')
     for (const [i, child] of children.entries()) {
         if (i > 0) await page.getByTestId('add-child').click()
@@ -55,16 +55,16 @@ export async function fillFamily(page: Page, parent: Parent, children: Child[]):
  */
 export async function registerAndConfirm(
     page: Page,
-    parent: Omit<Parent, 'email'>,
+    guardian: Omit<Guardian, 'email'>,
     children: Child[],
 ): Promise<string> {
     const { uniqueEmail } = await import('./world')
     const { mailCount } = await import('./mailbox')
     const { openEmailedLink } = await import('./sign-in')
-    const email = uniqueEmail(parent.first.toLowerCase())
+    const email = uniqueEmail(guardian.first.toLowerCase())
     const before = mailCount(email)
     await page.goto('/ccf/register')
-    await fillFamily(page, { ...parent, email }, children)
+    await fillFamily(page, { ...guardian, email }, children)
     await page.getByTestId('register-submit').click()
     await openEmailedLink(page, email, before)
     return email

@@ -18,8 +18,8 @@ final class CreateFamilyJob extends BaseJob
         $r = $this->registration;
 
         return Family::query()->create([
-            'organization_id' => $r->organization->id,
-            'home_branch_id' => $r->homeBranch->id,
+            'church_id' => $r->church->id,
+            'home_satellite_id' => $r->homeSatellite->id,
             'area_text' => self::clean($r->areaText),
             'fb_account' => self::clean($r->fbAccount),
             'wants_fb_group' => $r->wantsFbGroup,

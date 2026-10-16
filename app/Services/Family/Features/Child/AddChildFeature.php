@@ -21,6 +21,6 @@ final class AddChildFeature extends BaseFamilyFeature
         $family = $this->family();
         $child = $this->run(new AddChildToFamilyOperation(family: $family, details: $input->toDetails(), source: RegistrationSourceEnum::Self));
 
-        return redirect()->route('family.show', $family->organization)->with('success', "{$child->displayName()} is added to your family.");
+        return redirect()->route('family.show', $family->church)->with('success', "{$child->displayName()} is added to your family.");
     }
 }

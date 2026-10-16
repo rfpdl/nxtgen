@@ -35,7 +35,7 @@ final class FamilySearchResultData extends Data
             primaryName: $family->contactName(),
             maskedEmail: EmailMask::mask($family->contactEmail()),
             emailConfirmed: $family->contactEmailConfirmed(),
-            satellite: $family->homeBranch->name,
+            satellite: $family->homeSatellite->name,
             children: array_values($family->children->map(fn ($c): string => $c->nickname)->all()),
             canOpen: $canOpen,
         );

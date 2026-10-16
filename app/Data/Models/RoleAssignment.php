@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /** A staff role in one scope: the whole church, one satellite, or one class (plan §3.2).
  *
  * @property int $id
- * @property int $organization_id
+ * @property int $church_id
  * @property int $user_id
  * @property RoleEnum $role
  * @property ScopeTypeEnum $scope_type
@@ -50,9 +50,9 @@ final class RoleAssignment extends Model
         return $this->belongsTo(User::class);
     }
 
-    /** @return BelongsTo<Organization, $this> */
-    public function organization(): BelongsTo
+    /** @return BelongsTo<Church, $this> */
+    public function church(): BelongsTo
     {
-        return $this->belongsTo(Organization::class);
+        return $this->belongsTo(Church::class);
     }
 }

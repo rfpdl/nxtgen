@@ -47,7 +47,7 @@ final class GetRegistryRowsJob extends BaseJob
 
     private const int FB_ACCOUNT = 13;
 
-    private const int PARENT = 14;
+    private const int GUARDIAN = 14;
 
     private const int RELATION = 15;
 
@@ -112,7 +112,7 @@ final class GetRegistryRowsJob extends BaseJob
         $first = $c[self::FIRST] ?? '';
         $last = $c[self::LAST] ?? '';
         $dob = $this->date($c[self::YEAR] ?? '', $c[self::MONTH] ?? '', $c[self::DAY] ?? '');
-        [$parentFirst, $parentLast] = $this->splitName($c[self::PARENT] ?? '');
+        [$guardianFirst, $guardianLast] = $this->splitName($c[self::GUARDIAN] ?? '');
         $status = mb_strtoupper($c[self::STATUS] ?? '');
 
         return new RegistryRowData(
@@ -129,8 +129,8 @@ final class GetRegistryRowsJob extends BaseJob
             parentNotes: self::blank($c[self::NOTES] ?? ''),
             wantsFbGroup: self::yes($c[self::FB_GROUP] ?? ''),
             fbAccount: self::blank($c[self::FB_ACCOUNT] ?? ''),
-            parentFirstName: $parentFirst,
-            parentLastName: $parentLast,
+            guardianFirstName: $guardianFirst,
+            guardianLastName: $guardianLast,
             relationship: $this->relationship($c[self::RELATION] ?? ''),
             phone: self::blank($c[self::PHONE] ?? ''),
             phoneKey: substr((string) preg_replace('/\D+/', '', $c[self::PHONE] ?? ''), -9),

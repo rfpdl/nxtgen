@@ -15,15 +15,15 @@ use App\Foundation\Jobs\BaseJob;
 final class GetFamilyByIdJob extends BaseJob
 {
     public function __construct(
-        private readonly int $organizationId,
+        private readonly int $churchId,
         private readonly int $id,
     ) {}
 
     public function handle(): Family
     {
         return Family::query()
-            ->with(['primaryGuardian.user', 'homeBranch', 'guardians', 'children.group', 'organization'])
-            ->where('organization_id', $this->organizationId)
+            ->with(['primaryGuardian.user', 'homeSatellite', 'guardians', 'children.group', 'church'])
+            ->where('church_id', $this->churchId)
             ->findOrFail($this->id);
     }
 }

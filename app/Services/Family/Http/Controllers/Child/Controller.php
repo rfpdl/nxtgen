@@ -18,22 +18,22 @@ final class Controller extends \Lucid\Units\Controller
         return $this->serve(AddChildFeature::class);
     }
 
-    public function update(string $organization, int $child): RedirectResponse
+    public function update(string $church, int $child): RedirectResponse
     {
         return $this->serve(UpdateChildFeature::class, ['childId' => $child]);
     }
 
-    public function addPhoto(string $organization, int $child): RedirectResponse
+    public function addPhoto(string $church, int $child): RedirectResponse
     {
         return $this->serve(AddChildPhotoFeature::class, ['childId' => $child]);
     }
 
-    public function givePhotoConsent(string $organization, int $child): RedirectResponse
+    public function givePhotoConsent(string $church, int $child): RedirectResponse
     {
         return $this->serve(GivePhotoConsentFeature::class, ['childId' => $child]);
     }
 
-    public function withdrawPhotoConsent(string $organization, int $child): RedirectResponse
+    public function withdrawPhotoConsent(string $church, int $child): RedirectResponse
     {
         return $this->serve(WithdrawPhotoConsentFeature::class, ['childId' => $child]);
     }

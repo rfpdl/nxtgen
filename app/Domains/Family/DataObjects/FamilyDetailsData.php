@@ -16,7 +16,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 final class FamilyDetailsData extends Data
 {
     public function __construct(
-        public int $homeBranchId,
+        public int $homeSatelliteId,
         public ?string $areaText,
         public ?string $fbAccount,
         public bool $wantsFbGroup,
@@ -32,7 +32,7 @@ final class FamilyDetailsData extends Data
     public static function fromModel(Family $family): self
     {
         return new self(
-            homeBranchId: $family->home_branch_id,
+            homeSatelliteId: $family->home_satellite_id,
             areaText: $family->area_text,
             fbAccount: $family->fb_account,
             wantsFbGroup: $family->wants_fb_group,

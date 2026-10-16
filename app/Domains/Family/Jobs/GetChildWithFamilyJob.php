@@ -19,6 +19,6 @@ final class GetChildWithFamilyJob extends BaseJob
 
     public function handle(): ?Child
     {
-        return Child::query()->with(['family.organization'])->find($this->childId);
+        return Child::query()->with(['family.church'])->find($this->childId);
     }
 }

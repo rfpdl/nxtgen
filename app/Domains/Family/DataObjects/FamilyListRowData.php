@@ -34,7 +34,7 @@ final class FamilyListRowData extends Data
             primaryName: $family->contactName(),
             email: $fullEmail ? $email : EmailMask::mask($email),
             emailConfirmed: $family->contactEmailConfirmed(),
-            satellite: $family->homeBranch->name,
+            satellite: $family->homeSatellite->name,
             children: array_values($family->children->map(fn ($c): string => $c->nickname)->all()),
             registeredBy: $family->registration_source->label(),
             registeredOn: $family->created_at?->toDateString() ?? '',

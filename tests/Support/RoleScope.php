@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Support;
 
-use App\Data\Models\Organization;
+use App\Data\Models\Church;
 use App\Enums\ScopeTypeEnum;
 
 /**
@@ -14,7 +14,7 @@ use App\Enums\ScopeTypeEnum;
 final readonly class RoleScope
 {
     public function __construct(
-        public Organization $church,
+        public Church $church,
         public ScopeTypeEnum $type,
         public int $id,
     ) {}

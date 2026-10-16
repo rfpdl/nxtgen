@@ -92,12 +92,12 @@ test('register for a parent, resend, correct the email, set a status', async ({
     await expect(page.getByTestId('family-child').filter({ hasText: 'Carlitos' })).toBeVisible()
 
     // The parent, on their own phone, confirms from the corrected address and sees their family.
-    const parent = await browser.newContext({ storageState: { cookies: [], origins: [] } })
-    const parentPage = await parent.newPage()
-    await openEmailedLink(parentPage, real, beforeReal)
-    await expect(parentPage).toHaveURL(new RegExp(`/${CHURCH}/family`))
-    await expect(parentPage.getByTestId('family-child')).toContainText('Carlitos')
-    await parent.close()
+    const guardianContext = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+    const guardianPage = await guardianContext.newPage()
+    await openEmailedLink(guardianPage, real, beforeReal)
+    await expect(guardianPage).toHaveURL(new RegExp(`/${CHURCH}/family`))
+    await expect(guardianPage.getByTestId('family-child')).toContainText('Carlitos')
+    await guardianContext.close()
 })
 
 test('downloads the families list as Excel — what the filters show', async ({ page }) => {

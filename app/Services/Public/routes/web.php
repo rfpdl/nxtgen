@@ -17,6 +17,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [WelcomeController::class, 'show'])->name('public.welcome');
 
 // The church's registration link and QR code. Throttled per IP (security list #7).
-Route::get('/{organization:slug}/register', [RegistrationController::class, 'show'])->name('public.register');
-Route::post('/{organization:slug}/register', [RegistrationController::class, 'store'])->middleware('throttle:per-device')->name('public.register.store');
-Route::get('/{organization:slug}/register/thanks', [RegistrationController::class, 'thanks'])->name('public.register.thanks');
+Route::get('/{church:slug}/register', [RegistrationController::class, 'show'])->name('public.register');
+Route::post('/{church:slug}/register', [RegistrationController::class, 'store'])->middleware('throttle:per-device')->name('public.register.store');
+Route::get('/{church:slug}/register/thanks', [RegistrationController::class, 'thanks'])->name('public.register.thanks');

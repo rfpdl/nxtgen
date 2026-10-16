@@ -10,14 +10,14 @@ use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Church-wide "is this family already registered?" (plan §7.2): parent name, email, phone digits, or a
- * child's name/nickname. Org-wide on purpose — same umbrella — and the caller only gets a lite projection.
+ * child's name/nickname. Church-wide on purpose — same umbrella — and the caller only gets a lite projection.
  *
  * @extends BaseJob<Collection<int, Family>>
  */
 final class SearchFamiliesJob extends BaseJob
 {
     public function __construct(
-        private readonly int $organizationId,
+        private readonly int $churchId,
         private readonly string $query,
     ) {}
 
@@ -29,8 +29,8 @@ final class SearchFamiliesJob extends BaseJob
         }
 
         return Family::query()
-            ->with(['primaryGuardian.user', 'homeBranch', 'children'])
-            ->where('organization_id', $this->organizationId)
+            ->with(['primaryGuardian.user', 'homeSatellite', 'children'])
+            ->where('church_id', $this->churchId)
             ->matching($this->query)
             ->limit(20)
             ->get();

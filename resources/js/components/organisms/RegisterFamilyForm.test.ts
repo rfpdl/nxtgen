@@ -50,7 +50,7 @@ describe('RegisterFamilyForm', () => {
 
     it('lists the church satellites to choose from', () => {
         const options = mount(RegisterFamilyForm, { props }).findAll(
-            '[data-testid="home-branch"] option',
+            '[data-testid="home-satellite"] option',
         )
 
         expect(options.map((o) => o.text())).toEqual(['Choose…', 'CCF DXB', 'House Church'])

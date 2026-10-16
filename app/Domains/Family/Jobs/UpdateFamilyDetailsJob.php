@@ -26,7 +26,7 @@ final class UpdateFamilyDetailsJob extends BaseJob
         $d = $this->details;
 
         $this->family->update([
-            'home_branch_id' => $d->homeBranchId,
+            'home_satellite_id' => $d->homeSatelliteId,
             'area_text' => self::clean($d->areaText),
             'fb_account' => self::clean($d->fbAccount),
             'wants_fb_group' => $d->wantsFbGroup,

@@ -23,13 +23,13 @@ it('seeds exactly what the browser journeys expect', function (): void {
         expect(User::query()->where('email', $email)->firstOrFail()->roleAssignments()->where('is_active', true)->exists())->toBeTrue();
     }
 
-    $families = Family::query()->with(['primaryGuardian.user', 'homeBranch', 'children'])->get();
+    $families = Family::query()->with(['primaryGuardian.user', 'homeSatellite', 'children'])->get();
     expect($families)->toHaveCount(2);
 
     foreach ($families as $family) {
-        expect($world)->toContain("parent: '{$family->contactName()}'")
+        expect($world)->toContain("guardian: '{$family->contactName()}'")
             ->and($world)->toContain("email: '{$family->contactEmail()}'")
-            ->and($world)->toContain("satellite: '{$family->homeBranch->name}'")
+            ->and($world)->toContain("satellite: '{$family->homeSatellite->name}'")
             ->and($world)->toContain("child: '{$family->children->first()?->nickname}'");
     }
 

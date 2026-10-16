@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use App\Data\Models\Branch;
 use App\Data\Models\Child;
+use App\Data\Models\Church;
 use App\Data\Models\Family;
 use App\Data\Models\Guardian;
-use App\Data\Models\Organization;
+use App\Data\Models\Satellite;
 use App\Data\Models\User;
 use App\Enums\ChildStatusEnum;
 use Inertia\Testing\AssertableInertia;
@@ -20,26 +20,26 @@ use function Tests\Support\familyEdit;
 use function Tests\Support\guardianOf;
 use function Tests\Support\satelliteOf;
 
-/** @return array{0: Organization, 1: Family, 2: User} */
-function familyWithParent(string $slug = 'ccf'): array
+/** @return array{0: Church, 1: Family, 2: User} */
+function familyWithGuardian(string $slug = 'ccf'): array
 {
-    $org = church(['slug' => $slug]);
-    $branch = satelliteOf($org, ['name' => 'Holy Trinity Church']);
-    $family = familyAt($branch, ['area_text' => 'Al Barsha']);
+    $church = church(['slug' => $slug]);
+    $satellite = satelliteOf($church, ['name' => 'Holy Trinity Church']);
+    $family = familyAt($satellite, ['area_text' => 'Al Barsha']);
     $user = User::factory()->create();
     $guardian = guardianOf($family, $user, ['first_name' => 'Janice']);
 
-    return [$org, $family, $user];
+    return [$church, $family, $user];
 }
 
 it('sends a guest to sign in', function (): void {
-    familyWithParent();
+    familyWithGuardian();
 
     get('/ccf/family')->assertRedirect('/login');
 });
 
 it('shows a parent their own family, satellite and children with health details', function (): void {
-    [, $family, $user] = familyWithParent();
+    [, $family, $user] = familyWithGuardian();
     childOf($family, ['nickname' => 'Amara', 'allergies' => 'Peanuts']);
 
     actingAs($user)->get('/ccf/family')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
@@ -52,20 +52,20 @@ it('shows a parent their own family, satellite and children with health details'
 });
 
 it('404s for someone signed in without a family in this church', function (): void {
-    familyWithParent();
+    familyWithGuardian();
 
     actingAs(User::factory()->create())->get('/ccf/family')->assertNotFound();
 });
 
 it('does not show one church\'s family page to a parent of another church', function (): void {
-    familyWithParent('ccf');
-    [, , $otherParent] = familyWithParent('other');
+    familyWithGuardian('ccf');
+    [, , $otherGuardian] = familyWithGuardian('other');
 
-    actingAs($otherParent)->get('/ccf/family')->assertNotFound();
+    actingAs($otherGuardian)->get('/ccf/family')->assertNotFound();
 });
 
 it('lets a parent add a child, with a suggested group', function (): void {
-    [, $family, $user] = familyWithParent();
+    [, $family, $user] = familyWithGuardian();
 
     actingAs($user)->post('/ccf/family/children', [
         'first_name' => 'Aaron', 'middle_name' => null, 'last_name' => 'Ramos', 'nickname' => 'Aaron',
@@ -76,14 +76,14 @@ it('lets a parent add a child, with a suggested group', function (): void {
 });
 
 it('validates a new child in plain words', function (): void {
-    [, , $user] = familyWithParent();
+    [, , $user] = familyWithGuardian();
 
     actingAs($user)->post('/ccf/family/children', ['first_name' => ''])
         ->assertSessionHasErrors(['first_name' => 'Please enter the first name.', 'gender' => 'Please choose boy or girl.', 'date_of_birth' => 'Please enter the birthday.']);
 });
 
 it('lets a parent edit their own child, but not the status or group', function (): void {
-    [, $family, $user] = familyWithParent();
+    [, $family, $user] = familyWithGuardian();
     $child = childOf($family, ['allergies' => null]);
 
     actingAs($user)->put("/ccf/family/children/{$child->id}", [
@@ -101,7 +101,7 @@ it('lets a parent edit their own child, but not the status or group', function (
 });
 
 it('refuses to edit a child from another family', function (): void {
-    [, , $user] = familyWithParent();
+    [, , $user] = familyWithGuardian();
     $stranger = Child::factory()->create();
 
     actingAs($user)->put("/ccf/family/children/{$stranger->id}", [
@@ -117,13 +117,13 @@ it('refuses to edit a child from another family', function (): void {
  */
 
 it('gives the page what the edit forms need, and every health detail', function (): void {
-    [, $family, $user] = familyWithParent();
+    [, $family, $user] = familyWithGuardian();
     childOf($family, ['nickname' => 'Amara',
         'allergies' => 'Peanuts', 'illnesses' => 'Asthma', 'dislikes' => 'Loud music', 'fears' => 'The dark', 'parent_notes' => 'Shy at first',
     ]);
 
     actingAs($user)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p
-        ->where('details.homeBranchId', $family->home_branch_id)
+        ->where('details.homeSatelliteId', $family->home_satellite_id)
         ->where('details.areaText', 'Al Barsha')
         ->where('me.firstName', 'Janice')
         ->has('satellites', 1)
@@ -135,14 +135,14 @@ it('gives the page what the edit forms need, and every health detail', function 
 });
 
 it('lets a parent edit their family details and their own details', function (): void {
-    [$org, $family, $user] = familyWithParent();
-    $other = satelliteOf($org, ['name' => 'House Church']);
+    [$church, $family, $user] = familyWithGuardian();
+    $other = satelliteOf($church, ['name' => 'House Church']);
 
     actingAs($user)->put('/ccf/family', familyEdit($other))->assertRedirect('/ccf/family')->assertSessionHas('success');
 
     $family->refresh();
     $guardian = Guardian::query()->where('user_id', $user->id)->sole();
-    expect($family->home_branch_id)->toBe($other->id)
+    expect($family->home_satellite_id)->toBe($other->id)
         ->and($family->area_text)->toBe('Deira')
         ->and($family->dgroup_leader_phone)->toBe('0501231234')
         ->and($family->lifestage)->toBe('Married with kids')
@@ -154,22 +154,22 @@ it('lets a parent edit their family details and their own details', function ():
 });
 
 it('refuses a satellite from another church', function (): void {
-    [, , $user] = familyWithParent();
-    $foreign = Branch::factory()->create();
+    [, , $user] = familyWithGuardian();
+    $foreign = Satellite::factory()->create();
 
-    actingAs($user)->put('/ccf/family', familyEdit($foreign))->assertSessionHasErrors('home_branch_id');
+    actingAs($user)->put('/ccf/family', familyEdit($foreign))->assertSessionHasErrors('home_satellite_id');
 });
 
 it('needs the parent\'s name and phone', function (): void {
-    [$org, , $user] = familyWithParent();
-    $branch = Branch::query()->where('organization_id', $org->id)->firstOrFail();
+    [$church, , $user] = familyWithGuardian();
+    $satellite = Satellite::query()->where('church_id', $church->id)->firstOrFail();
 
-    actingAs($user)->put('/ccf/family', familyEdit($branch, ['guardian' => ['first_name' => '', 'phone' => '']]))
+    actingAs($user)->put('/ccf/family', familyEdit($satellite, ['guardian' => ['first_name' => '', 'phone' => '']]))
         ->assertSessionHasErrors(['guardian.first_name', 'guardian.phone']);
 });
 
 it('lets a parent fix a child\'s details but never the status or group', function (): void {
-    [, $family, $user] = familyWithParent();
+    [, $family, $user] = familyWithGuardian();
     $child = childOf($family, ['status' => ChildStatusEnum::Active]);
 
     actingAs($user)->put("/ccf/family/children/{$child->id}", [
@@ -183,12 +183,12 @@ it('lets a parent fix a child\'s details but never the status or group', functio
 });
 
 it('does not let a parent edit another family', function (): void {
-    [$org, , $user] = familyWithParent();
-    $branch = Branch::query()->where('organization_id', $org->id)->firstOrFail();
-    $otherFamily = familyAt($branch, ['area_text' => 'Untouched']);
+    [$church, , $user] = familyWithGuardian();
+    $satellite = Satellite::query()->where('church_id', $church->id)->firstOrFail();
+    $otherFamily = familyAt($satellite, ['area_text' => 'Untouched']);
 
     // The family page edits only the signed-in parent's own family; there is no family id to point elsewhere.
-    actingAs($user)->put('/ccf/family', familyEdit($branch))->assertRedirect();
+    actingAs($user)->put('/ccf/family', familyEdit($satellite))->assertRedirect();
 
     expect($otherFamily->fresh()?->area_text)->toBe('Untouched');
 });

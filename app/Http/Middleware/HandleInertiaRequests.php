@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Data\Models\User;
-use App\Domains\Organization\Jobs\GetLandingOptionsJob;
+use App\Domains\Church\Jobs\GetLandingOptionsJob;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 

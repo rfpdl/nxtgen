@@ -18,7 +18,7 @@ import { AlertTriangle, Check, X } from 'lucide-vue-next'
  * **`role="alert"` only for errors.** On a success it would interrupt a screen reader mid-name for
  * information the list is already carrying; `aria-live="polite"` waits its turn.
  *
- * Dismissible because it covers the heading while it is up, and a volunteer who has read it should be
+ * Dismissible because it covers the heading while it is up, and a staff member who has read it should be
  * able to put it away rather than scroll around it.
  */
 const { message } = defineProps<{ message: FlashMessage | null }>()

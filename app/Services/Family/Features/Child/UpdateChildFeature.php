@@ -24,6 +24,6 @@ final class UpdateChildFeature extends BaseFamilyFeature
         $child = $this->run(new GetFamilyChildJob(family: $family, childId: $this->childId));
         $this->run(new UpdateChildDetailsJob(child: $child, details: $input->toDetails()));
 
-        return redirect()->route('family.show', $family->organization)->with('success', "{$child->displayName()}'s details are saved.");
+        return redirect()->route('family.show', $family->church)->with('success', "{$child->displayName()}'s details are saved.");
     }
 }

@@ -10,10 +10,10 @@ test.use({ storageState: sessionFile('houseAdmin') })
 test('a satellite admin sees only their own satellite', async ({ page, browser }) => {
     await page.goto(`/${CHURCH}/families`)
     await expect(
-        page.getByTestId('family-row').filter({ hasText: FAMILIES.house.parent }),
+        page.getByTestId('family-row').filter({ hasText: FAMILIES.house.guardian }),
     ).toBeVisible()
     await expect(
-        page.getByTestId('family-row').filter({ hasText: FAMILIES.dxb.parent }),
+        page.getByTestId('family-row').filter({ hasText: FAMILIES.dxb.guardian }),
     ).toHaveCount(0)
 
     // The church admin can see the DXB family's address; the satellite admin typing it gets nothing.
@@ -22,7 +22,7 @@ test('a satellite admin sees only their own satellite', async ({ page, browser }
     await adminPage.goto(`/${CHURCH}/families`)
     const href = await adminPage
         .getByTestId('family-row')
-        .filter({ hasText: FAMILIES.dxb.parent })
+        .filter({ hasText: FAMILIES.dxb.guardian })
         .getByRole('link')
         .getAttribute('href')
     await admin.close()
@@ -45,7 +45,7 @@ test('a Lifeshaper can see a family but gets no edit forms', async ({ browser })
     await page.goto(`/${CHURCH}/families`)
     await page
         .getByTestId('family-row')
-        .filter({ hasText: FAMILIES.dxb.parent })
+        .filter({ hasText: FAMILIES.dxb.guardian })
         .getByRole('link')
         .click()
 

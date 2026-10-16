@@ -7,7 +7,7 @@ import FormField from '@/components/atoms/FormField.vue'
  * IN PLACE on the shared form object.
  */
 export type FamilyFields = {
-    home_branch_id: number | ''
+    home_satellite_id: number | ''
     area_text: string
     fb_account: string
     wants_fb_group: boolean
@@ -31,8 +31,8 @@ const check = 'min-h-touch text-text flex items-center gap-3 text-lg'
 </script>
 
 <template>
-    <FormField label="Satellite you usually attend" required :error="errors['home_branch_id']">
-        <select v-model="family.home_branch_id" :class="input" data-testid="home-branch">
+    <FormField label="Satellite you usually attend" required :error="errors['home_satellite_id']">
+        <select v-model="family.home_satellite_id" :class="input" data-testid="home-satellite">
             <option value="">Choose…</option>
             <option v-for="s in satellites" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>

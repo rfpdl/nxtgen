@@ -21,7 +21,7 @@ const props = defineProps<{
 const open = ref(false)
 
 const form = useForm<FamilyFields & { notes: string; guardian: GuardianFields }>({
-    home_branch_id: props.details.homeBranchId,
+    home_satellite_id: props.details.homeSatelliteId,
     area_text: props.details.areaText ?? '',
     fb_account: props.details.fbAccount ?? '',
     wants_fb_group: props.details.wantsFbGroup,

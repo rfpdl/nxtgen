@@ -14,7 +14,7 @@ final readonly class FamilyListFiltersData
 {
     public function __construct(
         public ?string $query = null,
-        public ?int $branchId = null,
+        public ?int $satelliteId = null,
         public ?ChildStatusEnum $status = null,
         public ?int $groupId = null,
         public bool $unconfirmedOnly = false,

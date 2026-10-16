@@ -130,7 +130,7 @@ describe('useFlashMessages', () => {
     })
 
     it('shows the next message after one was dismissed', async () => {
-        // Dismissal is about the message on screen, not about the channel. A volunteer who put one
+        // Dismissal is about the message on screen, not about the channel. A staff member who put one
         // away must still get the next one.
         const flash = harness()
 

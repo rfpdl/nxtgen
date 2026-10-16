@@ -2,12 +2,12 @@ import { expect, test } from '@playwright/test'
 import { CHURCH, STAFF, sessionFile } from '../support/world'
 
 /*
- * The staff backup password (plan D7): a volunteer sets one from the menu, then — the morning the email is
+ * The staff backup password (plan D7): a staff member sets one from the menu, then — the morning the email is
  * slow — signs in with it on another device. A wrong one gets the same plain answer as any failure.
  */
 test.use({ storageState: sessionFile('lifeshaper') })
 
-test('a volunteer sets a backup password and signs in with it', async ({ page, browser }) => {
+test('a staff member sets a backup password and signs in with it', async ({ page, browser }) => {
     const password = `church-morning-${Date.now()}`
 
     await page.goto(`/${CHURCH}/families`)

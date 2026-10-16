@@ -36,7 +36,7 @@ test('an admin reviews a possible duplicate', async ({ page }) => {
     await page.getByRole('link', { name: 'Duplicates' }).click()
     const pair = page.getByTestId('duplicate-pair').filter({ hasText: `Maria ${surname}` })
     await expect(pair).toContainText('Same phone')
-    await expect(pair).toContainText(FAMILIES.dxb.parent)
+    await expect(pair).toContainText(FAMILIES.dxb.guardian)
     // Side by side in the limited view: masked emails only.
     await expect(pair).not.toContainText(FAMILIES.dxb.email)
 
@@ -54,6 +54,6 @@ test('an admin reviews a possible duplicate', async ({ page }) => {
         .getByRole('link')
         .click()
     await expect(page.getByTestId('history')).toContainText(
-        `Possible duplicate of ${FAMILIES.dxb.parent} (same phone): not the same family`,
+        `Possible duplicate of ${FAMILIES.dxb.guardian} (same phone): not the same family`,
     )
 })

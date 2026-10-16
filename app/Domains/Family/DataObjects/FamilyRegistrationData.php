@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domains\Family\DataObjects;
 
-use App\Data\Models\Branch;
-use App\Data\Models\Organization;
+use App\Data\Models\Church;
+use App\Data\Models\Satellite;
 use App\Data\Models\User;
 use App\Enums\RegistrationSourceEnum;
 
@@ -14,8 +14,8 @@ final readonly class FamilyRegistrationData
 {
     /** @param list<ChildDetailsData> $children */
     public function __construct(
-        public Organization $organization,
-        public Branch $homeBranch,
+        public Church $church,
+        public Satellite $homeSatellite,
         public GuardianDetailsData $primary,
         public array $children,
         public ?string $areaText,

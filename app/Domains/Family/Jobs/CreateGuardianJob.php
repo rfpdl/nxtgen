@@ -29,7 +29,7 @@ final class CreateGuardianJob extends BaseJob
         $phone = trim((string) $this->details->phone);
 
         return Guardian::query()->create([
-            'organization_id' => $this->family->organization_id,
+            'church_id' => $this->family->church_id,
             'family_id' => $this->family->id,
             'user_id' => $this->user?->id,
             'relationship' => $this->details->relationship,

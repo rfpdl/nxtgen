@@ -22,15 +22,15 @@ use function Tests\Support\satelliteOf;
 
 /*
  * Staff password backup (plan D7: "magic link + optional password for staff; magic link only for parents").
- * For the morning the email is slow at church: a volunteer who set a password can still get in. It works only
+ * For the morning the email is slow at church: a staff member who set a password can still get in. It works only
  * while they serve somewhere; a parent never signs in with a password.
  */
 
 function servingUser(?string $password = null): User
 {
-    $org = church();
+    $church = church();
     $user = User::factory()->create(['email' => 'leo@example.com', 'password' => $password]);
-    grantRole($user, RoleEnum::Lifeshaper, atChurch($org));
+    grantRole($user, RoleEnum::Lifeshaper, atChurch($church));
 
     return $user;
 }
@@ -55,13 +55,13 @@ describe('setting a backup password', function (): void {
     });
 
     it('is not there for a parent', function (): void {
-        $org = church();
-        $family = familyAt(satelliteOf($org));
-        $parent = User::factory()->create();
-        guardianOf($family, $parent);
+        $church = church();
+        $family = familyAt(satelliteOf($church));
+        $guardian = User::factory()->create();
+        guardianOf($family, $guardian);
 
-        actingAs($parent)->get('/account/password')->assertNotFound();
-        actingAs($parent)->put('/account/password', ['password' => 'a-long-passphrase', 'password_confirmation' => 'a-long-passphrase'])->assertNotFound();
+        actingAs($guardian)->get('/account/password')->assertNotFound();
+        actingAs($guardian)->put('/account/password', ['password' => 'a-long-passphrase', 'password_confirmation' => 'a-long-passphrase'])->assertNotFound();
     });
 });
 
@@ -95,10 +95,10 @@ describe('signing in with it', function (): void {
     });
 
     it('never signs in a parent with a password, even one that has one', function (): void {
-        $org = church();
-        $family = familyAt(satelliteOf($org));
-        $parent = User::factory()->create(['email' => 'pia@example.com', 'password' => 'a-long-passphrase']);
-        guardianOf($family, $parent);
+        $church = church();
+        $family = familyAt(satelliteOf($church));
+        $guardian = User::factory()->create(['email' => 'pia@example.com', 'password' => 'a-long-passphrase']);
+        guardianOf($family, $guardian);
 
         post('/login/password', ['email' => 'pia@example.com', 'password' => 'a-long-passphrase'])->assertSessionHasErrors('email');
         assertGuest();

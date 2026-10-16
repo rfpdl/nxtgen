@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Public\Http\Controllers\Registration;
 
-use App\Data\Models\Organization;
+use App\Data\Models\Church;
 use App\Services\Public\Features\Registration\RegisterFamilyFeature;
 use App\Services\Public\Features\Registration\ShowRegisterFeature;
 use App\Services\Public\Features\Registration\ShowRegisterThanksFeature;
@@ -13,18 +13,18 @@ use Inertia\Response;
 
 final class Controller extends \Lucid\Units\Controller
 {
-    public function show(Organization $organization): Response
+    public function show(Church $church): Response
     {
-        return $this->serve(ShowRegisterFeature::class, ['organization' => $organization]);
+        return $this->serve(ShowRegisterFeature::class, ['church' => $church]);
     }
 
-    public function store(Organization $organization): RedirectResponse
+    public function store(Church $church): RedirectResponse
     {
-        return $this->serve(RegisterFamilyFeature::class, ['organization' => $organization]);
+        return $this->serve(RegisterFamilyFeature::class, ['church' => $church]);
     }
 
-    public function thanks(Organization $organization): Response
+    public function thanks(Church $church): Response
     {
-        return $this->serve(ShowRegisterThanksFeature::class, ['organization' => $organization]);
+        return $this->serve(ShowRegisterThanksFeature::class, ['church' => $church]);
     }
 }

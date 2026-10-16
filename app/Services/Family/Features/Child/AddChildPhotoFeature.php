@@ -30,16 +30,16 @@ final class AddChildPhotoFeature extends BaseFamilyFeature
     public function handle(ChildPhotoInput $input): RedirectResponse
     {
         $child = $this->run(new GetFamilyChildJob(family: $this->family(), childId: $this->childId));
-        $parent = request()->user();
-        abort_unless($parent instanceof User, 404);
+        $guardian = request()->user();
+        abort_unless($guardian instanceof User, 404);
 
         if ($child->photo_consent_at === null && ! $input->consent) {
             throw ValidationException::withMessages(['consent' => 'Please agree to the photo first.']);
         }
 
-        $kept = DB::transaction(function () use ($child, $parent, $input): bool {
+        $kept = DB::transaction(function () use ($child, $guardian, $input): bool {
             if ($child->photo_consent_at === null) {
-                $this->run(new UpdateChildPhotoConsentJob(child: $child, given: true, by: $parent));
+                $this->run(new UpdateChildPhotoConsentJob(child: $child, given: true, by: $guardian));
             }
 
             return $this->run(new CreateChildPhotoJob(child: $child, file: $input->photo));

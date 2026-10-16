@@ -26,7 +26,7 @@ enum RegistrationOutcomeEnum: string
      * already belongs to an account or to a family in this church (Codex diff review: membership oracle). The
      * specific next step (confirm, sign in, connect) arrives only in the email, to the inbox owner.
      */
-    public function parentMessage(): string
+    public function guardianMessage(): string
     {
         return 'Thank you! Please check your email to finish. If nothing arrives in a few minutes, check your spam folder or ask a Lifeshaper at church.';
     }

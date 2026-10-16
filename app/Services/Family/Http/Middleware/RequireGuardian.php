@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services\Family\Http\Middleware;
 
+use App\Data\Models\Church;
 use App\Data\Models\Guardian;
-use App\Data\Models\Organization;
 use App\Data\Models\User;
-use App\Foundation\Support\RouteOrganization;
+use App\Foundation\Support\RouteChurch;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,14 +22,14 @@ final class RequireGuardian
     /** @param Closure(Request): Response $next */
     public function handle(Request $request, Closure $next): Response
     {
-        $organization = RouteOrganization::from($request);
+        $church = RouteChurch::from($request);
         $user = $request->user();
 
-        abort_unless($organization instanceof Organization && $user instanceof User, 404);
+        abort_unless($church instanceof Church && $user instanceof User, 404);
 
         $guardian = Guardian::query()
-            ->with('family.organization')
-            ->where('organization_id', $organization->id)
+            ->with('family.church')
+            ->where('church_id', $church->id)
             ->where('user_id', $user->id)
             ->first();
 

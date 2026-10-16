@@ -1,5 +1,35 @@
 declare namespace App {
     namespace Domains {
+        namespace Church {
+            namespace DataObjects {
+                export type GrantOptionData = {
+                    label: string
+                    role: App.Enums.RoleEnum
+                    scopeType: App.Enums.ScopeTypeEnum
+                    scopeId: number
+                }
+                export type LandingOptionData = {
+                    churchName: string
+                    label: string
+                    url: string
+                }
+                export type SatelliteOptionData = {
+                    id: number
+                    name: string
+                }
+                export type StaffMemberData = {
+                    id: number
+                    name: string
+                    email: string
+                    roles: App.Domains.Church.DataObjects.StaffRoleData[]
+                }
+                export type StaffRoleData = {
+                    id: number
+                    label: string
+                    canRemove: boolean
+                }
+            }
+        }
         namespace Family {
             namespace DataObjects {
                 export type ChildListRowData = {
@@ -51,7 +81,7 @@ declare namespace App {
                     canEdit: boolean
                 }
                 export type FamilyDetailsData = {
-                    homeBranchId: number
+                    homeSatelliteId: number
                     areaText: string | null
                     fbAccount: string | null
                     wantsFbGroup: boolean
@@ -117,36 +147,6 @@ declare namespace App {
                 }
             }
         }
-        namespace Organization {
-            namespace DataObjects {
-                export type BranchOptionData = {
-                    id: number
-                    name: string
-                }
-                export type GrantOptionData = {
-                    label: string
-                    role: App.Enums.RoleEnum
-                    scopeType: App.Enums.ScopeTypeEnum
-                    scopeId: number
-                }
-                export type LandingOptionData = {
-                    churchName: string
-                    label: string
-                    url: string
-                }
-                export type StaffMemberData = {
-                    id: number
-                    name: string
-                    email: string
-                    roles: App.Domains.Organization.DataObjects.StaffRoleData[]
-                }
-                export type StaffRoleData = {
-                    id: number
-                    label: string
-                    canRemove: boolean
-                }
-            }
-        }
     }
     namespace Enums {
         export type AccessRowEnum =
@@ -180,6 +180,6 @@ declare namespace App {
         export type RelationshipEnum =
             'mother' | 'father' | 'guardian' | 'grandparent' | 'aunt_uncle' | 'sibling' | 'other'
         export type RoleEnum = 'admin' | 'lifeshaper'
-        export type ScopeTypeEnum = 'organization' | 'branch' | 'event_series'
+        export type ScopeTypeEnum = 'church' | 'satellite' | 'event_series'
     }
 }

@@ -15,8 +15,8 @@ use function Tests\Architecture\stripComments;
  * test proves the paths that exist are scoped; only a guard stops the next one being added unscoped. It is a
  * guardrail, not proof — authorization is proven by the Feature tests per access-matrix row.
  *
- * A statement passes when it names `organization_id`, or `family_id`: a family belongs to exactly one church
- * (`families.organization_id` is NOT NULL), so a statement scoped to one family is scoped to its church.
+ * A statement passes when it names `church_id`, or `family_id`: a family belongs to exactly one church
+ * (`families.church_id` is NOT NULL), so a statement scoped to one family is scoped to its church.
  */
 
 /**
@@ -26,7 +26,7 @@ use function Tests\Architecture\stripComments;
  */
 function tenantModels(): array
 {
-    return ['Family', 'Guardian', 'Child', 'Note', 'DuplicateCandidate', 'RoleAssignment', 'Branch', 'Group', 'FamilyClaim', 'RegistryImportMapping'];
+    return ['Family', 'Guardian', 'Child', 'Note', 'DuplicateCandidate', 'RoleAssignment', 'Satellite', 'Group', 'FamilyClaim', 'RegistryImportMapping'];
 }
 
 /**
@@ -56,7 +56,7 @@ function crossChurchOnPurpose(): array
 function modelHelpersScopedInside(): array
 {
     return [
-        'Note::system' => 'Writes the note with the church of the record it is about ($about->organization_id) — Note.php\'s self::query() is checked below.',
+        'Note::system' => 'Writes the note with the church of the record it is about ($about->church_id) — Note.php\'s self::query() is checked below.',
     ];
 }
 
@@ -177,8 +177,8 @@ function tenantStatements(): array
  * Proven by removal: deleting GetFamiliesJob's church filter fails this test.
  *
  * A QUALIFIED column counts only when the qualifier is the tenant table this query reached, or its alias:
- * `Child::query()->where('families.organization_id', …)` with no join to `families` scopes nothing, and a
- * join onto `guardians` is scoped by `guardians.organization_id`, not by some other table's. An unqualified
+ * `Child::query()->where('families.church_id', …)` with no join to `families` scopes nothing, and a
+ * join onto `guardians` is scoped by `guardians.church_id`, not by some other table's. An unqualified
  * column is still accepted — it is the query's own table, or a `whereHas` closure's, which is scoped by its
  * relation.
  *
@@ -188,7 +188,7 @@ function scopesToAChurch(string $statement, array $names): bool
 {
     $qualifier = '(?:(?:'.implode('|', array_map(fn (string $n): string => preg_quote($n, '/'), $names)).')\.)?';
 
-    return preg_match("/->where(In)?\\(\\s*['\"]{$qualifier}(organization_id|family_id)['\"]|['\"](organization_id|family_id)['\"]\\s*=>/", $statement) === 1;
+    return preg_match("/->where(In)?\\(\\s*['\"]{$qualifier}(church_id|family_id)['\"]|['\"](church_id|family_id)['\"]\\s*=>/", $statement) === 1;
 }
 
 it('finds the queries it is supposed to be guarding', function (): void {
@@ -224,11 +224,11 @@ it('accepts a qualified scope only on the table the query reached', function (st
 
     expect(scopesToAChurch($statement, $names))->toBe($scoped);
 })->with([
-    'unqualified' => ["Child::query()->where('organization_id', 1)", true],
-    'its own table' => ["Child::query()->where('children.organization_id', 1)", true],
-    'a joined alias' => ["User::query()->join('guardians as g', 'g.user_id', '=', 'users.id')->where('g.organization_id', 1)", true],
-    'another table, not joined' => ["Child::query()->where('families.organization_id', 1)", false],
-    'a non-tenant table' => ["User::query()->join('guardians', 'guardians.user_id', '=', 'users.id')->where('users.organization_id', 1)", false],
+    'unqualified' => ["Child::query()->where('church_id', 1)", true],
+    'its own table' => ["Child::query()->where('children.church_id', 1)", true],
+    'a joined alias' => ["User::query()->join('guardians as g', 'g.user_id', '=', 'users.id')->where('g.church_id', 1)", true],
+    'another table, not joined' => ["Child::query()->where('families.church_id', 1)", false],
+    'a non-tenant table' => ["User::query()->join('guardians', 'guardians.user_id', '=', 'users.id')->where('users.church_id', 1)", false],
     'a mere mention' => ["Child::query()->whereColumn('children.family_id', 'families.id')", false],
 ]);
 

@@ -6,13 +6,13 @@ import { ref } from 'vue'
 
 /**
  * A child's photo (Roy 2026-10-16): a parent or a Lifeshaper can take one with the phone camera or choose one —
- * once consent is recorded. The parent agrees with its own button; a volunteer can record that the parent said
+ * once consent is recorded. The parent agrees with its own button; a staff member can record that the parent said
  * yes in person (saved with their name, noted on the child). Only the parent takes consent back, which hides
  * the photo until they agree again. Choosing a file sends it straight away.
  */
 const props = defineProps<{
     child: ChildPortal
-    who: 'parent' | 'staff'
+    who: 'guardian' | 'staff'
     action: string
     consentAction?: string
     withdrawAction?: string
@@ -89,7 +89,7 @@ const button =
             </div>
         </div>
         <div
-            v-if="who === 'parent' && consentAction && !child.photoConsent"
+            v-if="who === 'guardian' && consentAction && !child.photoConsent"
             class="flex flex-col gap-2"
         >
             <p class="text-text">
@@ -130,7 +130,7 @@ const button =
                 />
             </label>
             <button
-                v-if="who === 'parent' && child.photoConsent"
+                v-if="who === 'guardian' && child.photoConsent"
                 type="button"
                 class="min-h-touch text-danger px-2 underline"
                 data-testid="withdraw-photo-consent"

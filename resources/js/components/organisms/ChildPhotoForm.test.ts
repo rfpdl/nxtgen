@@ -61,11 +61,11 @@ describe('ChildPhotoForm', () => {
         put.mockReset()
     })
 
-    it('asks a parent to agree first — saved on its own, so a volunteer can take the first photo', async () => {
+    it('asks a parent to agree first — saved on its own, so a staff member can take the first photo', async () => {
         const wrapper = mount(ChildPhotoForm, {
             props: {
                 child: child(),
-                who: 'parent',
+                who: 'guardian',
                 action: '/p',
                 consentAction: '/c',
                 withdrawAction: '/w',
@@ -82,7 +82,7 @@ describe('ChildPhotoForm', () => {
         const wrapper = mount(ChildPhotoForm, {
             props: {
                 child: child({ photoConsent: true }),
-                who: 'parent',
+                who: 'guardian',
                 action: '/p',
                 consentAction: '/c',
                 withdrawAction: '/w',
@@ -101,7 +101,7 @@ describe('ChildPhotoForm', () => {
         const wrapper = mount(ChildPhotoForm, {
             props: {
                 child: child({ photoConsent: true, photoUrl: '/x' }),
-                who: 'parent',
+                who: 'guardian',
                 action: '/p',
                 withdrawAction: '/w',
             },

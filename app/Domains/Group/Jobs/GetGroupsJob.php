@@ -15,13 +15,13 @@ use App\Foundation\Jobs\BaseJob;
  */
 final class GetGroupsJob extends BaseJob
 {
-    public function __construct(private readonly int $organizationId) {}
+    public function __construct(private readonly int $churchId) {}
 
     /** @return list<GroupOptionData> */
     public function handle(): array
     {
         return array_values(Group::query()
-            ->where('organization_id', $this->organizationId)
+            ->where('church_id', $this->churchId)
             ->where('is_active', true)
             ->orderBy('sort')
             ->get()

@@ -6,9 +6,9 @@ namespace App\Services\Auth\Features\Photo;
 
 use App\Data\Models\Child;
 use App\Data\Models\User;
+use App\Domains\Church\Jobs\GetAccessScopeJob;
 use App\Domains\Family\Jobs\GetChildWithFamilyJob;
 use App\Domains\Family\Jobs\GetGuardianForUserJob;
-use App\Domains\Organization\Jobs\GetAccessScopeJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Services\Auth\Features\BaseAuthFeature;
@@ -35,9 +35,9 @@ final class ShowChildPhotoFeature extends BaseAuthFeature
         // No consent, no photo — even one already stored (e.g. an upload that raced a withdrawal).
         abort_unless($child instanceof Child && $child->photo_path !== null && $child->photo_consent_at !== null, 404);
 
-        $church = $child->family->organization;
-        $mine = $this->run(new GetGuardianForUserJob(user: $user, organization: $church))?->family_id === $child->family_id;
-        abort_unless($mine || $this->run(new GetAccessScopeJob(user: $user, organization: $church))->canSeeFamily($child->family), 404);
+        $church = $child->family->church;
+        $mine = $this->run(new GetGuardianForUserJob(user: $user, church: $church))?->family_id === $child->family_id;
+        abort_unless($mine || $this->run(new GetAccessScopeJob(user: $user, church: $church))->canSeeFamily($child->family), 404);
 
         return Storage::disk('photos')->response($child->photo_path, null, [
             'Content-Type' => 'image/jpeg',

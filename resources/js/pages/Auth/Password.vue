@@ -5,7 +5,7 @@ import { useFlashMessages } from '@/composables/useFlashMessages'
 import { Head, Link, useForm } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
-/** A volunteer's backup password (plan D7): for when the email link is slow. The email link keeps working. */
+/** A staff member's backup password (plan D7): for when the email link is slow. The email link keeps working. */
 defineProps<{ hasPassword: boolean }>()
 
 const { message, dismiss } = useFlashMessages()

@@ -18,7 +18,7 @@ vi.mock('@inertiajs/vue3', async () => {
 describe('PasswordLoginForm', () => {
     beforeEach(() => post.mockReset())
 
-    it('stays out of the way until a volunteer asks for it — the email link comes first', async () => {
+    it('stays out of the way until a staff member asks for it — the email link comes first', async () => {
         const wrapper = mount(PasswordLoginForm, { props: { action: '/login/password' } })
         expect(wrapper.find('[data-testid="password-password"]').exists()).toBe(false)
 

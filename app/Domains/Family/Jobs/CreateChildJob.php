@@ -31,7 +31,7 @@ final class CreateChildJob extends BaseJob
         $d = $this->details;
 
         return Child::query()->create([
-            'organization_id' => $this->family->organization_id,
+            'church_id' => $this->family->church_id,
             'family_id' => $this->family->id,
             'group_id' => $this->group?->id,
             'group_set_at' => $this->group !== null ? now() : null,

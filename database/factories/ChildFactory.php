@@ -25,7 +25,7 @@ final class ChildFactory extends Factory
 
         return [
             'family_id' => Family::factory(),
-            'organization_id' => fn (array $attributes): mixed => Family::query()->whereKey(self::id($attributes['family_id']))->value('organization_id'),
+            'church_id' => fn (array $attributes): mixed => Family::query()->whereKey(self::id($attributes['family_id']))->value('church_id'),
             'first_name' => $first,
             'last_name' => fake()->lastName(),
             'nickname' => $first,

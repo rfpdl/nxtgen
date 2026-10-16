@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /** A child. Belongs to a family; the nickname is the name everyone uses.
  *
  * @property int $id
- * @property int $organization_id
+ * @property int $church_id
  * @property int $family_id
  * @property int|null $group_id
  * @property string $first_name

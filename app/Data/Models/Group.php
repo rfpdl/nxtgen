@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /** A class group by age and gender, e.g. "Level 2 Boys". Changes only at Moving-Up.
  *
  * @property int $id
- * @property int $organization_id
+ * @property int $church_id
  * @property string $name
  * @property int $sort
  * @property int $min_age
@@ -43,10 +43,10 @@ final class Group extends Model
         ];
     }
 
-    /** @return BelongsTo<Organization, $this> */
-    public function organization(): BelongsTo
+    /** @return BelongsTo<Church, $this> */
+    public function church(): BelongsTo
     {
-        return $this->belongsTo(Organization::class);
+        return $this->belongsTo(Church::class);
     }
 
     /** @return BelongsTo<Group, $this> */

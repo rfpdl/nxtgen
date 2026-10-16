@@ -51,7 +51,7 @@ final class RegisterFamilyOperation extends Operation
         $email = $r->normalisedEmail();
 
         /** @var array{0: RegistrationResultData, 1: IssuedMagicLinkData|null} $done */
-        $done = Cache::lock("register:{$r->organization->id}:{$email}", 15)
+        $done = Cache::lock("register:{$r->church->id}:{$email}", 15)
             ->block(10, fn (): array => DB::transaction(fn (): array => $this->register($email)));
 
         [$result, $issued] = $done;
@@ -59,7 +59,7 @@ final class RegisterFamilyOperation extends Operation
         if ($issued !== null) {
             $this->run(new SendMagicLinkJob(
                 issued: $issued,
-                churchName: $r->organization->name,
+                churchName: $r->church->name,
                 alreadyRegistered: $result->outcome === RegistrationOutcomeEnum::AlreadyRegistered,
             ));
         }
@@ -74,7 +74,7 @@ final class RegisterFamilyOperation extends Operation
         $user = $this->run(new GetUserByEmailJob(email: $email));
 
         if ($user instanceof User) {
-            $guardian = $this->run(new GetGuardianForUserJob(user: $user, organization: $r->organization));
+            $guardian = $this->run(new GetGuardianForUserJob(user: $user, church: $r->church));
             if ($guardian !== null) {
                 $issued = $this->link(new CreateMagicLinkJob(purpose: MagicLinkPurposeEnum::Login, email: $email, user: $user));
 
@@ -82,7 +82,7 @@ final class RegisterFamilyOperation extends Operation
             }
         }
 
-        $pending = $this->run(new GetPendingFamilyClaimJob(organization: $r->organization, email: $email));
+        $pending = $this->run(new GetPendingFamilyClaimJob(church: $r->church, email: $email));
         if ($pending !== null) {
             $issued = $this->link(new CreateMagicLinkJob(purpose: MagicLinkPurposeEnum::ClaimFamily, email: $email, claim: $pending));
 
@@ -115,7 +115,7 @@ final class RegisterFamilyOperation extends Operation
     {
         foreach ($this->registration->children as $child) {
             $group = $this->run(new GetSuggestedGroupJob(
-                organization: $this->registration->organization,
+                church: $this->registration->church,
                 gender: $child->gender,
                 dateOfBirth: $child->dateOfBirth,
             ));

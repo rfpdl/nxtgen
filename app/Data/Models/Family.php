@@ -17,8 +17,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /** A household: guardians + children. Belongs to the church; attends a home satellite.
  *
  * @property int $id
- * @property int $organization_id
- * @property int $home_branch_id
+ * @property int $church_id
+ * @property int $home_satellite_id
  * @property int|null $primary_guardian_id
  * @property string|null $area_text
  * @property string|null $fb_account
@@ -35,8 +35,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property RegistrationSourceEnum $registration_source
  * @property string|null $notes
  * @property CarbonImmutable|null $created_at
- * @property-read Organization $organization
- * @property-read Branch $homeBranch
+ * @property-read Church $church
+ * @property-read Satellite $homeSatellite
  * @property-read Guardian|null $primaryGuardian
  * @property-read Collection<int, Guardian> $guardians
  * @property-read Collection<int, Child> $children
@@ -65,16 +65,16 @@ final class Family extends Model
         ];
     }
 
-    /** @return BelongsTo<Organization, $this> */
-    public function organization(): BelongsTo
+    /** @return BelongsTo<Church, $this> */
+    public function church(): BelongsTo
     {
-        return $this->belongsTo(Organization::class);
+        return $this->belongsTo(Church::class);
     }
 
-    /** @return BelongsTo<Branch, $this> */
-    public function homeBranch(): BelongsTo
+    /** @return BelongsTo<Satellite, $this> */
+    public function homeSatellite(): BelongsTo
     {
-        return $this->belongsTo(Branch::class, 'home_branch_id');
+        return $this->belongsTo(Satellite::class, 'home_satellite_id');
     }
 
     /** @return HasMany<Guardian, $this> */

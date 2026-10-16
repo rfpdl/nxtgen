@@ -21,7 +21,7 @@ final class FamilyClaimFactory extends Factory
     {
         return [
             'family_id' => Family::factory(),
-            'organization_id' => fn (array $a): mixed => Family::query()->whereKey(self::id($a['family_id']))->value('organization_id'),
+            'church_id' => fn (array $a): mixed => Family::query()->whereKey(self::id($a['family_id']))->value('church_id'),
             'guardian_id' => fn (array $a): int => Guardian::factory()->create(['family_id' => self::id($a['family_id']), 'user_id' => null])->id,
             'email_normalised' => fake()->unique()->safeEmail(),
             'revision' => 1,

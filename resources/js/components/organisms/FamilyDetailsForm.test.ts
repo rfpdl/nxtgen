@@ -17,7 +17,7 @@ vi.mock('@inertiajs/vue3', async () => {
 })
 
 const details: FamilyDetails = {
-    homeBranchId: 7,
+    homeSatelliteId: 7,
     areaText: 'Al Barsha',
     fbAccount: null,
     wantsFbGroup: false,
@@ -66,7 +66,7 @@ describe('FamilyDetailsForm', () => {
         await wrapper.find('form').trigger('submit')
 
         expect(form).toMatchObject({
-            home_branch_id: 7,
+            home_satellite_id: 7,
             area_text: 'Al Barsha',
             in_dgroup: true,
             dgroup_area_text: 'Barsha',

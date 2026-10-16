@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Data\Models\Church;
 use App\Data\Models\Note;
-use App\Data\Models\Organization;
 use App\Enums\NoteKindEnum;
 use App\Enums\NoteVisibilityEnum;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -23,7 +23,7 @@ final class NoteFactory extends Factory
     public function definition(): array
     {
         return [
-            'organization_id' => Organization::factory(),
+            'church_id' => Church::factory(),
             'author_id' => null,
             'kind' => NoteKindEnum::System,
             'body' => fake()->sentence(),

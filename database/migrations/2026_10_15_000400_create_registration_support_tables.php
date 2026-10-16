@@ -16,7 +16,7 @@ return new class extends Migration
     {
         Schema::create('family_claims', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('organization_id')->comment('Church')->constrained()->restrictOnDelete();
+            $table->foreignId('church_id')->comment('Church')->constrained()->restrictOnDelete();
             $table->foreignId('family_id')->comment('Family waiting to be claimed')->constrained()->restrictOnDelete();
             $table->foreignId('guardian_id')->comment('Unlinked primary guardian the login will attach to')->constrained()->restrictOnDelete();
             $table->string('email_normalised')->comment('Lowercase, trimmed email the claim was sent to');
@@ -27,7 +27,7 @@ return new class extends Migration
         });
 
         DB::statement("ALTER TABLE family_claims ADD COLUMN pending_claim_key VARCHAR(320)
-            GENERATED ALWAYS AS (CASE WHEN status = 'pending' THEN CONCAT(organization_id, ':', email_normalised) END) STORED
+            GENERATED ALWAYS AS (CASE WHEN status = 'pending' THEN CONCAT(church_id, ':', email_normalised) END) STORED
             COMMENT 'One pending claim per email per church'");
         DB::statement('ALTER TABLE family_claims ADD UNIQUE INDEX family_claims_pending_claim_key_unique (pending_claim_key)');
 
@@ -49,7 +49,7 @@ return new class extends Migration
 
         Schema::create('duplicate_candidates', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('organization_id')->comment('Church')->constrained()->restrictOnDelete();
+            $table->foreignId('church_id')->comment('Church')->constrained()->restrictOnDelete();
             $table->string('subject_type')->comment('family | child');
             $table->unsignedBigInteger('subject_id')->comment('The new record');
             $table->unsignedBigInteger('candidate_id')->comment('The existing record it may duplicate');
@@ -60,12 +60,12 @@ return new class extends Migration
             $table->timestampsTz();
 
             $table->unique(['subject_type', 'subject_id', 'candidate_id']);
-            $table->index(['organization_id', 'status']);
+            $table->index(['church_id', 'status']);
         });
 
         Schema::create('notes', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('organization_id')->comment('Church')->constrained()->restrictOnDelete();
+            $table->foreignId('church_id')->comment('Church')->constrained()->restrictOnDelete();
             $table->string('noteable_type')->comment('Morph alias: family | child');
             $table->unsignedBigInteger('noteable_id')->comment('Record the note is about');
             $table->foreignId('author_id')->nullable()->comment('Null for system notes')->constrained('users')->nullOnDelete();

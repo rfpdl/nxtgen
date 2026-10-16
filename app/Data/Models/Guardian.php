@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /** An adult in a family. May have a login (`user_id`); grandparents usually don't.
  *
  * @property int $id
- * @property int $organization_id
+ * @property int $church_id
  * @property int $family_id
  * @property int|null $user_id
  * @property RelationshipEnum $relationship
@@ -53,10 +53,10 @@ final class Guardian extends Model
         return $this->belongsTo(Family::class);
     }
 
-    /** @return BelongsTo<Organization, $this> */
-    public function organization(): BelongsTo
+    /** @return BelongsTo<Church, $this> */
+    public function church(): BelongsTo
     {
-        return $this->belongsTo(Organization::class);
+        return $this->belongsTo(Church::class);
     }
 
     /** @return BelongsTo<User, $this> */

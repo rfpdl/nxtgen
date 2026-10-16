@@ -22,7 +22,7 @@ use function Tests\Architecture\stripComments;
  * The classes under `app/{$directory}` whose name ends in the suffix, as FULLY QUALIFIED names.
  *
  * **FQCNs, not basenames (TODO #19).** This used to collect `getFilenameWithoutExtension()` and look for
- * `AddChildFeature::class` anywhere in `app/` — and there are TWO `AddChildFeature`s (Family and Org), two
+ * `AddChildFeature::class` anywhere in `app/` — and there are TWO `AddChildFeature`s (Family and Church), two
  * `RegisterFamilyFeature`s, two `ShowFamilyFeature`s and two `ShowRegisterFeature`s. With basenames, serving one
  * of a pair made both look served, so a Feature whose route had been deleted would have passed.
  *
@@ -219,14 +219,14 @@ it('keeps the waiting list honest', function (): void {
  * creeps in here is logic outside a Feature, where no test looks for it.
  */
 it('tells two classes with the same short name apart', function (): void {
-    // The guard on the TODO #19 fix, on a real pair: Org and Family both have an AddChildFeature. A controller
+    // The guard on the TODO #19 fix, on a real pair: Church and Family both have an AddChildFeature. A controller
     // that imports ONE of them references that one only — with basenames, it made both look served.
     $controller = <<<'PHP'
         <?php
-        namespace App\Services\Org\Http\Controllers\Family;
+        namespace App\Services\Church\Http\Controllers\Family;
 
-        use App\Services\Org\Features\Family\AddChildFeature;
-        use App\Services\Org\Features\Family\ShowFamilyFeature as Show;
+        use App\Services\Church\Features\Family\AddChildFeature;
+        use App\Services\Church\Features\Family\ShowFamilyFeature as Show;
 
         final class Controller
         {
@@ -236,10 +236,10 @@ it('tells two classes with the same short name apart', function (): void {
         }
         PHP;
 
-    expect(referencesIn($controller, 'App\Services\Org\Http\Controllers\Family\Controller'))->toBe([
-        'App\Services\Org\Features\Family\AddChildFeature',
-        'App\Services\Org\Features\Family\ShowFamilyFeature',
-        'App\Services\Org\Http\Controllers\Family\Helper',
+    expect(referencesIn($controller, 'App\Services\Church\Http\Controllers\Family\Controller'))->toBe([
+        'App\Services\Church\Features\Family\AddChildFeature',
+        'App\Services\Church\Features\Family\ShowFamilyFeature',
+        'App\Services\Church\Http\Controllers\Family\Helper',
     ]);
 });
 

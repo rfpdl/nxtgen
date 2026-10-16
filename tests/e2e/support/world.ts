@@ -14,7 +14,7 @@ export type StaffRole = keyof typeof STAFF
 
 export const FAMILIES = {
     dxb: {
-        parent: 'Maria Dela Cruz',
+        guardian: 'Maria Dela Cruz',
         email: 'delacruz@nxtgen.test',
         // Matches E2ESeeder; a new family with this phone is a "possible duplicate" of this one.
         phone: '0501000001',
@@ -22,7 +22,7 @@ export const FAMILIES = {
         satellite: 'CCF DXB',
     },
     house: {
-        parent: 'Grace Santos',
+        guardian: 'Grace Santos',
         email: 'santos@nxtgen.test',
         child: 'Bea',
         satellite: 'House Church',

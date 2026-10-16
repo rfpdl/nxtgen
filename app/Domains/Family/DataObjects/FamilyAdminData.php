@@ -39,7 +39,7 @@ final class FamilyAdminData extends Data
             primaryName: $family->contactName(),
             email: $canEdit ? $email : EmailMask::mask($email),
             emailConfirmed: $family->contactEmailConfirmed(),
-            satellite: $family->homeBranch->name,
+            satellite: $family->homeSatellite->name,
             area: $family->area_text,
             registeredBy: $family->registration_source->label(),
             guardians: array_values($family->guardians->map(fn ($g) => GuardianPortalData::fromModel($g))->all()),

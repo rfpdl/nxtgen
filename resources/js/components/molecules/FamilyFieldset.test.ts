@@ -10,7 +10,7 @@ const satellites = [
 
 const family = () =>
     reactive({
-        home_branch_id: '' as number | '',
+        home_satellite_id: '' as number | '',
         area_text: '',
         fb_account: '',
         wants_fb_group: false,
@@ -30,7 +30,7 @@ describe('FamilyFieldset', () => {
 
         expect(
             wrapper
-                .find('[data-testid="home-branch"]')
+                .find('[data-testid="home-satellite"]')
                 .findAll('option')
                 .map((o) => o.text()),
         ).toEqual(['Choose…', 'CCF DXB', 'House Church'])

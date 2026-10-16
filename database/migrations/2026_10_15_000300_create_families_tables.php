@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schema;
 /*
  * Family > guardians + children (plan §4–§5). The invariants that decide who can see which children are
  * enforced here, not only in code:
- *   - one family per user per church        guardians UNIQUE(organization_id, user_id)
+ *   - one family per user per church        guardians UNIQUE(church_id, user_id)
  *   - one login per family (v1)             generated login_family_key UNIQUE
  *   - primary guardian is in its family     composite FK families(id, primary_guardian_id) → guardians(family_id, id)
  */
@@ -20,8 +20,8 @@ return new class extends Migration
     {
         Schema::create('families', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('organization_id')->comment('Church the family belongs to')->constrained()->restrictOnDelete();
-            $table->foreignId('home_branch_id')->comment('Satellite the family usually attends')->constrained('branches')->restrictOnDelete();
+            $table->foreignId('church_id')->comment('Church the family belongs to')->constrained()->restrictOnDelete();
+            $table->foreignId('home_satellite_id')->comment('Satellite the family usually attends')->constrained('satellites')->restrictOnDelete();
             $table->unsignedBigInteger('primary_guardian_id')->nullable()->comment('Main contact; their login is the family email');
             $table->string('area_text')->nullable()->comment('Area of residence, free text in v1');
             $table->string('fb_account')->nullable()->comment('Facebook account name for the parents group');
@@ -39,12 +39,12 @@ return new class extends Migration
             $table->text('notes')->nullable()->comment('Free-text notes from registration');
             $table->timestampsTz();
 
-            $table->index(['organization_id', 'home_branch_id']);
+            $table->index(['church_id', 'home_satellite_id']);
         });
 
         Schema::create('guardians', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('organization_id')->comment('Denormalised from the family so the database can enforce one family per user per church')->constrained()->restrictOnDelete();
+            $table->foreignId('church_id')->comment('Denormalised from the family so the database can enforce one family per user per church')->constrained()->restrictOnDelete();
             $table->foreignId('family_id')->comment('Family this adult belongs to')->constrained()->restrictOnDelete();
             $table->foreignId('user_id')->nullable()->comment('Login, if this adult has one')->constrained()->restrictOnDelete();
             $table->string('relationship')->comment('RelationshipEnum');
@@ -56,7 +56,7 @@ return new class extends Migration
             $table->boolean('can_pick_up')->default(true)->comment('Allowed to collect the children');
             $table->timestampsTz();
 
-            $table->unique(['organization_id', 'user_id']);
+            $table->unique(['church_id', 'user_id']);
             $table->unique(['family_id', 'id']);
         });
 
@@ -72,7 +72,7 @@ return new class extends Migration
 
         Schema::create('children', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('organization_id')->comment('Church the child belongs to')->constrained()->restrictOnDelete();
+            $table->foreignId('church_id')->comment('Church the child belongs to')->constrained()->restrictOnDelete();
             $table->foreignId('family_id')->comment('Household')->constrained()->restrictOnDelete();
             $table->foreignId('group_id')->nullable()->comment('Stored group; changes only at Moving-Up or by a church admin')->constrained()->nullOnDelete();
             $table->string('first_name')->comment('First name');
@@ -96,8 +96,8 @@ return new class extends Migration
             $table->string('registration_source')->comment('RegistrationSourceEnum');
             $table->timestampsTz();
 
-            $table->index(['organization_id', 'status']);
-            $table->index(['organization_id', 'last_name']);
+            $table->index(['church_id', 'status']);
+            $table->index(['church_id', 'last_name']);
         });
     }
 

@@ -17,11 +17,11 @@ vi.mock('@inertiajs/vue3', async () => {
 })
 
 const options: GrantOption[] = [
-    { label: 'Admin · whole church', role: 'admin', scopeType: 'organization', scopeId: 1 },
+    { label: 'Admin · whole church', role: 'admin', scopeType: 'church', scopeId: 1 },
     {
         label: 'Lifeshaper · Holy Trinity Church',
         role: 'lifeshaper',
-        scopeType: 'branch',
+        scopeType: 'satellite',
         scopeId: 3,
     },
 ]
@@ -48,7 +48,7 @@ describe('AddStaffForm', () => {
             name: 'Leo',
             email: 'leo@example.com',
             role: 'lifeshaper',
-            scope_type: 'branch',
+            scope_type: 'satellite',
             scope_id: 3,
         })
         expect(post).toHaveBeenCalledWith('/ccf/people', expect.anything())

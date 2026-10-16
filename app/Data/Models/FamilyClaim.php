@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * belongs to a user with no family in this church. One pending claim per email per church (generated key).
  *
  * @property int $id
- * @property int $organization_id
+ * @property int $church_id
  * @property int $family_id
  * @property int $guardian_id
  * @property string $email_normalised

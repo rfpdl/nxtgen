@@ -39,7 +39,7 @@ final class ChildListRowData extends Data
             group: $child->group?->name,
             status: $child->status->label(),
             hasAllergies: $child->allergies !== null,
-            satellite: $child->family->homeBranch->name,
+            satellite: $child->family->homeSatellite->name,
             familyId: $child->family_id,
         );
     }

@@ -9,7 +9,7 @@ import ChildPhotoForm from '@/components/organisms/ChildPhotoForm.vue'
 import EditChildForm from '@/components/organisms/EditChildForm.vue'
 import FamilyDetailsForm from '@/components/organisms/FamilyDetailsForm.vue'
 import { useFlashMessages } from '@/composables/useFlashMessages'
-import type { BranchOption, FamilyDetails, FamilyPortal, GuardianEdit } from '@/types'
+import type { SatelliteOption, FamilyDetails, FamilyPortal, GuardianEdit } from '@/types'
 import { route } from 'ziggy-js'
 
 defineProps<{
@@ -17,7 +17,7 @@ defineProps<{
     family: FamilyPortal
     details: FamilyDetails
     me: GuardianEdit
-    satellites: BranchOption[]
+    satellites: SatelliteOption[]
     relationships: { value: string; label: string }[]
     genders: { value: string; label: string }[]
 }>()
@@ -66,7 +66,7 @@ const { message, dismiss } = useFlashMessages()
             <FamilyChildCard v-for="child in family.children" :key="child.id" :child="child">
                 <ChildPhotoForm
                     :child="child"
-                    who="parent"
+                    who="guardian"
                     :action="route('family.children.photo', [church.slug, child.id])"
                     :consent-action="
                         route('family.children.photo-consent.give', [church.slug, child.id])

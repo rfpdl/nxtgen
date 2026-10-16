@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Foundation\Inputs;
 
-use App\Data\Models\Branch;
-use App\Data\Models\Organization;
+use App\Data\Models\Church;
+use App\Data\Models\Satellite;
 use App\Data\Models\User;
 use App\Domains\Family\DataObjects\FamilyRegistrationData;
 use App\Enums\RegistrationSourceEnum;
@@ -21,7 +21,7 @@ final class RegisterFamilyInput extends Data
 {
     /** @param list<ChildInput> $children */
     public function __construct(
-        public int $home_branch_id,
+        public int $home_satellite_id,
         public ?string $area_text,
         public bool $privacy_consented,
         public GuardianInput $guardian,
@@ -42,11 +42,11 @@ final class RegisterFamilyInput extends Data
      * The ONE mapping from the form to a registration, used by parent self-registration and staff registration
      * alike — two copies drifted once already (staff dropped DGroup area, leader phone and lifestage).
      */
-    public function toRegistration(Organization $organization, Branch $homeBranch, RegistrationSourceEnum $source, ?User $registeredBy = null): FamilyRegistrationData
+    public function toRegistration(Church $church, Satellite $homeSatellite, RegistrationSourceEnum $source, ?User $registeredBy = null): FamilyRegistrationData
     {
         return new FamilyRegistrationData(
-            organization: $organization,
-            homeBranch: $homeBranch,
+            church: $church,
+            homeSatellite: $homeSatellite,
             primary: $this->guardian->toDetails(),
             children: array_map(fn (ChildInput $c) => $c->toDetails(), $this->children),
             areaText: $this->area_text,

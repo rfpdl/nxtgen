@@ -73,7 +73,7 @@ describe('FlashBanner', () => {
     })
 
     it('can be put away', () => {
-        // It covers the heading while it is up, and a volunteer who has read it should be able to
+        // It covers the heading while it is up, and a staff member who has read it should be able to
         // move it rather than scroll around it.
         const wrapper = banner({ message: message() })
 

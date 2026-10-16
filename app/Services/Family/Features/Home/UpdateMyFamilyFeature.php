@@ -29,7 +29,7 @@ final class UpdateMyFamilyFeature extends BaseFamilyFeature
         $family = $this->family();
         $user = request()->user();
         abort_unless($user instanceof User, 404);
-        $me = $this->run(new GetGuardianForUserJob(user: $user, organization: $family->organization));
+        $me = $this->run(new GetGuardianForUserJob(user: $user, church: $family->church));
         abort_if($me === null, 404);
 
         DB::transaction(function () use ($family, $me, $input): void {
@@ -37,6 +37,6 @@ final class UpdateMyFamilyFeature extends BaseFamilyFeature
             $this->run(new UpdateGuardianDetailsJob(guardian: $me, details: $input->guardian->toEdit()));
         });
 
-        return redirect()->route('family.show', $family->organization)->with('success', 'Your family details are saved.');
+        return redirect()->route('family.show', $family->church)->with('success', 'Your family details are saved.');
     }
 }

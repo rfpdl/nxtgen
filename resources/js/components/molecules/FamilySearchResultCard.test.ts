@@ -37,7 +37,7 @@ describe('FamilySearchResultCard', () => {
         ).not.toContain('Email not confirmed')
     })
 
-    it('links to the family only when the volunteer may open it', () => {
+    it('links to the family only when the staff member may open it', () => {
         expect(
             mount(FamilySearchResultCard, { props: { result: result(), href: '/x' } })
                 .find('a')

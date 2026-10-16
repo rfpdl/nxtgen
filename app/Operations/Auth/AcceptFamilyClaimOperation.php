@@ -46,7 +46,7 @@ final class AcceptFamilyClaimOperation extends Operation
 
         try {
             /** @var User|null */
-            return Cache::lock("register:{$claim->organization_id}:{$claim->email_normalised}", 15)
+            return Cache::lock("register:{$claim->church_id}:{$claim->email_normalised}", 15)
                 ->block(10, fn (): ?User => DB::transaction(fn (): ?User => $this->accept($claim)));
         } catch (ClaimBindingFailed) {
             return null; // the whole transaction (link consumption included) rolled back
@@ -72,7 +72,7 @@ final class AcceptFamilyClaimOperation extends Operation
             throw new ClaimBindingFailed;
         }
 
-        if ($this->run(new GetGuardianForUserJob(user: $user, organization: $claim->family->organization)) !== null) {
+        if ($this->run(new GetGuardianForUserJob(user: $user, church: $claim->family->church)) !== null) {
             $this->run(new UpdateFamilyClaimStatusJob(claim: $claim, status: FamilyClaimStatusEnum::Revoked));
 
             return null;

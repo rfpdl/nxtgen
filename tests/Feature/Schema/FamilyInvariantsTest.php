@@ -16,58 +16,58 @@ use function Tests\Support\satelliteOf;
  */
 
 it('refuses one user as a guardian in two families of the same church', function (): void {
-    $org = church();
+    $church = church();
     $user = User::factory()->create();
 
-    Guardian::factory()->for(familyAt(satelliteOf($org)))->for($org)->for($user)->create();
+    Guardian::factory()->for(familyAt(satelliteOf($church)))->for($church)->for($user)->create();
 
-    expect(fn () => Guardian::factory()->for(familyAt(satelliteOf($org)))->for($org)->for($user)->create())
-        ->toThrow(QueryException::class, 'guardians_organization_id_user_id_unique');
+    expect(fn () => Guardian::factory()->for(familyAt(satelliteOf($church)))->for($church)->for($user)->create())
+        ->toThrow(QueryException::class, 'guardians_church_id_user_id_unique');
 });
 
 it('allows the same user as a guardian in families of two different churches', function (): void {
     $user = User::factory()->create();
-    $orgA = church();
-    $orgB = church();
+    $churchA = church();
+    $churchB = church();
 
-    Guardian::factory()->for(familyAt(satelliteOf($orgA)))->for($orgA)->for($user)->create();
-    Guardian::factory()->for(familyAt(satelliteOf($orgB)))->for($orgB)->for($user)->create();
+    Guardian::factory()->for(familyAt(satelliteOf($churchA)))->for($churchA)->for($user)->create();
+    Guardian::factory()->for(familyAt(satelliteOf($churchB)))->for($churchB)->for($user)->create();
 
     expect(Guardian::query()->where('user_id', $user->id)->count())->toBe(2);
 });
 
 it('refuses a second login on the same family (one login per family in v1)', function (): void {
-    $org = church();
-    $family = familyAt(satelliteOf($org));
+    $church = church();
+    $family = familyAt(satelliteOf($church));
 
-    Guardian::factory()->for($family)->for($org)->for(User::factory())->create();
+    Guardian::factory()->for($family)->for($church)->for(User::factory())->create();
 
-    expect(fn () => Guardian::factory()->for($family)->for($org)->for(User::factory())->create())
+    expect(fn () => Guardian::factory()->for($family)->for($church)->for(User::factory())->create())
         ->toThrow(QueryException::class, 'guardians_login_family_key_unique');
 });
 
 it('allows several guardians without a login on one family', function (): void {
-    $org = church();
-    $family = familyAt(satelliteOf($org));
+    $church = church();
+    $family = familyAt(satelliteOf($church));
 
-    Guardian::factory()->count(3)->for($family)->for($org)->create(['user_id' => null]);
+    Guardian::factory()->count(3)->for($family)->for($church)->create(['user_id' => null]);
 
     expect($family->guardians()->count())->toBe(3);
 });
 
 it('refuses a primary guardian that belongs to another family', function (): void {
-    $org = church();
-    $family = familyAt(satelliteOf($org));
-    $stranger = Guardian::factory()->for(familyAt(satelliteOf($org)))->for($org)->create();
+    $church = church();
+    $family = familyAt(satelliteOf($church));
+    $stranger = Guardian::factory()->for(familyAt(satelliteOf($church)))->for($church)->create();
 
     expect(fn () => $family->forceFill(['primary_guardian_id' => $stranger->id])->save())
         ->toThrow(QueryException::class, 'families_primary_guardian_in_family');
 });
 
 it('accepts a primary guardian from the same family', function (): void {
-    $org = church();
-    $family = familyAt(satelliteOf($org));
-    $own = Guardian::factory()->for($family)->for($org)->create();
+    $church = church();
+    $family = familyAt(satelliteOf($church));
+    $own = Guardian::factory()->for($family)->for($church)->create();
 
     $family->forceFill(['primary_guardian_id' => $own->id])->save();
 

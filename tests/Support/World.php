@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Support;
 
-use App\Data\Models\Branch;
 use App\Data\Models\Child;
+use App\Data\Models\Church;
 use App\Data\Models\Family;
 use App\Data\Models\Guardian;
-use App\Data\Models\Organization;
 use App\Data\Models\RoleAssignment;
+use App\Data\Models\Satellite;
 use App\Data\Models\User;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
@@ -20,16 +20,16 @@ use App\Enums\ScopeTypeEnum;
  * built only from these; the blocks themselves are checked in tests/Feature/Support/WorldTest.php.
  */
 
-/** @param  array<model-property<Organization>, mixed>  $attributes */
-function church(array $attributes = []): Organization
+/** @param  array<model-property<Church>, mixed>  $attributes */
+function church(array $attributes = []): Church
 {
-    return Organization::factory()->create($attributes);
+    return Church::factory()->create($attributes);
 }
 
-/** @param  array<model-property<Branch>, mixed>  $attributes */
-function satelliteOf(Organization $church, array $attributes = []): Branch
+/** @param  array<model-property<Satellite>, mixed>  $attributes */
+function satelliteOf(Church $church, array $attributes = []): Satellite
 {
-    return Branch::factory()->for($church)->create($attributes);
+    return Satellite::factory()->for($church)->create($attributes);
 }
 
 /**
@@ -37,9 +37,9 @@ function satelliteOf(Organization $church, array $attributes = []): Branch
  *
  * @param  array<model-property<Family>, mixed>  $attributes
  */
-function familyAt(Branch $satellite, array $attributes = []): Family
+function familyAt(Satellite $satellite, array $attributes = []): Family
 {
-    return Family::factory()->create(['organization_id' => $satellite->organization_id, 'home_branch_id' => $satellite->id] + $attributes);
+    return Family::factory()->create(['church_id' => $satellite->church_id, 'home_satellite_id' => $satellite->id] + $attributes);
 }
 
 /**
@@ -50,7 +50,7 @@ function familyAt(Branch $satellite, array $attributes = []): Family
  */
 function guardianOf(Family $family, User $user, array $attributes = []): Guardian
 {
-    $guardian = Guardian::factory()->create(['family_id' => $family->id, 'organization_id' => $family->organization_id, 'user_id' => $user->id] + $attributes);
+    $guardian = Guardian::factory()->create(['family_id' => $family->id, 'church_id' => $family->church_id, 'user_id' => $user->id] + $attributes);
     $family->forceFill(['primary_guardian_id' => $guardian->id])->save();
 
     return $guardian;
@@ -59,17 +59,17 @@ function guardianOf(Family $family, User $user, array $attributes = []): Guardia
 /** @param  array<model-property<Child>, mixed>  $attributes */
 function childOf(Family $family, array $attributes = []): Child
 {
-    return Child::factory()->create(['family_id' => $family->id, 'organization_id' => $family->organization_id] + $attributes);
+    return Child::factory()->create(['family_id' => $family->id, 'church_id' => $family->church_id] + $attributes);
 }
 
-function atChurch(Organization $church): RoleScope
+function atChurch(Church $church): RoleScope
 {
-    return new RoleScope($church, ScopeTypeEnum::Organization, $church->id);
+    return new RoleScope($church, ScopeTypeEnum::Church, $church->id);
 }
 
-function atSatellite(Branch $satellite): RoleScope
+function atSatellite(Satellite $satellite): RoleScope
 {
-    return new RoleScope($satellite->organization()->firstOrFail(), ScopeTypeEnum::Branch, $satellite->id);
+    return new RoleScope($satellite->church()->firstOrFail(), ScopeTypeEnum::Satellite, $satellite->id);
 }
 
 /**
@@ -91,7 +91,7 @@ function staffMember(RoleEnum $role, RoleScope $scope, array $user = []): User
 function grantRole(User $user, RoleEnum $role, RoleScope $scope, bool $active = true): void
 {
     RoleAssignment::factory()->create([
-        'organization_id' => $scope->church->id, 'user_id' => $user->id, 'role' => $role,
+        'church_id' => $scope->church->id, 'user_id' => $user->id, 'role' => $role,
         'scope_type' => $scope->type, 'scope_id' => $scope->id, 'is_active' => $active,
     ]);
 }

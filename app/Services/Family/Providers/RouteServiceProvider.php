@@ -13,7 +13,7 @@ final class RouteServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Route::middleware(['web', 'auth', RequireGuardian::class])
-            ->prefix('{organization:slug}/family')
+            ->prefix('{church:slug}/family')
             ->group(__DIR__.'/../routes/web.php');
     }
 }

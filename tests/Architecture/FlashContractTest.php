@@ -185,7 +185,7 @@ it('has a screen for every key it shares', function (): void {
      * The third hop. A key can be flashed by a Feature, shared by the middleware, and read by nothing
      * — which is what happened to `success` and `error`, and it is invisible from either end of the
      * server-side contract. A flashed message nobody renders is worse than no message: the Feature
-     * reports the refusal, every test agrees it did, and the volunteer sees a button that did nothing.
+     * reports the refusal, every test agrees it did, and the staff member sees a button that did nothing.
      */
     $unread = array_values(array_diff(sharedFlashKeys(), flashKeysReadByTheFrontend()));
 

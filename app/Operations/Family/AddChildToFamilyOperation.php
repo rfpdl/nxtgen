@@ -35,7 +35,7 @@ final class AddChildToFamilyOperation extends Operation
         return DB::transaction(function (): Child {
             // A reviewed import placement wins (plan §5); otherwise suggest from age + gender.
             $group = $this->group ?? $this->run(new GetSuggestedGroupJob(
-                organization: $this->family->organization,
+                church: $this->family->church,
                 gender: $this->details->gender,
                 dateOfBirth: $this->details->dateOfBirth,
             ));

@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3'
 import RegisterFamilyForm from '@/components/organisms/RegisterFamilyForm.vue'
-import type { BranchOption } from '@/types'
+import type { SatelliteOption } from '@/types'
 import { route } from 'ziggy-js'
 
 type Option = { value: string; label: string }
 
 defineProps<{
     church: { name: string; slug: string }
-    satellites: BranchOption[]
+    satellites: SatelliteOption[]
     relationships: Option[]
     genders: Option[]
 }>()

@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 /** A possible duplicate for staff to review — never an automatic merge (plan §4.2).
  *
  * @property int $id
- * @property int $organization_id
+ * @property int $church_id
  * @property string $subject_type
  * @property int $subject_id
  * @property int $candidate_id

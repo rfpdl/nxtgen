@@ -11,7 +11,7 @@ use App\Foundation\Jobs\BaseJob;
 
 /**
  * Change a child's photo consent AND note it on the child's history — every change, by everyone (review 4): the
- * parent agreeing (alone or with the first photo), a volunteer recording the parent's in-person yes (Roy
+ * parent agreeing (alone or with the first photo), a staff member recording the parent's in-person yes (Roy
  * 2026-10-16), and the parent withdrawing (which hides the photo). The caller checks who may.
  *
  * @extends BaseJob<Child>

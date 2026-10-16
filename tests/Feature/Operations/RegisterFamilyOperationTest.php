@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-use App\Data\Models\Branch;
 use App\Data\Models\Child;
+use App\Data\Models\Church;
 use App\Data\Models\DuplicateCandidate;
 use App\Data\Models\Family;
 use App\Data\Models\FamilyClaim;
 use App\Data\Models\Group;
 use App\Data\Models\Guardian;
 use App\Data\Models\MagicLink;
-use App\Data\Models\Organization;
+use App\Data\Models\Satellite;
 use App\Data\Models\User;
 use App\Domains\Family\DataObjects\ChildDetailsData;
 use App\Domains\Family\DataObjects\FamilyRegistrationData;
@@ -34,20 +34,20 @@ beforeEach(function (): void {
     Notification::fake();
 });
 
-/** @return array{0: Organization, 1: Branch} */
+/** @return array{0: Church, 1: Satellite} */
 function registrationChurch(): array
 {
-    $org = church(['moving_up_reference_date' => '2027-02-01']);
+    $church = church(['moving_up_reference_date' => '2027-02-01']);
 
-    return [$org, satelliteOf($org)];
+    return [$church, satelliteOf($church)];
 }
 
 /** @param list<ChildDetailsData>|null $children */
-function registration(Organization $org, Branch $branch, string $email = 'Janice@Example.com ', ?array $children = null, RegistrationSourceEnum $source = RegistrationSourceEnum::Self, ?User $by = null): FamilyRegistrationData
+function registration(Church $church, Satellite $satellite, string $email = 'Janice@Example.com ', ?array $children = null, RegistrationSourceEnum $source = RegistrationSourceEnum::Self, ?User $by = null): FamilyRegistrationData
 {
     return new FamilyRegistrationData(
-        organization: $org,
-        homeBranch: $branch,
+        church: $church,
+        homeSatellite: $satellite,
         primary: new GuardianDetailsData(
             firstName: 'Janice', lastName: 'Ramos', relationship: RelationshipEnum::Mother,
             phone: '0544897346', email: $email, ministries: ['Music'],
@@ -69,8 +69,8 @@ function register(FamilyRegistrationData $data): RegistrationResultData
 }
 
 it('registers a new family: unverified login, linked primary guardian, children, confirm-email link', function (): void {
-    [$org, $branch] = registrationChurch();
-    $result = register(registration($org, $branch));
+    [$church, $satellite] = registrationChurch();
+    $result = register(registration($church, $satellite));
 
     $user = User::query()->sole();
     $family = Family::query()->sole();
@@ -81,7 +81,7 @@ it('registers a new family: unverified login, linked primary guardian, children,
         ->and($user->email_verified_at)->toBeNull()
         ->and($guardian->user_id)->toBe($user->id)
         ->and($family->primary_guardian_id)->toBe($guardian->id)
-        ->and($family->home_branch_id)->toBe($branch->id)
+        ->and($family->home_satellite_id)->toBe($satellite->id)
         ->and($family->children()->count())->toBe(1)
         ->and(Child::query()->sole()->status)->toBe(ChildStatusEnum::Active)
         ->and(MagicLink::query()->sole()->purpose)->toBe(MagicLinkPurposeEnum::VerifyEmail);
@@ -90,10 +90,10 @@ it('registers a new family: unverified login, linked primary guardian, children,
 });
 
 it('does not register a second family for an email already registered in this church', function (): void {
-    [$org, $branch] = registrationChurch();
-    register(registration($org, $branch));
+    [$church, $satellite] = registrationChurch();
+    register(registration($church, $satellite));
 
-    $result = register(registration($org, $branch, email: 'janice@example.com'));
+    $result = register(registration($church, $satellite, email: 'janice@example.com'));
 
     expect($result->outcome)->toBe(RegistrationOutcomeEnum::AlreadyRegistered)
         ->and(Family::query()->count())->toBe(1)
@@ -101,10 +101,10 @@ it('does not register a second family for an email already registered in this ch
 });
 
 it('creates a pending claim when the email belongs to a login with no family here (e.g. a Lifeshaper)', function (): void {
-    [$org, $branch] = registrationChurch();
+    [$church, $satellite] = registrationChurch();
     $staff = User::factory()->create(['email' => 'janice@example.com']);
 
-    $result = register(registration($org, $branch));
+    $result = register(registration($church, $satellite));
 
     $guardian = Guardian::query()->sole();
     $claim = FamilyClaim::query()->sole();
@@ -120,11 +120,11 @@ it('creates a pending claim when the email belongs to a login with no family her
 });
 
 it('re-sends the pending claim instead of creating a second family', function (): void {
-    [$org, $branch] = registrationChurch();
+    [$church, $satellite] = registrationChurch();
     User::factory()->create(['email' => 'janice@example.com']);
-    register(registration($org, $branch));
+    register(registration($church, $satellite));
 
-    $result = register(registration($org, $branch));
+    $result = register(registration($church, $satellite));
 
     expect($result->outcome)->toBe(RegistrationOutcomeEnum::ClaimResent)
         ->and(Family::query()->count())->toBe(1)
@@ -133,22 +133,22 @@ it('re-sends the pending claim instead of creating a second family', function ()
 });
 
 it('lets the same parent register separately in another church', function (): void {
-    [$org, $branch] = registrationChurch();
-    register(registration($org, $branch));
-    $otherOrg = church();
+    [$church, $satellite] = registrationChurch();
+    register(registration($church, $satellite));
+    $otherChurch = church();
 
-    $result = register(registration($otherOrg, satelliteOf($otherOrg)));
+    $result = register(registration($otherChurch, satelliteOf($otherChurch)));
 
     expect($result->outcome)->toBe(RegistrationOutcomeEnum::ClaimSent)
         ->and(Family::query()->count())->toBe(2);
 });
 
 it('suggests a group from age on the reference date and gender', function (): void {
-    [$org, $branch] = registrationChurch();
-    Group::factory()->for($org)->create(['name' => 'Level 2 Girls', 'min_age' => 6, 'max_age' => 7, 'gender' => GenderEnum::Girl]);
-    $boys = Group::factory()->for($org)->create(['name' => 'Level 2 Boys', 'min_age' => 6, 'max_age' => 7, 'gender' => GenderEnum::Boy]);
+    [$church, $satellite] = registrationChurch();
+    Group::factory()->for($church)->create(['name' => 'Level 2 Girls', 'min_age' => 6, 'max_age' => 7, 'gender' => GenderEnum::Girl]);
+    $boys = Group::factory()->for($church)->create(['name' => 'Level 2 Boys', 'min_age' => 6, 'max_age' => 7, 'gender' => GenderEnum::Boy]);
 
-    register(registration($org, $branch, children: [new ChildDetailsData(
+    register(registration($church, $satellite, children: [new ChildDetailsData(
         firstName: 'Aaron', middleName: null, lastName: 'Ramos', nickname: 'Aaron',
         gender: GenderEnum::Boy, dateOfBirth: '2020-01-31', allergies: null,
     )]));
@@ -157,19 +157,19 @@ it('suggests a group from age on the reference date and gender', function (): vo
 });
 
 it('leaves the group empty when no group fits', function (): void {
-    [$org, $branch] = registrationChurch();
-    Group::factory()->for($org)->create(['min_age' => 10, 'max_age' => 12, 'gender' => null]);
+    [$church, $satellite] = registrationChurch();
+    Group::factory()->for($church)->create(['min_age' => 10, 'max_age' => 12, 'gender' => null]);
 
-    register(registration($org, $branch));
+    register(registration($church, $satellite));
 
     expect(Child::query()->sole()->group_id)->toBeNull();
 });
 
 it('flags a possible duplicate child for review without blocking registration', function (): void {
-    [$org, $branch] = registrationChurch();
-    register(registration($org, $branch));
+    [$church, $satellite] = registrationChurch();
+    register(registration($church, $satellite));
 
-    $result = register(registration($org, $branch, email: 'dad@example.com'));
+    $result = register(registration($church, $satellite, email: 'dad@example.com'));
 
     expect($result->outcome)->toBe(RegistrationOutcomeEnum::Registered)
         ->and(Family::query()->count())->toBe(2)
@@ -178,22 +178,22 @@ it('flags a possible duplicate child for review without blocking registration', 
 });
 
 it('records who registered on the parent\'s behalf', function (): void {
-    [$org, $branch] = registrationChurch();
-    $volunteer = User::factory()->create();
+    [$church, $satellite] = registrationChurch();
+    $staffMember = User::factory()->create();
 
-    register(registration($org, $branch, source: RegistrationSourceEnum::Staff, by: $volunteer));
+    register(registration($church, $satellite, source: RegistrationSourceEnum::Staff, by: $staffMember));
 
     $family = Family::query()->sole();
 
     expect($family->registration_source)->toBe(RegistrationSourceEnum::Staff)
-        ->and($family->registered_by_user_id)->toBe($volunteer->id);
+        ->and($family->registered_by_user_id)->toBe($staffMember->id);
 });
 
 it('tells a returning parent in the email why they got a sign-in link (review B3)', function (): void {
-    [$org, $branch] = registrationChurch();
-    register(registration($org, $branch));
+    [$church, $satellite] = registrationChurch();
+    register(registration($church, $satellite));
 
-    register(registration($org, $branch, email: 'janice@example.com'));
+    register(registration($church, $satellite, email: 'janice@example.com'));
 
     Notification::assertSentOnDemand(MagicLinkNotification::class, fn (MagicLinkNotification $n): bool => $n->alreadyRegistered);
 });

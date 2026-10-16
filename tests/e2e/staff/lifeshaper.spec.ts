@@ -20,7 +20,7 @@ test('finds a registered family and adds a child to it', async ({ page }) => {
     await page.getByTestId('family-search').fill('Dela Cruz')
     await page.getByTestId('family-search').press('Enter')
 
-    const hit = page.getByTestId('search-result').filter({ hasText: FAMILIES.dxb.parent })
+    const hit = page.getByTestId('search-result').filter({ hasText: FAMILIES.dxb.guardian })
     await expect(hit).toBeVisible()
     await hit.getByTestId('search-add-child').click()
 
@@ -38,7 +38,7 @@ test('finds a registered family and adds a child to it', async ({ page }) => {
     await page.getByTestId('family-search').fill('Dela Cruz')
     await page.getByTestId('family-search').press('Enter')
     await expect(
-        page.getByTestId('search-result').filter({ hasText: FAMILIES.dxb.parent }),
+        page.getByTestId('search-result').filter({ hasText: FAMILIES.dxb.guardian }),
     ).toContainText('Isa')
 })
 

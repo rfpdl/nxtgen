@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
-use App\Data\Models\Branch;
-use App\Data\Models\Organization;
+use App\Data\Models\Church;
+use App\Data\Models\Satellite;
 use App\Data\Models\User;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
@@ -30,13 +30,13 @@ final class DemoChurchSeeder extends Seeder
         ]]);
         $this->call(ChurchSeeder::class);
 
-        $ccf = Organization::query()->where('slug', 'ccf')->firstOrFail();
-        $dxb = Branch::query()->where('organization_id', $ccf->id)->where('slug', 'ccf-dxb')->firstOrFail();
+        $ccf = Church::query()->where('slug', 'ccf')->firstOrFail();
+        $dxb = Satellite::query()->where('church_id', $ccf->id)->where('slug', 'ccf-dxb')->firstOrFail();
 
         $admin = User::query()->where('email', 'admin@nxtgen.test')->firstOrFail();
         $admin->forceFill(['email_verified_at' => now(), 'password' => 'password', 'is_platform_admin' => true])->save();
 
         $lifeshaper = User::query()->updateOrCreate(['email' => 'lifeshaper@nxtgen.test'], ['name' => 'Lifeshaper', 'email_verified_at' => now(), 'password' => 'password']);
-        ChurchSeeder::assign($ccf, $lifeshaper, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $dxb->id);
+        ChurchSeeder::assign($ccf, $lifeshaper, RoleEnum::Lifeshaper, ScopeTypeEnum::Satellite, $dxb->id);
     }
 }

@@ -15,7 +15,7 @@ it('sees every way into a model\'s rows', function (string $code, bool $query): 
     'query()' => ['Family::query()->get()', true],
     'a static where' => ["Child::where('id', 1)", true],
     'with()' => ["Child::with('family')->get()", true],
-    'all()' => ['Branch::all()', true],
+    'all()' => ['Satellite::all()', true],
     'find()' => ['Family::find($id)', true],
     'latest()' => ['Note::latest()->first()', true],
     'a scope' => ["Family::matching('x')", true],
@@ -35,7 +35,7 @@ it('sees every way into a model\'s rows', function (string $code, bool $query): 
 it('sees every way a Job is run by hand', function (string $code, bool $byHand): void {
     expect(runsJobByHand($code))->toBe($byHand);
 })->with([
-    'new, then handle' => ['(new GetAccessScopeJob(user: $u, organization: $o))->handle()', true],
+    'new, then handle' => ['(new GetAccessScopeJob(user: $u, church: $c))->handle()', true],
     'nested arguments' => ['count((new GetLandingOptionsJob(user: f($a, g($b))))->handle())', true],
     'app()' => ['app(GetAccessScopeJob::class, [\'user\' => $u])->handle()', true],
     'resolve()' => ['resolve(\App\Domains\X\Jobs\GetXJob::class)->handle()', true],

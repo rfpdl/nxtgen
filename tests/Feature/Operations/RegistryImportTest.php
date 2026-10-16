@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use App\Data\Models\Child;
+use App\Data\Models\Church;
 use App\Data\Models\Family;
 use App\Data\Models\Group;
 use App\Data\Models\Guardian;
 use App\Data\Models\MagicLink;
-use App\Data\Models\Organization;
 use App\Data\Models\User;
 use App\Enums\ChildStatusEnum;
 use App\Enums\MagicLinkPurposeEnum;
@@ -37,17 +37,17 @@ function runCommand(string $command, array $args, bool $expectSuccess = true): v
     }
 }
 
-/** @return array{0: Organization, 1: string} */
+/** @return array{0: Church, 1: string} */
 function proposeSample(): array
 {
-    $org = church(['slug' => 'ccf']);
-    satelliteOf($org, ['name' => 'CCF DXB']);
-    satelliteOf($org, ['name' => 'House Church']);
+    $church = church(['slug' => 'ccf']);
+    satelliteOf($church, ['name' => 'CCF DXB']);
+    satelliteOf($church, ['name' => 'House Church']);
     $out = sys_get_temp_dir().'/nxtgen-review-'.uniqid().'.xlsx';
 
     runCommand('nxtgen:registry-propose', ['csv' => base_path('tests/Fixtures/registry-sample.csv'), '--out' => $out]);
 
-    return [$org, $out];
+    return [$church, $out];
 }
 
 /** @param list<string> $header */
@@ -86,9 +86,9 @@ it('writes a review file with families, quarantine and a balancing reconciliatio
 
 it('loads the approved families without emailing anyone', function (): void {
     Notification::fake();
-    [$org, $out] = proposeSample();
+    [$church, $out] = proposeSample();
 
-    runCommand('nxtgen:registry-apply', ['xlsx' => $out, '--org' => 'ccf']);
+    runCommand('nxtgen:registry-apply', ['xlsx' => $out, '--church' => 'ccf']);
 
     expect(Family::query()->count())->toBe(3)
         ->and(Child::query()->count())->toBe(4)
@@ -97,25 +97,25 @@ it('loads the approved families without emailing anyone', function (): void {
         ->and(MagicLink::query()->count())->toBe(0);
 
     Notification::assertNothingSent();
-    expect($org->id)->toBeInt();
+    expect($church->id)->toBeInt();
 });
 
 it('puts a House Church family on the House Church satellite', function (): void {
     Notification::fake();
     [, $out] = proposeSample();
 
-    runCommand('nxtgen:registry-apply', ['xlsx' => $out, '--org' => 'ccf']);
+    runCommand('nxtgen:registry-apply', ['xlsx' => $out, '--church' => 'ccf']);
 
-    $rala = Child::query()->where('first_name', 'Ysabella')->sole()->family()->with('homeBranch')->sole();
-    expect($rala->homeBranch->name)->toBe('House Church');
+    $rala = Child::query()->where('first_name', 'Ysabella')->sole()->family()->with('homeSatellite')->sole();
+    expect($rala->homeSatellite->name)->toBe('House Church');
 });
 
 it('is safe to run twice', function (): void {
     Notification::fake();
     [, $out] = proposeSample();
 
-    runCommand('nxtgen:registry-apply', ['xlsx' => $out, '--org' => 'ccf']);
-    runCommand('nxtgen:registry-apply', ['xlsx' => $out, '--org' => 'ccf']);
+    runCommand('nxtgen:registry-apply', ['xlsx' => $out, '--church' => 'ccf']);
+    runCommand('nxtgen:registry-apply', ['xlsx' => $out, '--church' => 'ccf']);
 
     expect(Family::query()->count())->toBe(3)->and(Child::query()->count())->toBe(4);
 });
@@ -139,7 +139,7 @@ it('skips rows the reviewer did not approve', function (): void {
     }
     $writer->close();
 
-    runCommand('nxtgen:registry-apply', ['xlsx' => $edited, '--org' => 'ccf']);
+    runCommand('nxtgen:registry-apply', ['xlsx' => $edited, '--church' => 'ccf']);
 
     expect(Child::query()->count())->toBe(3);
 });
@@ -147,7 +147,7 @@ it('skips rows the reviewer did not approve', function (): void {
 it('refuses a reviewed group whose rows were already imported into different families (Codex diff review, high)', function (): void {
     Notification::fake();
     [, $out] = proposeSample();
-    runCommand('nxtgen:registry-apply', ['xlsx' => $out, '--org' => 'ccf']);
+    runCommand('nxtgen:registry-apply', ['xlsx' => $out, '--church' => 'ccf']);
     $sheets = readReview($out);
 
     // Reviewer later merges Rala's row into the Ramos family key AND adds a new child to that group.
@@ -176,7 +176,7 @@ it('refuses a reviewed group whose rows were already imported into different fam
     }
     $writer->close();
 
-    runCommand('nxtgen:registry-apply', ['xlsx' => $edited, '--org' => 'ccf'], expectSuccess: false);
+    runCommand('nxtgen:registry-apply', ['xlsx' => $edited, '--church' => 'ccf'], expectSuccess: false);
 
     expect(Child::query()->where('first_name', 'Newbie')->exists())->toBeFalse();
 });
@@ -184,7 +184,7 @@ it('refuses a reviewed group whose rows were already imported into different fam
 it('refuses a group whose parent email differs from the family it was already imported into', function (): void {
     Notification::fake();
     [, $out] = proposeSample();
-    runCommand('nxtgen:registry-apply', ['xlsx' => $out, '--org' => 'ccf']);
+    runCommand('nxtgen:registry-apply', ['xlsx' => $out, '--church' => 'ccf']);
     $sheets = readReview($out);
 
     $families = $sheets['Families'];
@@ -207,7 +207,7 @@ it('refuses a group whose parent email differs from the family it was already im
     }
     $writer->close();
 
-    runCommand('nxtgen:registry-apply', ['xlsx' => $edited, '--org' => 'ccf'], expectSuccess: false);
+    runCommand('nxtgen:registry-apply', ['xlsx' => $edited, '--church' => 'ccf'], expectSuccess: false);
 
     expect(Child::query()->where('first_name', 'Stranger')->exists())->toBeFalse();
 });
@@ -215,7 +215,7 @@ it('refuses a group whose parent email differs from the family it was already im
 it('does not import a child twice after the sheet row was corrected (Codex diff review, medium)', function (): void {
     Notification::fake();
     [, $out] = proposeSample();
-    runCommand('nxtgen:registry-apply', ['xlsx' => $out, '--org' => 'ccf']);
+    runCommand('nxtgen:registry-apply', ['xlsx' => $out, '--church' => 'ccf']);
     $sheets = readReview($out);
 
     // The row is corrected in the sheet (new email → new source key), then re-proposed and re-applied.
@@ -234,7 +234,7 @@ it('does not import a child twice after the sheet row was corrected (Codex diff 
     }
     $writer->close();
 
-    runCommand('nxtgen:registry-apply', ['xlsx' => $edited, '--org' => 'ccf'], expectSuccess: false);
+    runCommand('nxtgen:registry-apply', ['xlsx' => $edited, '--church' => 'ccf'], expectSuccess: false);
 
     expect(Child::query()->where('first_name', $families[1][col($h, 'Child first name')])->count())->toBe(1)
         ->and(Family::query()->count())->toBe(3);
@@ -243,7 +243,7 @@ it('does not import a child twice after the sheet row was corrected (Codex diff 
 it('loads a same-name, same-birthday child in another family when the reviewer marks it distinct', function (): void {
     Notification::fake();
     [, $out] = proposeSample();
-    runCommand('nxtgen:registry-apply', ['xlsx' => $out, '--org' => 'ccf']);
+    runCommand('nxtgen:registry-apply', ['xlsx' => $out, '--church' => 'ccf']);
     $sheets = readReview($out);
 
     $families = $sheets['Families'];
@@ -263,15 +263,15 @@ it('loads a same-name, same-birthday child in another family when the reviewer m
     }
     $writer->close();
 
-    runCommand('nxtgen:registry-apply', ['xlsx' => $edited, '--org' => 'ccf']);
+    runCommand('nxtgen:registry-apply', ['xlsx' => $edited, '--church' => 'ccf']);
 
     expect(Child::query()->where('first_name', $twin[col($h, 'Child first name')])->count())->toBe(2);
 });
 
 it('keeps the group the reviewer chose instead of recalculating it (review A3)', function (): void {
     Notification::fake();
-    [$org, $out] = proposeSample();
-    $chosen = Group::factory()->for($org)->create(['name' => 'Level 4 Girls', 'min_age' => 10, 'max_age' => 12]);
+    [$church, $out] = proposeSample();
+    $chosen = Group::factory()->for($church)->create(['name' => 'Level 4 Girls', 'min_age' => 10, 'max_age' => 12]);
     $sheets = readReview($out);
     $families = $sheets['Families'];
     $h = $families[0];
@@ -286,7 +286,7 @@ it('keeps the group the reviewer chose instead of recalculating it (review A3)',
     }
     $writer->close();
 
-    runCommand('nxtgen:registry-apply', ['xlsx' => $edited, '--org' => 'ccf']);
+    runCommand('nxtgen:registry-apply', ['xlsx' => $edited, '--church' => 'ccf']);
 
     expect(Child::query()->sole()->group_id)->toBe($chosen->id);
 });
@@ -308,7 +308,7 @@ it('fails the apply command when approved rows could not be loaded (review B2)',
     }
     $writer->close();
 
-    $pending = artisan('nxtgen:registry-apply', ['xlsx' => $edited, '--org' => 'ccf']);
+    $pending = artisan('nxtgen:registry-apply', ['xlsx' => $edited, '--church' => 'ccf']);
     expect($pending)->toBeInstanceOf(PendingCommand::class);
     if ($pending instanceof PendingCommand) {
         $pending->assertFailed();
@@ -332,7 +332,7 @@ it('fails when an approved row lost its family key, instead of dropping it (revi
     }
     $writer->close();
 
-    runCommand('nxtgen:registry-apply', ['xlsx' => $edited, '--org' => 'ccf'], expectSuccess: false);
+    runCommand('nxtgen:registry-apply', ['xlsx' => $edited, '--church' => 'ccf'], expectSuccess: false);
 });
 
 it('fails when the review file has no Families sheet', function (): void {
@@ -344,7 +344,7 @@ it('fails when the review file has no Families sheet', function (): void {
     $writer->addRow(Row::fromValues(['x']));
     $writer->close();
 
-    runCommand('nxtgen:registry-apply', ['xlsx' => $empty, '--org' => 'ccf'], expectSuccess: false);
+    runCommand('nxtgen:registry-apply', ['xlsx' => $empty, '--church' => 'ccf'], expectSuccess: false);
 });
 
 it('re-validates edited rows: two families with a cleared parent email are NOT merged under one blank login (review-spar r3)', function (): void {
@@ -368,7 +368,7 @@ it('re-validates edited rows: two families with a cleared parent email are NOT m
     }
     $writer->close();
 
-    runCommand('nxtgen:registry-apply', ['xlsx' => $edited, '--org' => 'ccf'], expectSuccess: false);
+    runCommand('nxtgen:registry-apply', ['xlsx' => $edited, '--church' => 'ccf'], expectSuccess: false);
 
     expect(User::query()->count())->toBe(0)
         ->and(Family::query()->count())->toBe(0)
@@ -392,7 +392,7 @@ it('reports an edited row with an invalid gender instead of crashing', function 
     }
     $writer->close();
 
-    runCommand('nxtgen:registry-apply', ['xlsx' => $edited, '--org' => 'ccf'], expectSuccess: false);
+    runCommand('nxtgen:registry-apply', ['xlsx' => $edited, '--church' => 'ccf'], expectSuccess: false);
     expect(Child::query()->count())->toBe(0);
 });
 
@@ -403,13 +403,13 @@ it('reports an edited row with an invalid gender instead of crashing', function 
  */
 it('reports families waiting for an existing login to confirm, and the resend gets the parent in', function (): void {
     Notification::fake();
-    [$org, $out] = proposeSample();
+    [$church, $out] = proposeSample();
     $lifeshaper = User::factory()->create(['email' => 'janice@example.com']);
-    grantRole($lifeshaper, RoleEnum::Lifeshaper, atChurch($org));
+    grantRole($lifeshaper, RoleEnum::Lifeshaper, atChurch($church));
     $admin = User::factory()->create();
-    grantRole($admin, RoleEnum::Admin, atChurch($org));
+    grantRole($admin, RoleEnum::Admin, atChurch($church));
 
-    $apply = artisan('nxtgen:registry-apply', ['xlsx' => $out, '--org' => 'ccf']);
+    $apply = artisan('nxtgen:registry-apply', ['xlsx' => $out, '--church' => 'ccf']);
     if (! $apply instanceof PendingCommand) {
         throw new RuntimeException('Expected a pending command.');
     }

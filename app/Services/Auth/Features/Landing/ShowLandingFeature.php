@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Services\Auth\Features\Landing;
 
 use App\Data\Models\User;
-use App\Domains\Organization\DataObjects\LandingOptionData;
-use App\Domains\Organization\Jobs\GetLandingOptionsJob;
+use App\Domains\Church\DataObjects\LandingOptionData;
+use App\Domains\Church\Jobs\GetLandingOptionsJob;
 use App\Services\Auth\Features\BaseAuthFeature;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;

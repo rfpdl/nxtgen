@@ -20,12 +20,12 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 final class GetOpenDuplicatesJob extends BaseJob
 {
-    public function __construct(private readonly int $organizationId) {}
+    public function __construct(private readonly int $churchId) {}
 
     /** @return Collection<int, DuplicateCandidate> */
     public function handle(): Collection
     {
-        $family = ['primaryGuardian.user', 'homeBranch', 'children'];
+        $family = ['primaryGuardian.user', 'homeSatellite', 'children'];
         $sides = fn (MorphTo $m) => $m->morphWith([
             Family::class => $family,
             Child::class => array_map(fn (string $r): string => "family.{$r}", $family),
@@ -33,7 +33,7 @@ final class GetOpenDuplicatesJob extends BaseJob
 
         return DuplicateCandidate::query()
             ->with(['subject' => $sides, 'candidate' => $sides])
-            ->where('organization_id', $this->organizationId)
+            ->where('church_id', $this->churchId)
             ->where('status', DuplicateStatusEnum::Open)
             ->latest('id')
             ->get();

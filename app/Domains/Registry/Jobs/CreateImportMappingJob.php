@@ -20,7 +20,7 @@ final class CreateImportMappingJob extends BaseJob
     public function handle(): RegistryImportMapping
     {
         return RegistryImportMapping::query()->create([
-            'organization_id' => $this->child->organization_id,
+            'church_id' => $this->child->church_id,
             'source_child_key' => $this->sourceKey,
             'approved_family_key' => $this->familyKey,
             'child_id' => $this->child->id,

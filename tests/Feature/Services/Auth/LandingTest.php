@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Data\Models\Church;
 use App\Data\Models\Family;
-use App\Data\Models\Organization;
 use App\Data\Models\RoleAssignment;
 use App\Data\Models\User;
 use App\Enums\RoleEnum;
@@ -23,26 +23,26 @@ it('sends a guest to sign in', function (): void {
 });
 
 it('sends a parent straight to their family page', function (): void {
-    $org = church(['slug' => 'ccf']);
+    $church = church(['slug' => 'ccf']);
     $user = User::factory()->create();
-    guardianOf(familyAt(satelliteOf($org)), $user);
+    guardianOf(familyAt(satelliteOf($church)), $user);
 
     actingAs($user)->get('/home')->assertRedirect('/ccf/family');
 });
 
-it('sends a volunteer straight to the dashboard', function (): void {
-    $org = church(['slug' => 'ccf']);
+it('sends a staff member straight to the dashboard', function (): void {
+    $church = church(['slug' => 'ccf']);
     $user = User::factory()->create();
-    grantRole($user, RoleEnum::Lifeshaper, atChurch($org));
+    grantRole($user, RoleEnum::Lifeshaper, atChurch($church));
 
     actingAs($user)->get('/home')->assertRedirect('/ccf');
 });
 
 it('lets a parent who also serves choose, with one login', function (): void {
-    $org = church(['slug' => 'ccf']);
+    $church = church(['slug' => 'ccf']);
     $user = User::factory()->create();
-    guardianOf(familyAt(satelliteOf($org)), $user);
-    grantRole($user, RoleEnum::Lifeshaper, atChurch($org));
+    guardianOf(familyAt(satelliteOf($church)), $user);
+    grantRole($user, RoleEnum::Lifeshaper, atChurch($church));
 
     actingAs($user)->get('/home')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
         ->component('Auth/Choose')
@@ -68,9 +68,9 @@ it('tells someone with no family or role that there is nothing here yet', functi
 });
 
 it('ignores a revoked role', function (): void {
-    $org = church(['slug' => 'ccf']);
+    $church = church(['slug' => 'ccf']);
     $user = User::factory()->create();
-    grantRole($user, RoleEnum::Lifeshaper, atChurch($org));
+    grantRole($user, RoleEnum::Lifeshaper, atChurch($church));
     RoleAssignment::query()->update(['is_active' => false]);
 
     actingAs($user)->get('/home')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p->component('Auth/NothingYet'));
@@ -81,15 +81,15 @@ it('ignores a revoked role', function (): void {
  * only while it is still one of the person's options, and never a way to send someone off-site.
  */
 describe('remembering the choice', function (): void {
-    /** @return array{0: User, 1: Organization} */
+    /** @return array{0: User, 1: Church} */
     function bothHats(): array
     {
-        $org = church(['slug' => 'ccf']);
+        $church = church(['slug' => 'ccf']);
         $user = User::factory()->create();
-        guardianOf(familyAt(satelliteOf($org)), $user);
-        grantRole($user, RoleEnum::Lifeshaper, atChurch($org));
+        guardianOf(familyAt(satelliteOf($church)), $user);
+        grantRole($user, RoleEnum::Lifeshaper, atChurch($church));
 
-        return [$user, $org];
+        return [$user, $church];
     }
 
     it('goes where they chose, and remembers it', function (): void {
@@ -126,11 +126,11 @@ describe('remembering the choice', function (): void {
 
     it('tells the pages when there is more than one place to go, for the Switch link', function (): void {
         [$user] = bothHats();
-        $parentOnly = User::factory()->create();
-        $ccf = Organization::query()->where('slug', 'ccf')->firstOrFail();
-        guardianOf(familyAt(satelliteOf($ccf)), $parentOnly);
+        $guardianOnly = User::factory()->create();
+        $ccf = Church::query()->where('slug', 'ccf')->firstOrFail();
+        guardianOf(familyAt(satelliteOf($ccf)), $guardianOnly);
 
         actingAs($user)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('auth.canSwitch', true));
-        actingAs($parentOnly)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('auth.canSwitch', false));
+        actingAs($guardianOnly)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('auth.canSwitch', false));
     });
 });

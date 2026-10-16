@@ -15,8 +15,8 @@ namespace Tests\Architecture;
  *
  * Grouped by the refactor batch that empties each list (`.planning/tasks/2026-10-17-refactor/spec.md`):
  * 04 renames, 05 groups → Levels, 06 enums / DTOs / generated TS, 07 Feature clean-up, 08 tests per Job and enum
- * and the rest. **Batch 04 renames classes**, so it will rewrite FQCNs here (`Organization` → `Church`,
- * `Branch` → `Satellite`) without paying anything off, and batch 05 deletes the `Group` entries with the classes.
+ * and the rest. Batch 04 renamed classes to the GLOSSARY words (Church, Satellite) and rewrote the FQCNs here
+ * without paying anything off; batch 05 deletes the `Group` entries with the classes.
  *
  * Keys: an FQCN where the rule is about a class, a path relative to `app/` (or a migration's filename) where it
  * is about a file.
@@ -58,7 +58,7 @@ final class KnownGaps
 
     /** @var list<string> response DTOs typed with DataCollection rather than a list (DataObjectTest) */
     public const array DATA_COLLECTION = [
-        'App\Domains\Organization\DataObjects\StaffMemberData',
+        'App\Domains\Church\DataObjects\StaffMemberData',
     ];
 
     /** @var list<string> *Data classes declared outside a DataObjects folder (DataObjectTest) */
@@ -76,11 +76,11 @@ final class KnownGaps
         'App\Services\Auth\Data\PasswordLoginInput',
         'App\Services\Auth\Data\RequestMagicLinkInput',
         'App\Services\Auth\Data\UpdatePasswordInput',
-        'App\Services\Org\Data\AddStaffInput',
-        'App\Services\Org\Data\CorrectFamilyEmailInput',
-        'App\Services\Org\Data\ResolveDuplicateInput',
-        'App\Services\Org\Data\UpdateChildGroupInput',
-        'App\Services\Org\Data\UpdateChildStatusInput',
+        'App\Services\Church\Data\AddStaffInput',
+        'App\Services\Church\Data\CorrectFamilyEmailInput',
+        'App\Services\Church\Data\ResolveDuplicateInput',
+        'App\Services\Church\Data\UpdateChildGroupInput',
+        'App\Services\Church\Data\UpdateChildStatusInput',
         'App\Foundation\Inputs\ChildInput',
         'App\Foundation\Inputs\ChildPhotoInput',
         'App\Foundation\Inputs\FamilyDetailsInput',
@@ -99,25 +99,25 @@ final class KnownGaps
 
     /**
      * Jobs taking a non-nullable `int $…Id` instead of the Model (JobConstructorTest) — 14 Jobs, 15 parameters
-     * (`GetOrganizationChildJob` takes two). `CreateRoleAssignmentJob::$scopeId` is the polymorphic scope; batch
+     * (`GetChurchChildJob` takes two). `CreateRoleAssignmentJob::$scopeId` is the polymorphic scope; batch
      * 04 decides whether that scope becomes a real relation (issue 04), and 07 whether it stays an id.
      *
      * @var list<string>
      */
     public const array JOB_ID_PARAMS = [
+        'App\Domains\Church\Jobs\CreateRoleAssignmentJob',
         'App\Domains\Family\Jobs\GetChildWithFamilyJob',
         'App\Domains\Family\Jobs\GetChildrenJob',
+        'App\Domains\Family\Jobs\GetChurchChildJob',
         'App\Domains\Family\Jobs\GetDuplicateCandidateJob',
         'App\Domains\Family\Jobs\GetFamiliesJob',
         'App\Domains\Family\Jobs\GetFamilyByIdJob',
         'App\Domains\Family\Jobs\GetFamilyChildJob',
         'App\Domains\Family\Jobs\GetMatchingChildJob',
         'App\Domains\Family\Jobs\GetOpenDuplicatesJob',
-        'App\Domains\Family\Jobs\GetOrganizationChildJob',
         'App\Domains\Family\Jobs\SearchFamiliesJob',
         'App\Domains\Group\Jobs\GetGroupJob',
         'App\Domains\Group\Jobs\GetGroupsJob',
-        'App\Domains\Organization\Jobs\CreateRoleAssignmentJob',
         'App\Domains\User\Jobs\GetUserForUpdateJob',
     ];
 
@@ -125,7 +125,7 @@ final class KnownGaps
     public const array JOB_PROPS_NOT_PRIVATE_READONLY = [];
 
     /**
-     * Operations querying a model directly (OperationBoundariesTest) — `Branch::query()` (line ~50) and
+     * Operations querying a model directly (OperationBoundariesTest) — `Satellite::query()` (line ~50) and
      * `Group::query()` (line ~224).
      *
      * @var list<string>
@@ -160,7 +160,7 @@ final class KnownGaps
      */
     public const array MIDDLEWARE_RUNS_JOB_BY_HAND = [
         'App\Http\Middleware\HandleInertiaRequests',
-        'App\Services\Org\Http\Middleware\RequireAssignment',
+        'App\Services\Church\Http\Middleware\RequireAssignment',
     ];
 
     /** @var list<string> Features not extending their own service's Base{Service}Feature (BaseClassTest) */
@@ -186,6 +186,16 @@ final class KnownGaps
         'SignInUserJob',
         // Card
         'CreateQrCodeSvgJob',
+        // Church
+        'CreateRoleAssignmentJob',
+        'GetAccessScopeJob',
+        'GetChurchAdminCountJob',
+        'GetLandingOptionsJob',
+        'GetRoleAssignmentJob',
+        'GetSatelliteJob',
+        'GetSatellitesJob',
+        'GetStaffRolesJob',
+        'UpdateRoleAssignmentAsInactiveJob',
         // Family
         'CreateChildJob',
         'CreateDuplicateCandidatesJob',
@@ -195,6 +205,7 @@ final class KnownGaps
         'CreateSystemNoteJob',
         'GetChildWithFamilyJob',
         'GetChildrenJob',
+        'GetChurchChildJob',
         'GetDuplicateCandidateJob',
         'GetFamiliesJob',
         'GetFamilyByIdJob',
@@ -204,7 +215,6 @@ final class KnownGaps
         'GetGuardianForUserJob',
         'GetMatchingChildJob',
         'GetOpenDuplicatesJob',
-        'GetOrganizationChildJob',
         'GetPendingClaimForFamilyJob',
         'GetPendingFamilyClaimJob',
         'SearchFamiliesJob',
@@ -222,16 +232,6 @@ final class KnownGaps
         'GetGroupJob',
         'GetGroupsJob',
         'GetSuggestedGroupJob',
-        // Organization
-        'CreateRoleAssignmentJob',
-        'GetAccessScopeJob',
-        'GetBranchJob',
-        'GetBranchesJob',
-        'GetChurchAdminCountJob',
-        'GetLandingOptionsJob',
-        'GetRoleAssignmentJob',
-        'GetStaffRolesJob',
-        'UpdateRoleAssignmentAsInactiveJob',
         // Registry
         'CreateImportMappingJob',
         'CreateRegistryReviewSpreadsheetJob',
@@ -276,7 +276,7 @@ final class KnownGaps
      */
     public const array DOMAIN_TEST_NOT_MIRRORED = [
         'Domains/Auth/Tests/Jobs/MagicLinkJobsTest.php',
-        'Domains/Organization/Tests/AccessScopeTest.php',
+        'Domains/Church/Tests/AccessScopeTest.php',
         'Domains/Registry/Tests/Jobs/ProposeRegistryFamiliesTest.php',
     ];
 

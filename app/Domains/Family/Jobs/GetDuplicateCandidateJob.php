@@ -15,7 +15,7 @@ use App\Foundation\Jobs\BaseJob;
 final class GetDuplicateCandidateJob extends BaseJob
 {
     public function __construct(
-        private readonly int $organizationId,
+        private readonly int $churchId,
         private readonly int $id,
     ) {}
 
@@ -23,7 +23,7 @@ final class GetDuplicateCandidateJob extends BaseJob
     {
         return DuplicateCandidate::query()
             ->with(['subject', 'candidate'])
-            ->where('organization_id', $this->organizationId)
+            ->where('church_id', $this->churchId)
             ->findOrFail($this->id);
     }
 }

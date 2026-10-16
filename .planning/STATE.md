@@ -62,7 +62,7 @@ after each feature batch · stakeholder-facing text in plain words (ELI5) · com
   add a child to any found family; family page; resend confirmation; child status; v1 email correction.
 - **Registry import:** `php artisan nxtgen:registry-propose storage/imports/registry.csv` → review
   `storage/imports/registry-review.xlsx` (Families / Quarantine / Reconciliation) → `php artisan
-  nxtgen:registry-apply storage/imports/registry-review.xlsx --org=ccf`. No emails; safe to run twice.
+  nxtgen:registry-apply storage/imports/registry-review.xlsx --church=ccf`. No emails; safe to run twice.
   Export the **Registry** tab as CSV into `storage/imports/` (git-ignored — personal data).
 - **Fixed on the way:** `make check`'s migrate-check was wiping the WORKING database (no `.env.testing`) — added.
 - **Known gap:** a mixed group (Level 1) needs a per-gender "next group" for Moving-Up → TODO.md.

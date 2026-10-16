@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
-use App\Data\Models\Branch;
+use App\Data\Models\Church;
 use App\Data\Models\Group;
-use App\Data\Models\Organization;
 use App\Data\Models\RoleAssignment;
+use App\Data\Models\Satellite;
 use App\Data\Models\User;
 use App\Enums\GenderEnum;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
-use App\Foundation\Support\RouteOrganization;
+use App\Foundation\Support\RouteChurch;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -31,7 +31,7 @@ final class ChurchSeeder extends Seeder
         $settings = self::settings();
 
         DB::transaction(function () use ($settings): void {
-            $church = Organization::query()->firstOrCreate(['slug' => $settings['slug']], [
+            $church = Church::query()->firstOrCreate(['slug' => $settings['slug']], [
                 'name' => $settings['name'],
                 'timezone' => $settings['timezone'],
                 'currency' => 'AED',
@@ -40,13 +40,13 @@ final class ChurchSeeder extends Seeder
             ]);
 
             foreach ($settings['satellites'] as $name) {
-                Branch::query()->firstOrCreate(['organization_id' => $church->id, 'slug' => Str::slug($name)], ['name' => $name]);
+                Satellite::query()->firstOrCreate(['church_id' => $church->id, 'slug' => Str::slug($name)], ['name' => $name]);
             }
 
             self::groups($church);
 
             $admin = User::query()->firstOrCreate(['email' => $settings['first_admin_email']], ['name' => $settings['first_admin_name']]);
-            self::assign($church, $admin, RoleEnum::Admin, ScopeTypeEnum::Organization, $church->id);
+            self::assign($church, $admin, RoleEnum::Admin, ScopeTypeEnum::Church, $church->id);
         });
     }
 
@@ -65,7 +65,7 @@ final class ChurchSeeder extends Seeder
         };
 
         $slug = mb_strtolower($text('slug'));
-        if (preg_match('/^'.RouteOrganization::pattern().'$/', $slug) !== 1) {
+        if (preg_match('/^'.RouteChurch::pattern().'$/', $slug) !== 1) {
             throw new RuntimeException("Church address \"{$slug}\" is reserved by the app or not a valid address.");
         }
 
@@ -82,7 +82,7 @@ final class ChurchSeeder extends Seeder
     }
 
     /** NxtGen's groups: level 1 mixed (4–5), levels 2–4 split by gender. */
-    public static function groups(Organization $org): void
+    public static function groups(Church $church): void
     {
         $levels = [[2, 6, 7], [3, 8, 9], [4, 10, 12]];
         $previous = [];
@@ -91,7 +91,7 @@ final class ChurchSeeder extends Seeder
         foreach (array_reverse($levels) as [$level, $min, $max]) {
             foreach ([GenderEnum::Boy, GenderEnum::Girl] as $gender) {
                 $name = "Level {$level} ".($gender === GenderEnum::Boy ? 'Boys' : 'Girls');
-                $group = Group::query()->firstOrCreate(['organization_id' => $org->id, 'name' => $name], [
+                $group = Group::query()->firstOrCreate(['church_id' => $church->id, 'name' => $name], [
                     'sort' => $level * 10 + ($gender === GenderEnum::Boy ? 0 : 1),
                     'min_age' => $min,
                     'max_age' => $max,
@@ -103,16 +103,16 @@ final class ChurchSeeder extends Seeder
             $previous = $top;
         }
 
-        Group::query()->firstOrCreate(['organization_id' => $org->id, 'name' => 'Level 1'], [
+        Group::query()->firstOrCreate(['church_id' => $church->id, 'name' => 'Level 1'], [
             'sort' => 10, 'min_age' => 4, 'max_age' => 5, 'gender' => null, 'next_group_id' => null,
         ]);
     }
 
-    public static function assign(Organization $org, User $user, RoleEnum $role, ScopeTypeEnum $type, int $scopeId): void
+    public static function assign(Church $church, User $user, RoleEnum $role, ScopeTypeEnum $type, int $scopeId): void
     {
         // firstOrCreate: a rerun never switches back on a role the church removed.
         RoleAssignment::query()->firstOrCreate(
-            ['organization_id' => $org->id, 'user_id' => $user->id, 'role' => $role, 'scope_type' => $type, 'scope_id' => $scopeId],
+            ['church_id' => $church->id, 'user_id' => $user->id, 'role' => $role, 'scope_type' => $type, 'scope_id' => $scopeId],
             ['is_active' => true],
         );
     }
