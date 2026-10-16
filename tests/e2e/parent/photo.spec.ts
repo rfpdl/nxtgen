@@ -8,7 +8,7 @@ import { CHURCH, SATELLITES, sessionFile, uniqueSurname } from '../support/world
  */
 const PHOTO = 'tests/Fixtures/phone-photo-rotated-gps.jpg'
 
-test('a parent agrees and adds a photo; a Lifeshaper replaces it; the parent takes consent back', async ({
+test('a parent agrees; a Lifeshaper takes the first photo; the parent replaces it, then takes consent back', async ({
     page,
     browser,
 }) => {
@@ -29,30 +29,30 @@ test('a parent agrees and adds a photo; a Lifeshaper replaces it; the parent tak
     const staffCard = door.getByTestId('family-child').filter({ hasText: 'Noah' })
     await expect(staffCard).toContainText('The parent has not agreed to a photo yet')
 
-    // The parent agrees and chooses a photo.
-    await card.getByTestId('photo-consent').check()
-    await card.getByTestId('choose-photo').setInputFiles(PHOTO)
-    await expect(page.getByTestId('flash-success')).toContainText("Noah's photo is saved")
-    const img = card.getByTestId('child-photo-img')
-    await expect(img).toBeVisible()
-    // Really loaded (not a broken image) — waited for, the browser fetches it after the page shows.
-    await expect
-        .poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0))
-        .toBe(true)
-    // Upright: the original is landscape, tagged "rotate 90°".
-    expect(await img.evaluate((el: HTMLImageElement) => el.naturalHeight > el.naturalWidth)).toBe(
-        true,
-    )
+    // The parent agrees — no photo yet.
+    await card.getByTestId('give-photo-consent').click()
+    await expect(page.getByTestId('flash-success')).toContainText('a volunteer can now add')
 
-    // Now the Lifeshaper can take a new one at the door.
+    // The Lifeshaper takes the FIRST photo at the door.
     await door.reload()
     await staffCard.getByTestId('take-photo').setInputFiles(PHOTO)
     await expect(door.getByTestId('flash-success')).toContainText("Noah's photo is saved")
     await expect(staffCard.getByTestId('child-photo-img')).toBeVisible()
     await staff.close()
 
-    // The parent takes consent back: the photo is gone.
+    // The parent sees it, upright, and can replace it with their own.
     await page.reload()
+    const img = card.getByTestId('child-photo-img')
+    await expect
+        .poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0))
+        .toBe(true)
+    expect(await img.evaluate((el: HTMLImageElement) => el.naturalHeight > el.naturalWidth)).toBe(
+        true,
+    )
+    await card.getByTestId('choose-photo').setInputFiles(PHOTO)
+    await expect(page.getByTestId('flash-success')).toContainText("Noah's photo is saved")
+
+    // The parent takes consent back: the photo is gone.
     await card.getByTestId('withdraw-photo-consent').click()
     await expect(page.getByTestId('flash-success')).toContainText('no photo of Noah is kept')
     await expect(card.getByTestId('child-photo-img')).toHaveCount(0)

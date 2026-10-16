@@ -42,9 +42,14 @@ They sign in the way people do — by opening the emailed link (copied to `stora
 
 ## Starting production
 
-1. Set `NXTGEN_*` in the server's `.env` (church name and address, satellites as the registry sheet spells them,
-   first admin's email) — see `.env.example`.
-2. `php artisan migrate --force && php artisan db:seed --force` — creates that church and its first admin only
-   (never the demo logins). Safe to run again.
-3. The first admin signs in at `/login` with their email and adds everyone else on **People** (`/{church}/people`).
-4. Families: the registry import (`nxtgen:registry-propose` → review → `nxtgen:registry-apply`), once.
+1. In the server's `.env` (start from `.env.example`, which is set up for LOCAL use): `APP_ENV=production`,
+   `APP_DEBUG=false`, a real mailer (`MAIL_MAILER` + its keys — the first admin signs in by email link), and the
+   church: `NXTGEN_CHURCH_*`, `NXTGEN_SATELLITES` (spelled as the registry sheet spells them), and
+   `NXTGEN_FIRST_ADMIN_EMAIL`. Photos: `PHOTOS_DISK=s3` + `PHOTOS_BUCKET` (a PRIVATE bucket) + `AWS_*`.
+2. `php artisan migrate --force && php artisan db:seed --force` — creates that church, its satellites, NxtGen's
+   groups and the first admin only (never the demo logins). It refuses to run with a log-only mailer. Running it
+   again adds anything missing and changes nothing that exists.
+3. The first admin signs in at `/login` and adds everyone else on **People** (`/{church}/people`).
+4. Families: the registry import, once (`nxtgen:registry-propose` → review → `nxtgen:registry-apply`). It sends
+   no emails. If it reports families "waiting for an existing login to confirm" (a volunteer who is also a parent
+   in the sheet), open each and use **Send the confirmation link again**.

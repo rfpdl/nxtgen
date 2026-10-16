@@ -25,6 +25,7 @@ enum AccessRowEnum: string
     case GrantRoles = 'grant_roles';
     case OwnFamily = 'own_family';
     case ChildPhoto = 'child_photo';
+    case SeeChildPhoto = 'see_child_photo';
 
     /** The rule, in the matrix's words: who may. */
     public function rule(): string
@@ -43,6 +44,7 @@ enum AccessRowEnum: string
             self::ReviewDuplicates => 'Review possible duplicates: admins, for families they may edit',
             self::GrantRoles => 'Grant roles: church admin any; satellite admin Lifeshaper in own satellite',
             self::ChildPhoto => 'Take or upload a child\'s photo: staff who can see the family, only after the parent agreed',
+            self::SeeChildPhoto => 'See a child\'s photo: the child\'s own family, or staff who can see the family; only while consent stands',
             self::OwnFamily => 'The parent\'s own family: view, edit details, add/edit children (not status/group)',
         };
     }

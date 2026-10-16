@@ -2,34 +2,37 @@
 import { photoForUpload } from '@/lib/photoForUpload'
 import type { ChildPortal } from '@/types'
 import { router, useForm } from '@inertiajs/vue3'
-import { ref } from 'vue'
 
 /**
  * A child's photo (Roy 2026-10-16): a parent or a Lifeshaper can take one with the phone camera or choose one —
- * once the PARENT has agreed. A parent agrees here (and can take it back, which deletes the photo); staff can
+ * once the PARENT has agreed. A parent agrees here with its own button, saved straight away, so a volunteer can
+ * take the first photo at church (review 3); they can also take it back, which deletes the photo. Staff can
  * never agree for them. Choosing a file sends it straight away.
  */
 const props = defineProps<{
     child: ChildPortal
     who: 'parent' | 'staff'
     action: string
+    consentAction?: string
     withdrawAction?: string
 }>()
 
-const agreed = ref(props.child.photoConsent)
-const form = useForm<{ photo: File | null; consent: boolean }>({ photo: null, consent: false })
+const form = useForm<{ photo: File | null }>({ photo: null })
 
 async function send(event: Event): Promise<void> {
     const file = (event.target as HTMLInputElement).files?.[0]
     if (file === undefined) return
     // iPhone HEIC → JPEG, upright and small, before it leaves the phone.
     form.photo = await photoForUpload(file)
-    form.consent = props.who === 'parent' && agreed.value
     form.post(props.action, {
         forceFormData: true,
         preserveScroll: true,
         onFinish: () => form.reset(),
     })
+}
+
+function giveConsent(): void {
+    if (props.consentAction) router.put(props.consentAction, {}, { preserveScroll: true })
 }
 
 function withdraw(): void {
@@ -45,23 +48,25 @@ const button =
         <p v-if="who === 'staff' && !child.photoConsent" class="text-text-muted">
             The parent has not agreed to a photo yet. They can say yes on their family page.
         </p>
-        <label
-            v-if="who === 'parent' && !child.photoConsent"
-            class="text-text flex items-start gap-3"
+        <div
+            v-if="who === 'parent' && consentAction && !child.photoConsent"
+            class="flex flex-col gap-2"
         >
-            <input
-                v-model="agreed"
-                type="checkbox"
-                class="mt-1 size-5"
-                data-testid="photo-consent"
-            />
-            <span
-                >I agree that NxtGen may keep a photo of {{ child.nickname }} so volunteers can
+            <p class="text-text">
+                I agree that NxtGen may keep a photo of {{ child.nickname }} so volunteers can
                 recognise them at church. Only our volunteers and our family can see it, and I can
-                take this back any time.</span
+                take this back any time.
+            </p>
+            <button
+                type="button"
+                class="min-h-touch border-primary text-primary self-start rounded-md border px-4 font-semibold"
+                data-testid="give-photo-consent"
+                @click="giveConsent"
             >
-        </label>
-        <div v-if="agreed || child.photoConsent" class="flex flex-wrap gap-3">
+                Yes, I agree to a photo
+            </button>
+        </div>
+        <div v-if="child.photoConsent" class="flex flex-wrap gap-3">
             <!-- `image/*` (not a list of types) so iPhones offer every photo, HEIC included. -->
             <label :class="button">
                 {{ child.photoUrl ? 'Take a new photo' : 'Take a photo' }}
@@ -94,12 +99,8 @@ const button =
                 Take back my consent (deletes the photo)
             </button>
         </div>
-        <p
-            v-if="form.errors.photo || form.errors.consent"
-            role="alert"
-            class="text-danger font-semibold"
-        >
-            {{ form.errors.photo ?? form.errors.consent }}
+        <p v-if="form.errors.photo" role="alert" class="text-danger font-semibold">
+            {{ form.errors.photo }}
         </p>
     </div>
 </template>

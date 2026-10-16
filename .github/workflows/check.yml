@@ -2,7 +2,8 @@ name: check
 
 on:
   push:
-    branches: [main]
+    # release-* too: Release 1 is built on release-1, often without a PR open (review 3).
+    branches: [main, 'release-*']
   pull_request:
 
 concurrency:

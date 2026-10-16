@@ -46,3 +46,22 @@ under one blank login → **Accepted, fixed** (identity fields re-validated at l
 Every fix in this review was reverted in place and its test run: R1–R7 all fail when reverted. From the earlier
 diff review, 8 of 9 fail when reverted; the claim recheck under lock (H) survives — it only guards a concurrent
 interleaving a sequential test cannot reach. Logged with a trigger (R2 concurrency harness).
+
+
+---
+
+# Review 3 — 2026-10-16 (7fe14cd..3772d51)
+
+Requested model: `gpt-6-astra` on every call (runner did not report the actual model).
+
+| Round | Shape | Verdict | Caught |
+|---|---|---|---|
+| A | `adversarial-review --base 7fe14cd` | needs-attention | S3 adapter missing (high); upload/withdraw race + reads ignore consent (high); no consent-only path, hidden by a fixture (medium) |
+| B | `task --fresh` (absences + debt) | changes_requested | S3 (high); production bootstrap steps wrong (high); staff-first import leaves unlinked families silently (high); promised arch guards missing (high); 9 non-blocking |
+| 2 | `task --resume-last` with fixes + rulings | **agree** | nothing new; reminded of R1 gates (#18, #21) |
+| Fix 1 | `adversarial-review --scope working-tree` | needs-attention | rolled-back save orphans the new photo (high) → fixed |
+| Fix 2 | same, focused | needs-attention | withdrawal can sweep a pending upload (medium) → fixed |
+| Fix 3 | same, focused | needs-attention | commit failure leaves an orphan while consent stands (medium) → rejected as a defect, TODO #22 |
+
+Stopped after Fix 3: findings had narrowed to failure-of-the-database edges with no privacy consequence, and the
+main thread had agreed. Rulings and evidence: `review.md` → Review 3 → Rulings.

@@ -49,6 +49,7 @@ final class ApplyRegistryImportOperation extends Operation
         $mapped = $this->run(new GetImportedSourceKeysJob(organization: $this->organization));
         $branches = Branch::query()->where('organization_id', $this->organization->id)->get()->keyBy(fn (Branch $b): string => mb_strtolower($b->name));
         $families = $children = $skipped = 0;
+        $awaitingClaim = [];
         $problems = [];
 
         foreach ($this->groups as $familyKey => $rows) {
@@ -112,8 +113,8 @@ final class ApplyRegistryImportOperation extends Operation
                 continue;
             }
 
-            DB::transaction(function () use ($rows, $pending, $primary, $branch, $mapped, $familyKey, &$families, &$children): void {
-                $family = $this->existingFamily($rows, $mapped) ?? $this->register($primary, $branch, $families);
+            DB::transaction(function () use ($rows, $pending, $primary, $branch, $mapped, $familyKey, &$families, &$children, &$awaitingClaim): void {
+                $family = $this->existingFamily($rows, $mapped) ?? $this->register($primary, $branch, $families, $awaitingClaim);
 
                 foreach ($pending as $row) {
                     $child = $this->run(new AddChildToFamilyOperation(
@@ -128,7 +129,7 @@ final class ApplyRegistryImportOperation extends Operation
             });
         }
 
-        return new ImportResultData($families, $children, $skipped, $problems);
+        return new ImportResultData($families, $children, $skipped, $problems, $awaitingClaim);
     }
 
     /**
@@ -146,7 +147,8 @@ final class ApplyRegistryImportOperation extends Operation
         return null;
     }
 
-    private function register(ApprovedChildRowData $p, Branch $branch, int &$families): Family
+    /** @param list<string> $awaitingClaim */
+    private function register(ApprovedChildRowData $p, Branch $branch, int &$families, array &$awaitingClaim): Family
     {
         $result = $this->run(new RegisterFamilyOperation(new FamilyRegistrationData(
             organization: $this->organization,
@@ -173,6 +175,12 @@ final class ApplyRegistryImportOperation extends Operation
             lifestage: $p->orNull('Lifestage'),
             notify: false,
         )));
+
+        // The email is already someone's login (often staff added on People before the import): the family waits
+        // for them to confirm, and the import sends nothing — so the operator must be told (review 3, B3).
+        if ($result->outcome === RegistrationOutcomeEnum::ClaimSent || $result->outcome === RegistrationOutcomeEnum::ClaimResent) {
+            $awaitingClaim[] = mb_strtolower(trim($p->get('Parent email')));
+        }
 
         // Count only families this import actually created; an email already registered here reuses its family.
         if ($result->outcome !== RegistrationOutcomeEnum::AlreadyRegistered && $result->outcome !== RegistrationOutcomeEnum::ClaimResent) {

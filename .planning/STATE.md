@@ -109,3 +109,8 @@
   deleted; view = signed 30-min link AND viewer check (own family or staff who can see the family), no-store.
   Revert-checked: upright, viewer check, staff consent check. Production satellite default "CCF Dxb"; Sentry off.
   Gate: 274 Pest (incl. 31 arch), 95 Vitest; E2E 41 runs green.
+- **Review 3 (2026-10-16, uncommitted):** review-spar over 7fe14cd..3772d51 — Codex round 2 agrees. Fixed: S3 adapter,
+  Sentry message scrubbing (was documented-only), photo consent-only path + locked save/withdraw + every-file
+  withdrawal + consent-checked reads, production mailer guard, create-only ChurchSeeder reruns, import "awaiting
+  claim" report, AccessRow on the photo route, CI release-*. Logged: TODO #17–#22 (#18 and #21 before R1 ships).
+  Gate: 285 Pest, 99 Vitest, PHPStan L10; E2E 41 green.

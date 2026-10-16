@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Foundation\Support\SentryScrubber;
 use Sentry\Breadcrumb;
 use Sentry\Event;
+use Sentry\ExceptionDataBag;
 use Sentry\UserDataBag;
 
 /*
@@ -53,4 +54,17 @@ it('drops breadcrumb messages and data (SQL bindings, log lines) but keeps their
         ->and($crumbs[0]->getCategory())->toBe('db.sql.query')
         ->and($crumbs[0]->getMessage())->toBeNull()
         ->and($crumbs[0]->getMetadata())->toBe([]);
+});
+
+it('removes SQL values, emails and phone numbers from error messages (review 3)', function (): void {
+    $event = Event::createEvent();
+    $event->setExceptions([
+        new ExceptionDataBag(new RuntimeException('Duplicate entry (Connection: mysql, SQL: insert into users (name, email) values (Janice Ramos, janice@example.com))')),
+        new ExceptionDataBag(new RuntimeException('Could not reach janice@example.com on +971 50 123 4567')),
+    ]);
+
+    $values = array_map(fn (ExceptionDataBag $e): string => $e->getValue(), (new SentryScrubber)($event)->getExceptions());
+
+    expect($values[0])->toBe('Duplicate entry (Connection: mysql, SQL: [removed])')
+        ->and($values[1])->toBe('Could not reach [email] on [number]');
 });

@@ -21,8 +21,9 @@ describes the design; this records the choices that shaped or changed it.
 - **Staff backup password works only while someone serves**; parents sign in by email link only (plan D7).
 - **The landing choice is remembered per device** (cookie) and only ever sends someone to one of their own pages.
 
-- **E2E on every built screen, three browsers** (Roy: "it's important"). iPhone Safari, Android Chrome, desktop
-  Chrome, on their own database. Sign-in is tested through the real emailed link. Tablet/breakpoint layouts are
+- **E2E on every built screen** (Roy: "it's important"), on its own database. Parent journeys and the
+  Lifeshaper-at-the-door journey run on iPhone Safari, Android Chrome and desktop Chrome; admin journeys (People,
+  duplicates, family admin, satellite scope, backup password) run on desktop Chrome only — admins work at a laptop. Sign-in is tested through the real emailed link. Tablet/breakpoint layouts are
   a TODO (#12).
 - **Per-device rate limit is a setting** (`RATE_LIMIT_PER_DEVICE_PER_MINUTE`, 20 in production). Raised only for
   the browser tests, where three browsers on one machine look like one device. Per-email limits never change.

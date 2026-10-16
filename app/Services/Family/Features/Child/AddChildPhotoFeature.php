@@ -37,12 +37,16 @@ final class AddChildPhotoFeature extends BaseFamilyFeature
             throw ValidationException::withMessages(['consent' => 'Please agree to the photo first.']);
         }
 
-        DB::transaction(function () use ($child, $parent, $input): void {
+        $kept = DB::transaction(function () use ($child, $parent, $input): bool {
             if ($child->photo_consent_at === null) {
                 $this->run(new UpdateChildPhotoConsentJob(child: $child, parent: $parent));
             }
-            $this->run(new CreateChildPhotoJob(child: $child, file: $input->photo));
+
+            return $this->run(new CreateChildPhotoJob(child: $child, file: $input->photo));
         });
+        if (! $kept) {
+            return back()->with('error', 'Consent was taken back while the photo was sending, so it was not kept.');
+        }
 
         return back()->with('success', "{$child->displayName()}'s photo is saved.");
     }

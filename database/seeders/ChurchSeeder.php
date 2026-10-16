@@ -20,7 +20,8 @@ use RuntimeException;
 
 /**
  * Production start (D-R2): the church, its satellites, NxtGen's groups and ONE first church admin, from
- * `config('nxtgen.church')` (NXTGEN_* in .env). Safe to run again. The admin has no password: they sign in by
+ * `config('nxtgen.church')` (NXTGEN_* in .env). Safe to run again: it adds what is missing and changes NOTHING
+ * that exists — edited settings and groups stay, and a removed admin stays removed (review 3). The admin has no password: they sign in by
  * email link and add everyone else on People.
  */
 final class ChurchSeeder extends Seeder
@@ -30,7 +31,7 @@ final class ChurchSeeder extends Seeder
         $settings = self::settings();
 
         DB::transaction(function () use ($settings): void {
-            $church = Organization::query()->updateOrCreate(['slug' => $settings['slug']], [
+            $church = Organization::query()->firstOrCreate(['slug' => $settings['slug']], [
                 'name' => $settings['name'],
                 'timezone' => $settings['timezone'],
                 'currency' => 'AED',
@@ -39,7 +40,7 @@ final class ChurchSeeder extends Seeder
             ]);
 
             foreach ($settings['satellites'] as $name) {
-                Branch::query()->updateOrCreate(['organization_id' => $church->id, 'slug' => Str::slug($name)], ['name' => $name]);
+                Branch::query()->firstOrCreate(['organization_id' => $church->id, 'slug' => Str::slug($name)], ['name' => $name]);
             }
 
             self::groups($church);
@@ -90,7 +91,7 @@ final class ChurchSeeder extends Seeder
         foreach (array_reverse($levels) as [$level, $min, $max]) {
             foreach ([GenderEnum::Boy, GenderEnum::Girl] as $gender) {
                 $name = "Level {$level} ".($gender === GenderEnum::Boy ? 'Boys' : 'Girls');
-                $group = Group::query()->updateOrCreate(['organization_id' => $org->id, 'name' => $name], [
+                $group = Group::query()->firstOrCreate(['organization_id' => $org->id, 'name' => $name], [
                     'sort' => $level * 10 + ($gender === GenderEnum::Boy ? 0 : 1),
                     'min_age' => $min,
                     'max_age' => $max,
@@ -102,16 +103,17 @@ final class ChurchSeeder extends Seeder
             $previous = $top;
         }
 
-        Group::query()->updateOrCreate(['organization_id' => $org->id, 'name' => 'Level 1'], [
+        Group::query()->firstOrCreate(['organization_id' => $org->id, 'name' => 'Level 1'], [
             'sort' => 10, 'min_age' => 4, 'max_age' => 5, 'gender' => null, 'next_group_id' => null,
         ]);
     }
 
     public static function assign(Organization $org, User $user, RoleEnum $role, ScopeTypeEnum $type, int $scopeId): void
     {
-        RoleAssignment::query()->updateOrCreate(
-            ['user_id' => $user->id, 'role' => $role, 'scope_type' => $type, 'scope_id' => $scopeId],
-            ['organization_id' => $org->id, 'is_active' => true],
+        // firstOrCreate: a rerun never switches back on a role the church removed.
+        RoleAssignment::query()->firstOrCreate(
+            ['organization_id' => $org->id, 'user_id' => $user->id, 'role' => $role, 'scope_type' => $type, 'scope_id' => $scopeId],
+            ['is_active' => true],
         );
     }
 }

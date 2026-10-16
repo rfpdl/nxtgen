@@ -77,6 +77,7 @@ it('refuses a church address that clashes with a page of the app', function (): 
 
 it('never puts the demo accounts into production', function (): void {
     churchSettings();
+    config(['mail.default' => 'smtp']);
     app()->detectEnvironment(fn (): string => 'production');
 
     // Directly, not through `db:seed`, which (rightly) stops to ask "are you sure?" in production.
@@ -92,4 +93,30 @@ it('seeds the demo church locally', function (): void {
     seed(DatabaseSeeder::class);
 
     expect(User::query()->where('email', 'admin@nxtgen.test')->exists())->toBeTrue();
+});
+
+it('refuses to start production when emails would only go to the log — the first admin could never sign in (review 3)', function (string $mailer): void {
+    churchSettings();
+    config(['mail.default' => $mailer]);
+    app()->detectEnvironment(fn (): string => 'production');
+
+    expect(fn () => app(DatabaseSeeder::class)->setContainer(app())->__invoke())->toThrow(RuntimeException::class, 'MAIL_MAILER');
+    expect(Organization::query()->count())->toBe(0);
+})->with(['log', 'array']);
+
+it('adds what is missing on a second run, and changes nothing that exists (review 3)', function (): void {
+    churchSettings();
+    seed(ChurchSeeder::class);
+    $org = Organization::query()->sole();
+    $org->forceFill(['timezone' => 'Asia/Manila'])->save();
+    Group::query()->where('name', 'Level 1')->update(['min_age' => 3]);
+    RoleAssignment::query()->update(['is_active' => false]);          // the church removed that admin
+
+    churchSettings(['satellites' => 'CCF DXB|House Church|Al Quoz']);
+    seed(ChurchSeeder::class);
+
+    expect($org->fresh()?->timezone)->toBe('Asia/Manila')
+        ->and(Group::query()->where('name', 'Level 1')->sole()->min_age)->toBe(3)
+        ->and(RoleAssignment::query()->where('is_active', true)->count())->toBe(0)
+        ->and(Branch::query()->pluck('name')->sort()->values()->all())->toBe(['Al Quoz', 'CCF DXB', 'House Church']);
 });

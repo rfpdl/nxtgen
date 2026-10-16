@@ -54,7 +54,7 @@ final class ChildPortalData extends Data
             group: $child->group?->name,
             status: $child->status->label(),
             photoConsent: $child->photo_consent_at !== null,
-            photoUrl: $child->photo_path === null ? null
+            photoUrl: $child->photo_path === null || $child->photo_consent_at === null ? null
                 : URL::temporarySignedRoute('photos.child', now()->addMinutes(30), ['child' => $child->id, 'v' => md5($child->photo_path)]),
         );
     }

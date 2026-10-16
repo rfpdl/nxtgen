@@ -18,3 +18,9 @@
 | 14 | ~~Sentry DSN~~ — Roy: keep off for now | Roy 2026-10-16 | later |
 | 15 | Photo + consent built (Roy: parent or Lifeshaper, take or upload). **Roy to confirm:** consent wording; production private bucket (PHOTOS_DISK=s3) | Roy 2026-10-16 | before deploy |
 | 16 | iPhone HEIC: now converted to JPEG on the phone before upload (`lib/photoForUpload`). Still try once on a real iPhone (camera + Photos + Files) | photo | before deploy |
+| 17 | Missing arch guards from plan §10: DataObject, Enum, Migration, MorphMap, PhpStyle, ClassLength, TestCoverage | review 3 (B4) | before R2 freeze |
+| 18 | **R1 exit criterion:** access-matrix grid — each R1 row × anonymous, parent-only, staff-only, parent+staff, revoked staff, other-branch staff, other-org user; and response-allowlist tests per actor (door lite view has no photo/health) | plan §3.2, §3.3, §12 | **before Release 1 ships** |
+| 19 | TenancyArchTest blind to `DB::table()` / `->from()` / joins on tenant tables; ReachabilityTest matches basenames, not FQCNs | review 3 (B4) | before R2 (check-in adds builder queries) |
+| 20 | Two-connection concurrency tests: photo upload vs consent withdrawal; last-admin removal; claim acceptance (with #7) | review 3 | with the R2 concurrency harness |
+| 21 | Staging: real photo upload/read/delete against the private S3 bucket; registry import on staging, reconciliation balances | review 3 · plan §12 | before Release 1 ships |
+| 22 | Photo housekeeping: a scheduled sweep deleting stored photo files no `children.photo_path` points to (a commit that fails after the file is written leaves one; withdrawal already removes every file of the child, so this is storage tidiness, not privacy) | review 3 (Codex final round, rejected as a defect) | after R1 |

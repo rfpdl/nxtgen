@@ -399,6 +399,12 @@ desktop-chromium). Arch tests: Lucid boundaries, DataObject, Enum, Migration, Mo
 TestCoverage, Reachability, Tenancy, **every Feature declares its access-matrix row**, Flash contract, scan-key
 parity. Guards strip comments, exclude tests, and are each proven to fail once.
 
+**Built so far (review 3, 2026-10-16):** Lucid boundaries (`FeatureBoundariesTest`, `JobBoundariesTest`),
+Reachability (basename search — see TODO), Tenancy (`Model::query()` statements only — see TODO), access-matrix row
+(`AccessRowTest`: Org, Family, Auth photo), Flash contract, Inertia pages; component discipline in Vitest.
+**Not built yet:** DataObject, Enum, Migration, MorphMap, PhpStyle, ClassLength, TestCoverage guards; scan-key
+parity (Release 2, with cards). Listed in TODO #17 — the list above is the target, not the current state.
+
 ---
 
 ## 11. Reuse ledger and complexity delta

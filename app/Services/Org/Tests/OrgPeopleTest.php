@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Data\Models\Branch;
+use App\Data\Models\Family;
+use App\Data\Models\Guardian;
 use App\Data\Models\Organization;
 use App\Data\Models\RoleAssignment;
 use App\Data\Models\User;
@@ -114,8 +116,12 @@ describe('adding someone', function (): void {
 
     it('adds the role to an existing login (a parent who also serves) without a second account', function (): void {
         Notification::fake();
-        ['htc' => $htc, 'admin' => $admin] = peopleChurch();
+        ['org' => $org, 'htc' => $htc, 'admin' => $admin] = peopleChurch();
+        // A REAL parent (review 3: the fixture used to have no family, so it proved account reuse only).
         $parent = User::factory()->create(['name' => 'Pia Parent', 'email' => 'pia@example.com']);
+        $family = Family::factory()->create(['organization_id' => $org->id, 'home_branch_id' => $htc->id]);
+        $guardian = Guardian::factory()->create(['family_id' => $family->id, 'organization_id' => $org->id, 'user_id' => $parent->id]);
+        $family->forceFill(['primary_guardian_id' => $guardian->id])->save();
 
         // The reply names the email the admin typed, never the account's own name (SECURITY #16).
         actingAs($admin)->post('/ccf/people', addPerson('pia@example.com', RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id, 'Typed Differently'))
@@ -125,6 +131,10 @@ describe('adding someone', function (): void {
         expect(User::query()->where('email', 'pia@example.com')->count())->toBe(1)
             ->and($parent->fresh()?->name)->toBe('Pia Parent')
             ->and(RoleAssignment::query()->where('user_id', $parent->id)->count())->toBe(1);
+
+        // One login, both places.
+        actingAs($parent)->get('/ccf/family')->assertOk();
+        actingAs($parent)->get('/ccf/families')->assertOk();
     });
 
     it('says so when the person already has that role', function (): void {

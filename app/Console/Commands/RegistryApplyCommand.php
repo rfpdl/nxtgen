@@ -30,6 +30,11 @@ final class RegistryApplyCommand extends Command
         $problems = [...$approval->problems, ...$result->problems];
 
         $this->info("Families created: {$result->familiesCreated}. Children loaded: {$result->childrenCreated}. Already loaded, skipped: {$result->childrenSkipped}.");
+        if ($result->awaitingClaim !== []) {
+            $count = count($result->awaitingClaim);
+            $this->warn(($count === 1 ? '1 family waits' : "{$count} families wait").' for an existing login to confirm (no email was sent): '.implode(', ', $result->awaitingClaim));
+            $this->line('Open each family and use "Send the confirmation link again" — they confirm from that email.');
+        }
         foreach ($problems as $problem) {
             $this->warn($problem);
         }

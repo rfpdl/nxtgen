@@ -11,6 +11,7 @@ use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Inputs\ChildPhotoInput;
 use App\Services\Org\Features\BaseOrgFeature;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 
 /**
  * A Lifeshaper (any staff who can see the family) takes or uploads a child's photo — only once the PARENT has
@@ -32,7 +33,10 @@ final class StaffAddChildPhotoFeature extends BaseOrgFeature
             return back()->with('error', 'The parent has not agreed to a photo yet. They can say yes on their family page.');
         }
 
-        $this->run(new CreateChildPhotoJob(child: $child, file: $input->photo));
+        $kept = DB::transaction(fn (): bool => $this->run(new CreateChildPhotoJob(child: $child, file: $input->photo)));
+        if (! $kept) {
+            return back()->with('error', 'The parent has just taken back their consent, so the photo was not kept.');
+        }
 
         return back()->with('success', "{$child->displayName()}'s photo is saved.");
     }

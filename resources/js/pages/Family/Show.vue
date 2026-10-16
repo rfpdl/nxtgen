@@ -68,6 +68,9 @@ const { message, dismiss } = useFlashMessages()
                     :child="child"
                     who="parent"
                     :action="route('family.children.photo', [church.slug, child.id])"
+                    :consent-action="
+                        route('family.children.photo-consent.give', [church.slug, child.id])
+                    "
                     :withdraw-action="
                         route('family.children.photo-consent', [church.slug, child.id])
                     "

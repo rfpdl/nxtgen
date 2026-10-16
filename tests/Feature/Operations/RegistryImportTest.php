@@ -6,17 +6,24 @@ use App\Data\Models\Branch;
 use App\Data\Models\Child;
 use App\Data\Models\Family;
 use App\Data\Models\Group;
+use App\Data\Models\Guardian;
 use App\Data\Models\MagicLink;
 use App\Data\Models\Organization;
+use App\Data\Models\RoleAssignment;
 use App\Data\Models\User;
 use App\Enums\ChildStatusEnum;
+use App\Enums\MagicLinkPurposeEnum;
 use App\Enums\RegistrationSourceEnum;
+use App\Enums\RoleEnum;
+use App\Enums\ScopeTypeEnum;
+use App\Notifications\MagicLinkNotification;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\PendingCommand;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Reader\XLSX\Reader;
 use OpenSpout\Writer\XLSX\Writer;
 
+use function Pest\Laravel\actingAs;
 use function Pest\Laravel\artisan;
 
 /** @param array<string, string> $args */
@@ -386,4 +393,39 @@ it('reports an edited row with an invalid gender instead of crashing', function 
 
     runCommand('nxtgen:registry-apply', ['xlsx' => $edited, '--org' => 'ccf'], expectSuccess: false);
     expect(Child::query()->count())->toBe(0);
+});
+
+/*
+ * Review 3 (B3): staff are added on People BEFORE the import. A Lifeshaper who is also a parent in the sheet gets
+ * their family as a pending claim (the email is someone's login: never linked on the sheet's word) — and the
+ * import sends no emails. The apply must say so, and the existing resend must get them in.
+ */
+it('reports families waiting for an existing login to confirm, and the resend gets the parent in', function (): void {
+    Notification::fake();
+    [$org, $out] = proposeSample();
+    $lifeshaper = User::factory()->create(['email' => 'janice@example.com']);
+    RoleAssignment::factory()->create(['organization_id' => $org->id, 'user_id' => $lifeshaper->id, 'role' => RoleEnum::Lifeshaper, 'scope_type' => ScopeTypeEnum::Organization, 'scope_id' => $org->id]);
+    $admin = User::factory()->create();
+    RoleAssignment::factory()->create(['organization_id' => $org->id, 'user_id' => $admin->id, 'role' => RoleEnum::Admin, 'scope_type' => ScopeTypeEnum::Organization, 'scope_id' => $org->id]);
+
+    $apply = artisan('nxtgen:registry-apply', ['xlsx' => $out, '--org' => 'ccf']);
+    if (! $apply instanceof PendingCommand) {
+        throw new RuntimeException('Expected a pending command.');
+    }
+    $apply->expectsOutputToContain('1 family waits for an existing login to confirm (no email was sent): janice@example.com')->assertSuccessful()->run();
+
+    $family = Family::query()->whereHas('guardians', fn ($g) => $g->where('email', 'janice@example.com'))->sole();
+    expect(Guardian::query()->where('user_id', $lifeshaper->id)->exists())->toBeFalse();
+
+    // An admin sends the link from the family page; the parent opens it and the family is theirs.
+    actingAs($admin)->post("/ccf/families/{$family->id}/resend")->assertSessionHas('success');
+    $url = '';
+    Notification::assertSentOnDemand(MagicLinkNotification::class, function (MagicLinkNotification $n) use (&$url): bool {
+        $url = $n->url;
+
+        return $n->purpose === MagicLinkPurposeEnum::ClaimFamily;
+    });
+    actingAs($lifeshaper)->post(str_replace('/magic/claim/', '/magic/claim/', (string) parse_url($url, PHP_URL_PATH)))->assertRedirect('/home');
+
+    expect(Guardian::query()->where('user_id', $lifeshaper->id)->where('family_id', $family->id)->exists())->toBeTrue();
 });

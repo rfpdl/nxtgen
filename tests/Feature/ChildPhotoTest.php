@@ -14,6 +14,7 @@ use App\Enums\ScopeTypeEnum;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
@@ -101,6 +102,30 @@ describe('a parent', function (): void {
         $stranger = Child::factory()->create();
 
         actingAs($parent)->post("/ccf/family/children/{$stranger->id}/photo", ['photo' => photoFile(), 'consent' => true])->assertNotFound();
+    });
+});
+
+describe('consent first, photo later (review 3)', function (): void {
+    it('lets a parent agree without a photo, so a Lifeshaper can take the first one at church', function (): void {
+        ['org' => $org, 'htc' => $htc, 'parent' => $parent, 'child' => $child] = photoFamily();
+
+        actingAs($parent)->put("/ccf/family/children/{$child->id}/photo-consent")->assertRedirect()->assertSessionHas('success');
+        expect($child->fresh()?->photo_consent_by)->toBe($parent->id)->and($child->fresh()?->photo_path)->toBeNull();
+
+        actingAs(photoStaff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id))
+            ->post("/ccf/children/{$child->id}/photo", ['photo' => photoFile()])->assertSessionHas('success');
+        expect($child->fresh()?->photo_path)->not->toBeNull();
+    });
+
+    it('never shows a photo, nor gives a link to one, once consent is gone', function (): void {
+        ['parent' => $parent, 'child' => $child] = photoFamily();
+        actingAs($parent)->post("/ccf/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true]);
+        $url = URL::temporarySignedRoute('photos.child', now()->addMinutes(5), ['child' => $child->id]);
+        // The state an upload finishing after a withdrawal could leave: a stored photo, no consent.
+        $child->forceFill(['photo_consent_at' => null, 'photo_consent_by' => null])->save();
+
+        actingAs($parent)->get($url)->assertNotFound();
+        actingAs($parent)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('family.children.0.photoUrl', null));
     });
 });
 

@@ -190,3 +190,135 @@ matrix-row arch test~~ done · ~~decisions log~~ done (`docs/DECISIONS.md`).
 - Lint + README fixed. Still no e2e: parent child edit (route exists, **no UI** — R1 remaining list), link EXPIRY
   (needs a clock; the used-link path is covered).
 - **Next:** resume Phase 5 (Codex rounds A and B) over 7fe14cd + this working tree.
+
+---
+
+# Review 3 — Release 1 since the first review (7fe14cd..3772d51)
+
+**Status:** fixed, no decisions pending · **Date:** 2026-10-16 · **Reviewed:** `7fe14cd..3772d51` on `release-1` (base `e045817`)
+against `plan.md` §2, §3.1–3.3, §4.4–4.5, §5 photo, §6 R1, §7.6, §10, §12; `docs/DECISIONS.md`; Review 2 (paused)
+above; Roy's decisions in chat. Supersedes Review 2's open rows.
+
+Intent sources found: plan.md, spar.md, review.md (reviews 1–2), review-spar.md, docs/DECISIONS.md (started
+2026-10-15), STATE.md, TODO.md, SECURITY.md, git log, chat (Roy: Org/no /admin; People in R1; import once; E2E
+important + complete; photos by parent OR Lifeshaper after parent consent; one satellite "CCF Dxb"; Sentry off;
+consent wording OK; HEIC → convert).
+
+## Intent ledger
+
+| # | Commitment | Source | Status (before fixes) |
+|---|---|---|---|
+| 1 | Org service, `/{church}/…`, no `/admin` | Roy · plan §2 | DONE — OrgRoutingTest |
+| 2 | Reserved top-level paths never a church | plan §2 | DONE — OrgRoutingTest, ChurchSeederTest |
+| 3 | People: list/add/remove, grant ceiling, last-admin guard | D-R2 · §3.2 | DONE — revert-checked (7 guards) |
+| 4 | Class-admin grants | §3.2 | PARTIAL — refused until R2 (TODO #9) |
+| 5 | Production church + first admin from settings; never demo logins in prod | D-R2 · DECISIONS | DONE — ChurchSeederTest, revert-checked |
+| 6 | One production satellite "CCF Dxb" | Roy 10-16 | DONE (config default) |
+| 7 | Import once; rerun skips | D-R1 · §7.6 | DONE (pre-existing tests) |
+| 8 | Allergy explicit yes/no; "no" keeps no details; nickname required | B6 · DECISIONS | DONE — revert-checked |
+| 9 | Google Form parity (DGroup area/phone, lifestage, ministry) | §6 · B6 | DONE |
+| 10 | Edit family/guardian/child: own family (parent); church/home-satellite admin (staff); never status/group/email | §3.2 · B5 | DONE — revert-checked gates |
+| 11 | Full health shown to family + staff who can see the family | §3.3 | DONE |
+| 12 | Duplicates: review, dismiss/confirm, nothing merged, reviewers = editors of the new family | §6 · §4.2 | DONE — revert-checked |
+| 13 | System notes for email correction (§4.4), status, duplicates; staff-only | §4.4 · §6 | DONE |
+| 14 | List search + filters (status, group, satellite, unconfirmed, duplicates); export matches; never widens | §6 | DONE — revert-checked |
+| 15 | TenancyArchTest: tenant queries name the church | §3.1 · §10 | PARTIAL — only `Model::query()` statements (blind to `DB::table`/`->from()`) |
+| 16 | Every Feature declares its matrix row | §3.2 · §10 | PARTIAL — Org + Family services only; `ShowChildPhotoFeature` (Auth) makes an access decision undeclared |
+| 17 | Matrix rows tested for 7 actor kinds (anon, parent, staff, both, revoked, other-branch, other-org) | §3.2 | PARTIAL — rows tested, not the full 7-actor grid |
+| 18 | Response-level tests: forbidden fields + photo URLs absent per actor | §3.3 | UNTESTED for the lite door view (no photo/health assertion) |
+| 19 | Remembered landing, switchable, no off-site redirect | §4.5 | DONE — revert-checked |
+| 20 | Staff backup password; staff only, while serving | D7 · DECISIONS | DONE — revert-checked |
+| 21 | Printable QR poster | §6 | DONE (+ E2E) |
+| 22 | Sentry with PII scrubber: "no child data in events" | §1 · DECISIONS | **DOCUMENTED-ONLY** — exception messages (SQL bindings: names, emails) not scrubbed |
+| 23 | Photos: parent OR Lifeshaper takes/uploads, only after PARENT consent; staff never consent | Roy 10-16 | PARTIAL — a parent cannot consent without uploading (round A) |
+| 24 | Photo consent withdrawal removes the photo | DECISIONS | PARTIAL — an in-flight upload can survive it; reads do not re-check consent (round A) |
+| 25 | Photos private: signed links + viewer check; S3 private bucket in production | §5 · DECISIONS | PARTIAL — S3 adapter not installed (round A) |
+| 26 | iPhone HEIC converted on the phone | Roy 10-16 | DONE (unit) — real-iPhone check TODO #16 |
+| 27 | E2E complete for what is built; 3 browsers; never touches working data | Roy · §10 | DONE — 41 runs; DB guard proven; link expiry not E2E (TODO #13) |
+| 28 | R1 exit criteria (§12) | §12 | PARTIAL — matrix grid (#17), import reconciliation on staging, `make e2e` green ✓ |
+
+## Reuse and debt ledger
+
+| New or changed concept | Closest existing implementation | Old path removed? | Judgment |
+|---|---|---|---|
+| `FamilyDetailsInput`, `GuardianDetailsInput` | rules inside `RegisterFamilyInput` / `GuardianInput` | yes — registration spreads them | good refactor |
+| `GuardianFieldset`, `FamilyFieldset` | markup inside `RegisterFamilyForm` (267 → 141 lines) | yes | good refactor |
+| `Family::scopeMatching` | matching inside `SearchFamiliesJob` | yes — both jobs use it | good refactor |
+| `DuplicatePairData` | `FamilySearchResultData` (reused for both sides) | n/a | reuse |
+| `GuardianEditData` | `GuardianDetailsData` (+ email) | n/a | necessary addition — email must not be editable here (§4.4) |
+| `FamilyDetailsData` | family fields inside `FamilyRegistrationData` | no | **second copy** — justified for now (create vs edit DTO); third copy = consolidate |
+| `GetChildWithFamilyJob` | `GetOrganizationChildJob`, `GetFamilyChildJob` | n/a | necessary (church read FROM the child); allow-listed in TenancyArchTest |
+| `canManagePeople` / `canReviewDuplicates` | private `isAnyAdmin()` | n/a | fine — two rules that may diverge, one implementation |
+| `SignOutButton` | three inline copies would have been needed | n/a | good refactor (one owner) |
+| `AddChildPhotoFeature` / `StaffAddChildPhotoFeature` | shared `ChildPhotoInput` + `CreateChildPhotoJob` | n/a | necessary — different consent rules per actor |
+| `UpdateDuplicateCandidateStatusJob` | `UpdateChildStatusJob` pattern | n/a | necessary |
+| `CreateSystemNoteJob`, `GetFamilyNotesJob`, `Note` | none (table existed, unused) | n/a | necessary addition |
+| `E2EServiceProvider`, `FamilyListQuery`, `config/nxtgen.php` | none | n/a | necessary |
+| `AccessRowEnum` + `#[AccessRow]` | none | n/a | necessary (plan §10) |
+
+**Complexity delta (7fe14cd..3772d51):** ≈ 60 public concepts added (Jobs, Features, DTOs, components, routes,
+config keys); 0 removed; 3 consolidations (field rules, fieldsets, search matching). Parallel paths retained: 1
+(`FamilyDetailsData` beside `FamilyRegistrationData`, trigger above).
+
+## Ledger after fixes
+
+| # | Was | Now |
+|---|---|---|
+| 22 Sentry "no child data" | DOCUMENTED-ONLY | DONE — `SentryScrubber::clean` strips SQL values, emails, phone digits from exception messages (unit test, revert-checked) |
+| 23 Parent consent without a photo | PARTIAL | DONE — `GivePhotoConsentFeature` + "Yes, I agree" button; Pest + E2E: parent agrees → Lifeshaper takes the FIRST photo |
+| 24 Withdrawal removes the photo | PARTIAL | DONE — child row locked + consent checked BEFORE the file is written; withdrawal locks and deletes EVERY file of the child; reads and links refuse without consent (read guard revert-checked). Two-connection test → TODO #20 |
+| 25 Private S3 in production | PARTIAL | DONE in code — S3 adapter installed, real disk built in a test; staging upload/read/delete → TODO #21 |
+| 15 TenancyArchTest | PARTIAL | PARTIAL — logged TODO #19 (before R2) |
+| 16 Matrix row declared | PARTIAL | DONE — AccessRowTest covers the Auth photo feature (`SeeChildPhoto`) |
+| 17 / 18 Matrix grid, response allowlist | PARTIAL / UNTESTED | logged TODO #18 — **Release 1 exit criterion, before shipping** |
+| 28 R1 exit criteria | PARTIAL | PARTIAL — #18 and staging import reconciliation (#21) remain |
+
+**Tally (28 rows, after fixes):** done 22 · partial 4 (#4 R2, #15, #17, #28) · untested 1 (#18) · missing 0 ·
+documented-only 0 (was 1). **Debt ledger:** necessary 9 · good refactor 4 · reuse 1 · second copy justified 1 ·
+missed 0 · duplicate 0 · premature 0.
+
+## Rulings
+
+| Round | Finding | Ruling |
+|---|---|---|
+| A | [high] S3 adapter not installed — production photos would fail | **Accepted** — installed; real S3 disk built in a test (failed before) |
+| A | [high] upload racing withdrawal keeps a photo; reads ignore consent | **Accepted** — lock + consent check before writing; withdrawal sweeps every file; reads refuse; SECURITY #17 |
+| A | [medium] parent cannot consent without uploading; test set consent in the DB (fixture blindness) | **Accepted** — consent-only endpoint + button; E2E covers the real path |
+| B1 | S3 adapter (same as A) | **Accepted** |
+| B2 | README production steps produce the demo church and log-only mail | **Accepted** — seeder refuses log/array mailer in production; README rewritten |
+| B3 | staff added before the import get unlinked families and no email | **Accepted** — import reports them; resend → claim tested end to end |
+| B4 | promised arch guards missing; reachability by basename | **Accepted, reclassified** — plan §10 now says built vs not; TODO #17, #19 (trigger: before R2) |
+| B nb | 7-actor grid + response allowlist | **Accepted, reclassified** — TODO #18, R1 exit criterion |
+| B nb | tenancy guard blind to builder queries; photo feature outside AccessRowTest | Builder: logged #19 · Photo: **fixed** |
+| B nb | two-connection concurrency evidence | **Accepted, deferred** — TODO #20 (R2 harness) |
+| B nb | People "parent who serves" fixture has no family | **Accepted** — real family; both pages asserted |
+| B nb | ChurchSeeder reruns overwrite edits and reactivate a removed admin | **Accepted** — create-only; test |
+| B nb | CI ignores pushes to release-1 | **Accepted** — `release-*` added |
+| B nb | DECISIONS overstates "three browsers" | **Accepted** — states which journeys run where |
+| B nb | E2E could reuse a non-e2e server | **Rejected** — `/__e2e/health` exists only under APP_ENV=e2e, whose provider refuses a non-`_e2e` DB; global setup checks again. Codex round 2 did not contest |
+| B nb | FamilyDetailsData duplicates FamilyRegistrationData fields | **Accepted as a justified second copy** — consolidate on a third |
+| Fix review 1 | [high] rolled-back save orphans the new photo outside withdrawal cleanup | **Accepted** — withdrawal deletes every file of the child; old file deleted after commit |
+| Fix review 2 | [medium] withdrawal can sweep a pending upload | **Accepted** — lock + consent check before writing |
+| Fix review 3 | [medium] commit failure after save leaves an orphan while consent stands | **Rejected as a defect** — withdrawal still removes it, so no photo outlives consent; storage tidiness → TODO #22 |
+
+Not everything was accepted: one rejection on evidence (E2E server identity), one reclassified as housekeeping
+(post-commit orphan). The high acceptance rate is mostly a signal about the work: the photo feature shipped with
+a consent path missing and a race the tests could not see — both found here, not by the green suite.
+
+## Outcome
+
+**Fixed now** (each test failed before its fix): S3 adapter · Sentry message scrubbing · photo consent-only path ·
+photo save/withdraw locking + every-file withdrawal + consent-checked reads · production mailer guard · ChurchSeeder
+create-only reruns · import "awaiting claim" report + resend→claim test · AccessRow on the photo route · People
+fixture with a real family · CI trigger · plan §10 / DECISIONS / README truthful.
+
+**Needs a decision:** none — every finding fell inside Roy's decisions or the plan.
+
+**Logged** (TODO, with triggers): #17 arch guards (before R2 freeze) · **#18 matrix grid + response allowlist
+(before Release 1 ships)** · #19 tenancy/reachability guard gaps (before R2) · #20 two-connection concurrency tests
+(R2 harness) · #21 staging S3 + import reconciliation (before R1 ships) · #22 photo orphan sweep (after R1).
+
+**Codex sign-off:** round 2 (resumed thread) **agree**. Requested model `gpt-6-astra` on every call; the runner did
+not report the model actually used.
+
+**Gate:** `make check` green — 285 Pest (incl. 31 arch), 99 Vitest, PHPStan L10; `make e2e` 41 runs green.
