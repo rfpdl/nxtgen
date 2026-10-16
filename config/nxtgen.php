@@ -13,8 +13,8 @@ return [
         'name' => env('NXTGEN_CHURCH_NAME', 'CCF'),
         'timezone' => env('NXTGEN_CHURCH_TIMEZONE', 'Asia/Dubai'),
         'satellites' => env('NXTGEN_SATELLITES', 'CCF Dxb'),   // Roy 2026-10-16: one satellite to start
-        'first_admin_email' => env('NXTGEN_FIRST_ADMIN_EMAIL'),
-        'first_admin_name' => env('NXTGEN_FIRST_ADMIN_NAME', 'Church Admin'),
+        'first_admin_email' => env('NXTGEN_FIRST_ADMIN_EMAIL', 'blivejesus@gmail.com'),   // Roy 2026-10-16
+        'first_admin_name' => env('NXTGEN_FIRST_ADMIN_NAME', 'Roy'),
     ],
 
     'rate_limits' => [
