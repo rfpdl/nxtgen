@@ -2,8 +2,7 @@
 
 declare(strict_types=1);
 
-use Symfony\Component\Finder\Finder;
-use Symfony\Component\Finder\SplFileInfo;
+namespace Tests\Architecture;
 
 /**
  * Features orchestrate. Jobs hold the business logic. This is the guard that was missing.
@@ -26,36 +25,19 @@ use Symfony\Component\Finder\SplFileInfo;
  * manipulate collections the Jobs returned. Deciding *which* rows exist is the Jobs' job.
  */
 /**
- * @return list<SplFileInfo>
+ * The concrete Features, as paths. The base classes are inherited, never run, and hold the accessors.
+ *
+ * @return list<string>
  */
-function featureFiles(): array
+function servedFeatureFiles(): array
 {
-    $files = [];
-
-    foreach (Finder::create()->files()->in(base_path('app/Services'))->name('*Feature.php') as $file) {
-        if (! str_starts_with($file->getFilename(), 'Base')) {
-            $files[] = $file;
-        }
-    }
-
-    return $files;
-}
-
-/**
- * Comments stripped, because half the docblocks in this codebase quote the queries they replaced.
- * A guard that reads prose finds violations in explanations of why there are none.
- */
-function withoutComments(string $source): string
-{
-    $source = (string) preg_replace('#/\*.*?\*/#s', '', $source);
-
-    return (string) preg_replace('#//.*$#m', '', $source);
+    return array_values(array_filter(featureFiles(), fn (string $f): bool => ! str_starts_with(basename($f), 'Base')));
 }
 
 it('finds the Features it is supposed to be guarding', function (): void {
     // The guard on the guard. An empty file list would make every assertion below pass forever, and
     // this project has already shipped one vacuous gate.
-    expect(featureFiles())->not->toBeEmpty();
+    expect(servedFeatureFiles())->not->toBeEmpty();
 });
 
 it('never queries a model from a Feature', function (): void {
@@ -68,21 +50,15 @@ it('never queries a model from a Feature', function (): void {
      * `GetCompanyByIdJob`, which solves the same problem: a Feature has an id from a request body and
      * a Job needs a model.
      */
-    $methods = [
-        'where', 'whereKey', 'whereIn', 'whereNotIn', 'whereHas', 'whereDoesntHave', 'whereBelongsTo',
-        'whereNull', 'whereNotNull', 'whereRaw', 'whereRelation', 'query', 'create', 'createMany',
-        'insert', 'insertOrIgnore', 'upsert', 'updateOrCreate', 'firstOrCreate', 'firstOrNew',
-        'update', 'delete', 'destroy', 'find', 'findOrFail', 'findMany', 'first', 'firstOrFail',
-        'sole', 'withTrashed', 'lockForUpdate',
-    ];
-
-    $pattern = '/[A-Z]\w+::('.implode('|', $methods).')\s*\(/';
-
+    /*
+     * The pattern is shared with the Operation, Middleware and Tenancy guards (Helpers.php `modelEntryPattern()`),
+     * so the four cannot drift apart — aegis's three copies did, and a `whereIn` passed in an Operation.
+     */
     $offenders = [];
 
-    foreach (featureFiles() as $file) {
-        if (preg_match_all($pattern, withoutComments($file->getContents()), $matches) > 0) {
-            $offenders[] = $file->getFilename().': '.implode(', ', array_unique($matches[0]));
+    foreach (servedFeatureFiles() as $file) {
+        if (preg_match_all(modelEntryPattern(), codeOf($file), $matches) > 0) {
+            $offenders[] = basename($file).': '.implode(', ', array_unique($matches[0]));
         }
     }
 
@@ -95,18 +71,11 @@ it('never queries a model from a Feature', function (): void {
 it('never writes to a loaded model from a Feature', function (): void {
     // The same rule for the instance form, which the static pattern above cannot see. Persistence is
     // a Job's business whether the model arrived as a class or as a variable.
-    $methods = [
-        'save', 'saveQuietly', 'update', 'updateQuietly', 'delete', 'forceDelete', 'restore',
-        'increment', 'decrement', 'forceFill',
-    ];
-
-    $pattern = '/\$\w+->('.implode('|', $methods).')\s*\(/';
-
     $offenders = [];
 
-    foreach (featureFiles() as $file) {
-        if (preg_match_all($pattern, withoutComments($file->getContents()), $matches) > 0) {
-            $offenders[] = $file->getFilename().': '.implode(', ', array_unique($matches[0]));
+    foreach (servedFeatureFiles() as $file) {
+        if (preg_match_all(eloquentInstanceWritePattern(), codeOf($file), $matches) > 0) {
+            $offenders[] = basename($file).': '.implode(', ', array_unique($matches[0]));
         }
     }
 
@@ -125,8 +94,8 @@ it('uses no raw DB call from a Feature except a transaction', function (): void 
      */
     $offenders = [];
 
-    foreach (featureFiles() as $file) {
-        preg_match_all('/DB::(\w+)\(/', withoutComments($file->getContents()), $matches);
+    foreach (servedFeatureFiles() as $file) {
+        preg_match_all('/DB::(\w+)\(/', codeOf($file), $matches);
 
         $raw = array_values(array_unique(array_filter(
             $matches[1],
@@ -134,7 +103,7 @@ it('uses no raw DB call from a Feature except a transaction', function (): void 
         )));
 
         if ($raw !== []) {
-            $offenders[] = $file->getFilename().': DB::'.implode(', DB::', $raw);
+            $offenders[] = basename($file).': DB::'.implode(', DB::', $raw);
         }
     }
 
@@ -149,9 +118,9 @@ it('never calls one Feature from another', function (): void {
     // the same work share a Job, and if the work spans domains it is an Operation.
     $offenders = [];
 
-    foreach (featureFiles() as $file) {
-        if (preg_match('/(new \w+Feature\(|\w+Feature::class)/', withoutComments($file->getContents())) === 1) {
-            $offenders[] = $file->getFilename();
+    foreach (servedFeatureFiles() as $file) {
+        if (preg_match('/(new \w+Feature\(|\w+Feature::class)/', codeOf($file)) === 1) {
+            $offenders[] = basename($file);
         }
     }
 

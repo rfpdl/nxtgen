@@ -26,8 +26,6 @@ Updated 2026-10-17. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 | 12 | E2E per breakpoint: a **tablet** project (iPad portrait/landscape) and layout assertions per size (no sideways scroll, ≥44/56px targets, menu fits); also run the staff photo-consent journey on phones (needs its own child per run) | Roy 2026-10-15 · review 4 |
 | 13 | E2E for link EXPIRY (2 h login / 7 d verify) — needs a controllable clock in the e2e server; Pest covers it | review 2 |
 | 7, 20 | **Two-connection concurrency tests:** claim acceptance; photo upload vs consent withdrawal; last-admin removal | review-spar · review 3 |
-| 19 | TenancyArchTest blind to `DB::table()` / `->from()` / joins on tenant tables; ReachabilityTest matches basenames, not FQCNs — check-in adds builder queries | review 3 (B4) |
-| 17 | Missing arch guards from plan §10: DataObject, Enum, Migration, MorphMap, PhpStyle, ClassLength, TestCoverage (before the R2 freeze) | review 3 (B4) |
 | 10 | E2E "test map" like admin-v2 (`e2e/map/serve.mjs`): the access matrix as a page, each cell → its tests, with Run buttons | Roy: admin-v2 has a good page per item |
 | — | Open questions for R2: `lifeshapers_can_open` default; follow-up threshold (weeks absent) — plan §13 | plan §13 |
 
@@ -53,3 +51,5 @@ Updated 2026-10-17. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 | 6 | Remaining R1 build list (review 1) — all built | 2026-10-16 |
 | 14 | Sentry wired with a PII scrubber — kept OFF for now (Roy) | 2026-10-16 |
 | 15 | Photos + consent (parent or Lifeshaper; consent wording approved by Roy) | 2026-10-16 |
+| 17 | Arch guards from aegis: PhpStyle, DataObject, Enum, Migration, ClassLength, TestCoverage, Job constructors, Operation + Middleware boundaries, base classes, domain test location, MorphMap (adapted to `enforceMorphMap`) — each with a shrinking known-gaps list (`tests/Architecture/KnownGaps.php`). Refactor batch 03 | 2026-10-17 |
+| 19 | TenancyArchTest sees `DB::table()` / `->from()` / joins / static finds; ReachabilityTest matches FQCNs. Refactor batch 03 | 2026-10-17 |

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Tests\Architecture;
+
 use Symfony\Component\Finder\Finder;
 
 /**
@@ -12,11 +14,6 @@ use Symfony\Component\Finder\Finder;
  * aegis (mainly) built"* — was that the standard already exists and this project had adopted a
  * fraction of it.
  */
-function jobFiles(): Finder
-{
-    return Finder::create()->files()->in(base_path('app/Domains'))->path('#^[^/]+/Jobs/#')->name('*.php');
-}
-
 /**
  * @return list<string>
  */
@@ -25,14 +22,14 @@ function jobNames(): array
     $names = [];
 
     foreach (jobFiles() as $file) {
-        $names[] = $file->getBasename('.php');
+        $names[] = basename($file, '.php');
     }
 
     return $names;
 }
 
 it('finds the Jobs it is supposed to be guarding', function (): void {
-    expect(iterator_count(jobFiles()))->toBeGreaterThan(10);
+    expect(count(jobFiles()))->toBeGreaterThan(10);
 });
 
 /**
@@ -47,12 +44,12 @@ it('never opens a transaction inside a Job', function (): void {
     $offenders = [];
 
     foreach (jobFiles() as $file) {
-        $source = $file->getContents();
+        $source = codeOf($file);
 
         // `lockForUpdate` is fine and expected — a Job may take locks INSIDE the caller's
         // transaction. Beginning one is what is refused.
         if (preg_match('/DB::(transaction|beginTransaction)\s*\(/', $source) === 1) {
-            $offenders[] = str_replace(base_path().'/', '', (string) $file->getRealPath());
+            $offenders[] = relativePath($file);
         }
     }
 
@@ -144,10 +141,10 @@ it('never runs a Job from inside a Job', function (): void {
     $offenders = [];
 
     foreach (jobFiles() as $file) {
-        $source = (string) preg_replace('#/\*.*?\*/#s', '', $file->getContents());
+        $source = codeOf($file);
 
         if (preg_match('/\$this->run\(|new \w+Job\(/', $source) === 1) {
-            $offenders[] = $file->getFilename();
+            $offenders[] = basename($file);
         }
     }
 
@@ -163,10 +160,10 @@ it('never reaches for a Feature or an Operation from a Job', function (): void {
     $offenders = [];
 
     foreach (jobFiles() as $file) {
-        $source = (string) preg_replace('#/\*.*?\*/#s', '', $file->getContents());
+        $source = codeOf($file);
 
         if (preg_match('/(\w+Feature|\w+Operation)(::class|\()/', $source) === 1) {
-            $offenders[] = $file->getFilename();
+            $offenders[] = basename($file);
         }
     }
 
