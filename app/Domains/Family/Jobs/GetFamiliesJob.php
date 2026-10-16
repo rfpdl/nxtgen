@@ -9,15 +9,16 @@ use App\Data\Models\Family;
 use App\Domains\Family\DataObjects\FamilyListFiltersData;
 use App\Enums\DuplicateStatusEnum;
 use App\Foundation\Jobs\BaseJob;
+use App\Foundation\Support\ListPage;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 
 /**
  * The registration list (and its Excel download): families in the viewer's satellites, narrowed by the
  * filters. `$satelliteIds` null = every satellite; a chosen satellite outside them yields nothing, never more.
+ * Paged in the database, 50 at a time (ListPage); `$page` null = every filtered family (the Excel download).
  *
- * @extends BaseJob<Collection<int, Family>>
+ * @extends BaseJob<ListPage<Family>>
  */
 final class GetFamiliesJob extends BaseJob
 {
@@ -26,14 +27,15 @@ final class GetFamiliesJob extends BaseJob
         private readonly Church $church,
         private readonly ?array $satelliteIds,
         private readonly FamilyListFiltersData $filters = new FamilyListFiltersData,
+        private readonly ?int $page = null,
     ) {}
 
-    /** @return Collection<int, Family> */
-    public function handle(): Collection
+    /** @return ListPage<Family> */
+    public function handle(): ListPage
     {
         $f = $this->filters;
 
-        return Family::query()
+        $query = Family::query()
             ->with(['primaryGuardian.user', 'homeSatellite', 'children'])
             ->where('church_id', $this->church->id)
             ->when($this->satelliteIds !== null, fn (Builder $q) => $q->whereIn('home_satellite_id', $this->satelliteIds ?? []))
@@ -56,7 +58,8 @@ final class GetFamiliesJob extends BaseJob
                             ->where(fn (QueryBuilder $id) => $id
                                 ->whereColumn('children.id', 'duplicate_candidates.subject_id')
                                 ->orWhereColumn('children.id', 'duplicate_candidates.candidate_id')))))))
-            ->latest('id')
-            ->get();
+            ->latest('id');
+
+        return $this->page === null ? ListPage::all($query) : ListPage::of($query, $this->page);
     }
 }

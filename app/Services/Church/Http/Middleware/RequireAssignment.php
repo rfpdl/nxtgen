@@ -11,7 +11,6 @@ use App\Foundation\Support\RequestContext;
 use App\Foundation\Support\RouteChurch;
 use Closure;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Lucid\Bus\UnitDispatcher;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -35,12 +34,9 @@ final class RequireAssignment
         abort_unless($scope->canWorkHere(), 404);
 
         RequestContext::putChurch($request, $church);
+        // The staff menu (HandleInertiaRequests' `churchNav`) is read from here too — never Inertia::share, which
+        // is process-wide and would outlive this request.
         RequestContext::putScope($request, $scope);
-        // What the staff frame shows (ChurchShell). Navigation only — every Feature still asks the scope itself.
-        Inertia::share('churchNav', [
-            'can_manage_people' => $scope->canManagePeople(),
-            'can_review_duplicates' => $scope->canReviewDuplicates(),
-        ]);
 
         return $next($request);
     }

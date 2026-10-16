@@ -11,6 +11,7 @@ use Tests\TestCase;
 require_once __DIR__.'/Support/InertiaHelpers.php';
 require_once __DIR__.'/Support/FormPayloads.php';
 require_once __DIR__.'/Support/World.php';
+require_once __DIR__.'/Support/Downloads.php';
 require_once __DIR__.'/Architecture/Helpers.php';
 
 /*

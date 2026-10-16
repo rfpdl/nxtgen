@@ -7,11 +7,11 @@
 | | |
 |---|---|
 | **What** | NxtGen — kids-church app for CCF (first church), satellite "CCF Dxb". Generic, multi-church; may grow into a whole-church app (names stay ministry-neutral) |
-| **Release 1 — Registration** | **Built and committed** on `release-1` (`7fe14cd..` HEAD). Ships when plan §12's exit criteria pass: TODO **#18** (access-matrix grid + response allowlists) and **#21** (staging dry run) remain |
+| **Release 1 — Registration** | **Built and committed** on `release-1`. Ships when plan §12's exit criteria pass: only TODO **#21** (staging dry run) remains — #18 (access-matrix grid + response allowlists) done in refactor 09 |
 | **Release 2 — Check-in** | Not started; waits for the refactor (28 Oct is a target, not a hard date). Was target 2026-10-28, dry run Sat 2026-10-24. Open questions in plan §13 (#2, #3) |
-| **Next step** | **Refactor first** — `tasks/2026-10-17-refactor/` (spec + issues 01–09, mattpocock chain: tdd → code-review). Then Laravel Cloud (#23) → staging dry run (#21) → go live → Release 2 |
+| **Next step** | **Refactor complete** — `tasks/2026-10-17-refactor/` issues 01–09 all resolved (09: lists paged in the database, TODO #24; access-matrix grid + response allowlists, TODO #18, SECURITY #4/#5). Batch 09 awaits Roy's commit; Roy to confirm TODO #28 (who may resend). Next: Laravel Cloud (#23, Roy) → staging dry run (#21) → go live → Release 2 check-in |
 | **Waiting on Roy** | Laravel Cloud + mail provider + Registry CSV (TODO #23); "No group" filter yes/no (plan §13 q5); a real-iPhone photo try (TODO #16) |
-| **Gate** | `make check` green — 310 Pest (incl. 31 arch), 106 Vitest, PHPStan L10 · `make e2e` green — 43 runs (iPhone Safari, Android Chrome, desktop Chrome) |
+| **Gate** | `make check` green — 1313 Pest + 171 arch (450 access-matrix cells, 64 open-route cells, 48 allowlist cases), 114 Vitest, PHPStan L10 · `make e2e` green — 43 runs (iPhone Safari, Android Chrome, desktop Chrome) |
 
 ## Where to look
 
@@ -22,7 +22,7 @@
 | `tasks/2026-10-14-nxtgen-v1/review.md` | Reviews 1–4: intent ledgers, debt ledgers, rulings |
 | `tasks/2026-10-14-nxtgen-v1/spar.md`, `review-spar.md` | The Codex debates behind the plan and the reviews |
 | `TODO.md` | Everything not built, grouped by when it is needed (numbers are stable) |
-| `SECURITY.md` | Known security items; open **must** items: #4, #5 (= TODO #18) |
+| `SECURITY.md` | Known security items; no open **must** items (#4, #5 done 2026-10-17) |
 | `../README.md` | Run it locally, the checks, browser tests, starting production |
 
 ## Working rules (Roy)

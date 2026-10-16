@@ -1,14 +1,14 @@
 # TODO
 
 Numbers are stable — reviews and code comments refer to them. Grouped by when they are needed.
-Updated 2026-10-17. **The refactor (`.planning/tasks/2026-10-17-refactor/`) comes first** — it absorbs #1, #17, #18, #19, #24. Decisions behind these: `docs/DECISIONS.md`; security items: `SECURITY.md`.
+Updated 2026-10-17. **The refactor (`.planning/tasks/2026-10-17-refactor/`) comes first** — it absorbed #1, #17, #18, #19, #24 (all done). Decisions behind these: `docs/DECISIONS.md`; security items: `SECURITY.md`.
 
 ## Before Release 1 ships (exit criteria, plan §12)
 
 | # | Item | Why | Owner |
 |---|---|---|---|
-| 18 | **Access-matrix grid:** every R1 Feature × anonymous, parent-only, staff-only, parent+staff, revoked staff, other-satellite staff, other-church user; and **response allowlists** per actor (e.g. the door search's lite view never carries a photo or health field) | plan §3.2, §3.3, §12 · SECURITY #4, #5 | Claude (~1 day) |
 | 21 | **Staging dry run:** a real photo upload / show / hide against the private Laravel Cloud bucket; the registry import with the real sheet, reconciliation balances | review 3 · plan §12 | Claude + Roy |
+| 28 | **Confirm with Roy:** resending a confirmation link follows plan §3.2 literally — any Lifeshaper (even another satellite's) may, but another satellite's ADMIN may not (404). Keep, or let any admin resend too? (`AccessScope::canResendLink`; the grid's `church.families.resend` row) | refactor 09 review | Roy |
 | 16 | Try a photo on a real iPhone (camera, Photos, Files) — HEIC is converted on the phone (`lib/photoForUpload`) | photo | Roy |
 
 ## Roy — to go live
@@ -36,7 +36,6 @@ Updated 2026-10-17. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 | 27 | **Moving-Up** (admin-run, never automatic): each Child's Level + 1; from the top Level (4) the Child's status becomes Graduated. Nothing is built yet beyond `children.level` (refactor 05) | before the February Moving-Up |
 | 8 | A church slug must never be a reserved path — ChurchSeeder refuses one; enforce again in any create-church screen | with Platform screens |
 | 22 | Photo housekeeping: a scheduled sweep deleting stored photo files no `children.photo_path` points to (never shown — nothing points at them) | after R1 |
-| 24 | Lists are paged in memory (50 per page) — move paging into the query | if a church reaches thousands |
 | 25 | A "delete this photo for good" action (a parent asking for erasure) — withdrawal only hides (SECURITY #19) | when a parent asks, or before a data-protection review |
 | — | "No Level" filter on the children lists (plan §13 q5; was "no group") — the list shows "No Level" today, there is no filter for it | awaiting Roy |
 | 26 | Storybook, as aegis (a story per component) — not now (DECISIONS 2026-10-17) | when components grow |
@@ -53,4 +52,6 @@ Updated 2026-10-17. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 | 15 | Photos + consent (parent or Lifeshaper; consent wording approved by Roy) | 2026-10-16 |
 | 17 | Arch guards from aegis: PhpStyle, DataObject, Enum, Migration, ClassLength, TestCoverage, Job constructors, Operation + Middleware boundaries, base classes, domain test location, MorphMap (adapted to `enforceMorphMap`) — each with a shrinking known-gaps list (`tests/Architecture/KnownGaps.php`). Refactor batch 03 | 2026-10-17 |
 | 1 | ~~Moving-Up for a mixed group~~ — superseded: groups replaced by Levels + Squads (DECISIONS 2026-10-17). Refactor batch 05 | 2026-10-17 |
+| 18 | Access-matrix grid: every staff/parent route (30, from the router) × 15 actors (anonymous, two parents, church/satellite admin, church/satellite Lifeshaper, two both-hats, three revoked kinds, other-satellite admin + Lifeshaper, other-church admin) = 450 cells, plus another church's admin trying all 16 id-carrying routes from their own address — `tests/Feature/AccessMatrixTest.php`; the 16 Auth/Public routes × 4 actors — `OpenRouteAccessTest.php`; exact response allowlists per actor + the Excel header — `ResponseAllowlistTest.php`. No access bug found. Refactor batch 09 | 2026-10-17 |
+| 24 | Lists paged in the database (count + limit/offset, eager loads per page) — `ListPage::of(Builder)`; Excel still every filtered row. Refactor batch 09 | 2026-10-17 |
 | 19 | TenancyArchTest sees `DB::table()` / `->from()` / joins / static finds; ReachabilityTest matches FQCNs. Refactor batch 03 | 2026-10-17 |

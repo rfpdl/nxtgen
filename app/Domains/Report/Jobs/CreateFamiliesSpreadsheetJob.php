@@ -8,7 +8,6 @@ use App\Data\Models\Family;
 use App\Foundation\Jobs\BaseJob;
 use App\Foundation\Support\EmailMask;
 use App\Foundation\Support\TextRow;
-use Illuminate\Database\Eloquent\Collection;
 use OpenSpout\Writer\XLSX\Writer;
 
 /**
@@ -19,9 +18,9 @@ use OpenSpout\Writer\XLSX\Writer;
  */
 final class CreateFamiliesSpreadsheetJob extends BaseJob
 {
-    /** @param Collection<int, Family> $families */
+    /** @param iterable<Family> $families */
     public function __construct(
-        private readonly Collection $families,
+        private readonly iterable $families,
         private readonly bool $fullEmail,
     ) {}
 

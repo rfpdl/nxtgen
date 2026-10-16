@@ -13,8 +13,8 @@ export type SharedProps = {
     flash: { success?: string | null; error?: string | null }
     /** The church the address names; null on a page outside one. */
     church: Church | null
-    /** Shared on church staff pages only (RequireAssignment). */
-    churchNav?: { can_manage_people: boolean; can_review_duplicates: boolean }
+    /** The staff menu: set on church staff pages (from RequireAssignment's scope), null on every other page. */
+    churchNav: { can_manage_people: boolean; can_review_duplicates: boolean } | null
 }
 
 // ─── Enums ──────────────────────────────────────────────────────────────────────────────────────────────

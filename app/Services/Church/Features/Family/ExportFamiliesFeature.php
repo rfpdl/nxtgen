@@ -29,9 +29,9 @@ final class ExportFamiliesFeature extends BaseChurchFeature
     public function handle(): BinaryFileResponse
     {
         $scope = $this->scope();
-        // The same filters as the screen, so the download is what the list shows.
+        // The same filters as the screen, so the download is what the list shows — every page of it (no `page`).
         $families = $this->run(new GetFamiliesJob(church: $this->church(), satelliteIds: $scope->visibleSatelliteIds(), filters: FamilyListQuery::from(request())));
-        $path = $this->run(new CreateFamiliesSpreadsheetJob(families: $families, fullEmail: $scope->isChurchAdmin));
+        $path = $this->run(new CreateFamiliesSpreadsheetJob(families: $families->items, fullEmail: $scope->isChurchAdmin));
 
         return response()->download($path, 'nxtgen-families-'.now()->format('Y-m-d').'.xlsx', [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

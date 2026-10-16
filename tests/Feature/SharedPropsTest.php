@@ -48,3 +48,13 @@ it('gives the public thank-you page its church', function (): void {
 it('shares no church on a page whose address names none', function (): void {
     get('/login')->assertInertia(fn (AssertableInertia $p) => $p->where('church', null));
 });
+
+it('gives the staff menu only to a staff page — never to the next request in the same app', function (): void {
+    $church = church(['slug' => 'ccf']);
+    $parent = User::factory()->create();
+    guardianOf(familyAt(satelliteOf($church)), $parent);
+
+    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/families')
+        ->assertInertia(fn (AssertableInertia $p) => $p->where('churchNav.can_manage_people', true));
+    actingAs($parent)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('churchNav', null));
+});

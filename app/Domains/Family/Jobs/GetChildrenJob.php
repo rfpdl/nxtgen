@@ -8,14 +8,15 @@ use App\Data\Models\Child;
 use App\Data\Models\Church;
 use App\Domains\Family\DataObjects\ChildListFiltersData;
 use App\Foundation\Jobs\BaseJob;
+use App\Foundation\Support\ListPage;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 
 /**
  * The children list: children whose family's home satellite the viewer can see (`$satelliteIds` null = all), narrowed
- * by the filters, by nickname. A chosen satellite outside the viewer's yields nothing, never more.
+ * by the filters, by nickname. A chosen satellite outside the viewer's yields nothing, never more. Paged in the
+ * database, 50 at a time (ListPage); `$page` null = every filtered child.
  *
- * @extends BaseJob<Collection<int, Child>>
+ * @extends BaseJob<ListPage<Child>>
  */
 final class GetChildrenJob extends BaseJob
 {
@@ -24,15 +25,16 @@ final class GetChildrenJob extends BaseJob
         private readonly Church $church,
         private readonly ?array $satelliteIds,
         private readonly ChildListFiltersData $filters = new ChildListFiltersData,
+        private readonly ?int $page = null,
     ) {}
 
-    /** @return Collection<int, Child> */
-    public function handle(): Collection
+    /** @return ListPage<Child> */
+    public function handle(): ListPage
     {
         $f = $this->filters;
         $like = $f->query === null ? null : '%'.str_replace(['%', '_'], ['\%', '\_'], trim($f->query)).'%';
 
-        return Child::query()
+        $query = Child::query()
             ->with(['family.homeSatellite'])
             ->where('church_id', $this->church->id)
             ->when($this->satelliteIds !== null, fn (Builder $q) => $q->whereHas('family', fn (Builder $fam) => $fam->whereIn('home_satellite_id', $this->satelliteIds ?? [])))
@@ -45,7 +47,8 @@ final class GetChildrenJob extends BaseJob
             ->when($f->status !== null, fn (Builder $q) => $q->where('status', $f->status))
             ->when($f->level !== null, fn (Builder $q) => $q->where('level', $f->level))
             ->orderBy('nickname')
-            ->orderBy('id')
-            ->get();
+            ->orderBy('id');
+
+        return $this->page === null ? ListPage::all($query) : ListPage::of($query, $this->page);
     }
 }

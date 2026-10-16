@@ -7,6 +7,7 @@ namespace App\Http\Middleware;
 use App\Data\Models\User;
 use App\Domains\Church\DataObjects\ChurchData;
 use App\Domains\Church\Jobs\GetLandingOptionsJob;
+use App\Foundation\Support\RequestContext;
 use App\Foundation\Support\RouteChurch;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -47,6 +48,13 @@ final class HandleInertiaRequests extends Middleware
             // The church the address names (/{church}/…), for every page under it — staff, family and public
             // registration alike. Read after the route's middleware has resolved and checked it; null elsewhere.
             'church' => fn (): ?ChurchData => ($church = RouteChurch::from($request)) !== null ? ChurchData::fromModel($church) : null,
+
+            // The staff menu (ChurchShell), from the AccessScope RequireAssignment put on THIS request; null on any
+            // page that is not a staff page. Navigation only — every Feature still asks the scope itself.
+            'churchNav' => fn (): ?array => ($scope = RequestContext::scope($request)) !== null ? [
+                'can_manage_people' => $scope->canManagePeople(),
+                'can_review_duplicates' => $scope->canReviewDuplicates(),
+            ] : null,
 
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

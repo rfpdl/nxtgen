@@ -16,6 +16,12 @@ use function Tests\Support\satelliteOf;
 
 /* The children list: this church's children whose family's home satellite the viewer sees, narrowed by the filters. */
 
+/** @return list<string> the nicknames the Job lists, in its order */
+function listedNicknames(GetChildrenJob $job): array
+{
+    return array_map(fn (Child $row): string => $row->nickname, $job->handle()->items);
+}
+
 it('lists only this church\'s children, by nickname', function (): void {
     $church = church();
     $satellite = satelliteOf($church);
@@ -23,9 +29,9 @@ it('lists only this church\'s children, by nickname', function (): void {
     childOf(familyAt($satellite), ['nickname' => 'Amara']);
     childOf(familyAt(satelliteOf(church())), ['nickname' => 'Other Church']);
 
-    $children = (new GetChildrenJob(church: $church, satelliteIds: null))->handle();
+    $children = listedNicknames(new GetChildrenJob(church: $church, satelliteIds: null));
 
-    expect($children->pluck('nickname')->all())->toBe(['Amara', 'Zed']);
+    expect($children)->toBe(['Amara', 'Zed']);
 });
 
 it('keeps to the viewer\'s satellites, and a chosen satellite outside them yields nothing', function (): void {
@@ -35,10 +41,10 @@ it('keeps to the viewer\'s satellites, and a chosen satellite outside them yield
     childOf(familyAt($mine), ['nickname' => 'Mine']);
     childOf(familyAt($theirs), ['nickname' => 'Theirs']);
 
-    $scoped = (new GetChildrenJob(church: $church, satelliteIds: [$mine->id]))->handle();
-    $outside = (new GetChildrenJob(church: $church, satelliteIds: [$mine->id], filters: new ChildListFiltersData(satellite_id: $theirs->id)))->handle();
+    $scoped = listedNicknames(new GetChildrenJob(church: $church, satelliteIds: [$mine->id]));
+    $outside = listedNicknames(new GetChildrenJob(church: $church, satelliteIds: [$mine->id], filters: new ChildListFiltersData(satellite_id: $theirs->id)));
 
-    expect($scoped->pluck('nickname')->all())->toBe(['Mine'])
+    expect($scoped)->toBe(['Mine'])
         ->and($outside)->toBeEmpty();
 });
 
@@ -51,7 +57,7 @@ it('narrows by status and level', function (): void {
 
     $filters = new ChildListFiltersData(status: ChildStatusEnum::Active, level: 2);
 
-    expect((new GetChildrenJob(church: $church, satelliteIds: null, filters: $filters))->handle()->pluck('nickname')->all())->toBe(['Active L2']);
+    expect(listedNicknames(new GetChildrenJob(church: $church, satelliteIds: null, filters: $filters)))->toBe(['Active L2']);
 });
 
 it('searches the child\'s own names or the parent, without a child\'s name dragging in siblings', function (): void {
@@ -63,17 +69,31 @@ it('searches the child\'s own names or the parent, without a child\'s name dragg
     childOf($santos, ['nickname' => 'Bea', 'first_name' => 'Beatriz', 'last_name' => 'Santos']);
     childOf(familyAt($satellite), ['nickname' => 'Carlo', 'first_name' => 'Carlo', 'last_name' => 'Reyes']);
 
-    $byChild = (new GetChildrenJob(church: $church, satelliteIds: null, filters: new ChildListFiltersData(query: 'amara')))->handle();
-    $byParent = (new GetChildrenJob(church: $church, satelliteIds: null, filters: new ChildListFiltersData(query: 'Janice')))->handle();
+    $byChild = listedNicknames(new GetChildrenJob(church: $church, satelliteIds: null, filters: new ChildListFiltersData(query: 'amara')));
+    $byParent = listedNicknames(new GetChildrenJob(church: $church, satelliteIds: null, filters: new ChildListFiltersData(query: 'Janice')));
 
-    expect($byChild->pluck('nickname')->all())->toBe(['Amara'])
-        ->and($byParent->pluck('nickname')->all())->toBe(['Amara', 'Bea']);
+    expect($byChild)->toBe(['Amara'])
+        ->and($byParent)->toBe(['Amara', 'Bea']);
 });
 
 it('treats % and _ in the search as letters, not wildcards', function (): void {
     $church = church();
     childOf(familyAt(satelliteOf($church)), ['nickname' => 'Amara', 'first_name' => 'Amara', 'last_name' => 'Santos']);
 
-    expect((new GetChildrenJob(church: $church, satelliteIds: null, filters: new ChildListFiltersData(query: '%')))->handle())->toBeEmpty()
+    expect(listedNicknames(new GetChildrenJob(church: $church, satelliteIds: null, filters: new ChildListFiltersData(query: '%'))))->toBeEmpty()
         ->and(Child::query()->count())->toBe(1);
+});
+
+it('hands back the asked-for page of 50, by nickname, cut in the database', function (): void {
+    $church = church();
+    $family = familyAt(satelliteOf($church));
+    $nicknames = array_map(fn (int $n): string => sprintf('Kid %02d', $n), range(1, 55));
+    foreach (array_reverse($nicknames) as $nickname) {
+        childOf($family, ['nickname' => $nickname]);
+    }
+
+    $page = (new GetChildrenJob(church: $church, satelliteIds: null, page: 2))->handle();
+
+    expect(collect($page->items)->pluck('nickname')->all())->toBe(array_slice($nicknames, 50))
+        ->and([$page->page, $page->lastPage, $page->total])->toBe([2, 2, 55]);
 });

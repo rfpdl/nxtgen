@@ -16,8 +16,6 @@ use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia;
-use OpenSpout\Reader\XLSX\Reader;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Tests\Support\RoleScope;
 
 use function Pest\Laravel\actingAs;
@@ -26,6 +24,7 @@ use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
 use function Tests\Support\childOf;
 use function Tests\Support\church;
+use function Tests\Support\exportedRows;
 use function Tests\Support\familyAt;
 use function Tests\Support\guardianOf;
 use function Tests\Support\satelliteOf;
@@ -318,21 +317,7 @@ describe('searching and filtering the list', function (): void {
 
         $response = actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get("/ccf/families/export?satellite={$house->id}");
 
-        $download = $response->baseResponse;
-        if (! $download instanceof BinaryFileResponse) {
-            throw new RuntimeException('Expected a file download.');
-        }
-        $file = $download->getFile()->getPathname();
-        $rows = [];
-        $reader = new Reader;
-        $reader->open($file);
-        foreach ($reader->getSheetIterator() as $sheet) {
-            foreach ($sheet->getRowIterator() as $row) {
-                $rows[] = implode('|', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $row->toArray()));
-            }
-            break;
-        }
-        $reader->close();
+        $rows = exportedRows($response);
 
         $sheet = implode("\n", $rows);
         expect(str_contains($sheet, 'Mira'))->toBeTrue()->and(str_contains($sheet, 'Janice'))->toBeFalse();
@@ -348,4 +333,15 @@ it('shows the families list 50 at a time; the Excel download still has every fam
     actingAs($admin)->get('/ccf/families')->assertInertia(fn (AssertableInertia $p) => $p
         ->has('families', 50)->where('pagination.total', 55)->where('pagination.last_page', 2));
     actingAs($admin)->get('/ccf/families?page=2')->assertInertia(fn (AssertableInertia $p) => $p->has('families', 5));
+});
+
+it('downloads every filtered family, not only the page on screen @story#45', function (): void {
+    ['church' => $church, 'htc' => $htc] = adminChurch();
+    foreach (range(1, 55) as $n) {
+        childOf(familyAt($htc), ['nickname' => "Kid {$n}"]);
+    }
+
+    $rows = exportedRows(actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/families/export'));
+
+    expect($rows)->toHaveCount(56); // the heading + one row per child
 });

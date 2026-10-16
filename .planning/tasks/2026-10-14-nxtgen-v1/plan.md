@@ -475,17 +475,17 @@ staff and import).
 unconfirmed email and resends; a returning imported parent is told "already registered"; matrix tests green for
 every R1 Feature; projection tests green; import reconciliation balances; `make check` + `make e2e` green.
 
-**Status (2026-10-16):**
+**Status (2026-10-17):**
 
 | Criterion | Status |
 |---|---|
 | A parent registers on a phone and confirms | ✅ E2E `parent/register.spec.ts` (iPhone Safari, Android Chrome, desktop) |
 | Staff register a family with an unconfirmed email and resend | ✅ E2E `staff/family-admin.spec.ts` |
 | A returning imported parent is told "already registered" | ✅ E2E `parent/returning.spec.ts` |
-| Matrix tests green for every R1 Feature (7 actor kinds) | ⏳ rows tested; full grid = **TODO #18** |
-| Projection tests green | ⏳ **TODO #18** (response allowlists per actor) |
+| Matrix tests green for every R1 Feature (7 actor kinds) | ✅ `AccessMatrixTest` — 30 routes × 15 actors, + Auth/Public in `OpenRouteAccessTest` (2026-10-17, TODO #18) |
+| Projection tests green | ✅ `ResponseAllowlistTest` — exact props per actor (2026-10-17, TODO #18) |
 | Import reconciliation balances | ✅ in tests; ⏳ on staging with the real sheet (**TODO #21**) |
-| `make check` + `make e2e` green | ✅ 310 Pest (incl. 31 arch), 106 Vitest, PHPStan L10; 43 E2E runs |
+| `make check` + `make e2e` green | ✅ 1313 Pest + 171 arch, 114 Vitest, PHPStan L10; 43 E2E runs |
 
 ### Release 2 — Check-in (Wed 28 Oct)
 

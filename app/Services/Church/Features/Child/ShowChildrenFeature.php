@@ -15,7 +15,6 @@ use App\Enums\AccessRowEnum;
 use App\Enums\ChildStatusEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
-use App\Foundation\Support\ListPage;
 use App\Services\Church\Data\ChildListQuery;
 use App\Services\Church\Features\BaseChurchFeature;
 use Inertia\Inertia;
@@ -42,8 +41,7 @@ final class ShowChildrenFeature extends BaseChurchFeature
         $visible = $this->scope()->visibleSatelliteIds();
         $filters = ChildListQuery::from(request());
 
-        $children = $this->run(new GetChildrenJob(church: $church, satelliteIds: $visible, filters: $filters));
-        $page = ListPage::of($children, requested: request()->integer('page', 1));
+        $page = $this->run(new GetChildrenJob(church: $church, satelliteIds: $visible, filters: $filters, page: request()->integer('page', 1)));
 
         return Inertia::render('Church/Children/Index', [
             'children' => array_map(fn (Child $c): ChildListRowData => ChildListRowData::fromModel($c), $page->items),

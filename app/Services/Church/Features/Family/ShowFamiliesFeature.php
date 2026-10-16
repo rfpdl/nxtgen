@@ -15,7 +15,6 @@ use App\Enums\AccessRowEnum;
 use App\Enums\ChildStatusEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
-use App\Foundation\Support\ListPage;
 use App\Services\Church\Data\FamilyListQuery;
 use App\Services\Church\Features\BaseChurchFeature;
 use Inertia\Inertia;
@@ -43,8 +42,7 @@ final class ShowFamiliesFeature extends BaseChurchFeature
         $filters = FamilyListQuery::from(request());
         $visible = $scope->visibleSatelliteIds();
 
-        $families = $this->run(new GetFamiliesJob(church: $church, satelliteIds: $visible, filters: $filters));
-        $page = ListPage::of($families, requested: request()->integer('page', 1));
+        $page = $this->run(new GetFamiliesJob(church: $church, satelliteIds: $visible, filters: $filters, page: request()->integer('page', 1)));
         $satellites = array_values(array_filter(
             $this->run(new GetSatellitesJob(church: $church)),
             fn (SatelliteOptionData $s): bool => $visible === null || in_array($s->id, $visible, true),

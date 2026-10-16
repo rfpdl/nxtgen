@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Foundation\DataObjects;
 
 use App\Foundation\Support\ListPage;
+use Illuminate\Database\Eloquent\Model;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -19,7 +20,7 @@ final class PaginationData extends Data
         public int $per_page,
     ) {}
 
-    /** @param ListPage<mixed> $page */
+    /** @param ListPage<Model> $page */
     public static function fromListPage(ListPage $page): self
     {
         return new self(page: $page->page, last_page: $page->lastPage, total: $page->total, per_page: $page->perPage);
