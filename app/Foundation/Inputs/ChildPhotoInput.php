@@ -9,7 +9,8 @@ use Spatie\LaravelData\Data;
 
 /**
  * A child's photo, taken with the phone camera or chosen from the gallery. `consent` is honoured ONLY when a
- * parent sends it — staff can never agree on a parent's behalf.
+ * parent sends it. Staff record a parent's in-person yes only through its own confirmed step
+ * (RecordPhotoConsentFeature), never by sending `consent` with a photo.
  */
 final class ChildPhotoInput extends Data
 {

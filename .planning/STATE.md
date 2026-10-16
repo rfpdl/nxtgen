@@ -1,21 +1,44 @@
 # State
 
-**Read this first at session start.** Updated: 2026-10-16 (overnight build, Release 1 in progress).
+**Read this first at session start.** Updated: 2026-10-16.
+
+## Where things stand
 
 | | |
 |---|---|
-| **What** | NxtGen v1 — kids church app for CCF (first org), branch DXB. Generic, multi-church |
-| **Deadline** | 2026-10-28. Dry run Sat 2026-10-24 (all classes) |
-| **Current task** | `tasks/2026-10-14-nxtgen-v1/plan.md` — **plan signed off by Codex (plan-spar, 3 rounds); **awaiting Roy approval** + D1–D7 + §13 questions** |
+| **What** | NxtGen — kids-church app for CCF (first church), satellite "CCF Dxb". Generic, multi-church; may grow into a whole-church app (names stay ministry-neutral) |
+| **Release 1 — Registration** | **Built and committed** on `release-1` (`7fe14cd..` HEAD). Ships when plan §12's exit criteria pass: TODO **#18** (access-matrix grid + response allowlists) and **#21** (staging dry run) remain |
+| **Release 2 — Check-in** | Not started. Target 2026-10-28, dry run Sat 2026-10-24. Open questions in plan §13 (#2, #3) |
+| **Next step** | TODO #18 (Claude, ~1 day) → Roy sets up Laravel Cloud (TODO #23) → staging dry run (#21) → go live → Release 2 |
+| **Waiting on Roy** | Laravel Cloud + mail provider + Registry CSV (TODO #23); "No group" filter yes/no (plan §13 q5); a real-iPhone photo try (TODO #16) |
+| **Gate** | `make check` green — 310 Pest (incl. 31 arch), 106 Vitest, PHPStan L10 · `make e2e` green — 43 runs (iPhone Safari, Android Chrome, desktop Chrome) |
+
+## Where to look
+
+| File | What it holds |
+|---|---|
+| `tasks/2026-10-14-nxtgen-v1/plan.md` | The approved plan; §12 has the Release 1 exit-criteria status |
+| `../docs/DECISIONS.md` | Every decision after the plan, newest first — **outranks the plan** |
+| `tasks/2026-10-14-nxtgen-v1/review.md` | Reviews 1–4: intent ledgers, debt ledgers, rulings |
+| `tasks/2026-10-14-nxtgen-v1/spar.md`, `review-spar.md` | The Codex debates behind the plan and the reviews |
+| `TODO.md` | Everything not built, grouped by when it is needed (numbers are stable) |
+| `SECURITY.md` | Known security items; open **must** items: #4, #5 (= TODO #18) |
+| `../README.md` | Run it locally, the checks, browser tests, starting production |
+
+## Working rules (Roy)
+
+Test-first (TDD) · security items go on `SECURITY.md` and do not block · E2E for every built screen · Codex review-spar
+after each feature batch · stakeholder-facing text in plain words (ELI5) · commit when Roy says so.
+
+| | |
+|---|---|
 | **Stakeholder doc** | https://claude.ai/code/artifact/4dcab16b-b96d-42a7-b08f-aa4f189c41e0 (+ PDF in repo root) |
 | **Requirements** | `project.md` (raw, Roy's words) |
-| **PoC (reference only)** | `~/projects/personal/poc/nxtgen-attendance` — not the codebase; its plan §6/§4.10 (offline) is ported into the spec |
+| **PoC (reference only)** | `~/projects/personal/poc/nxtgen-attendance` — not the codebase |
 | **House stack** | `~/projects/work/aegis/aegis` (preferred) and `~/projects/personal/current/palo` |
-| **Branch** | `release-1` (plan committed; build work **uncommitted** for Roy to review) |
 | **Run it** | `docker compose up -d --wait mysql redis` → `cp .env.example .env && php artisan key:generate` → `php artisan migrate --seed` → `make dev` (http://localhost:3020). Magic-link emails land in `storage/logs/laravel.log` |
-| **Gate** | `make check` — green as of the last entry below |
 
-## Build log (Release 1)
+## Build log (Release 1) — history, oldest first
 
 - **Scaffold:** Laravel 12.70 + Lucid v2 + Spatie Data + TS transformer + Inertia 3 / Vue / Pinia / Tailwind 4,
   tooling ported from the PoC (Makefile, gate, arch tests, discipline test). PHPStan **level 10** via typed
@@ -105,7 +128,7 @@
   - Gate: 262 Pest (incl. 31 arch), 90 Vitest, PHPStan L10; E2E 38 runs green.
 - **Photos (2026-10-16, Roy: parent or Lifeshaper, take or upload):** private `photos` disk (local; S3 private bucket by
   PHOTOS_DISK=s3); re-encoded upright/600px/no EXIF (fixture with orientation + GPS proves it); only after the PARENT
-  agrees (consent_at/by, new `photo_consent_by` column), staff never agree; parent takes consent back → photo
+  agrees (consent_at/by, new `photo_consent_by` column), staff never agree [later changed: staff may record an in-person yes; withdrawal hides]; parent takes consent back → photo
   deleted; view = signed 30-min link AND viewer check (own family or staff who can see the family), no-store.
   Revert-checked: upright, viewer check, staff consent check. Production satellite default "CCF Dxb"; Sentry off.
   Gate: 274 Pest (incl. 31 arch), 95 Vitest; E2E 41 runs green.

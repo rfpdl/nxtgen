@@ -3,6 +3,7 @@
 Kids church registration and check-in, built for CCF's NxtGen and for any church.
 
 - Plan: `.planning/tasks/2026-10-14-nxtgen-v1/plan.md` (and `spar.md`, the Codex review that shaped it)
+- **Start here:** `.planning/STATE.md` (where things stand, next step, where to look)
 - Decisions (newest first): `docs/DECISIONS.md`
 - Where things stand: `.planning/STATE.md` · Security list: `.planning/SECURITY.md` · TODO: `.planning/TODO.md`
 
@@ -32,7 +33,7 @@ make check    # pint, larastan level 10, architecture guards, pest, vitest, esli
 ## Browser tests (E2E)
 
 ```bash
-make e2e          # every journey on iPhone Safari, Android Chrome and desktop Chrome (own database, nxtgen_e2e)
+make e2e          # parent + door journeys on iPhone Safari, Android Chrome, desktop Chrome; admin journeys on desktop (own DB, nxtgen_e2e)
 make e2e-ui       # watch each journey run, one by one
 make e2e-report   # the last run's report: each journey, its steps; screenshot, video and trace for failures
 ```

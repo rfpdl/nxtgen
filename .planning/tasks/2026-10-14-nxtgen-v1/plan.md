@@ -1,8 +1,9 @@
 # NxtGen v1 — Plan
 
-**Status:** approved (Roy, 2026-10-15) · in progress · **Date:** 2026-10-15
+**Status:** approved (Roy, 2026-10-15) · **Release 1 built** (2026-10-16; exit criteria §12 pending TODO #18, #21) · Release 2 not started · **Date:** 2026-10-15, updated 2026-10-16
 **Product doc (stakeholders):** https://claude.ai/code/artifact/4dcab16b-b96d-42a7-b08f-aa4f189c41e0 (PDF in repo
-root) · **Raw requirements:** `project.md` · **Debate:** `spar.md` (same folder)
+root) · **Raw requirements:** `project.md` · **Debate:** `spar.md` (same folder) · **Changes since approval:**
+`docs/DECISIONS.md` (newest first — it outranks this plan where they differ) · **Reviews:** `review.md` (1–4)
 
 NxtGen is a kids-church app for CCF Dubai's kids ministry, built for any church. Two releases:
 **Release 1 — Registration** (target ~20 Oct, conditional on its exit criteria) and **Release 2 — Check-in**
@@ -34,14 +35,17 @@ NxtGen is a kids-church app for CCF Dubai's kids ministry, built for any church.
 | Health data | Visible to **all Lifeshapers/admins of the org** and the **child's own family**; never to other parents |
 | Registration | Every child is registered before check-in. Parent self-registration preferred; **staff may register** after searching, email required but may stay **unconfirmed**; unconfirmed never blocks check-in |
 | Login | **One login per person, no role picker**; a user can be a parent and a Lifeshaper. **One login per family** in v1; second-parent invite later |
-| Groups | Age + gender, per org, **stored**; changed only at **Moving-Up** (yearly, admin-run). App shows a "ready to move up" indicator |
+| Groups | Age + gender, per org, **stored**; changed at **Moving-Up** (yearly, admin-run), or corrected by a **church admin** (§3.2). App shows a "ready to move up" indicator |
 | Child status | `active` / `inactive` / `graduated` (finished NxtGen 5–12 → Elevate) |
 | Notes | One **polymorphic** notes table (Roy: "rather than having request_notes, we just have notes"). R1: system audit notes on families; R2: staff observations on children |
 | Area | Free text in v1; shared list + map picker later |
 | Cards | Today's Code 39 name barcodes until Moving-Up (Feb), then QR + reprint. First card free, replacement AED 10 |
 | Reports | In-app lists + Excel export; no Sheets sync |
-| Existing data | Loaded from the Google Sheet through a reviewed import |
-| Later | Offline + payload round · merge · card requests/printing · area map · kiosk · roll call · head count · pickup · Squad Leader notes · parent attendance/notes · Moving-Up action (before Feb) · Sheets sync |
+| Existing data | Loaded **once** from the Google Sheet through a reviewed import; the app is the source of truth after that (D-R1) |
+| Photos | A parent **or a Lifeshaper** takes or uploads a child's photo, only after consent. Consent is given by the parent, or recorded by a Lifeshaper the parent told in person (with an "Are you sure?" step); every change is on the child's history. Withdrawal **hides** the photo (kept, shown to nobody, back on a new yes). Private bucket; signed 30-minute links (Roy 2026-10-16) |
+| Staff pages | The **Org** service at `/{church}/…` — no `/admin` in URLs; for Lifeshapers too (Roy 2026-10-15) |
+| Hosting | **Laravel Cloud** + MySQL + private S3 bucket; Sentry off for now; production starts with one satellite, "CCF Dxb"; first admin blivejesus@gmail.com (Roy 2026-10-16) |
+| Later | Offline + payload round · merge · card requests/printing · area map · kiosk · roll call · head count · pickup · Squad Leader notes · parent attendance/notes · Moving-Up action (before Feb) |
 
 ---
 
@@ -330,6 +334,13 @@ mixed-success family check-in, undo vs re-check-in, concurrent registration.
   remove a role (kept for the record; never the last church admin).
 - **Platform:** the church, its satellites and its first church admin come from the seeder in R1; screens later.
 - **Registry import** (§7).
+- **Children list** (`/{org}/children`) beside the families list; both **paged, 50 per page**; Excel keeps every
+  filtered row (Roy 2026-10-16).
+- **Child group correction** by a church admin (§3.2), gender-checked, noted on the history.
+- **Photos with consent** (see §0 "Photos").
+
+**Built (2026-10-16), all of the above** — commits `7fe14cd..027f555` on `release-1`. Reviewed four times with
+Codex (`review.md`, `review-spar.md`). What is NOT built yet is listed in `.planning/TODO.md`.
 
 ### Release 2 — Check-in
 
@@ -464,6 +475,18 @@ staff and import).
 unconfirmed email and resends; a returning imported parent is told "already registered"; matrix tests green for
 every R1 Feature; projection tests green; import reconciliation balances; `make check` + `make e2e` green.
 
+**Status (2026-10-16):**
+
+| Criterion | Status |
+|---|---|
+| A parent registers on a phone and confirms | ✅ E2E `parent/register.spec.ts` (iPhone Safari, Android Chrome, desktop) |
+| Staff register a family with an unconfirmed email and resend | ✅ E2E `staff/family-admin.spec.ts` |
+| A returning imported parent is told "already registered" | ✅ E2E `parent/returning.spec.ts` |
+| Matrix tests green for every R1 Feature (7 actor kinds) | ⏳ rows tested; full grid = **TODO #18** |
+| Projection tests green | ⏳ **TODO #18** (response allowlists per actor) |
+| Import reconciliation balances | ✅ in tests; ⏳ on staging with the real sheet (**TODO #21**) |
+| `make check` + `make e2e` green | ✅ 310 Pest (incl. 31 arch), 106 Vitest, PHPStan L10; 43 E2E runs |
+
 ### Release 2 — Check-in (Wed 28 Oct)
 
 | Day | Date | Work |
@@ -487,7 +510,9 @@ stays). **Never cut:** registration outcomes, magic-link security, scope matrix,
 
 ## 13. Open questions (Roy)
 
-1. D1–D7 (or "go with your picks").
-2. `lifeshapers_can_open` default (may Lifeshapers open a class)?
-3. Follow-up threshold (weeks absent)?
-4. Repo name + production domain.
+1. ~~D1–D7~~ — picks taken ("start the development"); D2 confirmed Laravel Cloud (2026-10-16).
+2. `lifeshapers_can_open` default (may Lifeshapers open a class)? — **open, needed for Release 2** (seeded `true`).
+3. Follow-up threshold (weeks absent)? — **open, needed for Release 2** reports.
+4. Repo name + production domain — Roy is setting up Laravel Cloud (TODO #23).
+5. A "No group" filter on the children list (children outside every age band or with a mistyped birthday)? —
+   **asked 2026-10-16, awaiting Roy.**

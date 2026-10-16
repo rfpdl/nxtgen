@@ -1,29 +1,54 @@
 # TODO
 
-| # | Item | Why | When |
+Numbers are stable — reviews and code comments refer to them. Grouped by when they are needed.
+Updated 2026-10-16. Decisions behind these: `docs/DECISIONS.md`; security items: `SECURITY.md`.
+
+## Before Release 1 ships (exit criteria, plan §12)
+
+| # | Item | Why | Owner |
 |---|---|---|---|
-| 1 | Moving-Up for a **mixed** group (Level 1 → Level 2 Boys/Girls): `next_group_id` can't express a per-gender next group | design gap found while seeding | before Feb Moving-Up |
-| 2 | ~~E2E harness~~ built: `make e2e` / `make e2e-ui` / `make e2e-report`, 4 journeys × 2 browsers | plan §10 | done 2026-10-15 |
-| 3 | Laravel Cloud project + env (D2) | Roy owns the account | before Release 1 deploy |
-| 4 | ~~D-R1~~ decided: import once, app is the source of truth (plan §7.6) | Roy 2026-10-15 | done |
-| 5 | ~~D-R2~~ decided: People screens (built) + `ChurchSeeder` from NXTGEN_* settings (built 2026-10-15). **Roy:** real satellite list + first admin email | Roy 2026-10-15 | before deploy |
-| 6 | Remaining R1 build list (review.md "Remaining Release 1 build") | review-spar | before R1 release |
-| 7 | Claim-acceptance concurrency test (two DB connections) | review-spar | with R2 concurrency harness |
-| 8 | ~~Church slug never a reserved path~~ — ChurchSeeder refuses one; enforce again in any future create-church screen | Org rename | with Platform |
-| 9 | Class-admin roles (event series) in People — `canGrant` refuses them until series exist | People | R2 |
-| 10 | E2E "test map" like admin-v2 (`e2e/map/serve.mjs`): the access matrix (plan §3.2) as a page, each cell → its Pest + E2E tests, with Run buttons | Roy: admin-v2 has a good page per item | when the matrix grows (R2) |
-| 11 | More journeys: family-page edit, duplicates screen, export download, resend/correct email, check-in (R2) | e2e | with each feature |
-| 12 | E2E per breakpoint: a **tablet** project (iPad, both portrait/landscape) alongside the phones, and specs that assert layout per size (no sideways scroll, ≥44/56px targets, menu fits) — not just the same journeys at a different width | Roy 2026-10-15 | before R2 door screens |
-| 13 | E2E for link EXPIRY (2 h login / 7 d verify) — needs a controllable clock in the e2e server; Pest covers it today | review 2 | with R2 harness work |
-| 14 | ~~Sentry DSN~~ — Roy: keep off for now | Roy 2026-10-16 | later |
-| 15 | Photo + consent built (Roy: parent or Lifeshaper, take or upload). **Roy to confirm:** consent wording; production private bucket (PHOTOS_DISK=s3) | Roy 2026-10-16 | before deploy |
-| 16 | iPhone HEIC: now converted to JPEG on the phone before upload (`lib/photoForUpload`). Still try once on a real iPhone (camera + Photos + Files) | photo | before deploy |
-| 17 | Missing arch guards from plan §10: DataObject, Enum, Migration, MorphMap, PhpStyle, ClassLength, TestCoverage | review 3 (B4) | before R2 freeze |
-| 18 | **R1 exit criterion:** access-matrix grid — each R1 row × anonymous, parent-only, staff-only, parent+staff, revoked staff, other-branch staff, other-org user; and response-allowlist tests per actor (door lite view has no photo/health) | plan §3.2, §3.3, §12 | **before Release 1 ships** |
-| 19 | TenancyArchTest blind to `DB::table()` / `->from()` / joins on tenant tables; ReachabilityTest matches basenames, not FQCNs | review 3 (B4) | before R2 (check-in adds builder queries) |
-| 20 | Two-connection concurrency tests: photo upload vs consent withdrawal; last-admin removal; claim acceptance (with #7) | review 3 | with the R2 concurrency harness |
-| 21 | Staging: real photo upload/read/delete against the private S3 bucket; registry import on staging, reconciliation balances | review 3 · plan §12 | before Release 1 ships |
-| 22 | Photo housekeeping: a scheduled sweep deleting stored photo files no `children.photo_path` points to (a commit that fails after the file is written leaves one; never shown — nothing points at it) | review 3 (Codex final round, rejected as a defect) | after R1 |
-| 23 | **Roy — to go live** (Roy: "it's fine", handling it): ~~first admin email~~ blivejesus@gmail.com; Laravel Cloud app + MySQL + PRIVATE bucket + domain; mail provider key + sending domain; the Registry tab exported as CSV, and the review file checked (with Ate Noemi) | go-live | before deploy |
-| 24 | ~~Lists paging~~ built (50 per page, cut in memory) — move paging into the query if a church reaches thousands | Roy 2026-10-16 | at thousands |
-| 25 | A "delete this photo for good" action (for a parent asking for erasure) — withdrawal only hides (SECURITY #19) | Roy's hide decision | when a parent asks, or before a data-protection review |
+| 18 | **Access-matrix grid:** every R1 Feature × anonymous, parent-only, staff-only, parent+staff, revoked staff, other-satellite staff, other-church user; and **response allowlists** per actor (e.g. the door search's lite view never carries a photo or health field) | plan §3.2, §3.3, §12 · SECURITY #4, #5 | Claude (~1 day) |
+| 21 | **Staging dry run:** a real photo upload / show / hide against the private Laravel Cloud bucket; the registry import with the real sheet, reconciliation balances | review 3 · plan §12 | Claude + Roy |
+| 16 | Try a photo on a real iPhone (camera, Photos, Files) — HEIC is converted on the phone (`lib/photoForUpload`) | photo | Roy |
+
+## Roy — to go live
+
+| # | Item | Status |
+|---|---|---|
+| 23 | Laravel Cloud app + MySQL + **private** bucket (`PHOTOS_DISK=s3`) + domain; a mail provider key + sending domain; the Registry tab exported as CSV and the review file checked (with Ate Noemi). First admin = blivejesus@gmail.com (in config) | Roy handling |
+| 3 | (same as #23 — Laravel Cloud, D2) | merged into #23 |
+
+## Release 2 — Check-in (28 Oct)
+
+| # | Item | Why |
+|---|---|---|
+| 9 | Class-admin roles (event series) in People — `canGrant` refuses them until series exist | People |
+| 12 | E2E per breakpoint: a **tablet** project (iPad portrait/landscape) and layout assertions per size (no sideways scroll, ≥44/56px targets, menu fits); also run the staff photo-consent journey on phones (needs its own child per run) | Roy 2026-10-15 · review 4 |
+| 13 | E2E for link EXPIRY (2 h login / 7 d verify) — needs a controllable clock in the e2e server; Pest covers it | review 2 |
+| 7, 20 | **Two-connection concurrency tests:** claim acceptance; photo upload vs consent withdrawal; last-admin removal | review-spar · review 3 |
+| 19 | TenancyArchTest blind to `DB::table()` / `->from()` / joins on tenant tables; ReachabilityTest matches basenames, not FQCNs — check-in adds builder queries | review 3 (B4) |
+| 17 | Missing arch guards from plan §10: DataObject, Enum, Migration, MorphMap, PhpStyle, ClassLength, TestCoverage (before the R2 freeze) | review 3 (B4) |
+| 10 | E2E "test map" like admin-v2 (`e2e/map/serve.mjs`): the access matrix as a page, each cell → its tests, with Run buttons | Roy: admin-v2 has a good page per item |
+| — | Open questions for R2: `lifeshapers_can_open` default; follow-up threshold (weeks absent) — plan §13 | plan §13 |
+
+## Later
+
+| # | Item | Trigger |
+|---|---|---|
+| 1 | Moving-Up for a **mixed** group (Level 1 → Level 2 Boys/Girls): `next_group_id` cannot express a per-gender next group | before the February Moving-Up |
+| 8 | A church slug must never be a reserved path — ChurchSeeder refuses one; enforce again in any create-church screen | with Platform screens |
+| 22 | Photo housekeeping: a scheduled sweep deleting stored photo files no `children.photo_path` points to (never shown — nothing points at them) | after R1 |
+| 24 | Lists are paged in memory (50 per page) — move paging into the query | if a church reaches thousands |
+| 25 | A "delete this photo for good" action (a parent asking for erasure) — withdrawal only hides (SECURITY #19) | when a parent asks, or before a data-protection review |
+| — | "No group" filter on the children list (plan §13 q5) | awaiting Roy |
+
+## Done
+
+| # | Item | When |
+|---|---|---|
+| 2, 11 | E2E harness and journeys for everything built — 43 runs on iPhone Safari, Android Chrome, desktop Chrome | 2026-10-15/16 |
+| 4 | D-R1: import once, app is the source of truth (plan §7.6) | 2026-10-15 |
+| 5 | D-R2: People screens + `ChurchSeeder`; one satellite "CCF Dxb"; first admin blivejesus@gmail.com | 2026-10-16 |
+| 6 | Remaining R1 build list (review 1) — all built | 2026-10-16 |
+| 14 | Sentry wired with a PII scrubber — kept OFF for now (Roy) | 2026-10-16 |
+| 15 | Photos + consent (parent or Lifeshaper; consent wording approved by Roy) | 2026-10-16 |

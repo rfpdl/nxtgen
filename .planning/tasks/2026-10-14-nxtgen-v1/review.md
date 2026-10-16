@@ -1,6 +1,6 @@
 # Review — NxtGen Release 1 (registration)
 
-**Status:** decisions taken (D-R1, D-R2 — 2026-10-15) · **Date:** 2026-10-15 · **Reviewed:** uncommitted working tree on
+**Status:** closed — decisions taken (D-R1, D-R2 — 2026-10-15); remaining build list done 2026-10-16 · **Date:** 2026-10-15 · **Reviewed:** uncommitted working tree on
 `release-1` (on top of `e045817`) against `plan.md` §3–§7, §12 and Roy's later decisions
 
 Intent sources found: `plan.md` (approved), `spar.md` (plan rounds + 6 diff-review rounds), `.planning/STATE.md`,
@@ -147,9 +147,9 @@ matrix-row arch test~~ done · ~~decisions log~~ done (`docs/DECISIONS.md`).
 
 ---
 
-# Review 2 — Org rename, People, E2E harness (PAUSED)
+# Review 2 — Org rename, People, E2E harness (superseded)
 
-**Status:** paused at Roy's request ("start doing the e2e… hard part later") · **Date:** 2026-10-15 ·
+**Status:** superseded by Review 3 (which ran the Codex rounds this one paused) · **Date:** 2026-10-15 ·
 **Reviewed:** `7fe14cd` + uncommitted E2E harness. Codex rounds NOT yet run — resume with Phase 5.
 
 ## Intent ledger (so far)
@@ -327,7 +327,7 @@ not report the model actually used.
 
 # Review 4 — staff consent, Cloud storage, children list, group correction (4adeb84..b1453b1)
 
-**Status:** fixed; 3 owner questions · **Date:** 2026-10-16 · **Reviewed:** `4adeb84..b1453b1` on `release-1`
+**Status:** fixed; owner questions answered 2026-10-16 (confirm step, paging, hide on withdrawal — built in `027f555`; "No group" filter awaiting Roy) · **Date:** 2026-10-16 · **Reviewed:** `4adeb84..b1453b1` on `release-1`
 against plan §3.2/§3.3/§6, DECISIONS (2026-10-16 entries), Review 3 outcome, TODO #17–#23, Roy in chat (consent by
 parent or Lifeshaper; Laravel Cloud + private S3; first admin blivejesus@gmail.com; "complete the features first").
 

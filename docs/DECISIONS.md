@@ -6,18 +6,23 @@ describes the design; this records the choices that shaped or changed it.
 
 ## 2026-10-16
 
-- **Staff consent needs a confirmation step** (Roy): "Are you sure the parent said yes?" before it is recorded.
-- **Families and children lists are paged** (Roy).
-
-- **Photos: a parent or a Lifeshaper can take or upload a child's photo** (Roy) — only once consent is recorded.
-  **Consent can be recorded by the parent, or by a Lifeshaper the parent told in person** (Roy, later the same day,
-  replacing "staff never agree") — saved with who recorded it and noted on the child's history. The parent can take consent back, which **hides** the photo (kept, shown to nobody, back if they agree again) — Roy chose hide over delete, against the review's recommendation. Photos are private
-  (signed 30-minute links, checked against who is asking), re-encoded on upload (upright, 600px, no location or
-  camera data). Consent wording approved by Roy. Photos are converted to an upright ~1600px JPEG ON THE PHONE before upload
-  (iPhone HEIC included; much smaller uploads on church wifi); the server still re-processes every photo.
-- **Hosting: Laravel Cloud, photos in a private S3 bucket** (Roy).
-- **Production starts with one satellite, "CCF Dxb"** (Roy). More can be added in `NXTGEN_SATELLITES`.
-- **Sentry stays off** for now (Roy).
+- **Photos** (Roy):
+  - A parent **or a Lifeshaper** can take (camera) or upload a child's photo — only once consent is recorded.
+  - **Consent** is given by the parent on their family page, or **recorded by a Lifeshaper** the parent told in
+    person — with an "Are you sure the parent said yes?" step. (This replaced an earlier "staff never agree".)
+  - Every consent change is noted on the child's history (who, when), together with the change.
+  - **Withdrawing consent HIDES the photo**: kept, shown to nobody, back if the parent agrees again. Roy chose hide
+    over delete, against the review's recommendation — see SECURITY #19, TODO #25.
+  - Photos are private: signed 30-minute links, checked against who is asking and against consent. Converted to an
+    upright ~1600px JPEG on the phone before upload (iPhone HEIC included), re-encoded on the server (600px, no
+    location or camera data). Consent wording approved by Roy.
+- **Hosting: Laravel Cloud, MySQL, photos in a private S3 bucket** (Roy). **Sentry stays off** for now.
+- **Production starts with one satellite, "CCF Dxb"**; more via `NXTGEN_SATELLITES`. **First admin:
+  blivejesus@gmail.com** — everyone else is added on People.
+- **Children list** beside the families list; **both lists paged, 50 per page**; Excel keeps every filtered row (Roy).
+- **A church admin can correct a child's group** outside Moving-Up (plan §3.2); the group must fit the child's
+  gender; noted on the history.
+- **The children search also finds a child by their parent's name, email or phone** (review 4).
 
 ## 2026-10-15
 
