@@ -6,7 +6,6 @@ namespace App\Operations\Registry;
 
 use App\Data\Models\Church;
 use App\Data\Models\Family;
-use App\Data\Models\Group;
 use App\Data\Models\Satellite;
 use App\Domains\Family\DataObjects\ChildDetailsData;
 use App\Domains\Family\DataObjects\FamilyRegistrationData;
@@ -22,6 +21,7 @@ use App\Enums\GenderEnum;
 use App\Enums\RegistrationOutcomeEnum;
 use App\Enums\RegistrationSourceEnum;
 use App\Enums\RelationshipEnum;
+use App\Foundation\Support\LevelChart;
 use App\Operations\Family\AddChildToFamilyOperation;
 use App\Operations\Registration\RegisterFamilyOperation;
 use Illuminate\Support\Facades\DB;
@@ -35,13 +35,10 @@ use Lucid\Units\Operation;
  */
 final class ApplyRegistryImportOperation extends Operation
 {
-    /** @var array<string, Group|null> reviewed group names resolved once */
-    private array $groupCache = [];
-
-    /** @param array<string, list<ApprovedChildRowData>> $groups */
+    /** @param array<string, list<ApprovedChildRowData>> $rowsByFamily the approved rows, by family key */
     public function __construct(
         private readonly Church $church,
-        private readonly array $groups,
+        private readonly array $rowsByFamily,
     ) {}
 
     public function handle(): ImportResultData
@@ -52,7 +49,7 @@ final class ApplyRegistryImportOperation extends Operation
         $awaitingClaim = [];
         $problems = [];
 
-        foreach ($this->groups as $familyKey => $rows) {
+        foreach ($this->rowsByFamily as $familyKey => $rows) {
             $pending = array_values(array_filter($rows, fn (ApprovedChildRowData $r): bool => ! isset($mapped[$r->get('Source key')])));
             $skipped += count($rows) - count($pending);
 
@@ -82,17 +79,18 @@ final class ApplyRegistryImportOperation extends Operation
                 continue;
             }
 
-            // A reviewed group must exist in this church; an unknown name is a problem, never silently replaced.
-            $badGroup = array_filter($pending, fn (ApprovedChildRowData $r): bool => $r->get('Group') !== '' && $this->reviewedGroup($r) === null);
-            if ($badGroup !== []) {
-                $problems[] = "Family {$familyKey}: unknown group \"".array_values($badGroup)[0]->get('Group').'" — not loaded';
+            // A reviewed Level must be one of the chart's ("Level 2", "Level 2 Boys", "2"); an unknown one is a problem,
+            // never silently replaced.
+            $badLevel = array_filter($pending, fn (ApprovedChildRowData $r): bool => $r->get('Level') !== '' && $this->reviewedLevel($r) === null);
+            if ($badLevel !== []) {
+                $problems[] = "Family {$familyKey}: unknown Level \"".array_values($badLevel)[0]->get('Level').'" — not loaded';
 
                 continue;
             }
 
             $primary = $rows[0];
 
-            // A group must point at ONE family. Rows already imported into different families, or a parent email
+            // A family key must point at ONE family. Rows already imported into different families, or a parent email
             // that differs from the family they were imported into, need a person to reconcile — never guess.
             $mappedFamilies = array_values(array_unique(array_filter(array_map(fn (ApprovedChildRowData $r): ?int => $mapped[$r->get('Source key')] ?? null, $rows))));
             if (count($mappedFamilies) > 1) {
@@ -121,7 +119,7 @@ final class ApplyRegistryImportOperation extends Operation
                         family: $family,
                         details: $this->child($row),
                         source: RegistrationSourceEnum::Import,
-                        group: $this->reviewedGroup($row),
+                        level: $this->reviewedLevel($row),
                     ));
                     $this->run(new CreateImportMappingJob(child: $child, sourceKey: $row->get('Source key'), familyKey: (string) $familyKey));
                     $children++;
@@ -214,16 +212,11 @@ final class ApplyRegistryImportOperation extends Operation
         return mb_strtolower(trim($family->contactEmail())) === mb_strtolower(trim($email));
     }
 
-    private function reviewedGroup(ApprovedChildRowData $row): ?Group
+    /** The Level the reviewer wrote in the "Level" column, or null when blank (the age then suggests one). */
+    private function reviewedLevel(ApprovedChildRowData $row): ?int
     {
-        $name = $row->get('Group');
-        if ($name === '') {
-            return null;
-        }
+        $text = $row->get('Level');
 
-        return $this->groupCache[mb_strtolower($name)] ??= Group::query()
-            ->where('church_id', $this->church->id)
-            ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])
-            ->first();
+        return $text === '' ? null : LevelChart::fromText($text);
     }
 }

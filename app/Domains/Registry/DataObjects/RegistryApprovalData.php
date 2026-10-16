@@ -8,11 +8,11 @@ namespace App\Domains\Registry\DataObjects;
 final readonly class RegistryApprovalData
 {
     /**
-     * @param  array<string, list<ApprovedChildRowData>>  $groups
+     * @param  array<string, list<ApprovedChildRowData>>  $rowsByFamily
      * @param  list<string>  $problems
      */
     public function __construct(
-        public array $groups,
+        public array $rowsByFamily,
         public array $problems,
     ) {}
 }

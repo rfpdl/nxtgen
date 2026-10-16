@@ -7,18 +7,19 @@ namespace App\Data\Models;
 use App\Enums\ChildStatusEnum;
 use App\Enums\GenderEnum;
 use App\Enums\RegistrationSourceEnum;
+use App\Foundation\Support\LevelChart;
 use Carbon\CarbonImmutable;
 use Database\Factories\ChildFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/** A child. Belongs to a family; the nickname is the name everyone uses.
+/** A child. Belongs to a family and stores its Level; the nickname is the name everyone uses.
  *
  * @property int $id
  * @property int $church_id
  * @property int $family_id
- * @property int|null $group_id
+ * @property int|null $level
  * @property string $first_name
  * @property string|null $middle_name
  * @property string $last_name
@@ -33,14 +34,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property ChildStatusEnum $status
  * @property CarbonImmutable|null $status_changed_at
  * @property int|null $status_changed_by
- * @property CarbonImmutable|null $group_set_at
- * @property int|null $group_set_by
+ * @property CarbonImmutable|null $level_set_at
+ * @property int|null $level_set_by
  * @property string|null $photo_path
  * @property CarbonImmutable|null $photo_consent_at
  * @property int|null $photo_consent_by
  * @property RegistrationSourceEnum $registration_source
  * @property-read Family $family
- * @property-read Group|null $group
  */
 final class Child extends Model
 {
@@ -63,7 +63,8 @@ final class Child extends Model
             'date_of_birth' => 'immutable_date',
             'status' => ChildStatusEnum::class,
             'status_changed_at' => 'immutable_datetime',
-            'group_set_at' => 'immutable_datetime',
+            'level' => 'integer',
+            'level_set_at' => 'immutable_datetime',
             'photo_consent_at' => 'immutable_datetime',
             'registration_source' => RegistrationSourceEnum::class,
         ];
@@ -75,14 +76,14 @@ final class Child extends Model
         return $this->belongsTo(Family::class);
     }
 
-    /** @return BelongsTo<Group, $this> */
-    public function group(): BelongsTo
-    {
-        return $this->belongsTo(Group::class);
-    }
-
     public function displayName(): string
     {
         return $this->nickname !== '' ? $this->nickname : $this->first_name;
+    }
+
+    /** "Level 2", or null while the child has no Level yet. */
+    public function levelName(): ?string
+    {
+        return $this->level === null ? null : LevelChart::name($this->level);
     }
 }

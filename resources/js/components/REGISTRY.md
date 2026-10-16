@@ -19,10 +19,10 @@ fails when one is missing. Reuse before you build: search this list first.
 | GuardianFieldset        | molecule | A parent's own fields (+ email on registration only), one ministry; shared by registration and editing                        |
 | FamilyFieldset          | molecule | The family's fields (satellite, area, FB, DGroup, lifestage); shared by registration and editing                              |
 | FamilyDetailsForm       | organism | "Edit family details": FamilyFieldset + GuardianFieldset (no email), PUT to the given action                                  |
-| EditChildForm           | organism | "Edit {child}'s details": ChildFieldset from what is saved, PUT to the given action; never status/group                       |
-| RegistrationListFilters | molecule | Families + children lists: search, satellite/status/group (+ unconfirmed/duplicates with familyToggles); emits address params |
+| EditChildForm           | organism | "Edit {child}'s details": ChildFieldset from what is saved, PUT to the given action; never status/Level                       |
+| RegistrationListFilters | molecule | Families + children lists: search, satellite/status/Level (+ unconfirmed/duplicates with familyToggles); emits address params |
 | SwitchLink              | atom     | "Switch" between My family / Serve (or churches): only when there is more than one place to go                                |
 | PasswordLoginForm       | organism | "Use a password instead" on sign-in: the staff backup, collapsed by default                                                   |
 | ChildPhotoForm          | organism | A child's photo: take (camera) or choose; parent agrees/takes back consent, staff only after consent                          |
-| ChildAdminControls      | molecule | Staff status + group pickers under a child; a refused group change shows only on that child                                   |
+| ChildAdminControls      | molecule | Staff status + Level pickers under a child; a refused Level change shows only on that child                                   |
 | Pager                   | molecule | "Page 2 of 3" with Previous / Next for the registration lists; hidden when one page holds all                                 |

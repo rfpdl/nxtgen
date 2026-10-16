@@ -3,10 +3,11 @@
 declare(strict_types=1);
 
 use App\Data\Models\Church;
-use App\Data\Models\Group;
 use App\Data\Models\RoleAssignment;
 use App\Data\Models\Satellite;
+use App\Data\Models\Squad;
 use App\Data\Models\User;
+use App\Enums\GenderEnum;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
 use Database\Seeders\ChurchSeeder;
@@ -15,7 +16,7 @@ use Database\Seeders\DatabaseSeeder;
 use function Pest\Laravel\seed;
 
 /*
- * Production start (D-R2): the real church, its satellites, its groups and ONE first church admin — from
+ * Production start (D-R2): the real church, its satellites with their Squads, and ONE first church admin — from
  * settings, never from code. Everyone else is added on People; families come from the registry import.
  */
 
@@ -32,7 +33,7 @@ function churchSettings(array $overrides = []): void
     ], $overrides)]);
 }
 
-it('creates the church, its satellites, its groups and the first church admin', function (): void {
+it('creates the church, its satellites, each satellite\'s Squads and the first church admin', function (): void {
     churchSettings();
 
     seed(ChurchSeeder::class);
@@ -42,11 +43,27 @@ it('creates the church, its satellites, its groups and the first church admin', 
 
     expect($church->name)->toBe('CCF')
         ->and(Satellite::query()->where('church_id', $church->id)->orderBy('name')->pluck('name')->all())->toBe(['CCF DXB', 'House Church'])
-        ->and(Group::query()->where('church_id', $church->id)->count())->toBe(7)
         ->and($admin->password)->toBeNull()
         ->and($admin->is_platform_admin)->toBeFalse()
         ->and(RoleAssignment::query()->where('user_id', $admin->id)->where('role', RoleEnum::Admin)
             ->where('scope_type', ScopeTypeEnum::Church)->where('scope_id', $church->id)->where('is_active', true)->count())->toBe(1);
+});
+
+it('gives every satellite the chart\'s Squads: Level 1 mixed, Levels 2–4 boys and girls', function (): void {
+    churchSettings();
+
+    seed(ChurchSeeder::class);
+
+    foreach (Satellite::query()->get() as $satellite) {
+        $squads = Squad::query()->where('satellite_id', $satellite->id)->orderBy('level')->orderBy('gender')->get();
+
+        expect($squads->map(fn (Squad $s): array => [$s->level, $s->gender, $s->name()])->all())->toBe([
+            [1, null, 'Level 1'],
+            [2, GenderEnum::Boy, 'Level 2 Boys'], [2, GenderEnum::Girl, 'Level 2 Girls'],
+            [3, GenderEnum::Boy, 'Level 3 Boys'], [3, GenderEnum::Girl, 'Level 3 Girls'],
+            [4, GenderEnum::Boy, 'Level 4 Boys'], [4, GenderEnum::Girl, 'Level 4 Girls'],
+        ])->and($squads->pluck('church_id')->unique()->all())->toBe([$satellite->church_id]);
+    }
 });
 
 it('is safe to run again', function (): void {
@@ -57,7 +74,7 @@ it('is safe to run again', function (): void {
 
     expect(Church::query()->count())->toBe(1)
         ->and(Satellite::query()->count())->toBe(2)
-        ->and(Group::query()->count())->toBe(7)
+        ->and(Squad::query()->count())->toBe(14)
         ->and(User::query()->count())->toBe(1)
         ->and(RoleAssignment::query()->count())->toBe(1);
 });
@@ -109,14 +126,13 @@ it('adds what is missing on a second run, and changes nothing that exists (revie
     seed(ChurchSeeder::class);
     $church = Church::query()->sole();
     $church->forceFill(['timezone' => 'Asia/Manila'])->save();
-    Group::query()->where('name', 'Level 1')->update(['min_age' => 3]);
     RoleAssignment::query()->update(['is_active' => false]);          // the church removed that admin
 
     churchSettings(['satellites' => 'CCF DXB|House Church|Al Quoz']);
     seed(ChurchSeeder::class);
 
     expect($church->fresh()?->timezone)->toBe('Asia/Manila')
-        ->and(Group::query()->where('name', 'Level 1')->sole()->min_age)->toBe(3)
+        ->and(Squad::query()->count())->toBe(21)           // the new satellite got its own seven
         ->and(RoleAssignment::query()->where('is_active', true)->count())->toBe(0)
         ->and(Satellite::query()->pluck('name')->sort()->values()->all())->toBe(['Al Quoz', 'CCF DXB', 'House Church']);
 });

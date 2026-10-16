@@ -22,7 +22,7 @@ Updated 2026-10-17. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 
 | # | Item | Why |
 |---|---|---|
-| 9 | Class-admin roles (event series) in People — `canGrant` refuses them until series exist | People |
+| 9 | Schedule-admin roles (shown as "class", `ScopeTypeEnum::Schedule`) in People — `canGrant` refuses them until Schedules exist | People |
 | 12 | E2E per breakpoint: a **tablet** project (iPad portrait/landscape) and layout assertions per size (no sideways scroll, ≥44/56px targets, menu fits); also run the staff photo-consent journey on phones (needs its own child per run) | Roy 2026-10-15 · review 4 |
 | 13 | E2E for link EXPIRY (2 h login / 7 d verify) — needs a controllable clock in the e2e server; Pest covers it | review 2 |
 | 7, 20 | **Two-connection concurrency tests:** claim acceptance; photo upload vs consent withdrawal; last-admin removal | review-spar · review 3 |
@@ -33,12 +33,12 @@ Updated 2026-10-17. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 
 | # | Item | Trigger |
 |---|---|---|
-| 1 | ~~Moving-Up for a mixed group~~ — goes away with Levels + Squads (refactor 05) | superseded 2026-10-17 |
+| 27 | **Moving-Up** (admin-run, never automatic): each Child's Level + 1; from the top Level (4) the Child's status becomes Graduated. Nothing is built yet beyond `children.level` (refactor 05) | before the February Moving-Up |
 | 8 | A church slug must never be a reserved path — ChurchSeeder refuses one; enforce again in any create-church screen | with Platform screens |
 | 22 | Photo housekeeping: a scheduled sweep deleting stored photo files no `children.photo_path` points to (never shown — nothing points at them) | after R1 |
 | 24 | Lists are paged in memory (50 per page) — move paging into the query | if a church reaches thousands |
 | 25 | A "delete this photo for good" action (a parent asking for erasure) — withdrawal only hides (SECURITY #19) | when a parent asks, or before a data-protection review |
-| — | "No group" filter on the children list (plan §13 q5) — now "no Level" | awaiting Roy |
+| — | "No Level" filter on the children lists (plan §13 q5; was "no group") — the list shows "No Level" today, there is no filter for it | awaiting Roy |
 | 26 | Storybook, as aegis (a story per component) — not now (DECISIONS 2026-10-17) | when components grow |
 
 ## Done
@@ -52,4 +52,5 @@ Updated 2026-10-17. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 | 14 | Sentry wired with a PII scrubber — kept OFF for now (Roy) | 2026-10-16 |
 | 15 | Photos + consent (parent or Lifeshaper; consent wording approved by Roy) | 2026-10-16 |
 | 17 | Arch guards from aegis: PhpStyle, DataObject, Enum, Migration, ClassLength, TestCoverage, Job constructors, Operation + Middleware boundaries, base classes, domain test location, MorphMap (adapted to `enforceMorphMap`) — each with a shrinking known-gaps list (`tests/Architecture/KnownGaps.php`). Refactor batch 03 | 2026-10-17 |
+| 1 | ~~Moving-Up for a mixed group~~ — superseded: groups replaced by Levels + Squads (DECISIONS 2026-10-17). Refactor batch 05 | 2026-10-17 |
 | 19 | TenancyArchTest sees `DB::table()` / `->from()` / joins / static finds; ReachabilityTest matches FQCNs. Refactor batch 03 | 2026-10-17 |

@@ -25,7 +25,7 @@ final class GetApprovedRegistryRowsJob extends BaseJob
     {
         $reader = new Reader;
         $reader->open($this->path);
-        $groups = [];
+        $rowsByFamily = [];
         $problems = [];
         $foundSheet = false;
 
@@ -56,7 +56,7 @@ final class GetApprovedRegistryRowsJob extends BaseJob
 
                     continue;
                 }
-                $groups[$approved->get('Family key')][] = $approved;
+                $rowsByFamily[$approved->get('Family key')][] = $approved;
             }
         }
 
@@ -66,7 +66,7 @@ final class GetApprovedRegistryRowsJob extends BaseJob
             $problems[] = 'The review file has no "Families" sheet — nothing loaded';
         }
 
-        return new RegistryApprovalData(groups: $groups, problems: $problems);
+        return new RegistryApprovalData(rowsByFamily: $rowsByFamily, problems: $problems);
     }
 
     /**

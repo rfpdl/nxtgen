@@ -29,7 +29,7 @@ const child = (allergies: string | null): ChildPortal => ({
     dislikes: null,
     fears: 'Dogs',
     parentNotes: null,
-    group: 'Level 3 Boys',
+    level: 'Level 3',
     status: 'Active',
     photoConsent: false,
     photoUrl: null,

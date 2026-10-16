@@ -9,7 +9,7 @@ use App\Domains\Church\DataObjects\SatelliteOptionData;
 use App\Domains\Church\Jobs\GetSatellitesJob;
 use App\Domains\Family\DataObjects\FamilyListRowData;
 use App\Domains\Family\Jobs\GetFamiliesJob;
-use App\Domains\Group\Jobs\GetGroupsJob;
+use App\Domains\Level\Jobs\GetLevelsJob;
 use App\Enums\AccessRowEnum;
 use App\Enums\ChildStatusEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -49,7 +49,7 @@ final class ShowFamiliesFeature extends BaseChurchFeature
             'filters' => FamilyListQuery::toProps($filters),
             'options' => [
                 'satellites' => $satellites,
-                'groups' => $this->run(new GetGroupsJob(churchId: $church->id)),
+                'levels' => $this->run(new GetLevelsJob),
                 'statuses' => ChildStatusEnum::toFrontend(),
             ],
         ]);

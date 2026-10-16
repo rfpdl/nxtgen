@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Data\Models\Child;
 use App\Data\Models\Church;
 use App\Data\Models\Family;
-use App\Data\Models\Group;
 use App\Data\Models\MagicLink;
 use App\Data\Models\Satellite;
 use App\Data\Models\User;
@@ -218,7 +217,7 @@ describe('review-spar fixes', function (): void {
         ['church' => $church, 'htc' => $htc] = adminChurch();
         $family = registeredFamily($htc, 'Janice', 'janice@example.com', verified: false);
 
-        actingAs(staffMember(RoleEnum::Admin, new RoleScope($church, ScopeTypeEnum::EventSeries, 99)))->post("/ccf/families/{$family->id}/resend")->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, new RoleScope($church, ScopeTypeEnum::Schedule, 99)))->post("/ccf/families/{$family->id}/resend")->assertNotFound();
     });
 
     it('says honestly when the email was NOT sent because of the per-address limit (review B3)', function (): void {
@@ -254,7 +253,7 @@ describe('review-spar fixes', function (): void {
 });
 
 /*
- * The registration list's search and filters (plan §6: status, group, satellite, unconfirmed email, open
+ * The registration list's search and filters (plan §6: status, Level, satellite, unconfirmed email, open
  * duplicate candidates). Filters narrow what the viewer may see — they never widen it.
  */
 describe('searching and filtering the list', function (): void {
@@ -270,21 +269,21 @@ describe('searching and filtering the list', function (): void {
         }
     });
 
-    it('filters by satellite, child status and group, and offers those choices', function (): void {
+    it('filters by satellite, child status and Level, and offers those choices', function (): void {
         ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
         $a = registeredFamily($htc, 'Janice', 'janice@example.com');
         registeredFamily($house, 'Mira', 'mira@example.com');
-        $group = Group::factory()->create(['church_id' => $church->id, 'name' => 'Level 2 Girls']);
-        Child::query()->where('family_id', $a->id)->update(['status' => ChildStatusEnum::Inactive, 'group_id' => $group->id]);
+        Child::query()->where('church_id', $church->id)->update(['level' => 1]);
+        Child::query()->where('family_id', $a->id)->update(['status' => ChildStatusEnum::Inactive, 'level' => 2]);
         $admin = staffMember(RoleEnum::Admin, atChurch($church));
 
         actingAs($admin)->get("/ccf/families?satellite={$house->id}")->assertInertia(fn (AssertableInertia $p) => $p
             ->has('families', 1)->where('families.0.primaryName', 'Mira Ramos')
-            ->has('options.satellites', 2)->has('options.groups', 1)->has('options.statuses', 3));
+            ->has('options.satellites', 2)->has('options.levels', 4)->has('options.statuses', 3));
         actingAs($admin)->get('/ccf/families?status=inactive')->assertInertia(fn (AssertableInertia $p) => $p
             ->has('families', 1)->where('families.0.primaryName', 'Janice Ramos'));
-        actingAs($admin)->get("/ccf/families?group={$group->id}")->assertInertia(fn (AssertableInertia $p) => $p
-            ->has('families', 1)->where('families.0.primaryName', 'Janice Ramos'));
+        actingAs($admin)->get('/ccf/families?level=2')->assertInertia(fn (AssertableInertia $p) => $p
+            ->has('families', 1)->where('families.0.primaryName', 'Janice Ramos')->where('filters.level', 2));
     });
 
     it('filters to families with an open possible duplicate, on either side', function (): void {

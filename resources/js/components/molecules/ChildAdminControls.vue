@@ -1,39 +1,41 @@
 <script setup lang="ts">
+import type { LevelOption } from '@/types'
+
 /**
- * Staff controls under a child on the family page: status (who may edit the family) and group (church admins,
- * plan §3.2). A refused group change shows only on the child it was for — the page passes `groupError` to that
- * child alone (it used to appear under every child).
+ * Staff controls under a child on the family page: status (who may edit the family) and Level (church admins,
+ * plan §3.2 — a correction outside Moving-Up). A refused Level change shows only on the child it was for — the
+ * page passes `levelError` to that child alone.
  */
 defineProps<{
-    child: { id: number; group: string | null; status: string }
+    child: { id: number; level: string | null; status: string }
     canSetStatus: boolean
-    canSetGroup: boolean
-    groups: { id: number; name: string }[]
-    groupError?: string
+    canSetLevel: boolean
+    levels: LevelOption[]
+    levelError?: string
 }>()
 
 const emit = defineEmits<{
     status: [childId: number, status: string]
-    group: [childId: number, groupId: number]
+    level: [childId: number, level: number]
 }>()
 
 const select = 'min-h-touch border-border bg-surface text-text rounded-md border px-3'
 </script>
 
 <template>
-    <label v-if="canSetGroup" class="text-text flex items-center gap-2">
-        Group
+    <label v-if="canSetLevel" class="text-text flex items-center gap-2">
+        Level
         <select
             :class="select"
-            :data-testid="`group-${child.id}`"
-            @change="emit('group', child.id, Number(($event.target as HTMLSelectElement).value))"
+            :data-testid="`level-${child.id}`"
+            @change="emit('level', child.id, Number(($event.target as HTMLSelectElement).value))"
         >
-            <option value="" selected disabled>{{ child.group ?? 'No group' }}</option>
-            <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
+            <option value="" selected disabled>{{ child.level ?? 'No Level' }}</option>
+            <option v-for="l in levels" :key="l.level" :value="l.level">{{ l.name }}</option>
         </select>
     </label>
-    <p v-if="canSetGroup && groupError" role="alert" class="text-danger font-semibold">
-        {{ groupError }}
+    <p v-if="canSetLevel && levelError" role="alert" class="text-danger font-semibold">
+        {{ levelError }}
     </p>
     <label v-if="canSetStatus" class="text-text flex items-center gap-2">
         Status

@@ -17,6 +17,19 @@ return [
         'first_admin_name' => env('NXTGEN_FIRST_ADMIN_NAME', 'Roy'),
     ],
 
+    /*
+     * The Levels — ONE list for the whole Church (DECISIONS 2026-10-17), from CCF's age-level chart. Ages are
+     * completed years on the church's Moving-Up reference date, and only SUGGEST a child's Level: the child stores
+     * it and keeps it until Moving-Up. `by_gender` splits the Level into a boys' and a girls' Squad at every
+     * Satellite (Level 1 is mixed). Shown as "Level 1" … "Level 4"; from the top Level a child is Graduated.
+     */
+    'levels' => [
+        1 => ['min_age' => 4, 'max_age' => 5, 'by_gender' => false],
+        2 => ['min_age' => 6, 'max_age' => 7, 'by_gender' => true],
+        3 => ['min_age' => 8, 'max_age' => 9, 'by_gender' => true],
+        4 => ['min_age' => 10, 'max_age' => 12, 'by_gender' => true],
+    ],
+
     'rate_limits' => [
         /*
          * Public forms and emailed-link use, per device (IP) per minute. Production keeps 20. Only `.env.e2e`

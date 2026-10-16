@@ -31,7 +31,7 @@ final class CreateFamiliesSpreadsheetJob extends BaseJob
         $path = tempnam(sys_get_temp_dir(), 'nxtgen-families-').'.xlsx';
         $writer = new Writer;
         $writer->openToFile($path);
-        $writer->addRow(TextRow::of(['Family', 'Email', 'Email confirmed', 'Satellite', 'Child nickname', 'Child full name', 'Birthday', 'Group', 'Allergies', 'Status', 'Registered by', 'Registered on']));
+        $writer->addRow(TextRow::of(['Family', 'Email', 'Email confirmed', 'Satellite', 'Child nickname', 'Child full name', 'Birthday', 'Level', 'Allergies', 'Status', 'Registered by', 'Registered on']));
 
         foreach ($this->families as $family) {
             $email = $family->contactEmail();
@@ -47,7 +47,7 @@ final class CreateFamiliesSpreadsheetJob extends BaseJob
                     $child->nickname,
                     trim("{$child->first_name} {$child->middle_name} {$child->last_name}"),
                     $child->date_of_birth->toDateString(),
-                    $child->group->name ?? '',
+                    $child->levelName() ?? '',
                     $child->allergies ?? '',
                     $child->status->label(),
                     $family->registration_source->label(),

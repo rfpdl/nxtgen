@@ -10,7 +10,7 @@ use App\Domains\Family\DataObjects\FamilyDetailsData;
 use App\Domains\Family\DataObjects\GuardianEditData;
 use App\Domains\Family\Jobs\GetFamilyByIdJob;
 use App\Domains\Family\Jobs\GetFamilyNotesJob;
-use App\Domains\Group\Jobs\GetGroupsJob;
+use App\Domains\Level\Jobs\GetLevelsJob;
 use App\Enums\AccessRowEnum;
 use App\Enums\GenderEnum;
 use App\Enums\RelationshipEnum;
@@ -46,8 +46,8 @@ final class ShowFamilyFeature extends BaseChurchFeature
             'primary' => $canEdit && $primary !== null ? GuardianEditData::fromModel($primary) : null,
             'satellites' => $canEdit ? $this->run(new GetSatellitesJob(church: $church)) : [],
             'relationships' => RelationshipEnum::toFrontend(),
-            'canSetGroup' => $this->scope()->canSetGroup(),
-            'groups' => $this->scope()->canSetGroup() ? $this->run(new GetGroupsJob(churchId: $church->id)) : [],
+            'canSetLevel' => $this->scope()->canSetLevel(),
+            'levels' => $this->scope()->canSetLevel() ? $this->run(new GetLevelsJob) : [],
             'genders' => GenderEnum::toFrontend(),
         ]);
     }

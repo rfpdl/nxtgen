@@ -30,7 +30,7 @@ final class ChildPortalData extends Data
         public ?string $dislikes,
         public ?string $fears,
         public ?string $parentNotes,
-        public ?string $group,
+        public ?string $level,
         public string $status,
         public bool $photoConsent,
         public ?string $photoUrl,
@@ -51,7 +51,7 @@ final class ChildPortalData extends Data
             dislikes: $child->dislikes,
             fears: $child->fears,
             parentNotes: $child->parent_notes,
-            group: $child->group?->name,
+            level: $child->levelName(),
             status: $child->status->label(),
             photoConsent: $child->photo_consent_at !== null,
             photoUrl: $child->photo_path === null || $child->photo_consent_at === null ? null

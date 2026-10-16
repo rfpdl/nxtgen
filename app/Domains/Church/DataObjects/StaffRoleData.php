@@ -36,7 +36,7 @@ final class StaffRoleData extends Data
         $where = match ($type) {
             ScopeTypeEnum::Church => 'whole church',
             ScopeTypeEnum::Satellite => $satelliteName ?? 'a satellite',
-            ScopeTypeEnum::EventSeries => 'a class',
+            ScopeTypeEnum::Schedule => 'a class',
         };
 
         return "{$role->label()} · {$where}";

@@ -8,7 +8,7 @@ use App\Domains\Family\DataObjects\ChildListFiltersData;
 use App\Enums\ChildStatusEnum;
 use Illuminate\Http\Request;
 
-/** The children list's filters as they arrive in the address (`?q=&satellite=&status=&group=`), read leniently. */
+/** The children list's filters as they arrive in the address (`?q=&satellite=&status=&level=`), read leniently. */
 final class ChildListQuery
 {
     public static function from(Request $request): ChildListFiltersData
@@ -19,14 +19,14 @@ final class ChildListQuery
             query: $q === '' ? null : $q,
             satelliteId: $request->integer('satellite') ?: null,
             status: ChildStatusEnum::tryFrom($request->string('status')->value()),
-            groupId: $request->integer('group') ?: null,
+            level: $request->integer('level') ?: null,
         );
     }
 
-    /** @return array{q: string, satellite: int|null, status: string|null, group: int|null, unconfirmed: bool, duplicates: bool} */
+    /** @return array{q: string, satellite: int|null, status: string|null, level: int|null, unconfirmed: bool, duplicates: bool} */
     public static function toProps(ChildListFiltersData $f): array
     {
         // Same shape as the families list's filters, so one filter bar serves both lists.
-        return ['q' => $f->query ?? '', 'satellite' => $f->satelliteId, 'status' => $f->status?->value, 'group' => $f->groupId, 'unconfirmed' => false, 'duplicates' => false];
+        return ['q' => $f->query ?? '', 'satellite' => $f->satelliteId, 'status' => $f->status?->value, 'level' => $f->level, 'unconfirmed' => false, 'duplicates' => false];
     }
 }

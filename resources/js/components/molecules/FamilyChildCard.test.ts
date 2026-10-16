@@ -16,7 +16,7 @@ const child = (over: Partial<ChildPortal> = {}): ChildPortal => ({
     dislikes: null,
     fears: null,
     parentNotes: null,
-    group: 'Level 2 Girls',
+    level: 'Level 2',
     status: 'Active',
     photoConsent: false,
     photoUrl: null,
@@ -24,12 +24,12 @@ const child = (over: Partial<ChildPortal> = {}): ChildPortal => ({
 })
 
 describe('FamilyChildCard', () => {
-    it('leads with the nickname and shows the full name and group', () => {
+    it('leads with the nickname and shows the full name and Level', () => {
         const text = mount(FamilyChildCard, { props: { child: child() } }).text()
 
         expect(text).toContain('Amara')
         expect(text).toContain('Alexis Amara Ramos')
-        expect(text).toContain('Level 2 Girls')
+        expect(text).toContain('Level 2')
     })
 
     it('warns about allergies, and only when there are some', () => {
@@ -45,10 +45,10 @@ describe('FamilyChildCard', () => {
         ).toContain('Peanuts')
     })
 
-    it('says when no group is set yet', () => {
+    it('says when the child has no Level yet', () => {
         expect(
-            mount(FamilyChildCard, { props: { child: child({ group: null }) } }).text(),
-        ).toContain('Group not set yet')
+            mount(FamilyChildCard, { props: { child: child({ level: null }) } }).text(),
+        ).toContain('No Level yet')
     })
 
     it('shows every health detail the family gave, and nothing for what they left empty', () => {

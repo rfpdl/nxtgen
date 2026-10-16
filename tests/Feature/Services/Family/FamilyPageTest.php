@@ -64,7 +64,7 @@ it('does not show one church\'s family page to a parent of another church', func
     actingAs($otherGuardian)->get('/ccf/family')->assertNotFound();
 });
 
-it('lets a parent add a child, with a suggested group', function (): void {
+it('lets a parent add a child, at the Level their age suggests', function (): void {
     [, $family, $user] = familyWithGuardian();
 
     actingAs($user)->post('/ccf/family/children', [
@@ -72,7 +72,8 @@ it('lets a parent add a child, with a suggested group', function (): void {
         'gender' => 'boy', 'date_of_birth' => '2018-03-04', 'has_allergies' => false, 'allergies' => null,
     ])->assertRedirect('/ccf/family')->assertSessionHas('success', 'Aaron is added to your family.');
 
-    expect($family->children()->sole()->nickname)->toBe('Aaron');
+    // Eight on the church's reference date (2027-02-01) → Level 3.
+    expect($family->children()->sole()->nickname)->toBe('Aaron')->and($family->children()->sole()->level)->toBe(3);
 });
 
 it('validates a new child in plain words', function (): void {
@@ -82,14 +83,14 @@ it('validates a new child in plain words', function (): void {
         ->assertSessionHasErrors(['first_name' => 'Please enter the first name.', 'gender' => 'Please choose boy or girl.', 'date_of_birth' => 'Please enter the birthday.']);
 });
 
-it('lets a parent edit their own child, but not the status or group', function (): void {
+it('lets a parent edit their own child, but not the status or Level', function (): void {
     [, $family, $user] = familyWithGuardian();
     $child = childOf($family, ['allergies' => null]);
 
     actingAs($user)->put("/ccf/family/children/{$child->id}", [
         'first_name' => $child->first_name, 'middle_name' => null, 'last_name' => $child->last_name, 'nickname' => 'Igo',
         'gender' => $child->gender->value, 'date_of_birth' => $child->date_of_birth->toDateString(), 'has_allergies' => true, 'allergies' => 'Shrimp',
-        'status' => 'graduated', 'group_id' => 999,
+        'status' => 'graduated', 'level' => 4,
     ])->assertRedirect('/ccf/family');
 
     $child->refresh();
@@ -97,7 +98,7 @@ it('lets a parent edit their own child, but not the status or group', function (
     expect($child->nickname)->toBe('Igo')
         ->and($child->allergies)->toBe('Shrimp')
         ->and($child->status->value)->toBe('active')
-        ->and($child->group_id)->toBeNull();
+        ->and($child->level)->toBeNull();
 });
 
 it('refuses to edit a child from another family', function (): void {
@@ -112,7 +113,7 @@ it('refuses to edit a child from another family', function (): void {
 });
 
 /*
- * The family page, editable (plan §3.2 "Edit family/guardian/child details": own family, not status/group;
+ * The family page, editable (plan §3.2 "Edit family/guardian/child details": own family, not status/Level;
  * review B5). The page carries what the edit forms need; health details are the child's own family's to see.
  */
 
@@ -168,18 +169,18 @@ it('needs the parent\'s name and phone', function (): void {
         ->assertSessionHasErrors(['guardian.first_name', 'guardian.phone']);
 });
 
-it('lets a parent fix a child\'s details but never the status or group', function (): void {
+it('lets a parent fix a child\'s details but never the status or Level', function (): void {
     [, $family, $user] = familyWithGuardian();
     $child = childOf($family, ['status' => ChildStatusEnum::Active]);
 
     actingAs($user)->put("/ccf/family/children/{$child->id}", [
         'first_name' => 'Gabriel', 'last_name' => 'Ramos', 'nickname' => 'Gab', 'gender' => 'boy', 'date_of_birth' => '2017-05-10',
-        'has_allergies' => true, 'allergies' => 'Eggs', 'fears' => 'Dogs', 'status' => 'graduated', 'group_id' => 999,
+        'has_allergies' => true, 'allergies' => 'Eggs', 'fears' => 'Dogs', 'status' => 'graduated', 'level' => 4,
     ])->assertRedirect();
 
     $child->refresh();
     expect($child->nickname)->toBe('Gab')->and($child->allergies)->toBe('Eggs')->and($child->fears)->toBe('Dogs')
-        ->and($child->status)->toBe(ChildStatusEnum::Active)->and($child->group_id)->not->toBe(999);
+        ->and($child->status)->toBe(ChildStatusEnum::Active)->and($child->level)->toBeNull();
 });
 
 it('does not let a parent edit another family', function (): void {

@@ -38,7 +38,7 @@ const child = (over: Partial<ChildPortal> = {}): ChildPortal => ({
     dislikes: null,
     fears: null,
     parentNotes: null,
-    group: null,
+    level: null,
     status: 'Active',
     photoConsent: false,
     photoUrl: null,

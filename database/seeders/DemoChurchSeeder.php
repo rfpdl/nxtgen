@@ -12,8 +12,8 @@ use App\Enums\ScopeTypeEnum;
 use Illuminate\Database\Seeder;
 
 /**
- * A local church to click around in: the same church ChurchSeeder makes (CCF, CCF DXB + House Church, NxtGen's
- * groups), with demo staff logins. Sign in with a magic link (emails go to storage/logs/laravel.log) or the staff
+ * A local church to click around in: the same church ChurchSeeder makes (CCF, CCF DXB + House Church, each with its
+ * Squads), with demo staff logins. Sign in with a magic link (emails go to storage/logs/laravel.log) or the staff
  * password "password". NEVER in production — DatabaseSeeder runs ChurchSeeder there.
  */
 final class DemoChurchSeeder extends Seeder

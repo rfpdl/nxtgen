@@ -8,14 +8,14 @@ enum ScopeTypeEnum: string
 {
     case Church = 'church';
     case Satellite = 'satellite';
-    case EventSeries = 'event_series';
+    case Schedule = 'schedule';
 
     public function label(): string
     {
         return match ($this) {
             self::Church => 'Church',
             self::Satellite => 'Satellite',
-            self::EventSeries => 'Class',
+            self::Schedule => 'Class',
         };
     }
 

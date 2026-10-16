@@ -10,7 +10,7 @@ it('writes a nickname that looks like a formula as plain text, never a formula (
     $family = Family::factory()->create();
     Child::factory()->create(['family_id' => $family->id, 'church_id' => $family->church_id, 'nickname' => '=HYPERLINK("http://evil","x")', 'allergies' => '=1+1']);
 
-    $families = Family::query()->with(['primaryGuardian.user', 'homeSatellite', 'children.group'])->get();
+    $families = Family::query()->with(['primaryGuardian.user', 'homeSatellite', 'children'])->get();
     $path = (new CreateFamiliesSpreadsheetJob(families: $families, fullEmail: true))->handle();
 
     $zip = new ZipArchive;

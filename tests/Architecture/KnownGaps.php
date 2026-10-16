@@ -16,7 +16,7 @@ namespace Tests\Architecture;
  * Grouped by the refactor batch that empties each list (`.planning/tasks/2026-10-17-refactor/spec.md`):
  * 04 renames, 05 groups → Levels, 06 enums / DTOs / generated TS, 07 Feature clean-up, 08 tests per Job and enum
  * and the rest. Batch 04 renamed classes to the GLOSSARY words (Church, Satellite) and rewrote the FQCNs here
- * without paying anything off; batch 05 deletes the `Group` entries with the classes.
+ * without paying anything off; batch 05 deleted the `Group` entries with the classes.
  *
  * Keys: an FQCN where the rule is about a class, a path relative to `app/` (or a migration's filename) where it
  * is about a file.
@@ -79,7 +79,6 @@ final class KnownGaps
         'App\Services\Church\Data\AddStaffInput',
         'App\Services\Church\Data\CorrectFamilyEmailInput',
         'App\Services\Church\Data\ResolveDuplicateInput',
-        'App\Services\Church\Data\UpdateChildGroupInput',
         'App\Services\Church\Data\UpdateChildStatusInput',
         'App\Foundation\Inputs\ChildInput',
         'App\Foundation\Inputs\ChildPhotoInput',
@@ -98,7 +97,7 @@ final class KnownGaps
     // ─── Batch 07 — Feature clean-up ────────────────────────────────────────────────────────────────────
 
     /**
-     * Jobs taking a non-nullable `int $…Id` instead of the Model (JobConstructorTest) — 14 Jobs, 15 parameters
+     * Jobs taking a non-nullable `int $…Id` instead of the Model (JobConstructorTest) — 12 Jobs, 13 parameters
      * (`GetChurchChildJob` takes two). `CreateRoleAssignmentJob::$scopeId` is the polymorphic scope; batch
      * 04 decides whether that scope becomes a real relation (issue 04), and 07 whether it stays an id.
      *
@@ -116,8 +115,6 @@ final class KnownGaps
         'App\Domains\Family\Jobs\GetMatchingChildJob',
         'App\Domains\Family\Jobs\GetOpenDuplicatesJob',
         'App\Domains\Family\Jobs\SearchFamiliesJob',
-        'App\Domains\Group\Jobs\GetGroupJob',
-        'App\Domains\Group\Jobs\GetGroupsJob',
         'App\Domains\User\Jobs\GetUserForUpdateJob',
     ];
 
@@ -125,8 +122,7 @@ final class KnownGaps
     public const array JOB_PROPS_NOT_PRIVATE_READONLY = [];
 
     /**
-     * Operations querying a model directly (OperationBoundariesTest) — `Satellite::query()` (line ~50) and
-     * `Group::query()` (line ~224).
+     * Operations querying a model directly (OperationBoundariesTest) — `Satellite::query()` (line ~47).
      *
      * @var list<string>
      */
@@ -169,8 +165,9 @@ final class KnownGaps
     // ─── Batch 08 — tests per Job and enum; ClassLength / PhpStyle / Migration lists emptied ────────────
 
     /**
-     * Jobs with no `app/Domains/<Domain>/Tests/Jobs/<Job>Test.php` (TestCoverageTest) — 64 of 67. The three
-     * with one: CreateChildPhotoJob, CreateFamiliesSpreadsheetJob, UpdateUserEmailVerifiedJob. Three listed here
+     * Jobs with no `app/Domains/<Domain>/Tests/Jobs/<Job>Test.php` (TestCoverageTest) — 60 of 66. The six
+     * with one: CreateChildPhotoJob, CreateFamiliesSpreadsheetJob, UpdateUserEmailVerifiedJob, and batch 05's
+     * GetLevelsJob, GetSuggestedLevelJob and UpdateChildLevelJob. Three listed here
      * (Create-, Redeem- and SendMagicLinkJob) ARE exercised, by the bundled `MagicLinkJobsTest`, which attributes
      * to none of them; GetRegistryProposalJob and GetRegistryRowsJob likewise by `ProposeRegistryFamiliesTest`.
      *
@@ -219,7 +216,6 @@ final class KnownGaps
         'GetPendingFamilyClaimJob',
         'SearchFamiliesJob',
         'UpdateChildDetailsJob',
-        'UpdateChildGroupJob',
         'UpdateChildPhotoConsentJob',
         'UpdateChildStatusJob',
         'UpdateDuplicateCandidateStatusJob',
@@ -228,10 +224,6 @@ final class KnownGaps
         'UpdateFamilyPrimaryGuardianJob',
         'UpdateGuardianDetailsJob',
         'UpdateGuardianUserJob',
-        // Group (goes in batch 05)
-        'GetGroupJob',
-        'GetGroupsJob',
-        'GetSuggestedGroupJob',
         // Registry
         'CreateImportMappingJob',
         'CreateRegistryReviewSpreadsheetJob',

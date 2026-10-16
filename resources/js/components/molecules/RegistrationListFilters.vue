@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { LevelOption } from '@/types'
 import { reactive } from 'vue'
 
 /**
@@ -11,7 +12,7 @@ export type RegistrationListFilterValues = {
     q: string
     satellite: number | null
     status: string | null
-    group: number | null
+    level: number | null
     unconfirmed: boolean
     duplicates: boolean
 }
@@ -21,7 +22,7 @@ const props = defineProps<{
     filters: RegistrationListFilterValues
     options: {
         satellites: { id: number; name: string }[]
-        groups: { id: number; name: string }[]
+        levels: LevelOption[]
         statuses: { value: string; label: string }[]
     }
 }>()
@@ -35,7 +36,7 @@ function apply(): void {
     if (f.q.trim() !== '') params.q = f.q.trim()
     if (f.satellite !== null) params.satellite = f.satellite
     if (f.status !== null) params.status = f.status
-    if (f.group !== null) params.group = f.group
+    if (f.level !== null) params.level = f.level
     if (f.unconfirmed) params.unconfirmed = 1
     if (f.duplicates) params.duplicates = 1
     emit('apply', params)
@@ -82,14 +83,16 @@ const control = 'min-h-touch border-border bg-surface text-text rounded-md borde
             </option>
         </select>
         <select
-            v-model="f.group"
-            aria-label="Group"
+            v-model="f.level"
+            aria-label="Level"
             :class="control"
-            data-testid="filter-group"
+            data-testid="filter-level"
             @change="apply"
         >
-            <option :value="null">Any group</option>
-            <option v-for="g in options.groups" :key="g.id" :value="g.id">{{ g.name }}</option>
+            <option :value="null">Any Level</option>
+            <option v-for="l in options.levels" :key="l.level" :value="l.level">
+                {{ l.name }}
+            </option>
         </select>
         <label v-if="familyToggles" class="min-h-touch text-text flex items-center gap-2">
             <input

@@ -21,6 +21,7 @@ Grilling session on refactoring Release 1 (Roy). Terms live in `GLOSSARY.md`; th
   Satellite needs nothing. **Supersedes 2026-10-16 "a church admin can correct a child's group"** — it becomes
   "correct a child's Level"; TODO #1 (mixed-group Moving-Up) disappears. Moving up out of Level 4 = **Graduated**.
 - **Levels are one list for the whole Church**; per-Satellite Levels only if a Satellite ever needs them.
+- Squads table built in refactor 05; the child→squad lookup waits for check-in (Claude — for Roy to confirm).
 - **Schedule** = a Satellite's regular class time (shown as "class"; `Class` is a PHP reserved word); **Session** =
   one Schedule on one date — what children are checked into. A child has no "usual" Schedule.
 - **Migrations are edited in place until the first deploy**, then only ever added.

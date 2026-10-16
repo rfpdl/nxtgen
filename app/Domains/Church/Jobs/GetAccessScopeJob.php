@@ -39,7 +39,7 @@ final class GetAccessScopeJob extends BaseJob
             isChurchLifeshaper: $ids(RoleEnum::Lifeshaper, ScopeTypeEnum::Church) !== [],
             adminSatelliteIds: $ids(RoleEnum::Admin, ScopeTypeEnum::Satellite),
             lifeshaperSatelliteIds: $ids(RoleEnum::Lifeshaper, ScopeTypeEnum::Satellite),
-            adminSeriesIds: $ids(RoleEnum::Admin, ScopeTypeEnum::EventSeries),
+            adminScheduleIds: $ids(RoleEnum::Admin, ScopeTypeEnum::Schedule),
         );
     }
 }

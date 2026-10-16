@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Data\Models\Child;
 use App\Data\Models\Church;
-use App\Data\Models\Group;
 use App\Data\Models\Note;
 use App\Data\Models\Satellite;
 use App\Data\Models\User;
@@ -24,29 +23,27 @@ use function Tests\Support\satelliteOf;
 use function Tests\Support\staffMember;
 
 /*
- * The children list (plan §6 R1 "families/children lists") and setting a child's group (plan §3.2 "Set child
- * group (outside Moving-Up)": church admin only). Groups are assigned by age + gender at registration and
- * otherwise change only at Moving-Up — this is the admin's correction.
+ * The children list (plan §6 R1 "families/children lists") and correcting a child's Level (plan §3.2, DECISIONS
+ * 2026-10-17 — it replaced "set a child's group": church admin only). The child's age suggests a Level at
+ * registration; the child stores it and otherwise keeps it until Moving-Up — this is the admin's correction.
  */
 
-/** @return array{church: Church, dxb: Satellite, house: Satellite, girls2: Group, boys2: Group, amara: Child, bea: Child} */
+/** @return array{church: Church, dxb: Satellite, house: Satellite, amara: Child, bea: Child} */
 function kidsChurch(): array
 {
     $church = church(['slug' => 'ccf']);
     $dxb = satelliteOf($church, ['name' => 'CCF DXB']);
     $house = satelliteOf($church, ['name' => 'House Church']);
-    $girls2 = Group::factory()->create(['church_id' => $church->id, 'name' => 'Level 2 Girls', 'gender' => GenderEnum::Girl, 'sort' => 21]);
-    $boys2 = Group::factory()->create(['church_id' => $church->id, 'name' => 'Level 2 Boys', 'gender' => GenderEnum::Boy, 'sort' => 20]);
     $a = familyAt($dxb);
     $b = familyAt($house);
-    $amara = childOf($a, ['first_name' => 'Alexis', 'nickname' => 'Amara', 'gender' => GenderEnum::Girl, 'allergies' => 'Peanuts', 'group_id' => $girls2->id, 'date_of_birth' => now()->subYears(7)->toDateString()]);
+    $amara = childOf($a, ['first_name' => 'Alexis', 'nickname' => 'Amara', 'gender' => GenderEnum::Girl, 'allergies' => 'Peanuts', 'level' => 2, 'date_of_birth' => now()->subYears(7)->toDateString()]);
     $bea = childOf($b, ['first_name' => 'Beatrice', 'nickname' => 'Bea', 'gender' => GenderEnum::Girl, 'allergies' => null, 'status' => ChildStatusEnum::Inactive]);
 
-    return compact('church', 'dxb', 'house', 'girls2', 'boys2', 'amara', 'bea');
+    return compact('church', 'dxb', 'house', 'amara', 'bea');
 }
 
 describe('the children list', function (): void {
-    it('lists every child a church admin can see, with group, age, status and an allergy flag', function (): void {
+    it('lists every child a church admin can see, with Level, age, status and an allergy flag', function (): void {
         ['church' => $church, 'amara' => $amara] = kidsChurch();
 
         actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/children')
@@ -54,13 +51,13 @@ describe('the children list', function (): void {
             ->component('Church/Children/Index')
             ->has('children', 2)
             ->where('children.0.nickname', 'Amara')
-            ->where('children.0.group', 'Level 2 Girls')
+            ->where('children.0.level', 'Level 2')
             ->where('children.0.age', 7)
             ->where('children.0.status', 'Active')
             ->where('children.0.hasAllergies', true)
             ->where('children.0.satellite', 'CCF DXB')
             ->where('children.0.familyId', $amara->family_id)
-            ->has('options.groups', 2)->has('options.satellites', 2)->has('options.statuses', 3));
+            ->has('options.levels', 4)->has('options.satellites', 2)->has('options.statuses', 3));
     });
 
     it('shows a Lifeshaper only their satellite', function (): void {
@@ -70,12 +67,12 @@ describe('the children list', function (): void {
             ->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Bea'));
     });
 
-    it('searches and filters by group, status and satellite — never widening the viewer\'s scope', function (): void {
-        ['church' => $church, 'dxb' => $dxb, 'house' => $house, 'girls2' => $girls2] = kidsChurch();
+    it('searches and filters by Level, status and satellite — never widening the viewer\'s scope', function (): void {
+        ['church' => $church, 'dxb' => $dxb, 'house' => $house] = kidsChurch();
         $admin = staffMember(RoleEnum::Admin, atChurch($church));
 
         actingAs($admin)->get('/ccf/children?q=bea')->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Bea')->where('filters.q', 'bea'));
-        actingAs($admin)->get("/ccf/children?group={$girls2->id}")->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Amara'));
+        actingAs($admin)->get('/ccf/children?level=2')->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Amara')->where('filters.level', 2));
         actingAs($admin)->get('/ccf/children?status=inactive')->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Bea'));
         actingAs($admin)->get("/ccf/children?satellite={$house->id}")->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1));
 
@@ -104,68 +101,82 @@ describe('the children list', function (): void {
     });
 });
 
-describe('setting a child\'s group', function (): void {
+describe('correcting a child\'s Level', function (): void {
     it('lets a church admin move a child, records who and when, and notes it', function (): void {
-        ['church' => $church, 'boys2' => $boys2, 'bea' => $bea] = kidsChurch();
-        $girls1 = Group::factory()->create(['church_id' => $church->id, 'name' => 'Level 1', 'gender' => null]);
+        ['church' => $church, 'bea' => $bea] = kidsChurch();
         $admin = staffMember(RoleEnum::Admin, atChurch($church), ['name' => 'Ana Admin']);
 
-        actingAs($admin)->put("/ccf/children/{$bea->id}/group", ['group_id' => $girls1->id])->assertRedirect()->assertSessionHas('success');
+        actingAs($admin)->put("/ccf/children/{$bea->id}/level", ['level' => 1])->assertRedirect()->assertSessionHas('success', 'Bea is now in Level 1.');
 
         $bea->refresh();
-        expect($bea->group_id)->toBe($girls1->id)
-            ->and($bea->group_set_by)->toBe($admin->id)
-            ->and($bea->group_set_at)->not->toBeNull()
+        expect($bea->level)->toBe(1)
+            ->and($bea->level_set_by)->toBe($admin->id)
+            ->and($bea->level_set_at)->not->toBeNull()
             ->and(Note::query()->where('noteable_type', 'child')->where('noteable_id', $bea->id)->sole()->body)
-            ->toBe('Bea: group changed from no group to Level 1.');
-        expect($boys2->id)->toBeInt();
+            ->toBe('Bea: Level changed from no Level to Level 1.');
     });
 
-    it('refuses a group for the other gender', function (): void {
-        ['church' => $church, 'boys2' => $boys2, 'amara' => $amara, 'girls2' => $girls2] = kidsChurch();
-
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
-            ->put("/ccf/children/{$amara->id}/group", ['group_id' => $boys2->id])
-            ->assertSessionHasErrors(['group_id' => 'Level 2 Boys is for boys.']);
-
-        expect($amara->fresh()?->group_id)->toBe($girls2->id);
-    });
-
-    it('refuses a retired group (review 4)', function (): void {
-        ['church' => $church, 'amara' => $amara, 'girls2' => $girls2] = kidsChurch();
-        $retired = Group::factory()->create(['church_id' => $church->id, 'name' => 'Old Level', 'gender' => null, 'is_active' => false]);
-
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
-            ->put("/ccf/children/{$amara->id}/group", ['group_id' => $retired->id])->assertSessionHasErrors('group_id');
-
-        expect($amara->fresh()?->group_id)->toBe($girls2->id)->and(Note::query()->count())->toBe(0);
-    });
-
-    it('refuses a group of another church', function (): void {
+    it('notes the Level the child moved from', function (): void {
         ['church' => $church, 'amara' => $amara] = kidsChurch();
-        $foreign = Group::factory()->create();
+
+        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->put("/ccf/children/{$amara->id}/level", ['level' => 3])->assertSessionHas('success');
+
+        expect($amara->fresh()?->level)->toBe(3)
+            ->and(Note::query()->sole()->body)->toBe('Amara: Level changed from Level 2 to Level 3.');
+    });
+
+    it('refuses a Level that is not on the chart', function (int $level): void {
+        ['church' => $church, 'amara' => $amara] = kidsChurch();
 
         actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
-            ->put("/ccf/children/{$amara->id}/group", ['group_id' => $foreign->id])->assertSessionHasErrors('group_id');
+            ->put("/ccf/children/{$amara->id}/level", ['level' => $level])
+            ->assertSessionHasErrors(['level' => 'Please choose one of the church\'s Levels.']);
+
+        expect($amara->fresh()?->level)->toBe(2)->and(Note::query()->count())->toBe(0);
+    })->with([0, 5, 99]);
+
+    it('refuses a missing Level', function (): void {
+        ['church' => $church, 'amara' => $amara] = kidsChurch();
+
+        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->put("/ccf/children/{$amara->id}/level", [])
+            ->assertSessionHasErrors(['level' => 'Please choose one of the church\'s Levels.']);
+
+        expect($amara->fresh()?->level)->toBe(2);
+    });
+
+    it('has no gender rule — a girl at Level 2 moves to Level 3 like anyone (her Squad follows from her gender)', function (): void {
+        ['church' => $church, 'amara' => $amara] = kidsChurch();
+
+        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->put("/ccf/children/{$amara->id}/level", ['level' => 3])->assertSessionHasNoErrors();
+    });
+
+    it('does not reach a child of another church', function (): void {
+        ['church' => $church] = kidsChurch();
+        $foreign = childOf(familyAt(satelliteOf(church(['slug' => 'other']))), ['level' => 1]);
+
+        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->put("/ccf/children/{$foreign->id}/level", ['level' => 2])->assertNotFound();
+
+        expect($foreign->fresh()?->level)->toBe(1);
     });
 
     it('is for church admins only — not a satellite admin, not a Lifeshaper', function (RoleEnum $role): void {
-        ['church' => $church, 'dxb' => $dxb, 'amara' => $amara, 'girls2' => $girls2, 'boys2' => $boys2] = kidsChurch();
-        $girls1 = Group::factory()->create(['church_id' => $church->id, 'name' => 'Level 1', 'gender' => null]);
+        ['dxb' => $dxb, 'amara' => $amara] = kidsChurch();
 
         actingAs(staffMember($role, atSatellite($dxb)))
-            ->put("/ccf/children/{$amara->id}/group", ['group_id' => $girls1->id])->assertNotFound();
+            ->put("/ccf/children/{$amara->id}/level", ['level' => 1])->assertNotFound();
 
-        expect($amara->fresh()?->group_id)->toBe($girls2->id)->and($boys2->id)->toBeInt();
+        expect($amara->fresh()?->level)->toBe(2);
     })->with([RoleEnum::Admin, RoleEnum::Lifeshaper]);
 
-    it('tells the family page who may change groups, and offers the church\'s groups', function (): void {
+    it('tells the family page who may change Levels, and offers the church\'s Levels', function (): void {
         ['church' => $church, 'dxb' => $dxb, 'amara' => $amara] = kidsChurch();
 
         actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get("/ccf/families/{$amara->family_id}")
-            ->assertInertia(fn (AssertableInertia $p) => $p->where('canSetGroup', true)->has('groups', 2));
+            ->assertInertia(fn (AssertableInertia $p) => $p->where('canSetLevel', true)->has('levels', 4)
+                ->where('levels.1', ['level' => 2, 'name' => 'Level 2'])
+                ->where('family.children.0.level', 'Level 2'));
         actingAs(staffMember(RoleEnum::Admin, atSatellite($dxb)))->get("/ccf/families/{$amara->family_id}")
-            ->assertInertia(fn (AssertableInertia $p) => $p->where('canSetGroup', false)->where('groups', []));
+            ->assertInertia(fn (AssertableInertia $p) => $p->where('canSetLevel', false)->where('levels', []));
     });
 });
 

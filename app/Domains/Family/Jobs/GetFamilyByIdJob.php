@@ -22,7 +22,7 @@ final class GetFamilyByIdJob extends BaseJob
     public function handle(): Family
     {
         return Family::query()
-            ->with(['primaryGuardian.user', 'homeSatellite', 'guardians', 'children.group', 'church'])
+            ->with(['primaryGuardian.user', 'homeSatellite', 'guardians', 'children', 'church'])
             ->where('church_id', $this->churchId)
             ->findOrFail($this->id);
     }

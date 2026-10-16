@@ -6,17 +6,16 @@ namespace App\Operations\Family;
 
 use App\Data\Models\Child;
 use App\Data\Models\Family;
-use App\Data\Models\Group;
 use App\Domains\Family\DataObjects\ChildDetailsData;
 use App\Domains\Family\Jobs\CreateChildJob;
 use App\Domains\Family\Jobs\CreateDuplicateCandidatesJob;
-use App\Domains\Group\Jobs\GetSuggestedGroupJob;
+use App\Domains\Level\Jobs\GetSuggestedLevelJob;
 use App\Enums\RegistrationSourceEnum;
 use Illuminate\Support\Facades\DB;
 use Lucid\Units\Operation;
 
 /**
- * Add a child to an existing family (parent page, or staff after a search) — same group suggestion and
+ * Add a child to an existing family (parent page, or staff after a search) — same Level suggestion and
  * duplicate check as a full registration (plan §2).
  *
  * @extends Operation<Child>
@@ -27,20 +26,16 @@ final class AddChildToFamilyOperation extends Operation
         private readonly Family $family,
         private readonly ChildDetailsData $details,
         private readonly RegistrationSourceEnum $source,
-        private readonly ?Group $group = null,
+        private readonly ?int $level = null,
     ) {}
 
     public function handle(): Child
     {
         return DB::transaction(function (): Child {
-            // A reviewed import placement wins (plan §5); otherwise suggest from age + gender.
-            $group = $this->group ?? $this->run(new GetSuggestedGroupJob(
-                church: $this->family->church,
-                gender: $this->details->gender,
-                dateOfBirth: $this->details->dateOfBirth,
-            ));
+            // A reviewed import placement wins (plan §5); otherwise the child's age suggests the Level.
+            $level = $this->level ?? $this->run(new GetSuggestedLevelJob(church: $this->family->church, dateOfBirth: $this->details->dateOfBirth));
 
-            $child = $this->run(new CreateChildJob(family: $this->family, details: $this->details, group: $group, source: $this->source));
+            $child = $this->run(new CreateChildJob(family: $this->family, details: $this->details, level: $level, source: $this->source));
             $this->run(new CreateDuplicateCandidatesJob(family: $this->family));
 
             return $child;

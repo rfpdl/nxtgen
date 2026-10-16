@@ -4,7 +4,7 @@ import Pager from '@/components/molecules/Pager.vue'
 import RegistrationListFilters, {
     type RegistrationListFilterValues,
 } from '@/components/molecules/RegistrationListFilters.vue'
-import type { SatelliteOption, FamilyListRow } from '@/types'
+import type { LevelOption, SatelliteOption, FamilyListRow } from '@/types'
 import { Head, Link, router } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { route } from 'ziggy-js'
@@ -16,7 +16,7 @@ const props = defineProps<{
     pagination: { page: number; lastPage: number; total: number; perPage: number }
     options: {
         satellites: SatelliteOption[]
-        groups: { id: number; name: string }[]
+        levels: LevelOption[]
         statuses: { value: string; label: string }[]
     }
 }>()

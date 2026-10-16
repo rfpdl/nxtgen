@@ -6,7 +6,6 @@ namespace App\Domains\Family\Jobs;
 
 use App\Data\Models\Child;
 use App\Data\Models\Family;
-use App\Data\Models\Group;
 use App\Domains\Family\DataObjects\ChildDetailsData;
 use App\Enums\ChildStatusEnum;
 use App\Enums\RegistrationSourceEnum;
@@ -22,7 +21,7 @@ final class CreateChildJob extends BaseJob
     public function __construct(
         private readonly Family $family,
         private readonly ChildDetailsData $details,
-        private readonly ?Group $group,
+        private readonly ?int $level,
         private readonly RegistrationSourceEnum $source,
     ) {}
 
@@ -33,8 +32,8 @@ final class CreateChildJob extends BaseJob
         return Child::query()->create([
             'church_id' => $this->family->church_id,
             'family_id' => $this->family->id,
-            'group_id' => $this->group?->id,
-            'group_set_at' => $this->group !== null ? now() : null,
+            'level' => $this->level,
+            'level_set_at' => $this->level !== null ? now() : null,
             'first_name' => trim($d->firstName),
             'middle_name' => self::clean($d->middleName),
             'last_name' => trim($d->lastName),

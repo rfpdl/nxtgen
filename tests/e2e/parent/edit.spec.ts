@@ -3,7 +3,7 @@ import { registerAndConfirm } from '../support/forms'
 import { CHURCH, SATELLITES } from '../support/world'
 
 /*
- * A parent keeps their own details right (plan §3.2 "own family, not status/group"; review B5): the family's
+ * A parent keeps their own details right (plan §3.2 "own family, not status/Level"; review B5): the family's
  * and their own details, and a child's — including health — from the family page, on their phone.
  */
 test("a parent edits their family details and a child's health details", async ({ page }) => {

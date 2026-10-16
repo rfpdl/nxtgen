@@ -46,7 +46,7 @@ function classNames(string $directory, string $suffix): array
 }
 
 /**
- * Every class referenced as `new X(` or `X::class` anywhere in `app/`, resolved to its FQCN through the file's
+ * Every class referenced as `new X` (with or without brackets — Pint drops an empty `()`) or `X::class` anywhere in `app/`, resolved to its FQCN through the file's
  * namespace and `use` imports — the same resolution PHP does, so two classes that share a short name are told
  * apart. A file's references to ITSELF are not counted: a class cannot make itself reachable.
  *
@@ -77,7 +77,44 @@ function referencedClasses(): array
 }
 
 /**
- * The FQCNs one file's code references by `new X(` or `X::class`, other than itself.
+ * The class names a file's CODE instantiates (`new X`, with or without brackets) or names (`X::class`), in order —
+ * read from PHP's own tokens, so a word in a string ("Add a new Child") or a comment is never a call, and
+ * `new class`, `new static`, `new self` and `new parent` name no class of their own.
+ *
+ * @return list<string> names as written (short, qualified or fully qualified)
+ */
+function classNamesUsedIn(string $code): array
+{
+    $names = [T_STRING, T_NAME_QUALIFIED, T_NAME_FULLY_QUALIFIED];
+    $tokens = array_values(array_filter(
+        token_get_all($code),
+        fn (array|string $t): bool => ! is_array($t) || ! in_array($t[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true),
+    ));
+
+    $found = [];
+    foreach ($tokens as $i => $token) {
+        if (! is_array($token)) {
+            continue;
+        }
+        $next = $tokens[$i + 1] ?? null;
+
+        if ($token[0] === T_NEW && is_array($next) && in_array($next[0], $names, true)
+            && ! in_array(strtolower($next[1]), ['self', 'static', 'parent'], true)) {
+            $found[] = $next[1];
+        }
+
+        $after = $tokens[$i + 2] ?? null;
+        if (in_array($token[0], $names, true) && is_array($next) && $next[0] === T_DOUBLE_COLON
+            && is_array($after) && $after[0] === T_CLASS && ! in_array(strtolower($token[1]), ['self', 'static', 'parent'], true)) {
+            $found[] = $token[1];
+        }
+    }
+
+    return $found;
+}
+
+/**
+ * The FQCNs one file's code references by `new X` or `X::class` (classNamesUsedIn), other than itself.
  *
  * @return list<string>
  */
@@ -93,9 +130,7 @@ function referencesIn(string $code, string $self): array
     }
 
     $found = [];
-    preg_match_all('/new\s+(\\\\?[A-Za-z_][\w\\\\]*)\s*\(|(\\\\?[A-Za-z_][\w\\\\]*)::class\b/', $code, $refs, PREG_SET_ORDER);
-    foreach ($refs as $ref) {
-        $name = ($ref[1] ?? '') !== '' ? $ref[1] : ($ref[2] ?? '');
+    foreach (classNamesUsedIn($code) as $name) {
         $first = explode('\\', ltrim($name, '\\'))[0];
 
         $fqcn = match (true) {
@@ -241,6 +276,40 @@ it('tells two classes with the same short name apart', function (): void {
         'App\Services\Church\Features\Family\ShowFamilyFeature',
         'App\Services\Church\Http\Controllers\Family\Helper',
     ]);
+});
+
+it('reads a word in a string or a comment as no call at all', function (): void {
+    $code = <<<'PHP'
+        <?php
+        namespace App\Services\Church\Features\Child;
+
+        use App\Data\Models\Child;
+
+        final class ShowFeature
+        {
+            // new Child here would be a comment.
+            public function handle(): mixed { $title = 'Add a new Child'; $other = new static; $anon = new class {}; return "Child::class"; }
+        }
+        PHP;
+
+    expect(referencesIn($code, 'App\Services\Church\Features\Child\ShowFeature'))->toBe([]);
+});
+
+it('sees a Job made with no arguments, which Pint writes without brackets', function (): void {
+    // Batch 05: `$this->run(new GetLevelsJob)` — Pint drops the empty `()`, and the guard read the Job as unused.
+    $feature = <<<'PHP'
+        <?php
+        namespace App\Services\Church\Features\Child;
+
+        use App\Domains\Level\Jobs\GetLevelsJob;
+
+        final class ShowFeature
+        {
+            public function handle(): mixed { return $this->run(new GetLevelsJob); }
+        }
+        PHP;
+
+    expect(referencesIn($feature, 'App\Services\Church\Features\Child\ShowFeature'))->toBe(['App\Domains\Level\Jobs\GetLevelsJob']);
 });
 
 it('keeps controllers to a single serve call each', function (): void {

@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use App\Data\Models\Church;
-use App\Data\Models\Group;
 use App\Data\Models\RoleAssignment;
 use App\Data\Models\Satellite;
+use App\Data\Models\Squad;
 use App\Data\Models\User;
-use App\Enums\GenderEnum;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
 use App\Foundation\Support\RouteChurch;
@@ -19,9 +18,9 @@ use Illuminate\Support\Str;
 use RuntimeException;
 
 /**
- * Production start (D-R2): the church, its satellites, NxtGen's groups and ONE first church admin, from
+ * Production start (D-R2): the church, its satellites (each with its Squads) and ONE first church admin, from
  * `config('nxtgen.church')` (NXTGEN_* in .env). Safe to run again: it adds what is missing and changes NOTHING
- * that exists — edited settings and groups stay, and a removed admin stays removed (review 3). The admin has no password: they sign in by
+ * that exists — edited settings stay, squads are only ever added, and a removed admin stays removed (review 3). The admin has no password: they sign in by
  * email link and add everyone else on People.
  */
 final class ChurchSeeder extends Seeder
@@ -40,10 +39,8 @@ final class ChurchSeeder extends Seeder
             ]);
 
             foreach ($settings['satellites'] as $name) {
-                Satellite::query()->firstOrCreate(['church_id' => $church->id, 'slug' => Str::slug($name)], ['name' => $name]);
+                Squad::createChartFor(Satellite::query()->firstOrCreate(['church_id' => $church->id, 'slug' => Str::slug($name)], ['name' => $name]));
             }
-
-            self::groups($church);
 
             $admin = User::query()->firstOrCreate(['email' => $settings['first_admin_email']], ['name' => $settings['first_admin_name']]);
             self::assign($church, $admin, RoleEnum::Admin, ScopeTypeEnum::Church, $church->id);
@@ -79,33 +76,6 @@ final class ChurchSeeder extends Seeder
             'first_admin_email' => mb_strtolower($text('first_admin_email')),
             'first_admin_name' => $text('first_admin_name'),
         ];
-    }
-
-    /** NxtGen's groups: level 1 mixed (4–5), levels 2–4 split by gender. */
-    public static function groups(Church $church): void
-    {
-        $levels = [[2, 6, 7], [3, 8, 9], [4, 10, 12]];
-        $previous = [];
-        $top = [];
-
-        foreach (array_reverse($levels) as [$level, $min, $max]) {
-            foreach ([GenderEnum::Boy, GenderEnum::Girl] as $gender) {
-                $name = "Level {$level} ".($gender === GenderEnum::Boy ? 'Boys' : 'Girls');
-                $group = Group::query()->firstOrCreate(['church_id' => $church->id, 'name' => $name], [
-                    'sort' => $level * 10 + ($gender === GenderEnum::Boy ? 0 : 1),
-                    'min_age' => $min,
-                    'max_age' => $max,
-                    'gender' => $gender,
-                    'next_group_id' => $previous[$gender->value] ?? null,
-                ]);
-                $top[$gender->value] = $group->id;
-            }
-            $previous = $top;
-        }
-
-        Group::query()->firstOrCreate(['church_id' => $church->id, 'name' => 'Level 1'], [
-            'sort' => 10, 'min_age' => 4, 'max_age' => 5, 'gender' => null, 'next_group_id' => null,
-        ]);
     }
 
     public static function assign(Church $church, User $user, RoleEnum $role, ScopeTypeEnum $type, int $scopeId): void

@@ -9,7 +9,7 @@ use App\Domains\Church\DataObjects\SatelliteOptionData;
 use App\Domains\Church\Jobs\GetSatellitesJob;
 use App\Domains\Family\DataObjects\ChildListRowData;
 use App\Domains\Family\Jobs\GetChildrenJob;
-use App\Domains\Group\Jobs\GetGroupsJob;
+use App\Domains\Level\Jobs\GetLevelsJob;
 use App\Enums\AccessRowEnum;
 use App\Enums\ChildStatusEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -21,7 +21,7 @@ use Inertia\Response;
 
 /**
  * The children list (plan §6 "families/children lists"): children of the satellites the viewer can see, with
- * group, age, status and an allergy flag; search and filters that only narrow.
+ * Level, age, status and an allergy flag; search and filters that only narrow.
  *
  * @extends BaseChurchFeature<Response>
  */
@@ -47,7 +47,7 @@ final class ShowChildrenFeature extends BaseChurchFeature
                     $this->run(new GetSatellitesJob(church: $church)),
                     fn (SatelliteOptionData $s): bool => $visible === null || in_array($s->id, $visible, true),
                 )),
-                'groups' => $this->run(new GetGroupsJob(churchId: $church->id)),
+                'levels' => $this->run(new GetLevelsJob),
                 'statuses' => ChildStatusEnum::toFrontend(),
             ],
         ]);

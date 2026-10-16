@@ -6,7 +6,7 @@ import { ref } from 'vue'
 
 /**
  * "Edit" under a child: the same fields as registration (ChildFieldset), starting from what is saved, PUT to
- * `action` (the parent's family page, or staff who may edit the family). Never status or group.
+ * `action` (the parent's family page, or staff who may edit the family). Never status or Level.
  * A child saved with no allergies was answered "no" — it is shown that way, not as unanswered.
  */
 const props = defineProps<{

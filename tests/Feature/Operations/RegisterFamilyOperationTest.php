@@ -7,7 +7,6 @@ use App\Data\Models\Church;
 use App\Data\Models\DuplicateCandidate;
 use App\Data\Models\Family;
 use App\Data\Models\FamilyClaim;
-use App\Data\Models\Group;
 use App\Data\Models\Guardian;
 use App\Data\Models\MagicLink;
 use App\Data\Models\Satellite;
@@ -143,26 +142,27 @@ it('lets the same parent register separately in another church', function (): vo
         ->and(Family::query()->count())->toBe(2);
 });
 
-it('suggests a group from age on the reference date and gender', function (): void {
+it('stores the Level the child\'s age suggests on the reference date', function (): void {
     [$church, $satellite] = registrationChurch();
-    Group::factory()->for($church)->create(['name' => 'Level 2 Girls', 'min_age' => 6, 'max_age' => 7, 'gender' => GenderEnum::Girl]);
-    $boys = Group::factory()->for($church)->create(['name' => 'Level 2 Boys', 'min_age' => 6, 'max_age' => 7, 'gender' => GenderEnum::Boy]);
 
     register(registration($church, $satellite, children: [new ChildDetailsData(
         firstName: 'Aaron', middleName: null, lastName: 'Ramos', nickname: 'Aaron',
         gender: GenderEnum::Boy, dateOfBirth: '2020-01-31', allergies: null,
     )]));
 
-    expect(Child::query()->sole()->group_id)->toBe($boys->id);
+    // Seven on 2027-02-01 → Level 2.
+    expect(Child::query()->sole()->level)->toBe(2)->and(Child::query()->sole()->level_set_at)->not->toBeNull();
 });
 
-it('leaves the group empty when no group fits', function (): void {
+it('leaves the Level empty when no Level fits the age', function (): void {
     [$church, $satellite] = registrationChurch();
-    Group::factory()->for($church)->create(['min_age' => 10, 'max_age' => 12, 'gender' => null]);
 
-    register(registration($church, $satellite));
+    register(registration($church, $satellite, children: [new ChildDetailsData(
+        firstName: 'Baby', middleName: null, lastName: 'Ramos', nickname: 'Baby',
+        gender: GenderEnum::Girl, dateOfBirth: '2025-01-01', allergies: null,
+    )]));
 
-    expect(Child::query()->sole()->group_id)->toBeNull();
+    expect(Child::query()->sole()->level)->toBeNull()->and(Child::query()->sole()->level_set_at)->toBeNull();
 });
 
 it('flags a possible duplicate child for review without blocking registration', function (): void {

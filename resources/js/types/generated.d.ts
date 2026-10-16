@@ -38,7 +38,7 @@ declare namespace App {
                     fullName: string
                     age: number
                     dateOfBirth: string
-                    group: string | null
+                    level: string | null
                     status: string
                     hasAllergies: boolean
                     satellite: string
@@ -57,7 +57,7 @@ declare namespace App {
                     dislikes: string | null
                     fears: string | null
                     parentNotes: string | null
-                    group: string | null
+                    level: string | null
                     status: string
                     photoConsent: boolean
                     photoUrl: string | null
@@ -139,10 +139,10 @@ declare namespace App {
                 }
             }
         }
-        namespace Group {
+        namespace Level {
             namespace DataObjects {
-                export type GroupOptionData = {
-                    id: number
+                export type LevelOptionData = {
+                    level: number
                     name: string
                 }
             }
@@ -160,7 +160,7 @@ declare namespace App {
             | 'resend_link'
             | 'correct_contact'
             | 'set_child_status'
-            | 'set_child_group'
+            | 'set_child_level'
             | 'review_duplicates'
             | 'grant_roles'
             | 'own_family'
@@ -180,6 +180,15 @@ declare namespace App {
         export type RelationshipEnum =
             'mother' | 'father' | 'guardian' | 'grandparent' | 'aunt_uncle' | 'sibling' | 'other'
         export type RoleEnum = 'admin' | 'lifeshaper'
-        export type ScopeTypeEnum = 'church' | 'satellite' | 'event_series'
+        export type ScopeTypeEnum = 'church' | 'satellite' | 'schedule'
+    }
+    namespace Services {
+        namespace Church {
+            namespace Data {
+                export type UpdateChildLevelInput = {
+                    level: number
+                }
+            }
+        }
     }
 }

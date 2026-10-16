@@ -32,7 +32,7 @@ return new class extends Migration
             $table->string('dgroup_leader_phone')->nullable()->comment('DGroup leader contact');
             $table->boolean('wants_dgroup')->default(false)->comment('Would like to join a DGroup');
             $table->string('lifestage')->nullable()->comment('From the registration form');
-            $table->json('preferred_event_series_ids')->nullable()->comment('Classes the family usually attends');
+            $table->json('preferred_schedule_ids')->nullable()->comment('Schedules (classes) the family usually attends');
             $table->timestampTz('privacy_consented_at')->nullable()->comment('Data privacy agreement accepted');
             $table->foreignId('registered_by_user_id')->nullable()->comment('Staff who registered on the parent\'s behalf')->constrained('users')->nullOnDelete();
             $table->string('registration_source')->comment('RegistrationSourceEnum: self | staff | import');
@@ -74,7 +74,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('church_id')->comment('Church the child belongs to')->constrained()->restrictOnDelete();
             $table->foreignId('family_id')->comment('Household')->constrained()->restrictOnDelete();
-            $table->foreignId('group_id')->nullable()->comment('Stored group; changes only at Moving-Up or by a church admin')->constrained()->nullOnDelete();
             $table->string('first_name')->comment('First name');
             $table->string('middle_name')->nullable()->comment('Middle name(s)');
             $table->string('last_name')->comment('Family name');
@@ -89,8 +88,9 @@ return new class extends Migration
             $table->string('status')->default('active')->comment('ChildStatusEnum: active | inactive | graduated');
             $table->timestampTz('status_changed_at')->nullable()->comment('When the status last changed');
             $table->foreignId('status_changed_by')->nullable()->comment('Who changed it')->constrained('users')->nullOnDelete();
-            $table->timestampTz('group_set_at')->nullable()->comment('When the group was last set');
-            $table->foreignId('group_set_by')->nullable()->comment('Who set it')->constrained('users')->nullOnDelete();
+            $table->unsignedTinyInteger('level')->nullable()->comment('Stored Level (config nxtgen.levels), null = none yet; changes only at Moving-Up or by a church admin');
+            $table->timestampTz('level_set_at')->nullable()->comment('When the Level was last set');
+            $table->foreignId('level_set_by')->nullable()->comment('Who set it')->constrained('users')->nullOnDelete();
             $table->string('photo_path')->nullable()->comment('Private object-storage path; consent required');
             $table->timestampTz('photo_consent_at')->nullable()->comment('When the parent agreed to a photo');
             $table->string('registration_source')->comment('RegistrationSourceEnum');
@@ -98,6 +98,7 @@ return new class extends Migration
 
             $table->index(['church_id', 'status']);
             $table->index(['church_id', 'last_name']);
+            $table->index(['church_id', 'level']);
         });
     }
 

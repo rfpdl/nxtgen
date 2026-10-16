@@ -4,12 +4,12 @@ import Pager from '@/components/molecules/Pager.vue'
 import RegistrationListFilters, {
     type RegistrationListFilterValues,
 } from '@/components/molecules/RegistrationListFilters.vue'
-import type { SatelliteOption, ChildListRow } from '@/types'
+import type { LevelOption, SatelliteOption, ChildListRow } from '@/types'
 import { Head, Link, router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
 /**
- * The children list (plan §6): every child in the satellites the viewer can see — group, age, status, an allergy
+ * The children list (plan §6): every child in the satellites the viewer can see — Level, age, status, an allergy
  * flag — with the same search and filters as the families list. Each child opens their family.
  */
 const props = defineProps<{
@@ -19,7 +19,7 @@ const props = defineProps<{
     pagination: { page: number; lastPage: number; total: number; perPage: number }
     options: {
         satellites: SatelliteOption[]
-        groups: { id: number; name: string }[]
+        levels: LevelOption[]
         statuses: { value: string; label: string }[]
     }
 }>()
@@ -59,7 +59,7 @@ function apply(params: Record<string, string | number>): void {
                 >
                 <span class="text-text">{{ child.fullName }} · {{ child.age }} years</span>
                 <span class="text-text-muted"
-                    >{{ child.group ?? 'No group' }} · {{ child.status }} ·
+                    >{{ child.level ?? 'No Level' }} · {{ child.status }} ·
                     {{ child.satellite }}</span
                 >
                 <span

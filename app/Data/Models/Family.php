@@ -29,7 +29,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $dgroup_leader_phone
  * @property bool $wants_dgroup
  * @property string|null $lifestage
- * @property list<int>|null $preferred_event_series_ids
+ * @property list<int>|null $preferred_schedule_ids
  * @property CarbonImmutable|null $privacy_consented_at
  * @property int|null $registered_by_user_id
  * @property RegistrationSourceEnum $registration_source
@@ -59,7 +59,7 @@ final class Family extends Model
             'wants_fb_group' => 'boolean',
             'in_dgroup' => 'boolean',
             'wants_dgroup' => 'boolean',
-            'preferred_event_series_ids' => 'array',
+            'preferred_schedule_ids' => 'array',
             'privacy_consented_at' => 'immutable_datetime',
             'registration_source' => RegistrationSourceEnum::class,
         ];

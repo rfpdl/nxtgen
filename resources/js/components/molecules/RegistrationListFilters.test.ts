@@ -7,7 +7,10 @@ const options = {
         { id: 7, name: 'CCF DXB' },
         { id: 8, name: 'House Church' },
     ],
-    groups: [{ id: 3, name: 'Level 2 Girls' }],
+    levels: [
+        { level: 1, name: 'Level 1' },
+        { level: 2, name: 'Level 2' },
+    ],
     statuses: [
         { value: 'active', label: 'Active' },
         { value: 'inactive', label: 'Inactive' },
@@ -17,7 +20,7 @@ const empty = {
     q: '',
     satellite: null,
     status: null,
-    group: null,
+    level: null,
     unconfirmed: false,
     duplicates: false,
 }
@@ -62,17 +65,18 @@ describe('RegistrationListFilters', () => {
 
         await wrapper.find('[data-testid="filter-q"]').setValue('Ramos')
         await wrapper.find('[data-testid="filter-status"]').setValue('inactive')
+        await wrapper.find('[data-testid="filter-level"]').setValue('2')
         await wrapper.find('[data-testid="filter-duplicates"]').setValue(true)
         await wrapper.find('form').trigger('submit')
 
         expect(wrapper.emitted('apply')?.at(-1)).toEqual([
-            { q: 'Ramos', status: 'inactive', duplicates: 1 },
+            { q: 'Ramos', status: 'inactive', level: 2, duplicates: 1 },
         ])
     })
 
     it('clears everything', async () => {
         const wrapper = mount(RegistrationListFilters, {
-            props: { filters: { ...empty, q: 'x', group: 3 }, options },
+            props: { filters: { ...empty, q: 'x', level: 2 }, options },
         })
 
         await wrapper.find('[data-testid="filter-clear"]').trigger('click')
@@ -85,6 +89,6 @@ describe('RegistrationListFilters', () => {
 
         expect(wrapper.find('[data-testid="filter-unconfirmed"]').exists()).toBe(false)
         expect(wrapper.find('[data-testid="filter-duplicates"]').exists()).toBe(false)
-        expect(wrapper.find('[data-testid="filter-group"]').exists()).toBe(true)
+        expect(wrapper.find('[data-testid="filter-level"]').exists()).toBe(true)
     })
 })

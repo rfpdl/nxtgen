@@ -21,7 +21,7 @@ enum AccessRowEnum: string
     case ResendLink = 'resend_link';
     case CorrectContact = 'correct_contact';
     case SetChildStatus = 'set_child_status';
-    case SetChildGroup = 'set_child_group';
+    case SetChildLevel = 'set_child_level';
     case ReviewDuplicates = 'review_duplicates';
     case GrantRoles = 'grant_roles';
     case OwnFamily = 'own_family';
@@ -42,12 +42,12 @@ enum AccessRowEnum: string
             self::ResendLink => 'Resend confirmation link: church admin; home-satellite admin; any Lifeshaper',
             self::CorrectContact => 'Correct family contact (§4.4): church admin; home-satellite admin',
             self::SetChildStatus => 'Set child status: church admin; home-satellite admin',
-            self::SetChildGroup => 'Set child group outside Moving-Up: church admin only',
+            self::SetChildLevel => 'Correct a child\'s Level outside Moving-Up: church admin only',
             self::ReviewDuplicates => 'Review possible duplicates: admins, for families they may edit',
             self::GrantRoles => 'Grant roles: church admin any; satellite admin Lifeshaper in own satellite',
             self::ChildPhoto => 'Record the parent\'s in-person photo consent, and take or upload a child\'s photo once consent is recorded: staff who can see the family',
             self::SeeChildPhoto => 'See a child\'s photo: the child\'s own family, or staff who can see the family; only while consent stands',
-            self::OwnFamily => 'The parent\'s own family: view, edit details, add/edit children (not status/group)',
+            self::OwnFamily => 'The parent\'s own family: view, edit details, add/edit children (not status/Level)',
         };
     }
 }

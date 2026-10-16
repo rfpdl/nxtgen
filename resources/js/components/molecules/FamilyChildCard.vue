@@ -37,7 +37,7 @@ const health = computed(() =>
             {{ [child.firstName, child.middleName, child.lastName].filter(Boolean).join(' ') }}
         </p>
         <p class="text-text-muted">
-            Born {{ child.dateOfBirth }} · {{ child.group ?? 'Group not set yet' }}
+            Born {{ child.dateOfBirth }} · {{ child.level ?? 'No Level yet' }}
         </p>
         <p v-if="child.allergies" class="text-danger font-semibold" data-testid="allergy">
             Allergies: {{ child.allergies }}

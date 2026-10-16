@@ -18,7 +18,7 @@ use App\Domains\Family\Jobs\CreateGuardianJob;
 use App\Domains\Family\Jobs\GetGuardianForUserJob;
 use App\Domains\Family\Jobs\GetPendingFamilyClaimJob;
 use App\Domains\Family\Jobs\UpdateFamilyPrimaryGuardianJob;
-use App\Domains\Group\Jobs\GetSuggestedGroupJob;
+use App\Domains\Level\Jobs\GetSuggestedLevelJob;
 use App\Domains\User\Jobs\CreateUserJob;
 use App\Domains\User\Jobs\GetUserByEmailJob;
 use App\Enums\MagicLinkPurposeEnum;
@@ -114,13 +114,9 @@ final class RegisterFamilyOperation extends Operation
     private function addChildren(Family $family): void
     {
         foreach ($this->registration->children as $child) {
-            $group = $this->run(new GetSuggestedGroupJob(
-                church: $this->registration->church,
-                gender: $child->gender,
-                dateOfBirth: $child->dateOfBirth,
-            ));
+            $level = $this->run(new GetSuggestedLevelJob(church: $this->registration->church, dateOfBirth: $child->dateOfBirth));
 
-            $this->run(new CreateChildJob(family: $family, details: $child, group: $group, source: $this->registration->source));
+            $this->run(new CreateChildJob(family: $family, details: $child, level: $level, source: $this->registration->source));
         }
     }
 

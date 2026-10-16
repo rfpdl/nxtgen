@@ -13,6 +13,6 @@ final readonly class ChildListFiltersData
         public ?string $query = null,
         public ?int $satelliteId = null,
         public ?ChildStatusEnum $status = null,
-        public ?int $groupId = null,
+        public ?int $level = null,
     ) {}
 }

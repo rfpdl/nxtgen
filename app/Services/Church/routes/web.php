@@ -32,7 +32,7 @@ Route::post('/families/{family}/children', [FamilyController::class, 'addChild']
 Route::post('/families/{family}/resend', [FamilyController::class, 'resend'])->whereNumber('family')->middleware('throttle:10,1')->name('church.families.resend');
 Route::put('/families/{family}/email', [FamilyController::class, 'correctEmail'])->whereNumber('family')->name('church.families.email');
 Route::get('/children', [ChildController::class, 'index'])->name('church.children.index');
-Route::put('/children/{child}/group', [ChildController::class, 'updateGroup'])->whereNumber('child')->name('church.children.group');
+Route::put('/children/{child}/level', [ChildController::class, 'updateLevel'])->whereNumber('child')->name('church.children.level');
 Route::put('/children/{child}', [ChildController::class, 'update'])->whereNumber('child')->name('church.children.update');
 Route::put('/children/{child}/photo-consent', [ChildController::class, 'recordPhotoConsent'])->whereNumber('child')->name('church.children.photo-consent');
 Route::post('/children/{child}/photo', [ChildController::class, 'addPhoto'])->whereNumber('child')->name('church.children.photo');

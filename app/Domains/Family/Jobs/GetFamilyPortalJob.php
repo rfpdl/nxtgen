@@ -15,7 +15,7 @@ final class GetFamilyPortalJob extends BaseJob
 
     public function handle(): FamilyPortalData
     {
-        $this->family->loadMissing(['homeSatellite', 'guardians', 'children.group']);
+        $this->family->loadMissing(['homeSatellite', 'guardians', 'children']);
 
         return FamilyPortalData::fromModel($this->family);
     }

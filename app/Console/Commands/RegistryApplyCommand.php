@@ -26,7 +26,7 @@ final class RegistryApplyCommand extends Command
         }
 
         $approval = (new GetApprovedRegistryRowsJob(path: (string) $this->argument('xlsx')))->handle();
-        $result = (new ApplyRegistryImportOperation(church: $church, groups: $approval->groups))->handle();
+        $result = (new ApplyRegistryImportOperation(church: $church, rowsByFamily: $approval->rowsByFamily))->handle();
         $problems = [...$approval->problems, ...$result->problems];
 
         $this->info("Families created: {$result->familiesCreated}. Children loaded: {$result->childrenCreated}. Already loaded, skipped: {$result->childrenSkipped}.");

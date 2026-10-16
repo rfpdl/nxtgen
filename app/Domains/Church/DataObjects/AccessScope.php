@@ -13,8 +13,8 @@ use App\Enums\ScopeTypeEnum;
  * nothing else compares roles. Built from active role assignments in this church only.
  *
  *   church admin     → everything in the church
- *   satellite admin  → see + edit families whose home satellite is theirs; manage that satellite's classes
- *   class admin      → that class (Release 2)
+ *   satellite admin  → see + edit families whose home satellite is theirs; manage that satellite's Schedules
+ *   schedule admin   → that Schedule (shown as "class"; Release 2)
  *   Lifeshaper       → see their satellites' families, register families, add children, resend links
  */
 final readonly class AccessScope
@@ -22,7 +22,7 @@ final readonly class AccessScope
     /**
      * @param  list<int>  $adminSatelliteIds
      * @param  list<int>  $lifeshaperSatelliteIds
-     * @param  list<int>  $adminSeriesIds
+     * @param  list<int>  $adminScheduleIds
      */
     public function __construct(
         public int $churchId,
@@ -30,13 +30,13 @@ final readonly class AccessScope
         public bool $isChurchLifeshaper,
         public array $adminSatelliteIds,
         public array $lifeshaperSatelliteIds,
-        public array $adminSeriesIds,
+        public array $adminScheduleIds,
     ) {}
 
     public function canWorkHere(): bool
     {
         return $this->isChurchAdmin || $this->isChurchLifeshaper
-            || $this->adminSatelliteIds !== [] || $this->lifeshaperSatelliteIds !== [] || $this->adminSeriesIds !== [];
+            || $this->adminSatelliteIds !== [] || $this->lifeshaperSatelliteIds !== [] || $this->adminScheduleIds !== [];
     }
 
     /**
@@ -78,7 +78,7 @@ final readonly class AccessScope
 
     /**
      * Resend a confirmation/claim link (plan §3.2): church admin, any Lifeshaper (they meet the parent at the door),
-     * or the admin of the family's home satellite. Not a class admin.
+     * or the admin of the family's home satellite. Not a schedule admin.
      */
     public function canResendLink(Family $family): bool
     {
@@ -87,8 +87,8 @@ final readonly class AccessScope
                 || in_array($family->home_satellite_id, $this->adminSatelliteIds, true));
     }
 
-    /** Set a child's group outside Moving-Up (plan §3.2): church admin only. */
-    public function canSetGroup(): bool
+    /** Correct a child's Level outside Moving-Up (plan §3.2): church admin only. */
+    public function canSetLevel(): bool
     {
         return $this->isChurchAdmin;
     }
@@ -126,12 +126,12 @@ final readonly class AccessScope
     /**
      * The role-grant ceiling (plan §3.2): a church admin grants anything in this church; a satellite admin only
      * Lifeshaper, only in their own satellite. Removing a role uses the same rule. The caller still checks a
-     * satellite id belongs to this church (GetSatelliteJob) — this object knows ids, not ownership. Class roles
-     * (event series) arrive with Release 2.
+     * satellite id belongs to this church (GetSatelliteJob) — this object knows ids, not ownership. Schedule roles
+     * (shown as "class") arrive with Release 2.
      */
     public function canGrant(RoleEnum $role, ScopeTypeEnum $type, int $scopeId): bool
     {
-        if ($type === ScopeTypeEnum::EventSeries) {
+        if ($type === ScopeTypeEnum::Schedule) {
             return false;
         }
 

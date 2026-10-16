@@ -8,7 +8,7 @@ use App\Services\Church\Features\Child\RecordPhotoConsentFeature;
 use App\Services\Church\Features\Child\ShowChildrenFeature;
 use App\Services\Church\Features\Child\StaffAddChildPhotoFeature;
 use App\Services\Church\Features\Child\UpdateChildDetailsFeature;
-use App\Services\Church\Features\Child\UpdateChildGroupFeature;
+use App\Services\Church\Features\Child\UpdateChildLevelFeature;
 use App\Services\Church\Features\Child\UpdateChildStatusFeature;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Response;
@@ -20,9 +20,9 @@ final class Controller extends \Lucid\Units\Controller
         return $this->serve(ShowChildrenFeature::class);
     }
 
-    public function updateGroup(string $church, int $child): RedirectResponse
+    public function updateLevel(string $church, int $child): RedirectResponse
     {
-        return $this->serve(UpdateChildGroupFeature::class, ['childId' => $child]);
+        return $this->serve(UpdateChildLevelFeature::class, ['childId' => $child]);
     }
 
     public function update(string $church, int $child): RedirectResponse

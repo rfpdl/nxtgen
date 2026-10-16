@@ -6,7 +6,15 @@ import AddChildForm from '@/components/organisms/AddChildForm.vue'
 import ChildPhotoForm from '@/components/organisms/ChildPhotoForm.vue'
 import EditChildForm from '@/components/organisms/EditChildForm.vue'
 import FamilyDetailsForm from '@/components/organisms/FamilyDetailsForm.vue'
-import type { SatelliteOption, FamilyAdmin, FamilyDetails, GuardianEdit, Note } from '@/types'
+import type {
+    LevelOption,
+    UpdateChildLevelInput,
+    SatelliteOption,
+    FamilyAdmin,
+    FamilyDetails,
+    GuardianEdit,
+    Note,
+} from '@/types'
 import { Head, router, useForm, usePage } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import { route } from 'ziggy-js'
@@ -22,9 +30,9 @@ const props = defineProps<{
     satellites: SatelliteOption[]
     relationships: { value: string; label: string }[]
     genders: { value: string; label: string }[]
-    /** Church admins only (plan §3.2): correct a child's group outside Moving-Up. */
-    canSetGroup: boolean
-    groups: { id: number; name: string }[]
+    /** Church admins only (plan §3.2): correct a child's Level outside Moving-Up. */
+    canSetLevel: boolean
+    levels: LevelOption[]
 }>()
 
 function resend(): void {
@@ -44,18 +52,17 @@ function correctEmail(): void {
     })
 }
 
-/** A refused group change ("Level 2 Boys is for boys") comes back as a validation error on the page. */
+/** A refused Level change comes back as a validation error on the page. */
 const page = usePage<{ errors: Record<string, string | undefined> }>()
 
-const lastGroupChild = ref<number | null>(null)
+const lastLevelChild = ref<number | null>(null)
 
-function setGroup(childId: number, groupId: number): void {
-    lastGroupChild.value = childId
-    router.put(
-        route('church.children.group', [props.church.slug, childId]),
-        { group_id: groupId },
-        { preserveScroll: true },
-    )
+function setLevel(childId: number, level: number): void {
+    lastLevelChild.value = childId
+    const body: UpdateChildLevelInput = { level }
+    router.put(route('church.children.level', [props.church.slug, childId]), body, {
+        preserveScroll: true,
+    })
 }
 
 function setStatus(childId: number, status: string): void {
@@ -160,13 +167,11 @@ function setStatus(childId: number, status: string): void {
                 <ChildAdminControls
                     :child="child"
                     :can-set-status="family.canEdit"
-                    :can-set-group="canSetGroup"
-                    :groups="groups"
-                    :group-error="
-                        lastGroupChild === child.id ? page.props.errors.group_id : undefined
-                    "
+                    :can-set-level="canSetLevel"
+                    :levels="levels"
+                    :level-error="lastLevelChild === child.id ? page.props.errors.level : undefined"
                     @status="setStatus"
-                    @group="setGroup"
+                    @level="setLevel"
                 />
             </div>
             <AddChildForm

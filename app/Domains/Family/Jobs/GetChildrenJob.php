@@ -32,7 +32,7 @@ final class GetChildrenJob extends BaseJob
         $like = $f->query === null ? null : '%'.str_replace(['%', '_'], ['\%', '\_'], trim($f->query)).'%';
 
         return Child::query()
-            ->with(['family.homeSatellite', 'group'])
+            ->with(['family.homeSatellite'])
             ->where('church_id', $this->churchId)
             ->when($this->satelliteIds !== null, fn (Builder $q) => $q->whereHas('family', fn (Builder $fam) => $fam->whereIn('home_satellite_id', $this->satelliteIds ?? [])))
             ->when($f->satelliteId !== null, fn (Builder $q) => $q->whereHas('family', fn (Builder $fam) => $fam->where('home_satellite_id', $f->satelliteId)))
@@ -42,7 +42,7 @@ final class GetChildrenJob extends BaseJob
                 ->where('nickname', 'like', $like)->orWhere('first_name', 'like', $like)->orWhere('last_name', 'like', $like)
                 ->orWhereHas('family', fn (Builder $fam) => $fam->matchingContact((string) $f->query))))
             ->when($f->status !== null, fn (Builder $q) => $q->where('status', $f->status))
-            ->when($f->groupId !== null, fn (Builder $q) => $q->where('group_id', $f->groupId))
+            ->when($f->level !== null, fn (Builder $q) => $q->where('level', $f->level))
             ->orderBy('nickname')
             ->orderBy('id')
             ->get();

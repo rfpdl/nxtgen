@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Data\Models\Child;
 use App\Data\Models\Church;
 use App\Data\Models\Family;
-use App\Data\Models\Group;
 use App\Data\Models\Guardian;
 use App\Data\Models\MagicLink;
 use App\Data\Models\User;
@@ -144,13 +143,13 @@ it('skips rows the reviewer did not approve', function (): void {
     expect(Child::query()->count())->toBe(3);
 });
 
-it('refuses a reviewed group whose rows were already imported into different families (Codex diff review, high)', function (): void {
+it('refuses a reviewed family whose rows were already imported into different families (Codex diff review, high)', function (): void {
     Notification::fake();
     [, $out] = proposeSample();
     runCommand('nxtgen:registry-apply', ['xlsx' => $out, '--church' => 'ccf']);
     $sheets = readReview($out);
 
-    // Reviewer later merges Rala's row into the Ramos family key AND adds a new child to that group.
+    // Reviewer later merges Rala's row into the Ramos family key AND adds a new child to that family key.
     $families = $sheets['Families'];
     $h = $families[0];
     $key = col($h, 'Family key');
@@ -181,7 +180,7 @@ it('refuses a reviewed group whose rows were already imported into different fam
     expect(Child::query()->where('first_name', 'Newbie')->exists())->toBeFalse();
 });
 
-it('refuses a group whose parent email differs from the family it was already imported into', function (): void {
+it('refuses a family key whose parent email differs from the family it was already imported into', function (): void {
     Notification::fake();
     [, $out] = proposeSample();
     runCommand('nxtgen:registry-apply', ['xlsx' => $out, '--church' => 'ccf']);
@@ -268,16 +267,15 @@ it('loads a same-name, same-birthday child in another family when the reviewer m
     expect(Child::query()->where('first_name', $twin[col($h, 'Child first name')])->count())->toBe(2);
 });
 
-it('keeps the group the reviewer chose instead of recalculating it (review A3)', function (): void {
+it('keeps the Level the reviewer wrote instead of recalculating it (review A3)', function (string $written, ?int $level, bool $loaded): void {
     Notification::fake();
-    [$church, $out] = proposeSample();
-    $chosen = Group::factory()->for($church)->create(['name' => 'Level 4 Girls', 'min_age' => 10, 'max_age' => 12]);
+    [, $out] = proposeSample();
     $sheets = readReview($out);
     $families = $sheets['Families'];
     $h = $families[0];
-    $families[1][col($h, 'Group')] = 'Level 4 Girls';
+    $families[1][col($h, 'Level')] = $written;
 
-    $edited = sys_get_temp_dir().'/nxtgen-group-'.uniqid().'.xlsx';
+    $edited = sys_get_temp_dir().'/nxtgen-level-'.uniqid().'.xlsx';
     $writer = new Writer;
     $writer->openToFile($edited);
     $writer->getCurrentSheet()->setName('Families');
@@ -286,10 +284,23 @@ it('keeps the group the reviewer chose instead of recalculating it (review A3)',
     }
     $writer->close();
 
-    runCommand('nxtgen:registry-apply', ['xlsx' => $edited, '--church' => 'ccf']);
+    $pending = artisan('nxtgen:registry-apply', ['xlsx' => $edited, '--church' => 'ccf']);
+    expect($pending)->toBeInstanceOf(PendingCommand::class);
+    if ($pending instanceof PendingCommand && ! $loaded) {
+        $pending->expectsOutputToContain("unknown Level \"{$written}\"")->assertFailed();
+    } elseif ($pending instanceof PendingCommand) {
+        $pending->assertSuccessful();
+    }
+    $pending instanceof PendingCommand && $pending->run();
 
-    expect(Child::query()->sole()->group_id)->toBe($chosen->id);
-});
+    expect(Child::query()->value('level'))->toBe($level)->and(Child::query()->count())->toBe($loaded ? 1 : 0);
+})->with([
+    'the sheet\'s wording' => ['Level 4 Girls', 4, true],
+    'just the Level' => ['level 4', 4, true],
+    'a number' => ['4', 4, true],
+    'not on the chart' => ['Level 7', null, false],
+    'not a Level' => ['Big kids', null, false],
+]);
 
 it('fails the apply command when approved rows could not be loaded (review B2)', function (): void {
     Notification::fake();

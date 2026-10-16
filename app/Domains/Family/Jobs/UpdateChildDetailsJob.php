@@ -9,8 +9,8 @@ use App\Domains\Family\DataObjects\ChildDetailsData;
 use App\Foundation\Jobs\BaseJob;
 
 /**
- * The details a parent may change. Status and group are deliberately NOT here: status is staff's, and the
- * group changes only at Moving-Up (plan §0).
+ * The details a parent may change. Status and Level are deliberately NOT here: status is staff's, and the
+ * Level changes only at Moving-Up (plan §0).
  *
  * @extends BaseJob<Child>
  */

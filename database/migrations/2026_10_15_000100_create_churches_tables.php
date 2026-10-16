@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('slug')->unique()->comment('URL key: /{slug}/register');
             $table->string('timezone')->default('Asia/Dubai')->comment('Classes are generated in this timezone');
             $table->string('currency', 3)->default('AED')->comment('Card fees');
-            $table->date('moving_up_reference_date')->nullable()->comment('Age is measured on this date for group suggestions');
+            $table->date('moving_up_reference_date')->nullable()->comment('Age is measured on this date for Level suggestions');
             $table->json('settings')->nullable()->comment('satellite_label, lifeshapers_can_open, card fees');
             $table->timestampsTz();
         });
@@ -36,8 +36,8 @@ return new class extends Migration
             $table->foreignId('church_id')->comment('Church the role applies in')->constrained()->restrictOnDelete();
             $table->foreignId('user_id')->comment('Staff member')->constrained()->restrictOnDelete();
             $table->string('role')->comment('RoleEnum: admin | lifeshaper');
-            $table->string('scope_type')->comment('ScopeTypeEnum: church | satellite | event_series');
-            $table->unsignedBigInteger('scope_id')->comment('Id of the church, satellite or event series');
+            $table->string('scope_type')->comment('ScopeTypeEnum: church | satellite | schedule');
+            $table->unsignedBigInteger('scope_id')->comment('Id of the church, satellite or schedule');
             $table->boolean('is_active')->default(true)->comment('Revoked assignments stay for audit');
             $table->foreignId('granted_by')->nullable()->comment('Who granted it')->constrained('users')->nullOnDelete();
             $table->timestampsTz();

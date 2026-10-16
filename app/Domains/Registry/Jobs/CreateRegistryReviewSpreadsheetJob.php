@@ -11,7 +11,8 @@ use OpenSpout\Writer\XLSX\Writer;
 
 /**
  * The human review step (plan §7): one row per child with its proposed family. The reviewer may set
- * "Approve" to no, change "Family key" to regroup, or fix "Home satellite". Quarantined rows and a
+ * "Approve" to no, change "Family key" to regroup, fix "Home satellite", or write a child's "Level" ("Level 2", "Level 2
+ * Boys" or "2") where the age should not decide it. Quarantined rows and a
  * reconciliation that must balance are on their own sheets.
  *
  * @extends BaseJob<string>
@@ -23,7 +24,7 @@ final class CreateRegistryReviewSpreadsheetJob extends BaseJob
         'Home satellite', 'Area', 'FB group', 'FB account', 'In DGroup', 'DGroup area', 'DGroup leader',
         'DGroup leader phone', 'Wants DGroup', 'Ministry', 'Lifestage', 'Privacy consented', 'Source key', 'Sheet row',
         'Child first name', 'Child last name', 'Nickname', 'Gender', 'Birthday', 'Allergies', 'Dislikes', 'Fears',
-        'Notes', 'Status', 'Check this', 'Distinct child', 'Group',
+        'Notes', 'Status', 'Check this', 'Distinct child', 'Level',
     ];
 
     public function __construct(

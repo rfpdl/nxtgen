@@ -9,7 +9,7 @@ use App\Enums\ChildStatusEnum;
 use Illuminate\Http\Request;
 
 /**
- * The list's filters as they arrive in the address (`?q=&satellite=&status=&group=&unconfirmed=1&duplicates=1`)
+ * The list's filters as they arrive in the address (`?q=&satellite=&status=&level=&unconfirmed=1&duplicates=1`)
  * — read leniently: anything unrecognised is simply no filter. Shared by the list and its Excel download, so
  * the download is what the screen shows.
  */
@@ -23,20 +23,20 @@ final class FamilyListQuery
             query: $q === '' ? null : $q,
             satelliteId: $request->integer('satellite') ?: null,
             status: ChildStatusEnum::tryFrom($request->string('status')->value()),
-            groupId: $request->integer('group') ?: null,
+            level: $request->integer('level') ?: null,
             unconfirmedOnly: $request->boolean('unconfirmed'),
             duplicatesOnly: $request->boolean('duplicates'),
         );
     }
 
-    /** @return array{q: string, satellite: int|null, status: string|null, group: int|null, unconfirmed: bool, duplicates: bool} */
+    /** @return array{q: string, satellite: int|null, status: string|null, level: int|null, unconfirmed: bool, duplicates: bool} */
     public static function toProps(FamilyListFiltersData $f): array
     {
         return [
             'q' => $f->query ?? '',
             'satellite' => $f->satelliteId,
             'status' => $f->status?->value,
-            'group' => $f->groupId,
+            'level' => $f->level,
             'unconfirmed' => $f->unconfirmedOnly,
             'duplicates' => $f->duplicatesOnly,
         ];
