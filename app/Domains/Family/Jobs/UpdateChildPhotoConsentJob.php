@@ -9,8 +9,8 @@ use App\Data\Models\User;
 use App\Foundation\Jobs\BaseJob;
 
 /**
- * Record a parent's photo consent — or, with no parent, clear it. Only a parent of the child's family may give
- * it; the caller checks that.
+ * Record photo consent — or, with nobody, clear it. `$by` is who recorded it: the parent on their family page, or
+ * a volunteer the parent told in person (Roy 2026-10-16). The caller checks who may.
  *
  * @extends BaseJob<Child>
  */
@@ -18,14 +18,14 @@ final class UpdateChildPhotoConsentJob extends BaseJob
 {
     public function __construct(
         private readonly Child $child,
-        private readonly ?User $parent,
+        private readonly ?User $by,
     ) {}
 
     public function handle(): Child
     {
         $this->child->forceFill([
-            'photo_consent_at' => $this->parent !== null ? now() : null,
-            'photo_consent_by' => $this->parent?->id,
+            'photo_consent_at' => $this->by !== null ? now() : null,
+            'photo_consent_by' => $this->by?->id,
         ])->save();
 
         return $this->child;

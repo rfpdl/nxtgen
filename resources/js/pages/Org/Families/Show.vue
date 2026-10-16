@@ -127,6 +127,9 @@ function setStatus(childId: number, status: string): void {
                         :child="child"
                         who="staff"
                         :action="route('org.children.photo', [church.slug, child.id])"
+                        :consent-action="
+                            route('org.children.photo-consent', [church.slug, child.id])
+                        "
                     />
                     <EditChildForm
                         v-if="family.canEdit"

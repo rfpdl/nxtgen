@@ -5,9 +5,9 @@ import { router, useForm } from '@inertiajs/vue3'
 
 /**
  * A child's photo (Roy 2026-10-16): a parent or a Lifeshaper can take one with the phone camera or choose one —
- * once the PARENT has agreed. A parent agrees here with its own button, saved straight away, so a volunteer can
- * take the first photo at church (review 3); they can also take it back, which deletes the photo. Staff can
- * never agree for them. Choosing a file sends it straight away.
+ * once consent is recorded. The parent agrees with its own button; a volunteer can record that the parent said
+ * yes in person (saved with their name, noted on the child). Only the parent takes consent back, which deletes
+ * the photo. Choosing a file sends it straight away.
  */
 const props = defineProps<{
     child: ChildPortal
@@ -45,9 +45,18 @@ const button =
 
 <template>
     <div class="flex flex-col gap-2" data-testid="child-photo">
-        <p v-if="who === 'staff' && !child.photoConsent" class="text-text-muted">
-            The parent has not agreed to a photo yet. They can say yes on their family page.
-        </p>
+        <div v-if="who === 'staff' && !child.photoConsent" class="flex flex-col gap-2">
+            <p class="text-text-muted">The parent has not agreed to a photo yet.</p>
+            <button
+                v-if="consentAction"
+                type="button"
+                class="min-h-touch border-primary text-primary self-start rounded-md border px-4 font-semibold"
+                data-testid="record-photo-consent"
+                @click="giveConsent"
+            >
+                The parent said yes — record consent
+            </button>
+        </div>
         <div
             v-if="who === 'parent' && consentAction && !child.photoConsent"
             class="flex flex-col gap-2"

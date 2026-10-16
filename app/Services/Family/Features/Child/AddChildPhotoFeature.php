@@ -39,7 +39,7 @@ final class AddChildPhotoFeature extends BaseFamilyFeature
 
         $kept = DB::transaction(function () use ($child, $parent, $input): bool {
             if ($child->photo_consent_at === null) {
-                $this->run(new UpdateChildPhotoConsentJob(child: $child, parent: $parent));
+                $this->run(new UpdateChildPhotoConsentJob(child: $child, by: $parent));
             }
 
             return $this->run(new CreateChildPhotoJob(child: $child, file: $input->photo));

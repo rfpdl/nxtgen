@@ -24,3 +24,4 @@
 | 20 | Two-connection concurrency tests: photo upload vs consent withdrawal; last-admin removal; claim acceptance (with #7) | review 3 | with the R2 concurrency harness |
 | 21 | Staging: real photo upload/read/delete against the private S3 bucket; registry import on staging, reconciliation balances | review 3 · plan §12 | before Release 1 ships |
 | 22 | Photo housekeeping: a scheduled sweep deleting stored photo files no `children.photo_path` points to (a commit that fails after the file is written leaves one; withdrawal already removes every file of the child, so this is storage tidiness, not privacy) | review 3 (Codex final round, rejected as a defect) | after R1 |
+| 23 | **Roy — to go live:** first admin's email (`NXTGEN_FIRST_ADMIN_EMAIL`); Laravel Cloud app + MySQL + PRIVATE bucket + domain; mail provider key + sending domain; the Registry tab exported as CSV, and the review file checked (with Ate Noemi) | go-live | before deploy |

@@ -14,8 +14,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 
 /**
- * A Lifeshaper (any staff who can see the family) takes or uploads a child's photo — only once the PARENT has
- * agreed (Roy 2026-10-16). Staff can never agree for them: a `consent` in this request is ignored.
+ * A Lifeshaper (any staff who can see the family) takes or uploads a child's photo — only once consent is
+ * recorded (Roy 2026-10-16), by the parent or by a volunteer the parent told (RecordPhotoConsentFeature). A
+ * `consent` sent WITH the photo is ignored: consent is its own, noted step.
  *
  * @extends BaseOrgFeature<RedirectResponse>
  */
@@ -30,7 +31,7 @@ final class StaffAddChildPhotoFeature extends BaseOrgFeature
         abort_unless($this->scope()->canSeeFamily($child->family), 404);
 
         if ($child->photo_consent_at === null) {
-            return back()->with('error', 'The parent has not agreed to a photo yet. They can say yes on their family page.');
+            return back()->with('error', 'The parent has not agreed to a photo yet. If they say yes to you, record it first.');
         }
 
         $kept = DB::transaction(fn (): bool => $this->run(new CreateChildPhotoJob(child: $child, file: $input->photo)));

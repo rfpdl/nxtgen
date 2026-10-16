@@ -112,14 +112,17 @@ describe('ChildPhotoForm', () => {
         expect(del).toHaveBeenCalledWith('/w', expect.anything())
     })
 
-    it('tells staff to ask the parent when there is no consent, and never offers to agree', () => {
+    it('lets staff record that the parent said yes in person — no photo until then', async () => {
         const wrapper = mount(ChildPhotoForm, {
-            props: { child: child(), who: 'staff', action: '/s' },
+            props: { child: child(), who: 'staff', action: '/s', consentAction: '/sc' },
         })
 
         expect(wrapper.text()).toContain('The parent has not agreed to a photo yet')
-        expect(wrapper.find('[data-testid="give-photo-consent"]').exists()).toBe(false)
         expect(wrapper.find('[data-testid="take-photo"]').exists()).toBe(false)
+
+        await wrapper.find('[data-testid="record-photo-consent"]').trigger('click')
+
+        expect(put).toHaveBeenCalledWith('/sc', {}, expect.anything())
     })
 
     it('lets staff take one once the parent agreed', async () => {

@@ -43,7 +43,7 @@ enum AccessRowEnum: string
             self::SetChildStatus => 'Set child status: church admin; home-satellite admin',
             self::ReviewDuplicates => 'Review possible duplicates: admins, for families they may edit',
             self::GrantRoles => 'Grant roles: church admin any; satellite admin Lifeshaper in own satellite',
-            self::ChildPhoto => 'Take or upload a child\'s photo: staff who can see the family, only after the parent agreed',
+            self::ChildPhoto => 'Record the parent\'s in-person photo consent, and take or upload a child\'s photo once consent is recorded: staff who can see the family',
             self::SeeChildPhoto => 'See a child\'s photo: the child\'s own family, or staff who can see the family; only while consent stands',
             self::OwnFamily => 'The parent\'s own family: view, edit details, add/edit children (not status/group)',
         };

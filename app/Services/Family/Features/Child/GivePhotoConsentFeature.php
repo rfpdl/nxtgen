@@ -29,7 +29,7 @@ final class GivePhotoConsentFeature extends BaseFamilyFeature
         $parent = request()->user();
         abort_unless($parent instanceof User, 404);
 
-        $this->run(new UpdateChildPhotoConsentJob(child: $child, parent: $parent));
+        $this->run(new UpdateChildPhotoConsentJob(child: $child, by: $parent));
 
         return back()->with('success', "Thank you — you or a volunteer can now add {$child->displayName()}'s photo.");
     }

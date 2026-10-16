@@ -6,6 +6,7 @@ use App\Data\Models\Branch;
 use App\Data\Models\Child;
 use App\Data\Models\Family;
 use App\Data\Models\Guardian;
+use App\Data\Models\Note;
 use App\Data\Models\Organization;
 use App\Data\Models\RoleAssignment;
 use App\Data\Models\User;
@@ -140,14 +141,38 @@ describe('a Lifeshaper', function (): void {
         expect($child->fresh()?->photo_path)->not->toBeNull();
     });
 
-    it('cannot add one before the parent agrees — and cannot agree for them', function (): void {
+    it('cannot add one before consent is recorded — sending "consent" with the photo does not count', function (): void {
         ['org' => $org, 'htc' => $htc, 'child' => $child] = photoFamily();
 
         actingAs(photoStaff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id))
             ->post("/ccf/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true])
-            ->assertSessionHas('error', 'The parent has not agreed to a photo yet. They can say yes on their family page.');
+            ->assertSessionHas('error', 'The parent has not agreed to a photo yet. If they say yes to you, record it first.');
 
         expect($child->fresh()?->photo_path)->toBeNull()->and($child->fresh()?->photo_consent_at)->toBeNull();
+    });
+
+    it('records that the parent said yes in person, with who recorded it, then takes the photo (Roy 2026-10-16)', function (): void {
+        ['org' => $org, 'htc' => $htc, 'child' => $child] = photoFamily();
+        $lifeshaper = photoStaff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $htc->id);
+        $lifeshaper->forceFill(['name' => 'Leo Lifeshaper'])->save();
+
+        actingAs($lifeshaper)->put("/ccf/children/{$child->id}/photo-consent")->assertSessionHas('success');
+        actingAs($lifeshaper)->post("/ccf/children/{$child->id}/photo", ['photo' => photoFile()])->assertSessionHas('success');
+
+        $child->refresh();
+        expect($child->photo_consent_by)->toBe($lifeshaper->id)
+            ->and($child->photo_path)->not->toBeNull()
+            ->and(Note::query()->where('noteable_type', 'child')->where('noteable_id', $child->id)->sole()->body)
+            ->toBe('Amara: photo consent recorded by Leo Lifeshaper — the parent said yes in person.');
+    });
+
+    it('cannot record consent for a family they cannot see', function (): void {
+        ['org' => $org, 'house' => $house, 'child' => $child] = photoFamily();
+
+        actingAs(photoStaff($org, RoleEnum::Lifeshaper, ScopeTypeEnum::Branch, $house->id))
+            ->put("/ccf/children/{$child->id}/photo-consent")->assertNotFound();
+
+        expect($child->fresh()?->photo_consent_at)->toBeNull();
     });
 
     it('cannot add one for a family they cannot see', function (): void {

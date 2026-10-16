@@ -32,16 +32,19 @@ return [
 
         /*
          * Children's photos (plan §5): PRIVATE — never under public/, never a permanent URL. Pages show them through
-         * short-lived signed links issued after authorization. Local files by default; point PHOTOS_DISK at an S3
-         * disk (private bucket) in production.
+         * short-lived signed links issued after authorization. Local files by default. Production (Laravel Cloud):
+         * attach a PRIVATE bucket — Cloud fills in AWS_* — and set PHOTOS_DISK=s3 (PHOTOS_BUCKET overrides the
+         * bucket name if photos get their own).
          */
         'photos' => env('PHOTOS_DISK', 'local') === 's3' ? [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
             'region' => env('AWS_DEFAULT_REGION'),
-            'bucket' => env('PHOTOS_BUCKET'),
+            'bucket' => env('PHOTOS_BUCKET', env('AWS_BUCKET')),
+            'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => (bool) env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'visibility' => 'private',
             'throw' => true,
         ] : [

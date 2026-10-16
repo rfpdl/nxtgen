@@ -29,7 +29,7 @@ final class WithdrawPhotoConsentFeature extends BaseFamilyFeature
 
         DB::transaction(function () use ($child): void {
             $this->run(new DeleteChildPhotoJob(child: $child));
-            $this->run(new UpdateChildPhotoConsentJob(child: $child, parent: null));
+            $this->run(new UpdateChildPhotoConsentJob(child: $child, by: null));
         });
 
         return back()->with('success', "Done — no photo of {$child->displayName()} is kept.");
