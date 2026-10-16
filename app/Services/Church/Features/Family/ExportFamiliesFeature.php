@@ -8,6 +8,7 @@ use App\Domains\Family\Jobs\GetFamiliesJob;
 use App\Domains\Report\Jobs\CreateFamiliesSpreadsheetJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Attributes\UserStory;
 use App\Services\Church\Data\FamilyListQuery;
 use App\Services\Church\Features\BaseChurchFeature;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -17,6 +18,11 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
  *
  * @extends BaseChurchFeature<BinaryFileResponse>
  */
+#[UserStory(
+    title: 'Download the families list',
+    persona: 'staff',
+    happyPaths: ['story#45' => 'Staff download what the list shows as an Excel file, every page'],
+)]
 #[AccessRow(AccessRowEnum::FamilyList)]
 final class ExportFamiliesFeature extends BaseChurchFeature
 {

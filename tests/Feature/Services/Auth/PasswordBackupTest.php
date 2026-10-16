@@ -36,7 +36,7 @@ function servingUser(?string $password = null): User
 }
 
 describe('setting a backup password', function (): void {
-    it('lets someone who serves set one', function (): void {
+    it('lets someone who serves set one @story#19 @story#21', function (): void {
         $user = servingUser();
 
         actingAs($user)->get('/account/password')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
@@ -47,14 +47,14 @@ describe('setting a backup password', function (): void {
         expect(Hash::check('a-long-passphrase', (string) $user->fresh()?->password))->toBeTrue();
     });
 
-    it('asks for at least 10 characters, typed twice the same', function (): void {
+    it('asks for at least 10 characters, typed twice the same @story#22', function (): void {
         $user = servingUser();
 
         actingAs($user)->put('/account/password', ['password' => 'short', 'password_confirmation' => 'short'])->assertSessionHasErrors('password');
         actingAs($user)->put('/account/password', ['password' => 'a-long-passphrase', 'password_confirmation' => 'different-one!'])->assertSessionHasErrors('password');
     });
 
-    it('is not there for a parent', function (): void {
+    it('is not found for a Guardian with no Role, to open or to set @story#20', function (): void {
         $church = church();
         $family = familyAt(satelliteOf($church));
         $guardian = User::factory()->create();
@@ -66,7 +66,7 @@ describe('setting a backup password', function (): void {
 });
 
 describe('signing in with it', function (): void {
-    it('signs in someone who serves', function (): void {
+    it('signs in someone who serves @story#16', function (): void {
         $user = servingUser('a-long-passphrase');
 
         post('/login/password', ['email' => 'Leo@Example.com', 'password' => 'a-long-passphrase'])->assertRedirect('/home');
@@ -75,7 +75,7 @@ describe('signing in with it', function (): void {
         expect($user->fresh()?->last_login_at)->not->toBeNull();
     });
 
-    it('gives the same answer for a wrong password and an unknown email', function (string $email, string $password): void {
+    it('gives the same answer for a wrong password and an unknown email @story#18', function (string $email, string $password): void {
         servingUser('a-long-passphrase');
 
         post('/login/password', ['email' => $email, 'password' => $password])
@@ -86,7 +86,7 @@ describe('signing in with it', function (): void {
         'unknown email' => ['nobody@example.com', 'a-long-passphrase'],
     ]);
 
-    it('stops working when they no longer serve anywhere', function (): void {
+    it('stops working when they no longer serve anywhere @story#17', function (): void {
         $user = servingUser('a-long-passphrase');
         RoleAssignment::query()->where('user_id', $user->id)->update(['is_active' => false]);
 
@@ -94,7 +94,7 @@ describe('signing in with it', function (): void {
         assertGuest();
     });
 
-    it('never signs in a parent with a password, even one that has one', function (): void {
+    it('never signs in a parent with a password, even one that has one @story#17', function (): void {
         $church = church();
         $family = familyAt(satelliteOf($church));
         $guardian = User::factory()->create(['email' => 'pia@example.com', 'password' => 'a-long-passphrase']);
@@ -104,7 +104,7 @@ describe('signing in with it', function (): void {
         assertGuest();
     });
 
-    it('limits guessing', function (): void {
+    it('limits guessing @story#18', function (): void {
         servingUser('a-long-passphrase');
 
         foreach (range(1, 5) as $_) {
@@ -115,7 +115,7 @@ describe('signing in with it', function (): void {
         assertGuest();
     });
 
-    it('offers the password form on the sign-in page', function (): void {
+    it('offers the password form on the sign-in page @story#8', function (): void {
         get('/login')->assertInertia(fn (AssertableInertia $p) => $p->component('Auth/Login'));
     });
 });

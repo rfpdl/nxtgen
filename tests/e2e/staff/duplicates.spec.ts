@@ -15,7 +15,7 @@ import {
  */
 test.use({ storageState: sessionFile('churchAdmin') })
 
-test('an admin reviews a possible duplicate', async ({ page }) => {
+test('an admin reviews a possible duplicate @story#70 @story#72', async ({ page }) => {
     const surname = uniqueSurname('DelaCruz')
     await page.goto(`/${CHURCH}/families/new`)
     await page.getByTestId('register-new').click()

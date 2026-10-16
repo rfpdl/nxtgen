@@ -8,7 +8,7 @@ import { CHURCH, SATELLITES, sessionFile, uniqueSurname } from '../support/world
  */
 const PHOTO = 'tests/Fixtures/phone-photo-rotated-gps.jpg'
 
-test('a parent agrees; a Lifeshaper takes the first photo; the parent replaces it, then takes consent back', async ({
+test('a parent agrees; a Lifeshaper takes the first photo; the parent replaces it, then takes consent back @story#36 @story#37 @story#38 @story#68', async ({
     page,
     browser,
 }) => {

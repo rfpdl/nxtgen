@@ -7,6 +7,7 @@ namespace App\Services\Church\Features\Child;
 use App\Domains\Family\Jobs\UpdateChildPhotoConsentJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Attributes\UserStory;
 use App\Services\Church\Features\BaseChurchFeature;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,12 @@ use Illuminate\Support\Facades\DB;
  *
  * @extends BaseChurchFeature<RedirectResponse>
  */
+#[UserStory(
+    title: 'Record a parent\'s yes to photos',
+    persona: 'Lifeshaper',
+    happyPaths: ['story#66' => 'A Lifeshaper records that the parent said yes in person, with who recorded it'],
+    unhappyPaths: ['story#67' => 'Not for a Family they cannot see'],
+)]
 #[AccessRow(AccessRowEnum::ChildPhoto)]
 final class RecordPhotoConsentFeature extends BaseChurchFeature
 {

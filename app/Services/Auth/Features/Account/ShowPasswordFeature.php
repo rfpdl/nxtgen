@@ -6,6 +6,7 @@ namespace App\Services\Auth\Features\Account;
 
 use App\Data\Models\User;
 use App\Domains\User\Jobs\GetUserIsStaffJob;
+use App\Foundation\Attributes\UserStory;
 use App\Services\Auth\Features\BaseAuthFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,6 +17,12 @@ use Inertia\Response;
  *
  * @extends BaseAuthFeature<Response>
  */
+#[UserStory(
+    title: 'Open the backup-password form',
+    persona: 'staff',
+    happyPaths: ['story#19' => 'Someone who serves can open the backup-password form'],
+    unhappyPaths: ['story#20' => 'A Guardian with no Role can neither open the backup-password page nor set a password: both are not found'],
+)]
 final class ShowPasswordFeature extends BaseAuthFeature
 {
     public function handle(): Response

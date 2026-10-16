@@ -7,6 +7,7 @@ namespace App\Services\Church\Features\Child;
 use App\Domains\Family\Jobs\CreateChildPhotoJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Attributes\UserStory;
 use App\Foundation\Inputs\ChildPhotoInput;
 use App\Services\Church\Features\BaseChurchFeature;
 use Illuminate\Http\RedirectResponse;
@@ -19,6 +20,12 @@ use Illuminate\Support\Facades\DB;
  *
  * @extends BaseChurchFeature<RedirectResponse>
  */
+#[UserStory(
+    title: 'Take a child\'s photo',
+    persona: 'Lifeshaper',
+    happyPaths: ['story#68' => 'A Lifeshaper takes a photo once the parent has agreed'],
+    unhappyPaths: ['story#69' => 'No photo before Consent, or for a Family they cannot see'],
+)]
 #[AccessRow(AccessRowEnum::ChildPhoto)]
 final class StaffAddChildPhotoFeature extends BaseChurchFeature
 {

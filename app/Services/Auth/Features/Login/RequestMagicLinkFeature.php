@@ -9,6 +9,7 @@ use App\Domains\Auth\Jobs\SendMagicLinkJob;
 use App\Domains\Auth\Jobs\SendNoAccountEmailJob;
 use App\Domains\User\Jobs\GetUserByEmailJob;
 use App\Enums\MagicLinkPurposeEnum;
+use App\Foundation\Attributes\UserStory;
 use App\Services\Auth\Data\RequestMagicLinkInput;
 use App\Services\Auth\Features\BaseAuthFeature;
 use Illuminate\Http\RedirectResponse;
@@ -19,6 +20,12 @@ use Illuminate\Http\RedirectResponse;
  *
  * @extends BaseAuthFeature<RedirectResponse>
  */
+#[UserStory(
+    title: 'Ask for a sign-in link',
+    persona: 'anyone',
+    happyPaths: ['story#9' => 'A known email gets a sign-in link and an unknown one a register-here note, with the same answer on screen'],
+    unhappyPaths: ['story#10' => 'Repeated requests for one email are slowed down'],
+)]
 final class RequestMagicLinkFeature extends BaseAuthFeature
 {
     public function handle(RequestMagicLinkInput $input): RedirectResponse

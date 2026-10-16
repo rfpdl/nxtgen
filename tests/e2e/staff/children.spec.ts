@@ -8,7 +8,7 @@ import { CHURCH, FAMILIES, sessionFile } from '../support/world'
  */
 test.use({ storageState: sessionFile('churchAdmin') })
 
-test('an admin finds a child by Level on the children list and corrects their Level', async ({
+test('an admin finds a child by Level on the children list and corrects their Level @story#58 @story#64', async ({
     page,
 }) => {
     await page.goto(`/${CHURCH}/families`)

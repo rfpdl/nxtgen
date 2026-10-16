@@ -112,7 +112,8 @@ it('seeds the demo church locally', function (): void {
     expect(User::query()->where('email', 'admin@nxtgen.test')->exists())->toBeTrue();
 });
 
-it('refuses to start production when emails would only go to the log — the first admin could never sign in (review 3)', function (string $mailer): void {
+// Found in review 3.
+it('refuses to start production when emails would only go to the log — the first admin could never sign in', function (string $mailer): void {
     churchSettings();
     config(['mail.default' => $mailer]);
     app()->detectEnvironment(fn (): string => 'production');
@@ -121,7 +122,8 @@ it('refuses to start production when emails would only go to the log — the fir
     expect(Church::query()->count())->toBe(0);
 })->with(['log', 'array']);
 
-it('adds what is missing on a second run, and changes nothing that exists (review 3)', function (): void {
+// Found in review 3.
+it('adds what is missing on a second run, and changes nothing that exists', function (): void {
     churchSettings();
     seed(ChurchSeeder::class);
     $church = Church::query()->sole();

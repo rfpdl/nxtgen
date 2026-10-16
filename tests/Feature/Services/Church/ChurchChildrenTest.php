@@ -43,7 +43,7 @@ function kidsChurch(): array
 }
 
 describe('the children list', function (): void {
-    it('lists every child a church admin can see, with Level, age, status and an allergy flag', function (): void {
+    it('lists every child a church admin can see, with Level, age, status and an allergy flag @story#58', function (): void {
         ['church' => $church, 'amara' => $amara] = kidsChurch();
 
         actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/children')
@@ -60,14 +60,14 @@ describe('the children list', function (): void {
             ->has('options.levels', 4)->has('options.satellites', 2)->has('enums.child_status', 3));
     });
 
-    it('shows a Lifeshaper only their satellite', function (): void {
+    it('shows a Lifeshaper only their satellite @story#58', function (): void {
         ['church' => $church, 'house' => $house] = kidsChurch();
 
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($house)))->get('/ccf/children')
             ->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Bea'));
     });
 
-    it('searches and filters by Level, status and satellite — never widening the viewer\'s scope', function (): void {
+    it('searches and filters by Level, status and satellite — never widening the viewer\'s scope @story#58', function (): void {
         ['church' => $church, 'dxb' => $dxb, 'house' => $house] = kidsChurch();
         $admin = staffMember(RoleEnum::Admin, atChurch($church));
 
@@ -80,7 +80,8 @@ describe('the children list', function (): void {
             ->assertInertia(fn (AssertableInertia $p) => $p->has('children', 0));
     });
 
-    it('finds children by their family\'s parent name, email or phone too — as the search box says (review 4)', function (): void {
+    // Found in review 4.
+    it('finds children by their family\'s parent name, email or phone too — as the search box says @story#58', function (): void {
         ['church' => $church, 'amara' => $amara] = kidsChurch();
         guardianOf($amara->family()->firstOrFail(), User::factory()->create(['email' => 'janice@example.com']), ['first_name' => 'Janice', 'last_name' => 'Ramos', 'phone' => '0544897346']);
         $admin = staffMember(RoleEnum::Admin, atChurch($church));
@@ -94,7 +95,7 @@ describe('the children list', function (): void {
         actingAs($admin)->get('/ccf/children?q=Amara')->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Amara'));
     });
 
-    it('is not there for someone with no role in the church', function (): void {
+    it('is not there for someone with no role in the church @story#59', function (): void {
         kidsChurch();
 
         actingAs(User::factory()->create())->get('/ccf/children')->assertNotFound();
@@ -102,7 +103,7 @@ describe('the children list', function (): void {
 });
 
 describe('correcting a child\'s Level', function (): void {
-    it('lets a church admin move a child, records who and when, and notes it', function (): void {
+    it('lets a church admin move a child, records who and when, and notes it @story#64', function (): void {
         ['church' => $church, 'bea' => $bea] = kidsChurch();
         $admin = staffMember(RoleEnum::Admin, atChurch($church), ['name' => 'Ana Admin']);
 
@@ -116,7 +117,7 @@ describe('correcting a child\'s Level', function (): void {
             ->toBe('Bea: Level changed from no Level to Level 1.');
     });
 
-    it('notes the Level the child moved from', function (): void {
+    it('notes the Level the child moved from @story#64', function (): void {
         ['church' => $church, 'amara' => $amara] = kidsChurch();
 
         actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->put("/ccf/children/{$amara->id}/level", ['level' => 3])->assertSessionHas('success');
@@ -125,7 +126,7 @@ describe('correcting a child\'s Level', function (): void {
             ->and(Note::query()->sole()->body)->toBe('Amara: Level changed from Level 2 to Level 3.');
     });
 
-    it('refuses a Level that is not on the chart', function (int $level): void {
+    it('refuses a Level that is not on the chart @story#65', function (int $level): void {
         ['church' => $church, 'amara' => $amara] = kidsChurch();
 
         actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
@@ -135,7 +136,7 @@ describe('correcting a child\'s Level', function (): void {
         expect($amara->fresh()?->level)->toBe(2)->and(Note::query()->count())->toBe(0);
     })->with([0, 5, 99]);
 
-    it('refuses a missing Level', function (): void {
+    it('refuses a missing Level @story#65', function (): void {
         ['church' => $church, 'amara' => $amara] = kidsChurch();
 
         actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->put("/ccf/children/{$amara->id}/level", [])
@@ -150,7 +151,7 @@ describe('correcting a child\'s Level', function (): void {
         actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->put("/ccf/children/{$amara->id}/level", ['level' => 3])->assertSessionHasNoErrors();
     });
 
-    it('does not reach a child of another church', function (): void {
+    it('does not reach a child of another church @story#65', function (): void {
         ['church' => $church] = kidsChurch();
         $foreign = childOf(familyAt(satelliteOf(church(['slug' => 'other']))), ['level' => 1]);
 
@@ -159,7 +160,7 @@ describe('correcting a child\'s Level', function (): void {
         expect($foreign->fresh()?->level)->toBe(1);
     });
 
-    it('is for church admins only — not a satellite admin, not a Lifeshaper', function (RoleEnum $role): void {
+    it('is for church admins only — not a satellite admin, not a Lifeshaper @story#65', function (RoleEnum $role): void {
         ['dxb' => $dxb, 'amara' => $amara] = kidsChurch();
 
         actingAs(staffMember($role, atSatellite($dxb)))
@@ -180,7 +181,8 @@ describe('correcting a child\'s Level', function (): void {
     });
 });
 
-it('shows the children list 50 at a time, filters and all (Roy 2026-10-16)', function (): void {
+// Roy's decision, 2026-10-16.
+it('shows the children list 50 at a time, filters and all', function (): void {
     ['church' => $church, 'dxb' => $dxb] = kidsChurch();
     $family = familyAt($dxb);
     Child::factory()->count(58)->for($family)->create(['church_id' => $family->church_id, 'status' => ChildStatusEnum::Active]);

@@ -8,6 +8,7 @@ use App\Domains\Family\Jobs\UpdateFamilyDetailsJob;
 use App\Domains\Family\Jobs\UpdateGuardianDetailsJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Attributes\UserStory;
 use App\Foundation\Inputs\FamilyDetailsInput;
 use App\Services\Family\Features\BaseFamilyFeature;
 use Illuminate\Http\RedirectResponse;
@@ -19,6 +20,12 @@ use Illuminate\Support\Facades\DB;
  *
  * @extends BaseFamilyFeature<RedirectResponse>
  */
+#[UserStory(
+    title: 'Edit my family',
+    persona: 'parent',
+    happyPaths: ['story#30' => 'A parent edits their Family details and their own'],
+    unhappyPaths: ['story#31' => 'A Satellite of another church is refused, and no other Family changes'],
+)]
 #[AccessRow(AccessRowEnum::OwnFamily)]
 final class UpdateMyFamilyFeature extends BaseFamilyFeature
 {

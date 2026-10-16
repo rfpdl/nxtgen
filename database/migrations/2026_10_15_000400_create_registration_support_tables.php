@@ -56,7 +56,7 @@ return new class extends Migration
             $table->string('subject_type')->comment('family | child');
             $table->unsignedBigInteger('subject_id')->comment('The new record');
             $table->unsignedBigInteger('candidate_id')->comment('The existing record it may duplicate');
-            $table->string('reason')->comment('DuplicateReasonEnum: same_phone | same_name_dob | same_email');
+            $table->string('reason')->comment('DuplicateReasonEnum: same_phone | same_name_dob');
             $table->string('status')->default(DuplicateStatusEnum::default()->value)->comment('DuplicateStatusEnum: open | dismissed | confirmed');
             $table->foreignId('resolved_by')->nullable()->comment('Staff who reviewed it')->constrained('users')->nullOnDelete();
             $table->timestampTz('resolved_at')->nullable()->comment('When reviewed');

@@ -8,6 +8,7 @@ use App\Domains\Family\Jobs\GetFamilyByIdJob;
 use App\Enums\AccessRowEnum;
 use App\Enums\RegistrationSourceEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Attributes\UserStory;
 use App\Foundation\Inputs\ChildInput;
 use App\Operations\Family\AddChildToFamilyOperation;
 use App\Services\Church\Features\BaseChurchFeature;
@@ -19,6 +20,12 @@ use Illuminate\Http\RedirectResponse;
  *
  * @extends BaseChurchFeature<RedirectResponse>
  */
+#[UserStory(
+    title: 'Add a child to a found family',
+    persona: 'staff',
+    happyPaths: ['story#48' => 'Any Staff member adds a Child to a Family found by search, at any Satellite'],
+    unhappyPaths: ['story#49' => 'A Family of another church is refused'],
+)]
 #[AccessRow(AccessRowEnum::AddChild)]
 final class AddChildFeature extends BaseChurchFeature
 {

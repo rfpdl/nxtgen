@@ -7,7 +7,10 @@ import { CHURCH, FAMILIES, sessionFile } from '../support/world'
  */
 test.use({ storageState: sessionFile('houseAdmin') })
 
-test('a satellite admin sees only their own satellite', async ({ page, browser }) => {
+test('a satellite admin sees only their own satellite @story#43 @story#58', async ({
+    page,
+    browser,
+}) => {
     await page.goto(`/${CHURCH}/families`)
     await expect(
         page.getByTestId('family-row').filter({ hasText: FAMILIES.house.guardian }),
@@ -32,14 +35,18 @@ test('a satellite admin sees only their own satellite', async ({ page, browser }
     expect(response?.status()).toBe(404)
 })
 
-test('a satellite admin can only add Lifeshapers to their own satellite', async ({ page }) => {
+test('a satellite admin can only add Lifeshapers to their own satellite @story#77', async ({
+    page,
+}) => {
     await page.goto(`/${CHURCH}/people`)
 
     const choices = await page.getByTestId('staff-role').locator('option').allTextContents()
     expect(choices.map((c) => c.trim())).toEqual(['Lifeshaper · House Church'])
 })
 
-test('a Lifeshaper can see a family but gets no edit forms', async ({ browser }) => {
+test('a Lifeshaper can see a family but gets no edit forms @story#50 @story#53', async ({
+    browser,
+}) => {
     const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const page = await lifeshaper.newPage()
     await page.goto(`/${CHURCH}/families`)
@@ -55,7 +62,7 @@ test('a Lifeshaper can see a family but gets no edit forms', async ({ browser })
     await lifeshaper.close()
 })
 
-test('a Lifeshaper does not get the People page', async ({ browser }) => {
+test('a Lifeshaper does not get the People page @story#75', async ({ browser }) => {
     const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const page = await lifeshaper.newPage()
     await page.goto(`/${CHURCH}/families`)

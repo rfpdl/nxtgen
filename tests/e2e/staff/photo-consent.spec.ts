@@ -7,7 +7,9 @@ import { CHURCH, FAMILIES, sessionFile } from '../support/world'
  */
 test.use({ storageState: sessionFile('lifeshaper') })
 
-test("a Lifeshaper records the parent's yes, then takes the photo", async ({ page }) => {
+test("a Lifeshaper records the parent's yes, then takes the photo @story#66 @story#68", async ({
+    page,
+}) => {
     await page.goto(`/${CHURCH}/families?q=Dela%20Cruz`)
     await page
         .getByTestId('family-row')

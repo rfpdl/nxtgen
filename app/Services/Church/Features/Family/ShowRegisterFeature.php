@@ -10,6 +10,7 @@ use App\Domains\Family\DataObjects\FamilySearchResultData;
 use App\Domains\Family\Jobs\SearchFamiliesJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Attributes\UserStory;
 use App\Foundation\Support\FamilyFormEnums;
 use App\Services\Church\Features\BaseChurchFeature;
 use Inertia\Inertia;
@@ -21,6 +22,11 @@ use Inertia\Response;
  *
  * @extends BaseChurchFeature<Response>
  */
+#[UserStory(
+    title: 'Search before registering a family',
+    persona: 'staff',
+    happyPaths: ['story#46' => 'Staff search the whole Church first, so a Family is not registered twice'],
+)]
 #[AccessRow(AccessRowEnum::DoorSearch)]
 final class ShowRegisterFeature extends BaseChurchFeature
 {

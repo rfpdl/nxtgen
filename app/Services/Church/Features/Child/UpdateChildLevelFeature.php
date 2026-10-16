@@ -8,6 +8,7 @@ use App\Domains\Family\Jobs\GetChurchChildJob;
 use App\Domains\Family\Jobs\UpdateChildLevelJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Attributes\UserStory;
 use App\Foundation\Support\LevelChart;
 use App\Services\Church\Data\UpdateChildLevelInput;
 use App\Services\Church\Features\BaseChurchFeature;
@@ -21,6 +22,12 @@ use Illuminate\Support\Facades\DB;
  *
  * @extends BaseChurchFeature<RedirectResponse>
  */
+#[UserStory(
+    title: 'Correct a child\'s Level',
+    persona: 'church admin',
+    happyPaths: ['story#64' => 'A church admin corrects a Child\'s Level; who, when and the old Level are noted'],
+    unhappyPaths: ['story#65' => 'Only church admins, only Levels on the chart, only this church'],
+)]
 #[AccessRow(AccessRowEnum::SetChildLevel)]
 final class UpdateChildLevelFeature extends BaseChurchFeature
 {

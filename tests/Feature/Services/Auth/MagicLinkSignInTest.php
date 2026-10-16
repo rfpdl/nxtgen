@@ -26,11 +26,11 @@ function linkFor(MagicLinkPurposeEnum $purpose, string $email, ?User $user = nul
 }
 
 describe('requesting a sign-in link', function (): void {
-    it('shows the sign-in page', function (): void {
+    it('shows the sign-in page @story#8', function (): void {
         get('/login')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p->component('Auth/Login'));
     });
 
-    it('emails a sign-in link to a known email and says the same thing as for an unknown one', function (): void {
+    it('emails a sign-in link to a known email and says the same thing as for an unknown one @story#9', function (): void {
         Notification::fake();
         $user = User::factory()->create(['email' => 'janice@example.com']);
 
@@ -42,7 +42,7 @@ describe('requesting a sign-in link', function (): void {
         expect($user->id)->toBeInt();
     });
 
-    it('gives an unknown email the same answer, and emails that address a register-here note instead', function (): void {
+    it('gives an unknown email the same answer, and emails that address a register-here note instead @story#9', function (): void {
         Notification::fake();
 
         post('/login/link', ['email' => 'stranger@example.com'])
@@ -57,7 +57,7 @@ describe('requesting a sign-in link', function (): void {
         post('/login/link', ['email' => 'not-an-email'])->assertSessionHasErrors('email');
     });
 
-    it('throttles repeated requests for the same email', function (): void {
+    it('throttles repeated requests for the same email @story#10', function (): void {
         Notification::fake();
 
         foreach (range(1, 5) as $_) {
@@ -69,7 +69,8 @@ describe('requesting a sign-in link', function (): void {
 });
 
 describe('opening a link', function (): void {
-    it('only shows a Continue page when the link is opened, so an email scanner cannot use it up (Codex diff review, high)', function (): void {
+    // Found by Codex diff review (high).
+    it('only shows a Continue page when the link is opened, so an email scanner cannot use it up @story#11', function (): void {
         $user = User::factory()->create();
         $token = linkFor(MagicLinkPurposeEnum::Login, $user->email, $user);
 
@@ -82,7 +83,7 @@ describe('opening a link', function (): void {
         expect(MagicLink::query()->sole()->used_at)->toBeNull();
     });
 
-    it('does not accept a family claim just because the link was fetched', function (): void {
+    it('does not accept a family claim just because the link was fetched @story#11', function (): void {
         $claim = FamilyClaim::factory()->create(['email_normalised' => 'janice@example.com']);
 
         get('/magic/claim/'.linkFor(MagicLinkPurposeEnum::ClaimFamily, 'janice@example.com', claim: $claim))->assertOk();
@@ -90,7 +91,7 @@ describe('opening a link', function (): void {
         expect($claim->fresh()?->status)->toBe(FamilyClaimStatusEnum::Pending);
     });
 
-    it('signs in with a valid login link', function (): void {
+    it('signs in with a valid login link @story#12', function (): void {
         $user = User::factory()->create();
 
         post('/magic/login/'.linkFor(MagicLinkPurposeEnum::Login, $user->email, $user))->assertRedirect('/home');
@@ -98,7 +99,7 @@ describe('opening a link', function (): void {
         assertAuthenticatedAs($user);
     });
 
-    it('refuses a used or bad link with one plain message', function (): void {
+    it('refuses a used or bad link with one plain message @story#13', function (): void {
         post('/magic/login/nonsense')
             ->assertRedirect('/login')
             ->assertSessionHas('error', 'That link has expired or was already used. Enter your email to get a new one.');
@@ -106,7 +107,7 @@ describe('opening a link', function (): void {
         assertGuest();
     });
 
-    it('confirms the email and signs in with a verify link', function (): void {
+    it('confirms the email and signs in with a verify link @story#12', function (): void {
         $user = User::factory()->unverified()->create();
 
         post('/magic/verify/'.linkFor(MagicLinkPurposeEnum::VerifyEmail, $user->email, $user))->assertRedirect('/home');
@@ -115,7 +116,7 @@ describe('opening a link', function (): void {
         assertAuthenticatedAs($user);
     });
 
-    it('accepts a family claim for an existing login and links the guardian', function (): void {
+    it('accepts a family claim for an existing login and links the guardian @story#14', function (): void {
         $user = User::factory()->create(['email' => 'janice@example.com']);
         $claim = FamilyClaim::factory()->create(['email_normalised' => 'janice@example.com']);
 
@@ -126,7 +127,7 @@ describe('opening a link', function (): void {
         assertAuthenticatedAs($user);
     });
 
-    it('creates the login when a claim is accepted for an email with no account yet', function (): void {
+    it('creates the login when a claim is accepted for an email with no account yet @story#14', function (): void {
         $claim = FamilyClaim::factory()->create(['email_normalised' => 'new@example.com']);
 
         post('/magic/claim/'.linkFor(MagicLinkPurposeEnum::ClaimFamily, 'new@example.com', claim: $claim))->assertRedirect('/home');
@@ -137,7 +138,7 @@ describe('opening a link', function (): void {
             ->and(Guardian::query()->findOrFail($claim->guardian_id)->user_id)->toBe($user->id);
     });
 
-    it('revokes a claim when the login already belongs to another family in that church', function (): void {
+    it('revokes a claim when the login already belongs to another family in that church @story#15', function (): void {
         $user = User::factory()->create(['email' => 'janice@example.com']);
         $claim = FamilyClaim::factory()->create(['email_normalised' => 'janice@example.com']);
         Guardian::factory()->for(Family::factory()->state(['church_id' => $claim->church_id]))->create([
@@ -153,7 +154,7 @@ describe('opening a link', function (): void {
     });
 });
 
-it('signs out', function (): void {
+it('ends the session and goes back to the welcome page on sign-out @story#23', function (): void {
     $user = User::factory()->create();
 
     \Pest\Laravel\actingAs($user)->post('/logout')->assertRedirect('/');
@@ -161,7 +162,8 @@ it('signs out', function (): void {
     assertGuest();
 });
 
-it('does not accept a claim when the account email changed after the claim was sent (Codex diff review, high)', function (): void {
+// Found by Codex diff review (high).
+it('does not accept a claim when the account email changed after the claim was sent @story#15', function (): void {
     $user = User::factory()->unverified()->create(['email' => 'janice@example.com']);
     $claim = FamilyClaim::factory()->create(['email_normalised' => 'janice@example.com']);
     $token = linkFor(MagicLinkPurposeEnum::ClaimFamily, 'janice@example.com', claim: $claim);

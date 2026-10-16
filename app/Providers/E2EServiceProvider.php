@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use RuntimeException;
 use Symfony\Component\Mime\Address;
 
@@ -33,7 +34,7 @@ final class E2EServiceProvider extends ServiceProvider
     /** `migrate:fresh` runs before every browser run. It must never reach the working database. */
     public static function assertSafeDatabase(string $database): void
     {
-        if (! str_ends_with($database, '_e2e')) {
+        if (! Str::endsWith($database, '_e2e')) {
             throw new RuntimeException("APP_ENV=e2e is pointed at [{$database}]; it must be an *_e2e database.");
         }
     }

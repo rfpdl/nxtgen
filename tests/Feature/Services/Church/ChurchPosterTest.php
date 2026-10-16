@@ -20,7 +20,7 @@ use function Tests\Support\satelliteOf;
  * registration form, for the foyer. Any staff member can print it.
  */
 
-it('gives a staff member a poster whose QR code opens this church\'s registration form', function (): void {
+it('gives a staff member a poster whose QR code opens this church\'s registration form @story#80', function (): void {
     $church = church(['slug' => 'ccf', 'name' => 'CCF']);
     $user = User::factory()->create();
     grantRole($user, RoleEnum::Lifeshaper, atChurch($church));
@@ -33,7 +33,7 @@ it('gives a staff member a poster whose QR code opens this church\'s registratio
             && str_contains((string) base64_decode(substr($qr, 26), true), '<svg')));
 });
 
-it('is not for a parent', function (): void {
+it('is not found for a Guardian with no Role in the church @story#81', function (): void {
     $church = church(['slug' => 'ccf']);
     $family = familyAt(satelliteOf($church));
     $guardian = User::factory()->create();

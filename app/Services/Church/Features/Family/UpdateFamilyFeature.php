@@ -8,6 +8,7 @@ use App\Domains\Family\Jobs\UpdateFamilyDetailsJob;
 use App\Domains\Family\Jobs\UpdateGuardianDetailsJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Attributes\UserStory;
 use App\Foundation\Inputs\FamilyDetailsInput;
 use App\Services\Church\Features\BaseChurchFeature;
 use Illuminate\Http\RedirectResponse;
@@ -19,6 +20,12 @@ use Illuminate\Support\Facades\DB;
  *
  * @extends BaseChurchFeature<RedirectResponse>
  */
+#[UserStory(
+    title: 'Edit a family',
+    persona: 'church admin or satellite admin',
+    happyPaths: ['story#52' => 'An Admin who may edit the Family edits it and its parent'],
+    unhappyPaths: ['story#53' => 'A Lifeshaper or another Satellite\'s Admin cannot'],
+)]
 #[AccessRow(AccessRowEnum::EditFamily)]
 final class UpdateFamilyFeature extends BaseChurchFeature
 {

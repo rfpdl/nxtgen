@@ -13,11 +13,11 @@ namespace Tests\Architecture;
  *
  * Attributed by FILE, at the path the spec names (batch 08): a Job's test is
  * `app/Domains/<Domain>/Tests/Jobs/<Job>Test.php`, an enum's is `tests/Unit/Enums/<Enum>Test.php`. A bundled file
- * (`MagicLinkJobsTest` exercises three: Create-, Redeem- and SendMagicLinkJob) leaves every Job in it unattributable, which is what this enforces
- * against — aegis matches a basename anywhere; here the path is fixed because `DomainTestLocationTest` already
- * says where a domain test lives.
+ * (batch 08 split `MagicLinkJobsTest`, which exercised three Jobs) leaves every Job in it unattributable, which is
+ * what this enforces against — aegis matches a basename anywhere; here the path is fixed because
+ * `DomainTestLocationTest` already says where a domain test lives.
  *
- * Feature tests are not counted per Feature here: batch 08 numbers user stories, and a test names its story.
+ * Feature tests are not counted per Feature here: each Feature's #[UserStory] criteria are, by StoryTokenTest.
  */
 function jobTestPath(string $jobFile): string
 {

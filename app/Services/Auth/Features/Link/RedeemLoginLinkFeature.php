@@ -10,6 +10,7 @@ use App\Domains\Auth\Jobs\SignInUserJob;
 use App\Domains\User\Jobs\GetUserForUpdateJob;
 use App\Domains\User\Jobs\UpdateUserEmailVerifiedJob;
 use App\Enums\MagicLinkPurposeEnum;
+use App\Foundation\Attributes\UserStory;
 use App\Services\Auth\Features\BaseAuthFeature;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,12 @@ use Illuminate\Support\Facades\DB;
  *
  * @extends BaseAuthFeature<RedirectResponse>
  */
+#[UserStory(
+    title: 'Sign in with an emailed link',
+    persona: 'anyone',
+    happyPaths: ['story#12' => 'A valid sign-in or confirm link signs the person in'],
+    unhappyPaths: ['story#13' => 'A used or bad link gets one plain message'],
+)]
 final class RedeemLoginLinkFeature extends BaseAuthFeature
 {
     public function __construct(

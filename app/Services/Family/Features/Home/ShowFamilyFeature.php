@@ -10,6 +10,7 @@ use App\Domains\Family\DataObjects\GuardianEditData;
 use App\Domains\Family\Jobs\GetFamilyPortalJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Attributes\UserStory;
 use App\Foundation\Support\FamilyFormEnums;
 use App\Services\Family\Features\BaseFamilyFeature;
 use Inertia\Inertia;
@@ -21,6 +22,12 @@ use Inertia\Response;
  *
  * @extends BaseFamilyFeature<Response>
  */
+#[UserStory(
+    title: 'See my family',
+    persona: 'parent',
+    happyPaths: ['story#28' => 'A parent sees their own Family, Satellite and Children'],
+    unhappyPaths: ['story#29' => 'Another church\'s family page, or one with no Family, is not found'],
+)]
 #[AccessRow(AccessRowEnum::OwnFamily)]
 final class ShowFamilyFeature extends BaseFamilyFeature
 {

@@ -45,7 +45,7 @@ function validForm(Satellite $satellite): array
     ];
 }
 
-it('shows the registration form with the church satellites', function (): void {
+it('shows the registration form with the church satellites @story#2', function (): void {
     [, $satellite] = ccf();
 
     get('/ccf/register')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
@@ -57,11 +57,11 @@ it('shows the registration form with the church satellites', function (): void {
         ->has('enums.gender'));
 });
 
-it('404s for a church that does not exist', function (): void {
+it('404s for a church that does not exist @story#3', function (): void {
     get('/nope/register')->assertNotFound();
 });
 
-it('registers a family and thanks the parent', function (): void {
+it('registers a family and thanks the parent @story#4', function (): void {
     Notification::fake();
     [, $satellite] = ccf();
 
@@ -74,7 +74,7 @@ it('registers a family and thanks the parent', function (): void {
         ->and(User::query()->sole()->email)->toBe('janice@example.com');
 });
 
-it('registers several children at once', function (): void {
+it('registers several children at once @story#4', function (): void {
     Notification::fake();
     [, $satellite] = ccf();
 
@@ -86,7 +86,7 @@ it('registers several children at once', function (): void {
     expect(Child::query()->count())->toBe(2);
 });
 
-it('does not register an already-registered email twice, and says nothing that reveals it', function (): void {
+it('does not register an already-registered email twice, and says nothing that reveals it @story#5', function (): void {
     Notification::fake();
     [, $satellite] = ccf();
     post('/ccf/register', validForm($satellite));
@@ -98,13 +98,13 @@ it('does not register an already-registered email twice, and says nothing that r
     expect(Family::query()->count())->toBe(1);
 });
 
-it('gives the same public answer for every registration outcome (no membership oracle)', function (): void {
+it('gives the same public answer for every registration outcome (no membership oracle) @story#5', function (): void {
     $messages = array_unique(array_map(fn (RegistrationOutcomeEnum $o): string => $o->guardianMessage(), RegistrationOutcomeEnum::cases()));
 
     expect($messages)->toHaveCount(1);
 });
 
-it('shows the thank-you page', function (): void {
+it('shows the thank-you page @story#7', function (): void {
     ccf();
 
     get('/ccf/register/thanks')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p->component('Public/RegisterThanks'));
@@ -141,7 +141,7 @@ it('requires the parent email, name and phone and each child\'s name, gender and
     ]);
 });
 
-it('refuses a satellite from another church', function (): void {
+it('refuses a satellite from another church @story#6', function (): void {
     ccf();
     $foreign = Satellite::factory()->create();
 

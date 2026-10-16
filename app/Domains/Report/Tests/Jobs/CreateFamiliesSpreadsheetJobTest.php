@@ -6,7 +6,8 @@ use App\Data\Models\Child;
 use App\Data\Models\Family;
 use App\Domains\Report\Jobs\CreateFamiliesSpreadsheetJob;
 
-it('writes a nickname that looks like a formula as plain text, never a formula (Codex diff review, high)', function (): void {
+// Found by Codex diff review (high).
+it('writes a nickname that looks like a formula as plain text, never a formula', function (): void {
     $family = Family::factory()->create();
     Child::factory()->create(['family_id' => $family->id, 'church_id' => $family->church_id, 'nickname' => '=HYPERLINK("http://evil","x")', 'allergies' => '=1+1']);
 

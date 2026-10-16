@@ -14,6 +14,7 @@ use App\Domains\Level\Jobs\GetLevelsJob;
 use App\Enums\AccessRowEnum;
 use App\Enums\ChildStatusEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Attributes\UserStory;
 use App\Foundation\Support\ListPage;
 use App\Services\Church\Data\ChildListQuery;
 use App\Services\Church\Features\BaseChurchFeature;
@@ -26,6 +27,12 @@ use Inertia\Response;
  *
  * @extends BaseChurchFeature<Response>
  */
+#[UserStory(
+    title: 'See the children list',
+    persona: 'staff',
+    happyPaths: ['story#58' => 'Staff see the Children they may, searched and filtered by Level, status and Satellite'],
+    unhappyPaths: ['story#59' => 'Someone with no Role in this church sees nothing'],
+)]
 #[AccessRow(AccessRowEnum::FamilyList)]
 final class ShowChildrenFeature extends BaseChurchFeature
 {

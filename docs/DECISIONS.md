@@ -29,6 +29,8 @@ Grilling session on refactoring Release 1 (Roy). Terms live in `GLOSSARY.md`; th
   no Storybook yet (TODO #26); `CLAUDE.md` stays short (long rule files crowd an agent's context).
 - **Generated TS props are snake_case**, as in aegis. Jobs take Models, not ids. Enums and DTOs follow aegis's arch
   rules; Inputs also generate TS. Features carry `#[UserStory]`; tests say `story#N` (numbered from 1).
+  _Clarified in refactor 08:_ a test claims a story with `@story#N` in its title, as aegis does; a comment
+  does not count (StoryTokenTest).
 - **Casing of props** (Claude — for Roy to confirm): a page's TOP-LEVEL Inertia prop names are camelCase
   (`grantOptions`, `churchNav`) — they are Vue props, and `vue/prop-name-casing` and aegis agree; EVERYTHING
   inside them is snake_case (DTO fields, `auth.can_switch`, `enums.child_status`). Internal DTOs

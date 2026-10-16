@@ -22,7 +22,7 @@ it('sends a guest to sign in', function (): void {
     get('/home')->assertRedirect('/login');
 });
 
-it('sends a parent straight to their family page', function (): void {
+it('sends a parent straight to their family page @story#24', function (): void {
     $church = church(['slug' => 'ccf']);
     $user = User::factory()->create();
     guardianOf(familyAt(satelliteOf($church)), $user);
@@ -30,7 +30,7 @@ it('sends a parent straight to their family page', function (): void {
     actingAs($user)->get('/home')->assertRedirect('/ccf/family');
 });
 
-it('sends a staff member straight to the dashboard', function (): void {
+it('sends a staff member straight to the dashboard @story#24', function (): void {
     $church = church(['slug' => 'ccf']);
     $user = User::factory()->create();
     grantRole($user, RoleEnum::Lifeshaper, atChurch($church));
@@ -38,7 +38,7 @@ it('sends a staff member straight to the dashboard', function (): void {
     actingAs($user)->get('/home')->assertRedirect('/ccf');
 });
 
-it('lets a parent who also serves choose, with one login', function (): void {
+it('lets a parent who also serves choose, with one login @story#24', function (): void {
     $church = church(['slug' => 'ccf']);
     $user = User::factory()->create();
     guardianOf(familyAt(satelliteOf($church)), $user);
@@ -51,7 +51,7 @@ it('lets a parent who also serves choose, with one login', function (): void {
         ->where('options.1.url', '/ccf'));
 });
 
-it('lets someone in two churches pick one', function (): void {
+it('lets someone in two churches pick one @story#24', function (): void {
     $user = User::factory()->create();
     $other = church(['slug' => 'other']);
     guardianOf(familyAt(satelliteOf(church(['slug' => 'ccf']))), $user);
@@ -62,12 +62,12 @@ it('lets someone in two churches pick one', function (): void {
         ->has('options', 2));
 });
 
-it('tells someone with no family or role that there is nothing here yet', function (): void {
+it('tells someone with no family or role that there is nothing here yet @story#25', function (): void {
     actingAs(User::factory()->create())->get('/home')->assertOk()
         ->assertInertia(fn (AssertableInertia $p) => $p->component('Auth/NothingYet'));
 });
 
-it('ignores a revoked role', function (): void {
+it('ignores a revoked role @story#25', function (): void {
     $church = church(['slug' => 'ccf']);
     $user = User::factory()->create();
     grantRole($user, RoleEnum::Lifeshaper, atChurch($church));
@@ -92,7 +92,7 @@ describe('remembering the choice', function (): void {
         return [$user, $church];
     }
 
-    it('goes where they chose, and remembers it', function (): void {
+    it('goes where they chose, and remembers it @story#26', function (): void {
         [$user] = bothHats();
 
         $response = actingAs($user)->post('/home/choice', ['url' => '/ccf/family']);
@@ -101,14 +101,14 @@ describe('remembering the choice', function (): void {
         actingAs($user)->withCookie('nxtgen_landing', '/ccf/family')->get('/home')->assertRedirect('/ccf/family');
     });
 
-    it('asks again when they want to switch', function (): void {
+    it('asks again when they want to switch @story#26', function (): void {
         [$user] = bothHats();
 
         actingAs($user)->withCookie('nxtgen_landing', '/ccf/family')->get('/home?choose=1')
             ->assertOk()->assertInertia(fn (AssertableInertia $p) => $p->component('Auth/Choose'));
     });
 
-    it('forgets a choice that is no longer theirs', function (): void {
+    it('forgets a choice that is no longer theirs @story#27', function (): void {
         [$user] = bothHats();
         RoleAssignment::query()->where('user_id', $user->id)->update(['is_active' => false]);
 
@@ -116,7 +116,7 @@ describe('remembering the choice', function (): void {
         actingAs($user)->withCookie('nxtgen_landing', '/ccf')->get('/home')->assertRedirect('/ccf/family');
     });
 
-    it('refuses a choice that is not one of their options — no sending people off-site', function (string $url): void {
+    it('refuses a choice that is not one of their options — no sending people off-site @story#27', function (string $url): void {
         [$user] = bothHats();
 
         actingAs($user)->post('/home/choice', ['url' => $url])->assertNotFound();

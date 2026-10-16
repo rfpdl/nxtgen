@@ -47,7 +47,7 @@ function addPerson(string $email, RoleEnum $role, ScopeTypeEnum $type, int $scop
 }
 
 describe('the People page', function (): void {
-    it('shows a church admin everyone who serves, with their roles', function (): void {
+    it('shows a church admin everyone who serves, with their roles @story#74', function (): void {
         ['church' => $church, 'htc' => $htc, 'admin' => $admin] = peopleChurch();
         staffMember(RoleEnum::Lifeshaper, atSatellite($htc), ['name' => 'Leo Lifeshaper']);
         $other = church();
@@ -64,7 +64,7 @@ describe('the People page', function (): void {
             ->has('grantOptions', 6));
     });
 
-    it('shows a satellite admin only their satellite, and only Lifeshaper to give', function (): void {
+    it('shows a satellite admin only their satellite, and only Lifeshaper to give @story#74', function (): void {
         ['church' => $church, 'htc' => $htc, 'house' => $house] = peopleChurch();
         $satAdmin = staffMember(RoleEnum::Admin, atSatellite($htc), ['name' => 'Sam Satellite']);
         staffMember(RoleEnum::Lifeshaper, atSatellite($htc), ['name' => 'Leo Lifeshaper']);
@@ -87,7 +87,7 @@ describe('the People page', function (): void {
         actingAs($lifeshaper)->get('/ccf/families')->assertInertia(fn (AssertableInertia $page) => $page->where('churchNav.can_manage_people', false));
     });
 
-    it('is not there for a Lifeshaper', function (): void {
+    it('is not there for a Lifeshaper @story#75', function (): void {
         ['church' => $church] = peopleChurch();
 
         actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))
@@ -96,7 +96,7 @@ describe('the People page', function (): void {
 });
 
 describe('adding someone', function (): void {
-    it('creates the login, gives the role and emails a sign-in link', function (): void {
+    it('creates the login, gives the role and emails a sign-in link @story#76', function (): void {
         Notification::fake();
         ['church' => $church, 'htc' => $htc, 'admin' => $admin] = peopleChurch();
 
@@ -112,7 +112,7 @@ describe('adding someone', function (): void {
             && $to->routes['mail'] === 'leo@example.com');
     });
 
-    it('adds the role to an existing login (a parent who also serves) without a second account', function (): void {
+    it('adds the role to an existing login (a parent who also serves) without a second account @story#76', function (): void {
         Notification::fake();
         ['church' => $church, 'htc' => $htc, 'admin' => $admin] = peopleChurch();
         // A REAL parent (review 3: the fixture used to have no family, so it proved account reuse only).
@@ -146,7 +146,7 @@ describe('adding someone', function (): void {
         Notification::assertNothingSent();
     });
 
-    it('gives a removed role back instead of failing', function (): void {
+    it('gives a removed role back instead of failing @story#76', function (): void {
         Notification::fake();
         ['church' => $church, 'htc' => $htc, 'admin' => $admin] = peopleChurch();
         $leo = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
@@ -158,7 +158,7 @@ describe('adding someone', function (): void {
         expect(RoleAssignment::query()->where('user_id', $leo->id)->where('is_active', true)->count())->toBe(1);
     });
 
-    it('holds a satellite admin to Lifeshaper in their own satellite', function (RoleEnum $role, string $where): void {
+    it('holds a satellite admin to Lifeshaper in their own satellite @story#77', function (RoleEnum $role, string $where): void {
         Notification::fake();
         ['church' => $church, 'htc' => $htc, 'house' => $house] = peopleChurch();
         $satAdmin = staffMember(RoleEnum::Admin, atSatellite($htc));
@@ -177,7 +177,7 @@ describe('adding someone', function (): void {
         'Lifeshaper elsewhere' => [RoleEnum::Lifeshaper, 'other satellite'],
     ]);
 
-    it('refuses a satellite of another church', function (): void {
+    it('refuses a satellite of another church @story#77', function (): void {
         ['admin' => $admin] = peopleChurch();
         $foreign = Satellite::factory()->create();
 
@@ -194,7 +194,7 @@ describe('adding someone', function (): void {
 });
 
 describe('removing a role', function (): void {
-    it('switches the role off and keeps it for the record', function (): void {
+    it('switches the role off and keeps it for the record @story#78', function (): void {
         ['church' => $church, 'htc' => $htc, 'admin' => $admin] = peopleChurch();
         $leo = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
         $role = RoleAssignment::query()->where('user_id', $leo->id)->firstOrFail();
@@ -205,7 +205,7 @@ describe('removing a role', function (): void {
         actingAs($leo)->get('/ccf/families')->assertNotFound();
     });
 
-    it('will not remove the last church admin', function (): void {
+    it('will not remove the last church admin @story#79', function (): void {
         ['admin' => $admin] = peopleChurch();
         $role = RoleAssignment::query()->where('user_id', $admin->id)->firstOrFail();
 
@@ -214,7 +214,7 @@ describe('removing a role', function (): void {
         expect($role->fresh()?->is_active)->toBeTrue();
     });
 
-    it('does not let a satellite admin remove a role above their own', function (): void {
+    it('does not let a satellite admin remove a role above their own @story#79', function (): void {
         ['church' => $church, 'htc' => $htc, 'admin' => $admin] = peopleChurch();
         $satAdmin = staffMember(RoleEnum::Admin, atSatellite($htc));
         $role = RoleAssignment::query()->where('user_id', $admin->id)->firstOrFail();
@@ -224,7 +224,7 @@ describe('removing a role', function (): void {
         expect($role->fresh()?->is_active)->toBeTrue();
     });
 
-    it('cannot reach a role in another church', function (): void {
+    it('cannot reach a role in another church @story#79', function (): void {
         ['admin' => $admin] = peopleChurch();
         $other = church();
         $foreign = staffMember(RoleEnum::Lifeshaper, atChurch($other));

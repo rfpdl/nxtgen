@@ -8,7 +8,9 @@ import { CHURCH, SATELLITES, uniqueEmail } from '../support/world'
  * Journey 1 — the one the stakeholders care about most: a parent registers their family on their phone,
  * confirms their email from the link, sees their family page, and adds another child later.
  */
-test('a parent registers, confirms their email and sees their family', async ({ page }) => {
+test('a parent registers, confirms their email and sees their family @story#4 @story#28', async ({
+    page,
+}) => {
     const email = uniqueEmail('parent')
     const before = mailCount(email)
 
@@ -63,7 +65,9 @@ test('a parent registers, confirms their email and sees their family', async ({ 
     await expect(page).toHaveURL(/\/login/)
 })
 
-test('a registered parent signs in again with just their email', async ({ page }) => {
+test('a registered parent signs in again with just their email @story#9 @story#12', async ({
+    page,
+}) => {
     const email = uniqueEmail('returning')
     const before = mailCount(email)
     await page.goto(`/${CHURCH}/register`)

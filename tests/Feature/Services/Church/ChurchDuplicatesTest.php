@@ -52,7 +52,7 @@ function dupFamily(Satellite $satellite, string $name, string $email): Family
     return $family;
 }
 
-it('lists open possible duplicates side by side, with masked emails', function (): void {
+it('lists open possible duplicates side by side, with masked emails @story#70', function (): void {
     ['church' => $church] = dupChurch();
 
     actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/duplicates')
@@ -67,7 +67,7 @@ it('lists open possible duplicates side by side, with masked emails', function (
         ->where('duplicates.0.candidate.children.0', "Maria's kid"));
 });
 
-it('shows a satellite admin only the duplicates of families they may edit', function (): void {
+it('shows a satellite admin only the duplicates of families they may edit @story#70', function (): void {
     ['church' => $church, 'htc' => $htc, 'house' => $house] = dupChurch();
 
     actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->get('/ccf/duplicates')
@@ -76,13 +76,13 @@ it('shows a satellite admin only the duplicates of families they may edit', func
         ->assertInertia(fn (AssertableInertia $p) => $p->has('duplicates', 0));
 });
 
-it('is not there for a Lifeshaper', function (): void {
+it('is not there for a Lifeshaper @story#71', function (): void {
     ['church' => $church] = dupChurch();
 
     actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get('/ccf/duplicates')->assertNotFound();
 });
 
-it('dismisses a pair, records who, and notes it on the new family', function (): void {
+it('dismisses a pair, records who, and notes it on the new family @story#72', function (): void {
     ['church' => $church, 'new' => $new] = dupChurch();
     $admin = staffMember(RoleEnum::Admin, atChurch($church));
     $pair = DuplicateCandidate::query()->sole();
@@ -97,7 +97,7 @@ it('dismisses a pair, records who, and notes it on the new family', function ():
         ->toBe('Possible duplicate of Maria Santos (same phone): not the same family.');
 });
 
-it('confirms a pair as the same family — flagged for the merge, nothing merged', function (): void {
+it('confirms a pair as the same family — flagged for the merge, nothing merged @story#72', function (): void {
     ['church' => $church] = dupChurch();
     $pair = DuplicateCandidate::query()->sole();
 
@@ -108,7 +108,7 @@ it('confirms a pair as the same family — flagged for the merge, nothing merged
         ->and(Family::query()->count())->toBe(2);
 });
 
-it('refuses to review a pair outside the reviewer\'s satellite, or one already reviewed', function (): void {
+it('refuses to review a pair outside the reviewer\'s satellite, or one already reviewed @story#73', function (): void {
     ['church' => $church, 'house' => $house] = dupChurch();
     $pair = DuplicateCandidate::query()->sole();
 
@@ -120,7 +120,7 @@ it('refuses to review a pair outside the reviewer\'s satellite, or one already r
         ->put("/ccf/duplicates/{$pair->id}", ['status' => 'confirmed'])->assertNotFound();
 });
 
-it('only takes "dismissed" or "confirmed"', function (): void {
+it('only takes "dismissed" or "confirmed" @story#73', function (): void {
     ['church' => $church] = dupChurch();
     $pair = DuplicateCandidate::query()->sole();
 

@@ -12,6 +12,7 @@ use App\Domains\User\Jobs\GetUserIsFamilyOnlyJob;
 use App\Enums\AccessRowEnum;
 use App\Enums\MagicLinkPurposeEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Attributes\UserStory;
 use App\Services\Church\Data\CorrectFamilyEmailInput;
 use App\Services\Church\Features\BaseChurchFeature;
 use Illuminate\Http\RedirectResponse;
@@ -24,6 +25,12 @@ use Illuminate\Support\Facades\DB;
  *
  * @extends BaseChurchFeature<RedirectResponse>
  */
+#[UserStory(
+    title: 'Correct a family email',
+    persona: 'church admin or satellite admin',
+    happyPaths: ['story#56' => 'An Admin fixes a mistyped, unconfirmed parent email; a new link goes out and it is noted'],
+    unhappyPaths: ['story#57' => 'Refused for a Staff login, a confirmed email, an email in use, or a Lifeshaper'],
+)]
 #[AccessRow(AccessRowEnum::CorrectContact)]
 final class CorrectFamilyEmailFeature extends BaseChurchFeature
 {

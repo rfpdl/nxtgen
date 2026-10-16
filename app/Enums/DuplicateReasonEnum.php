@@ -8,6 +8,10 @@ use App\Enums\Concerns\HasEnumMetadata;
 use App\Enums\Concerns\ProvidesEnumMetadata;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
+/**
+ * Why two families or children were flagged as possibly the same. Not the same email: a second registration
+ * with a known email goes through the claim path instead (plan §4.2).
+ */
 #[TypeScript]
 enum DuplicateReasonEnum: string implements HasEnumMetadata
 {
@@ -15,14 +19,12 @@ enum DuplicateReasonEnum: string implements HasEnumMetadata
 
     case SamePhone = 'same_phone';
     case SameNameDob = 'same_name_dob';
-    case SameEmail = 'same_email';
 
     public function label(): string
     {
         return match ($this) {
             self::SamePhone => 'Same phone',
             self::SameNameDob => 'Same name and birthday',
-            self::SameEmail => 'Same email',
         };
     }
 
@@ -31,7 +33,6 @@ enum DuplicateReasonEnum: string implements HasEnumMetadata
         return match ($this) {
             self::SamePhone => 'warning',
             self::SameNameDob => 'warning',
-            self::SameEmail => 'warning',
         };
     }
 }

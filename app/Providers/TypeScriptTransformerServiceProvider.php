@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Foundation\Support\AttributedEnumTransformer;
 use Illuminate\Http\UploadedFile;
 use Spatie\LaravelTypeScriptTransformer\TypeScriptTransformerApplicationServiceProvider as BaseTypeScriptTransformerServiceProvider;
 use Spatie\TypeScriptTransformer\Formatters\PrettierFormatter;
 use Spatie\TypeScriptTransformer\Transformers\AttributedClassTransformer;
-use Spatie\TypeScriptTransformer\Transformers\EnumTransformer;
 use Spatie\TypeScriptTransformer\TypeScriptNodes\TypeScriptRaw;
 use Spatie\TypeScriptTransformer\TypeScriptTransformerConfigFactory;
 use Spatie\TypeScriptTransformer\Writers\GlobalNamespaceWriter;
@@ -32,7 +32,8 @@ class TypeScriptTransformerServiceProvider extends BaseTypeScriptTransformerServ
     {
         $config
             ->transformer(AttributedClassTransformer::class)
-            ->transformer(EnumTransformer::class)
+            // Only #[TypeScript] enums: a domain's private enum (RegistryCsvColumn) never reaches a page.
+            ->transformer(AttributedEnumTransformer::class)
             ->transformDirectories(app_path())
             // An Input's uploaded photo is a browser File on the page that posts it (ChildPhotoInput).
             ->replaceType(UploadedFile::class, new TypeScriptRaw('File'))

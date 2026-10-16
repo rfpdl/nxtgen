@@ -12,7 +12,7 @@ import { CHURCH, SATELLITES, sessionFile, uniqueEmail, uniqueSurname } from '../
  */
 test.use({ storageState: sessionFile('churchAdmin') })
 
-test('register for a parent, resend, correct the email, set a status', async ({
+test('register for a parent, resend, correct the email, set a status @story#47 @story#54 @story#56 @story#62', async ({
     page,
     browser,
 }) => {
@@ -100,7 +100,7 @@ test('register for a parent, resend, correct the email, set a status', async ({
     await guardianContext.close()
 })
 
-test('downloads the families list as Excel — what the filters show', async ({ page }) => {
+test('downloads the families list as Excel — what the filters show @story#45', async ({ page }) => {
     await page.goto(`/${CHURCH}/families?unconfirmed=1`)
     await expect(page.getByTestId('export')).toHaveAttribute('href', /unconfirmed=1/)
 
@@ -115,7 +115,7 @@ test('downloads the families list as Excel — what the filters show', async ({ 
     expect(bytes.subarray(0, 2).toString()).toBe('PK')
 })
 
-test('the welcome page is there', async ({ page }) => {
+test('the welcome page is there @story#1', async ({ page }) => {
     await page.goto('/')
     await expect(page.getByRole('heading', { name: 'NxtGen' })).toBeVisible()
 })

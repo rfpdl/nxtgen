@@ -15,7 +15,7 @@ import {
  */
 test.use({ storageState: sessionFile('lifeshaper') })
 
-test('finds a registered family and adds a child to it', async ({ page }) => {
+test('finds a registered family and adds a child to it @story#46 @story#48', async ({ page }) => {
     await page.goto(`/${CHURCH}/families/new`)
     await page.getByTestId('family-search').fill('Dela Cruz')
     await page.getByTestId('family-search').press('Enter')
@@ -42,7 +42,9 @@ test('finds a registered family and adds a child to it', async ({ page }) => {
     ).toContainText('Isa')
 })
 
-test('registers a new family for a parent who is not found', async ({ page }) => {
+test('registers a new family for a parent who is not found @story#46 @story#47', async ({
+    page,
+}) => {
     const email = uniqueEmail('walkup')
     const surname = uniqueSurname('Mendoza')
     await page.goto(`/${CHURCH}/families/new`)
@@ -65,7 +67,7 @@ test('registers a new family for a parent who is not found', async ({ page }) =>
     ).toContainText('Email not confirmed')
 })
 
-test('prints the registration poster, whose address opens the form', async ({ page }) => {
+test('prints the registration poster, whose address opens the form @story#80', async ({ page }) => {
     await page.goto(`/${CHURCH}/families`)
     await page.getByRole('link', { name: 'QR poster' }).click()
 

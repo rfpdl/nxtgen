@@ -8,6 +8,7 @@ use App\Domains\Family\Jobs\CreateChildPhotoJob;
 use App\Domains\Family\Jobs\UpdateChildPhotoConsentJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Attributes\UserStory;
 use App\Foundation\Inputs\ChildPhotoInput;
 use App\Services\Family\Features\BaseFamilyFeature;
 use Illuminate\Http\RedirectResponse;
@@ -20,6 +21,12 @@ use Illuminate\Validation\ValidationException;
  *
  * @extends BaseFamilyFeature<RedirectResponse>
  */
+#[UserStory(
+    title: 'Add my child\'s photo',
+    persona: 'parent',
+    happyPaths: ['story#38' => 'A parent adds a photo, agreeing in the same step'],
+    unhappyPaths: ['story#39' => 'No photo without Consent, and none for another Family\'s Child'],
+)]
 #[AccessRow(AccessRowEnum::OwnFamily)]
 final class AddChildPhotoFeature extends BaseFamilyFeature
 {

@@ -10,6 +10,7 @@ use App\Domains\Family\Jobs\GetChildWithFamilyJob;
 use App\Domains\Family\Jobs\GetGuardianForUserJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Attributes\UserStory;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -23,6 +24,12 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  *
  * @extends BaseChildPhotoFeature<StreamedResponse>
  */
+#[UserStory(
+    title: 'See a child\'s photo',
+    persona: 'parent or staff',
+    happyPaths: ['story#40' => 'A photo opens by a short-lived signed link, for the Family and for Staff who can see the Family'],
+    unhappyPaths: ['story#41' => 'No photo and no link once Consent is gone, or when there is no photo'],
+)]
 #[AccessRow(AccessRowEnum::SeeChildPhoto)]
 final class ShowChildPhotoFeature extends BaseChildPhotoFeature
 {

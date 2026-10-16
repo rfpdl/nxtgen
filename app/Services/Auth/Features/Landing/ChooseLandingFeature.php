@@ -7,6 +7,7 @@ namespace App\Services\Auth\Features\Landing;
 use App\Data\Models\User;
 use App\Domains\Church\DataObjects\LandingOptionData;
 use App\Domains\Church\Jobs\GetLandingOptionsJob;
+use App\Foundation\Attributes\UserStory;
 use App\Services\Auth\Features\BaseAuthFeature;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cookie;
@@ -17,6 +18,12 @@ use Illuminate\Support\Facades\Cookie;
  *
  * @extends BaseAuthFeature<RedirectResponse>
  */
+#[UserStory(
+    title: 'Choose where to go',
+    persona: 'anyone signed in',
+    happyPaths: ['story#26' => 'The choice is remembered until they switch'],
+    unhappyPaths: ['story#27' => 'A choice that is not theirs is refused or forgotten'],
+)]
 final class ChooseLandingFeature extends BaseAuthFeature
 {
     public function handle(): RedirectResponse

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domains\Registry\DataObjects;
 
+use App\Domains\Registry\Values\SheetCell;
 use App\Foundation\Attributes\NonClientFacing;
 
 /** One approved row read back from the reviewed spreadsheet, keyed by column name. */
@@ -15,18 +16,16 @@ final readonly class ApprovedChildRowData
 
     public function get(string $column): string
     {
-        return trim($this->values[$column] ?? '');
+        return SheetCell::text($this->values[$column] ?? null);
     }
 
     public function orNull(string $column): ?string
     {
-        $v = $this->get($column);
-
-        return $v === '' ? null : $v;
+        return SheetCell::orNull($this->get($column));
     }
 
     public function yes(string $column): bool
     {
-        return str_starts_with(mb_strtolower($this->get($column)), 'y');
+        return SheetCell::yes($this->get($column));
     }
 }

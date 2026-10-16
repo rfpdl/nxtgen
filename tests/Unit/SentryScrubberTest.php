@@ -56,7 +56,8 @@ it('drops breadcrumb messages and data (SQL bindings, log lines) but keeps their
         ->and($crumbs[0]->getMetadata())->toBe([]);
 });
 
-it('removes SQL values, emails and phone numbers from error messages (review 3)', function (): void {
+// Found in review 3.
+it('removes SQL values, emails and phone numbers from error messages', function (): void {
     $event = Event::createEvent();
     $event->setExceptions([
         new ExceptionDataBag(new RuntimeException('Duplicate entry (Connection: mysql, SQL: insert into users (name, email) values (Janice Ramos, janice@example.com))')),

@@ -12,6 +12,7 @@ use App\Enums\AccessRowEnum;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Attributes\UserStory;
 use App\Services\Church\Features\BaseChurchFeature;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,12 @@ use Illuminate\Support\Facades\DB;
  *
  * @extends BaseChurchFeature<RedirectResponse>
  */
+#[UserStory(
+    title: 'Remove someone\'s Role',
+    persona: 'church admin or satellite admin',
+    happyPaths: ['story#78' => 'An Admin switches a Role off, and it is kept for the record'],
+    unhappyPaths: ['story#79' => 'Never the last church admin, a Role above their own, or another church\'s'],
+)]
 #[AccessRow(AccessRowEnum::GrantRoles)]
 final class RemoveStaffRoleFeature extends BaseChurchFeature
 {

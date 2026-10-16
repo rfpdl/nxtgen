@@ -189,7 +189,8 @@ it('records who registered on the parent\'s behalf', function (): void {
         ->and($family->registered_by_user_id)->toBe($staffMember->id);
 });
 
-it('tells a returning parent in the email why they got a sign-in link (review B3)', function (): void {
+// Found in review B3.
+it('tells a returning parent in the email why they got a sign-in link', function (): void {
     [$church, $satellite] = registrationChurch();
     register(registration($church, $satellite));
 

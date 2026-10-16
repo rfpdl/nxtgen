@@ -13,6 +13,7 @@ use App\Domains\Level\Jobs\GetLevelsJob;
 use App\Enums\AccessRowEnum;
 use App\Enums\ChildStatusEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Attributes\UserStory;
 use App\Foundation\Support\FamilyFormEnums;
 use App\Services\Church\Features\BaseChurchFeature;
 use Inertia\Inertia;
@@ -24,6 +25,12 @@ use Inertia\Response;
  *
  * @extends BaseChurchFeature<Response>
  */
+#[UserStory(
+    title: 'Open a family\'s page',
+    persona: 'staff',
+    happyPaths: ['story#50' => 'Staff open a Family they can see, with its notes, newest first'],
+    unhappyPaths: ['story#51' => 'A Family they cannot see is not found'],
+)]
 #[AccessRow(AccessRowEnum::ViewFamily)]
 final class ShowFamilyFeature extends BaseChurchFeature
 {

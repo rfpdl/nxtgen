@@ -7,7 +7,10 @@ import { CHURCH, STAFF, sessionFile } from '../support/world'
  */
 test.use({ storageState: sessionFile('lifeshaper') })
 
-test('a staff member sets a backup password and signs in with it', async ({ page, browser }) => {
+test('a staff member sets a backup password and signs in with it @story#16 @story#21', async ({
+    page,
+    browser,
+}) => {
     const password = `church-morning-${Date.now()}`
 
     await page.goto(`/${CHURCH}/families`)

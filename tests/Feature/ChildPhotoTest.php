@@ -55,7 +55,7 @@ function photoFile(): UploadedFile
 beforeEach(fn () => Storage::fake('photos'));
 
 describe('a parent', function (): void {
-    it('agrees and adds a photo in one go', function (): void {
+    it('agrees and adds a photo in one go @story#38', function (): void {
         ['guardian' => $guardian, 'child' => $child] = photoFamily();
 
         actingAs($guardian)->post("/ccf/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true])
@@ -67,7 +67,7 @@ describe('a parent', function (): void {
             ->and($child->photo_consent_by)->toBe($guardian->id);
     });
 
-    it('cannot add a photo without agreeing', function (): void {
+    it('cannot add a photo without agreeing @story#39', function (): void {
         ['guardian' => $guardian, 'child' => $child] = photoFamily();
 
         actingAs($guardian)->post("/ccf/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => false])
@@ -83,7 +83,8 @@ describe('a parent', function (): void {
             ->assertSessionHasErrors('photo');
     });
 
-    it('takes consent back, which HIDES the photo — and saying yes again brings it back (Roy 2026-10-16)', function (): void {
+    // Roy's decision, 2026-10-16.
+    it('takes consent back, which HIDES the photo — and saying yes again brings it back @story#37', function (): void {
         ['church' => $church, 'htc' => $htc, 'guardian' => $guardian, 'child' => $child] = photoFamily();
         actingAs($guardian)->post("/ccf/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true]);
         $path = (string) $child->fresh()?->photo_path;
@@ -103,7 +104,7 @@ describe('a parent', function (): void {
         actingAs($guardian)->get($url)->assertOk();
     });
 
-    it('cannot touch another family\'s child', function (): void {
+    it('cannot touch another family\'s child @story#39', function (): void {
         ['guardian' => $guardian] = photoFamily();
         $stranger = Child::factory()->create();
 
@@ -111,8 +112,9 @@ describe('a parent', function (): void {
     });
 });
 
-describe('the consent history (review 4)', function (): void {
-    it('notes every consent change on the child — given by the parent, then withdrawn — and keeps the notes', function (): void {
+// Found in review 4.
+describe('the consent history', function (): void {
+    it('notes every consent change on the child — given by the parent, then withdrawn — and keeps the notes @story#36 @story#37', function (): void {
         ['guardian' => $guardian, 'child' => $child] = photoFamily();
         $guardian->forceFill(['name' => 'Janice Ramos'])->save();
 
@@ -125,7 +127,8 @@ describe('the consent history (review 4)', function (): void {
         ]);
     });
 
-    it('never records consent without its note — both or neither (review 4, round 2)', function (string $who): void {
+    // Found in review 4, round 2.
+    it('never records consent without its note — both or neither', function (string $who): void {
         ['church' => $church, 'htc' => $htc, 'guardian' => $guardian, 'child' => $child] = photoFamily();
         Note::creating(fn () => throw new RuntimeException('note store down'));
         withoutExceptionHandling();
@@ -148,8 +151,9 @@ describe('the consent history (review 4)', function (): void {
     });
 });
 
-describe('consent first, photo later (review 3)', function (): void {
-    it('lets a parent agree without a photo, so a Lifeshaper can take the first one at church', function (): void {
+// Found in review 3.
+describe('consent first, photo later', function (): void {
+    it('lets a parent agree without a photo, so a Lifeshaper can take the first one at church @story#36', function (): void {
         ['church' => $church, 'htc' => $htc, 'guardian' => $guardian, 'child' => $child] = photoFamily();
 
         actingAs($guardian)->put("/ccf/family/children/{$child->id}/photo-consent")->assertRedirect()->assertSessionHas('success');
@@ -160,7 +164,7 @@ describe('consent first, photo later (review 3)', function (): void {
         expect($child->fresh()?->photo_path)->not->toBeNull();
     });
 
-    it('never shows a photo, nor gives a link to one, once consent is gone', function (): void {
+    it('never shows a photo, nor gives a link to one, once consent is gone @story#41', function (): void {
         ['guardian' => $guardian, 'child' => $child] = photoFamily();
         actingAs($guardian)->post("/ccf/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true]);
         $url = URL::temporarySignedRoute('photos.child', now()->addMinutes(5), ['child' => $child->id]);
@@ -173,7 +177,7 @@ describe('consent first, photo later (review 3)', function (): void {
 });
 
 describe('a Lifeshaper', function (): void {
-    it('adds a photo once the parent has agreed', function (): void {
+    it('adds a photo once the parent has agreed @story#68', function (): void {
         ['church' => $church, 'htc' => $htc, 'child' => $child, 'guardian' => $guardian] = photoFamily();
         $child->forceFill(['photo_consent_at' => now(), 'photo_consent_by' => $guardian->id])->save();
 
@@ -183,7 +187,7 @@ describe('a Lifeshaper', function (): void {
         expect($child->fresh()?->photo_path)->not->toBeNull();
     });
 
-    it('cannot add one before consent is recorded — sending "consent" with the photo does not count', function (): void {
+    it('cannot add one before consent is recorded — sending "consent" with the photo does not count @story#69', function (): void {
         ['church' => $church, 'htc' => $htc, 'child' => $child] = photoFamily();
 
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))
@@ -193,7 +197,8 @@ describe('a Lifeshaper', function (): void {
         expect($child->fresh()?->photo_path)->toBeNull()->and($child->fresh()?->photo_consent_at)->toBeNull();
     });
 
-    it('records that the parent said yes in person, with who recorded it, then takes the photo (Roy 2026-10-16)', function (): void {
+    // Roy's decision, 2026-10-16.
+    it('records that the parent said yes in person, with who recorded it, then takes the photo @story#66', function (): void {
         ['church' => $church, 'htc' => $htc, 'child' => $child] = photoFamily();
         $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
         $lifeshaper->forceFill(['name' => 'Leo Lifeshaper'])->save();
@@ -208,7 +213,7 @@ describe('a Lifeshaper', function (): void {
             ->toBe('Amara: photo consent recorded by Leo Lifeshaper — the parent said yes in person.');
     });
 
-    it('cannot record consent for a family they cannot see', function (): void {
+    it('cannot record consent for a family they cannot see @story#67', function (): void {
         ['church' => $church, 'house' => $house, 'child' => $child] = photoFamily();
 
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($house)))
@@ -217,7 +222,7 @@ describe('a Lifeshaper', function (): void {
         expect($child->fresh()?->photo_consent_at)->toBeNull();
     });
 
-    it('cannot add one for a family they cannot see', function (): void {
+    it('cannot add one for a family they cannot see @story#69', function (): void {
         ['church' => $church, 'house' => $house, 'child' => $child, 'guardian' => $guardian] = photoFamily();
         $child->forceFill(['photo_consent_at' => now(), 'photo_consent_by' => $guardian->id])->save();
 
@@ -227,7 +232,7 @@ describe('a Lifeshaper', function (): void {
 });
 
 describe('seeing a photo', function (): void {
-    it('is a short-lived signed link, for the family and for staff who can see the family', function (): void {
+    it('is a short-lived signed link, for the family and for staff who can see the family @story#40', function (): void {
         ['church' => $church, 'htc' => $htc, 'house' => $house, 'guardian' => $guardian, 'child' => $child] = photoFamily();
         actingAs($guardian)->post("/ccf/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true]);
 
@@ -249,7 +254,7 @@ describe('seeing a photo', function (): void {
         get($url)->assertRedirect('/login');                                    // signed, but nobody signed in
     });
 
-    it('gives no link when there is no photo', function (): void {
+    it('gives no link when there is no photo @story#41', function (): void {
         ['guardian' => $guardian] = photoFamily();
 
         actingAs($guardian)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p

@@ -9,7 +9,7 @@ import { CHURCH, FAMILIES } from '../support/world'
  * already registered — by email, never on screen (the page says the same thing to everyone) — and the email
  * signs them straight into the family that was imported for them. The link works once.
  */
-test('an imported parent who registers again is signed in to their existing family', async ({
+test('an imported parent who registers again is signed in to their existing family @story#14', async ({
     page,
 }) => {
     const { email, child, satellite } = FAMILIES.dxb

@@ -15,7 +15,7 @@ use Symfony\Component\Finder\Finder;
  * stray file still runs — this keeps the LOCATION honest, so `TestCoverageTest` can find a unit's test by path.
  *
  * Aegis guards only the stray directories (`tests/Unit/Domains`, `tests/Feature/Jobs`); the mirroring rule is
- * added here because nxtgen already has the drift it prevents — a bundled `MagicLinkJobsTest`.
+ * added here because nxtgen had the drift it prevents — a bundled `MagicLinkJobsTest`, split in batch 08.
  */
 
 /** @return list<string> relative to `app/` */

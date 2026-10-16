@@ -46,7 +46,7 @@ function correctionChurch(bool $verified = false): array
 }
 
 describe('child status', function (): void {
-    it('lets a satellite admin mark a child of their satellite as graduated', function (): void {
+    it('lets a satellite admin mark a child of their satellite as graduated @story#62', function (): void {
         ['church' => $church, 'htc' => $htc, 'family' => $family] = correctionChurch();
         $child = childOf($family, []);
         $admin = staffMember(RoleEnum::Admin, atSatellite($htc));
@@ -67,7 +67,7 @@ describe('child status', function (): void {
         expect($child->fresh()?->status)->toBe(ChildStatusEnum::Active);
     });
 
-    it('refuses an admin of another satellite', function (): void {
+    it('refuses an admin of another satellite @story#63', function (): void {
         ['church' => $church, 'house' => $house, 'family' => $family] = correctionChurch();
         $child = childOf($family, []);
 
@@ -77,7 +77,7 @@ describe('child status', function (): void {
 });
 
 describe('correcting the family email (v1 rule)', function (): void {
-    it('fixes a mistyped, unconfirmed parent email and sends a new confirmation link', function (): void {
+    it('fixes a mistyped, unconfirmed parent email and sends a new confirmation link @story#56', function (): void {
         Notification::fake();
         ['church' => $church, 'family' => $family, 'guardianUser' => $guardianUser] = correctionChurch();
         $version = $guardianUser->credential_version;
@@ -92,7 +92,7 @@ describe('correcting the family email (v1 rule)', function (): void {
             ->and(MagicLink::query()->latest('id')->first()?->purpose)->toBe(MagicLinkPurposeEnum::VerifyEmail);
     });
 
-    it('refuses when the login is also a staff account, and changes nothing', function (): void {
+    it('refuses when the login is also a staff account, and changes nothing @story#57', function (): void {
         ['church' => $church, 'family' => $family, 'guardianUser' => $guardianUser] = correctionChurch();
         RoleAssignment::factory()->create(['church_id' => $church->id, 'user_id' => $guardianUser->id]);
 
@@ -103,7 +103,7 @@ describe('correcting the family email (v1 rule)', function (): void {
         expect($guardianUser->fresh()?->email)->toBe('janice@typo.com');
     });
 
-    it('refuses when the email is already confirmed', function (): void {
+    it('refuses when the email is already confirmed @story#57', function (): void {
         ['church' => $church, 'family' => $family, 'guardianUser' => $guardianUser] = correctionChurch(verified: true);
 
         actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
@@ -113,7 +113,7 @@ describe('correcting the family email (v1 rule)', function (): void {
         expect($guardianUser->fresh()?->email)->toBe('janice@typo.com');
     });
 
-    it('refuses an email someone else already uses', function (): void {
+    it('refuses an email someone else already uses @story#57', function (): void {
         ['church' => $church, 'family' => $family] = correctionChurch();
         User::factory()->create(['email' => 'taken@example.com']);
 
@@ -131,7 +131,8 @@ describe('correcting the family email (v1 rule)', function (): void {
     });
 });
 
-it('says honestly when the corrected email could not be sent because of the per-address limit (review-spar r2)', function (): void {
+// Found in review-spar r2.
+it('says honestly when the corrected email could not be sent because of the per-address limit', function (): void {
     Notification::fake();
     ['church' => $church, 'family' => $family, 'guardianUser' => $guardianUser] = correctionChurch();
     RateLimiter::hit('magic-link-mail:'.hash('sha256', 'janice@example.com'), 600);
@@ -152,7 +153,7 @@ it('says honestly when the corrected email could not be sent because of the per-
  * families whose home satellite is theirs; not Lifeshapers). Status stays its own action; email its own flow.
  */
 
-it('lets a satellite admin edit a family of their satellite, and its parent', function (): void {
+it('lets a satellite admin edit a family of their satellite, and its parent @story#52', function (): void {
     ['church' => $church, 'htc' => $htc, 'family' => $family] = correctionChurch();
 
     actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))
@@ -172,7 +173,7 @@ it('gives the staff page the edit details only to someone who may edit', functio
         ->assertInertia(fn (AssertableInertia $p) => $p->where('family.can_edit', false)->where('details', null)->where('primary', null));
 });
 
-it('refuses a Lifeshaper and an admin of another satellite', function (RoleEnum $role, string $where): void {
+it('refuses a Lifeshaper and an admin of another satellite @story#53', function (RoleEnum $role, string $where): void {
     ['church' => $church, 'htc' => $htc, 'house' => $house, 'family' => $family] = correctionChurch();
     $satellite = $where === 'own' ? $htc : $house;
 
@@ -185,7 +186,7 @@ it('refuses a Lifeshaper and an admin of another satellite', function (RoleEnum 
     'admin of another satellite' => [RoleEnum::Admin, 'other'],
 ]);
 
-it('lets staff who may edit fix a child\'s details, not the status', function (): void {
+it('lets staff who may edit fix a child\'s details, not the status @story#60', function (): void {
     ['church' => $church, 'htc' => $htc, 'family' => $family] = correctionChurch();
     $child = childOf($family, []);
     $status = $child->status;
@@ -197,7 +198,7 @@ it('lets staff who may edit fix a child\'s details, not the status', function ()
     expect($child->nickname)->toBe('Caloy')->and($child->status)->toBe($status);
 });
 
-it('refuses a child edit outside the editor\'s satellite', function (): void {
+it('refuses a child edit outside the editor\'s satellite @story#61', function (): void {
     ['church' => $church, 'house' => $house, 'family' => $family] = correctionChurch();
     $child = childOf($family, ['nickname' => 'Kept']);
 
@@ -212,7 +213,7 @@ it('refuses a child edit outside the editor\'s satellite', function (): void {
  * family, by whom and when — written by the app, shown to staff on the family page, never to the parent.
  */
 describe('system notes', function (): void {
-    it('records an email correction on the family, with who did it', function (): void {
+    it('records an email correction on the family, with who did it @story#56', function (): void {
         Notification::fake();
         ['church' => $church, 'htc' => $htc, 'family' => $family] = correctionChurch();
         $admin = staffMember(RoleEnum::Admin, atSatellite($htc));
@@ -229,7 +230,7 @@ describe('system notes', function (): void {
             ->and($note->body)->toBe('Email corrected from janice@typo.com to janice@real.com.');
     });
 
-    it('records a child status change on the child', function (): void {
+    it('records a child status change on the child @story#62', function (): void {
         ['church' => $church, 'htc' => $htc, 'family' => $family] = correctionChurch();
         $child = childOf($family, ['nickname' => 'Amara']);
 
@@ -241,7 +242,7 @@ describe('system notes', function (): void {
             ->and($note->body)->toBe('Amara: status changed from Active to Inactive.');
     });
 
-    it('shows the family\'s and its children\'s notes to staff, newest first, with the author', function (): void {
+    it('shows the family\'s and its children\'s notes to staff, newest first, with the author @story#50', function (): void {
         ['church' => $church, 'htc' => $htc, 'family' => $family] = correctionChurch();
         $child = childOf($family, []);
         $admin = staffMember(RoleEnum::Admin, atSatellite($htc));

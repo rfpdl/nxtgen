@@ -7,6 +7,7 @@ namespace App\Services\Family\Features\Child;
 use App\Domains\Family\Jobs\UpdateChildPhotoConsentJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Attributes\UserStory;
 use App\Services\Family\Features\BaseFamilyFeature;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,11 @@ use Illuminate\Support\Facades\DB;
  *
  * @extends BaseFamilyFeature<RedirectResponse>
  */
+#[UserStory(
+    title: 'Agree to photos',
+    persona: 'parent',
+    happyPaths: ['story#36' => 'A parent agrees to photos, with or without a photo, and it is noted on the Child'],
+)]
 #[AccessRow(AccessRowEnum::OwnFamily)]
 final class GivePhotoConsentFeature extends BaseFamilyFeature
 {

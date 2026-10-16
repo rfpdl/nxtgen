@@ -55,14 +55,14 @@ describe('who gets in', function (): void {
         get('/ccf/families')->assertRedirect('/login');
     });
 
-    it('404s for a parent with no staff role', function (): void {
+    it('404s for a parent with no staff role @story#44', function (): void {
         ['church' => $church, 'htc' => $htc] = adminChurch();
         $family = registeredFamily($htc, 'Janice', 'janice@example.com');
 
         actingAs($family->primaryGuardian->user ?? User::factory()->create())->get('/ccf/families')->assertNotFound();
     });
 
-    it('404s for staff of another church', function (): void {
+    it('404s for staff of another church @story#44', function (): void {
         adminChurch();
         $other = church();
 
@@ -71,7 +71,7 @@ describe('who gets in', function (): void {
 });
 
 describe('the family list', function (): void {
-    it('shows a church admin every family', function (): void {
+    it('shows a church admin every family @story#43', function (): void {
         ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
         registeredFamily($htc, 'Janice', 'janice@example.com');
         registeredFamily($house, 'Mira', 'mira@example.com');
@@ -80,7 +80,7 @@ describe('the family list', function (): void {
             ->assertOk()->assertInertia(fn (AssertableInertia $p) => $p->component('Church/Families/Index')->has('families', 2));
     });
 
-    it('shows a Lifeshaper only their satellite, with emails masked', function (): void {
+    it('shows a Lifeshaper only their satellite, with emails masked @story#43', function (): void {
         ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
         registeredFamily($htc, 'Janice', 'janice@example.com');
         registeredFamily($house, 'Mira', 'mira@example.com');
@@ -103,7 +103,7 @@ describe('the family list', function (): void {
 });
 
 describe('registering for a parent', function (): void {
-    it('searches the whole church first, so a family is not registered twice', function (): void {
+    it('searches the whole church first, so a family is not registered twice @story#46', function (): void {
         ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
         registeredFamily($house, 'Janice', 'janice@example.com');
 
@@ -116,7 +116,7 @@ describe('registering for a parent', function (): void {
             ->missing('results.0.phone'));
     });
 
-    it('also finds a family by a child\'s nickname or the parent\'s phone', function (): void {
+    it('also finds a family by a child\'s nickname or the parent\'s phone @story#46', function (): void {
         ['church' => $church, 'htc' => $htc] = adminChurch();
         registeredFamily($htc, 'Janice', 'janice@example.com');
         $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
@@ -125,7 +125,7 @@ describe('registering for a parent', function (): void {
         actingAs($lifeshaper)->get('/ccf/families/new?q=897346')->assertInertia(fn (AssertableInertia $p) => $p->has('results', 1));
     });
 
-    it('registers a new family with an unconfirmed email and records who did it', function (): void {
+    it('registers a new family with an unconfirmed email and records who did it @story#47', function (): void {
         Notification::fake();
         ['church' => $church, 'htc' => $htc] = adminChurch();
         $staffMember = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
@@ -143,7 +143,7 @@ describe('registering for a parent', function (): void {
             ->and(User::query()->where('email', 'mira@example.com')->sole()->email_verified_at)->toBeNull();
     });
 
-    it('lets any staff member add a child to a family found in another satellite', function (): void {
+    it('lets any staff member add a child to a family found in another satellite @story#48', function (): void {
         Notification::fake();
         ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
         $family = registeredFamily($house, 'Janice', 'janice@example.com');
@@ -155,7 +155,7 @@ describe('registering for a parent', function (): void {
         expect($family->children()->count())->toBe(2);
     });
 
-    it('refuses to add a child to a family of another church', function (): void {
+    it('refuses to add a child to a family of another church @story#49', function (): void {
         ['church' => $church, 'htc' => $htc] = adminChurch();
         $foreign = Family::factory()->create();
 
@@ -166,7 +166,7 @@ describe('registering for a parent', function (): void {
 });
 
 describe('a family\'s page', function (): void {
-    it('opens a family in scope and 404s one out of scope', function (): void {
+    it('opens a family in scope and 404s one out of scope @story#50 @story#51', function (): void {
         ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
         $mine = registeredFamily($htc, 'Janice', 'janice@example.com');
         $theirs = registeredFamily($house, 'Mira', 'mira@example.com');
@@ -177,7 +177,7 @@ describe('a family\'s page', function (): void {
         actingAs($lifeshaper)->get("/ccf/families/{$theirs->id}")->assertNotFound();
     });
 
-    it('resends the confirmation link for an unconfirmed email', function (): void {
+    it('resends the confirmation link for an unconfirmed email @story#54', function (): void {
         Notification::fake();
         ['church' => $church, 'htc' => $htc] = adminChurch();
         $family = registeredFamily($htc, 'Janice', 'janice@example.com', verified: false);
@@ -189,7 +189,7 @@ describe('a family\'s page', function (): void {
     });
 });
 
-it('downloads the visible families as an Excel file', function (): void {
+it('downloads the visible families as an Excel file @story#45', function (): void {
     ['church' => $church, 'htc' => $htc] = adminChurch();
     registeredFamily($htc, 'Janice', 'janice@example.com');
 
@@ -200,8 +200,10 @@ it('downloads the visible families as an Excel file', function (): void {
         ->and((string) $response->headers->get('content-disposition'))->toContain('.xlsx');
 });
 
-describe('review-spar fixes', function (): void {
-    it('refuses resend for a family outside a satellite admin\'s scope, and issues nothing (review A2)', function (): void {
+// Found by review-spar.
+describe('resending a link and registering for a parent, at the edges', function (): void {
+    // Found in review A2.
+    it('refuses resend for a family outside a satellite admin\'s scope, and issues nothing @story#55', function (): void {
         Notification::fake();
         ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
         $theirs = registeredFamily($house, 'Mira', 'mira@example.com', verified: false);
@@ -213,14 +215,15 @@ describe('review-spar fixes', function (): void {
         Notification::assertNothingSent();
     });
 
-    it('refuses resend for a class admin', function (): void {
+    it('refuses resend for a class admin @story#55', function (): void {
         ['church' => $church, 'htc' => $htc] = adminChurch();
         $family = registeredFamily($htc, 'Janice', 'janice@example.com', verified: false);
 
         actingAs(staffMember(RoleEnum::Admin, new RoleScope($church, ScopeTypeEnum::Schedule, 99)))->post("/ccf/families/{$family->id}/resend")->assertNotFound();
     });
 
-    it('says honestly when the email was NOT sent because of the per-address limit (review B3)', function (): void {
+    // Found in review B3.
+    it('says honestly when the email was NOT sent because of the per-address limit @story#55', function (): void {
         Notification::fake();
         ['church' => $church, 'htc' => $htc] = adminChurch();
         $family = registeredFamily($htc, 'Janice', 'janice@example.com', verified: false);
@@ -234,7 +237,8 @@ describe('review-spar fixes', function (): void {
             ->assertSessionHas('error', 'Too many emails were sent to this address recently. Please try again in 10 minutes.');
     });
 
-    it('keeps every family field when a staff member registers for a parent (review B6)', function (): void {
+    // Found in review B6.
+    it('keeps every family field when a staff member registers for a parent @story#47', function (): void {
         Notification::fake();
         ['church' => $church, 'htc' => $htc] = adminChurch();
 
@@ -257,7 +261,7 @@ describe('review-spar fixes', function (): void {
  * duplicate candidates). Filters narrow what the viewer may see — they never widen it.
  */
 describe('searching and filtering the list', function (): void {
-    it('finds families by parent, email, phone or child — the same matching as the door search', function (): void {
+    it('finds families by parent, email, phone or child — the same matching as the door search @story#43', function (): void {
         ['church' => $church, 'htc' => $htc] = adminChurch();
         registeredFamily($htc, 'Janice', 'janice@example.com');
         registeredFamily($htc, 'Mira', 'mira@example.com');
@@ -269,7 +273,7 @@ describe('searching and filtering the list', function (): void {
         }
     });
 
-    it('filters by satellite, child status and Level, and offers those choices', function (): void {
+    it('filters by satellite, child status and Level, and offers those choices @story#43', function (): void {
         ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
         $a = registeredFamily($htc, 'Janice', 'janice@example.com');
         registeredFamily($house, 'Mira', 'mira@example.com');
@@ -299,7 +303,7 @@ describe('searching and filtering the list', function (): void {
                 ->where('families.0.id', $new->id)->where('families.1.id', $old->id));
     });
 
-    it('never widens a satellite admin\'s view by picking another satellite', function (): void {
+    it('never widens a satellite admin\'s view by picking another satellite @story#44', function (): void {
         ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
         registeredFamily($house, 'Mira', 'mira@example.com');
 
@@ -307,7 +311,7 @@ describe('searching and filtering the list', function (): void {
             ->assertInertia(fn (AssertableInertia $p) => $p->has('families', 0)->has('options.satellites', 1));
     });
 
-    it('downloads what the filters show', function (): void {
+    it('downloads what the filters show @story#45', function (): void {
         ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
         registeredFamily($htc, 'Janice', 'janice@example.com');
         registeredFamily($house, 'Mira', 'mira@example.com');
@@ -335,7 +339,8 @@ describe('searching and filtering the list', function (): void {
     });
 });
 
-it('shows the families list 50 at a time; the Excel download still has every family (Roy 2026-10-16)', function (): void {
+// Roy's decision, 2026-10-16.
+it('shows the families list 50 at a time; the Excel download still has every family', function (): void {
     ['church' => $church, 'htc' => $htc] = adminChurch();
     Family::factory()->count(55)->create(['church_id' => $church->id, 'home_satellite_id' => $htc->id]);
     $admin = staffMember(RoleEnum::Admin, atChurch($church));

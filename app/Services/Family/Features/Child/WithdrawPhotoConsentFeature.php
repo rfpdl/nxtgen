@@ -7,6 +7,7 @@ namespace App\Services\Family\Features\Child;
 use App\Domains\Family\Jobs\UpdateChildPhotoConsentJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Attributes\UserStory;
 use App\Services\Family\Features\BaseFamilyFeature;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,11 @@ use Illuminate\Support\Facades\DB;
  *
  * @extends BaseFamilyFeature<RedirectResponse>
  */
+#[UserStory(
+    title: 'Take photo consent back',
+    persona: 'parent',
+    happyPaths: ['story#37' => 'Taking Consent back hides the photo and is noted; saying yes again brings it back'],
+)]
 #[AccessRow(AccessRowEnum::OwnFamily)]
 final class WithdrawPhotoConsentFeature extends BaseFamilyFeature
 {

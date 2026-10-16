@@ -83,7 +83,7 @@ it('writes a review file with families, quarantine and a balancing reconciliatio
         ->and(collect($sheets['Reconciliation'])->pluck(1)->all())->toContain('6');
 });
 
-it('loads the approved families without emailing anyone', function (): void {
+it('loads the approved families without emailing anyone @story#82', function (): void {
     Notification::fake();
     [$church, $out] = proposeSample();
 
@@ -109,7 +109,7 @@ it('puts a House Church family on the House Church satellite', function (): void
     expect($rala->homeSatellite->name)->toBe('House Church');
 });
 
-it('is safe to run twice', function (): void {
+it('is safe to run twice @story#82', function (): void {
     Notification::fake();
     [, $out] = proposeSample();
 
@@ -119,7 +119,7 @@ it('is safe to run twice', function (): void {
     expect(Family::query()->count())->toBe(3)->and(Child::query()->count())->toBe(4);
 });
 
-it('skips rows the reviewer did not approve', function (): void {
+it('skips rows the reviewer did not approve @story#83', function (): void {
     Notification::fake();
     [, $out] = proposeSample();
     $sheets = readReview($out);
@@ -143,7 +143,8 @@ it('skips rows the reviewer did not approve', function (): void {
     expect(Child::query()->count())->toBe(3);
 });
 
-it('refuses a reviewed family whose rows were already imported into different families (Codex diff review, high)', function (): void {
+// Found by Codex diff review (high).
+it('refuses a reviewed family whose rows were already imported into different families @story#83', function (): void {
     Notification::fake();
     [, $out] = proposeSample();
     runCommand('nxtgen:registry-apply', ['xlsx' => $out, '--church' => 'ccf']);
@@ -211,7 +212,8 @@ it('refuses a family key whose parent email differs from the family it was alrea
     expect(Child::query()->where('first_name', 'Stranger')->exists())->toBeFalse();
 });
 
-it('does not import a child twice after the sheet row was corrected (Codex diff review, medium)', function (): void {
+// Found by Codex diff review (medium).
+it('does not import a child twice after the sheet row was corrected', function (): void {
     Notification::fake();
     [, $out] = proposeSample();
     runCommand('nxtgen:registry-apply', ['xlsx' => $out, '--church' => 'ccf']);
@@ -267,7 +269,8 @@ it('loads a same-name, same-birthday child in another family when the reviewer m
     expect(Child::query()->where('first_name', $twin[col($h, 'Child first name')])->count())->toBe(2);
 });
 
-it('keeps the Level the reviewer wrote instead of recalculating it (review A3)', function (string $written, ?int $level, bool $loaded): void {
+// Found in review A3.
+it('keeps the Level the reviewer wrote instead of recalculating it', function (string $written, ?int $level, bool $loaded): void {
     Notification::fake();
     [, $out] = proposeSample();
     $sheets = readReview($out);
@@ -302,7 +305,8 @@ it('keeps the Level the reviewer wrote instead of recalculating it (review A3)',
     'not a Level' => ['Big kids', null, false],
 ]);
 
-it('fails the apply command when approved rows could not be loaded (review B2)', function (): void {
+// Found in review B2.
+it('fails the apply command when approved rows could not be loaded @story#83', function (): void {
     Notification::fake();
     [, $out] = proposeSample();
     $sheets = readReview($out);
@@ -326,7 +330,8 @@ it('fails the apply command when approved rows could not be loaded (review B2)',
     }
 });
 
-it('fails when an approved row lost its family key, instead of dropping it (review-spar r2)', function (): void {
+// Found in review-spar r2.
+it('fails when an approved row lost its family key, instead of dropping it', function (): void {
     Notification::fake();
     [, $out] = proposeSample();
     $sheets = readReview($out);
@@ -358,7 +363,8 @@ it('fails when the review file has no Families sheet', function (): void {
     runCommand('nxtgen:registry-apply', ['xlsx' => $empty, '--church' => 'ccf'], expectSuccess: false);
 });
 
-it('re-validates edited rows: two families with a cleared parent email are NOT merged under one blank login (review-spar r3)', function (): void {
+// Found in review-spar r3.
+it('re-validates edited rows: two families with a cleared parent email are NOT merged under one blank login', function (): void {
     Notification::fake();
     [, $out] = proposeSample();
     $sheets = readReview($out);

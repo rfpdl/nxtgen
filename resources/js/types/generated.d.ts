@@ -179,7 +179,7 @@ declare namespace App {
             | 'child_photo'
             | 'see_child_photo'
         export type ChildStatusEnum = 'active' | 'inactive' | 'graduated'
-        export type DuplicateReasonEnum = 'same_phone' | 'same_name_dob' | 'same_email'
+        export type DuplicateReasonEnum = 'same_phone' | 'same_name_dob'
         export type DuplicateStatusEnum = 'open' | 'dismissed' | 'confirmed'
         export type FamilyClaimStatusEnum = 'pending' | 'accepted' | 'revoked'
         export type GenderEnum = 'boy' | 'girl'

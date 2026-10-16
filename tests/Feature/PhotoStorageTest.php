@@ -24,7 +24,8 @@ it('keeps photos private by default', function (): void {
         ->and(config('filesystems.disks.photos.root'))->toContain('app/private/photos');
 });
 
-it('uses the bucket Laravel Cloud attaches (AWS_* settings) when PHOTOS_DISK=s3 — even with a blank PHOTOS_BUCKET (review 4)', function (): void {
+// Found in review 4.
+it('uses the bucket Laravel Cloud attaches (AWS_* settings) when PHOTOS_DISK=s3 — even with a blank PHOTOS_BUCKET', function (): void {
     $set = ['PHOTOS_DISK' => 's3', 'PHOTOS_BUCKET' => '', 'AWS_BUCKET' => 'cloud-bucket', 'AWS_ENDPOINT' => 'https://r2.example', 'AWS_USE_PATH_STYLE_ENDPOINT' => 'true'];
     foreach ($set as $k => $v) {
         putenv("{$k}={$v}");

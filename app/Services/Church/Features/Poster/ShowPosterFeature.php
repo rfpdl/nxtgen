@@ -7,6 +7,7 @@ namespace App\Services\Church\Features\Poster;
 use App\Domains\Card\Jobs\CreateQrCodeSvgJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Attributes\UserStory;
 use App\Services\Church\Features\BaseChurchFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -17,6 +18,12 @@ use Inertia\Response;
  *
  * @extends BaseChurchFeature<Response>
  */
+#[UserStory(
+    title: 'Print the registration poster',
+    persona: 'staff',
+    happyPaths: ['story#80' => 'Staff get a poster whose QR code opens the church\'s registration form'],
+    unhappyPaths: ['story#81' => 'A Guardian with no Role in the Church gets no poster; the page is not found'],
+)]
 #[AccessRow(AccessRowEnum::StaffArea)]
 final class ShowPosterFeature extends BaseChurchFeature
 {

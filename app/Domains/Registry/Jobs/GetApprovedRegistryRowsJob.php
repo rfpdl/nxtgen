@@ -8,6 +8,7 @@ use App\Domains\Registry\DataObjects\ApprovedChildRowData;
 use App\Domains\Registry\DataObjects\RegistryApprovalData;
 use App\Enums\GenderEnum;
 use App\Foundation\Jobs\BaseJob;
+use Illuminate\Support\Str;
 use OpenSpout\Reader\XLSX\Reader;
 
 /**
@@ -84,7 +85,7 @@ final class GetApprovedRegistryRowsJob extends BaseJob
             filter_var($email, FILTER_VALIDATE_EMAIL) === false => 'parent email is missing or invalid',
             $row->get('Child first name') === '' || $row->get('Child last name') === '' => 'child name is missing',
             GenderEnum::tryFrom($row->get('Gender')) === null => 'boy or girl is missing or invalid',
-            preg_match('/^\d{4}-\d{2}-\d{2}$/', $birthday) !== 1 || ! checkdate((int) substr($birthday, 5, 2), (int) substr($birthday, 8, 2), (int) substr($birthday, 0, 4)) => 'birthday is missing or invalid',
+            preg_match('/^\d{4}-\d{2}-\d{2}$/', $birthday) !== 1 || ! checkdate((int) Str::substr($birthday, 5, 2), (int) Str::substr($birthday, 8, 2), (int) Str::substr($birthday, 0, 4)) => 'birthday is missing or invalid',
             $row->get('Home satellite') === '' => 'home satellite is missing',
             default => null,
         };

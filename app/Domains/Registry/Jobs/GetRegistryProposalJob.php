@@ -9,6 +9,7 @@ use App\Domains\Registry\DataObjects\QuarantinedRowData;
 use App\Domains\Registry\DataObjects\RegistryProposalData;
 use App\Domains\Registry\DataObjects\RegistryRowData;
 use App\Foundation\Jobs\BaseJob;
+use Illuminate\Support\Str;
 
 /**
  * Turn registry rows into proposed families (plan §7):
@@ -67,13 +68,13 @@ final class GetRegistryProposalJob extends BaseJob
             }
 
             $schedule = mb_strtolower($primary->schedule);
-            $onlyHouseChurch = str_contains($schedule, 'house church') && ! str_contains($schedule, 'pm');
-            if (str_contains($schedule, 'either') && str_contains($schedule, 'house church')) {
+            $onlyHouseChurch = Str::contains($schedule, 'house church') && ! Str::contains($schedule, 'pm');
+            if (Str::contains($schedule, 'either') && Str::contains($schedule, 'house church')) {
                 $suggestions[] = 'Attends CCF DXB or House Church — check the home satellite';
             }
 
             $families[] = new ProposedFamilyData(
-                key: substr(hash('sha256', $email), 0, 16),
+                key: Str::substr(hash('sha256', $email), 0, 16),
                 email: $email,
                 primary: $primary,
                 home_satellite: $onlyHouseChurch ? 'House Church' : 'CCF DXB',

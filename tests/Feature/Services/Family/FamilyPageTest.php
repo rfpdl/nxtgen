@@ -39,7 +39,7 @@ it('sends a guest to sign in', function (): void {
     get('/ccf/family')->assertRedirect('/login');
 });
 
-it('shows a parent their own family, satellite and children with health details', function (): void {
+it('shows a parent their own family, satellite and children with health details @story#28', function (): void {
     [, $family, $user] = familyWithGuardian();
     childOf($family, ['nickname' => 'Amara', 'allergies' => 'Peanuts']);
 
@@ -52,20 +52,20 @@ it('shows a parent their own family, satellite and children with health details'
         ->where('family.children.0.allergies', 'Peanuts'));
 });
 
-it('404s for someone signed in without a family in this church', function (): void {
+it('404s for someone signed in without a family in this church @story#29', function (): void {
     familyWithGuardian();
 
     actingAs(User::factory()->create())->get('/ccf/family')->assertNotFound();
 });
 
-it('does not show one church\'s family page to a parent of another church', function (): void {
+it('does not show one church\'s family page to a parent of another church @story#29', function (): void {
     familyWithGuardian('ccf');
     [, , $otherGuardian] = familyWithGuardian('other');
 
     actingAs($otherGuardian)->get('/ccf/family')->assertNotFound();
 });
 
-it('lets a parent add a child, at the Level their age suggests', function (): void {
+it('lets a parent add a child, at the Level their age suggests @story#32', function (): void {
     [, $family, $user] = familyWithGuardian();
 
     actingAs($user)->post('/ccf/family/children', [
@@ -77,7 +77,7 @@ it('lets a parent add a child, at the Level their age suggests', function (): vo
     expect($family->children()->sole()->nickname)->toBe('Aaron')->and($family->children()->sole()->level)->toBe(3);
 });
 
-it('validates a new child in plain words', function (): void {
+it('validates a new child in plain words @story#33', function (): void {
     [, , $user] = familyWithGuardian();
 
     actingAs($user)->post('/ccf/family/children', ['first_name' => ''])
@@ -98,7 +98,7 @@ it('keeps Laravel\'s own words when "Anything else we should know" is not text',
         ->assertSessionHasErrors(['guardian_notes' => 'The parent notes field must be a string.']);
 });
 
-it('lets a parent edit their own child, but not the status or Level', function (): void {
+it('lets a parent edit their own child, but not the status or Level @story#34', function (): void {
     [, $family, $user] = familyWithGuardian();
     $child = childOf($family, ['allergies' => null]);
 
@@ -116,7 +116,7 @@ it('lets a parent edit their own child, but not the status or Level', function (
         ->and($child->level)->toBeNull();
 });
 
-it('refuses to edit a child from another family', function (): void {
+it('refuses to edit a child from another family @story#35', function (): void {
     [, , $user] = familyWithGuardian();
     $stranger = Child::factory()->create();
 
@@ -150,7 +150,7 @@ it('gives the page what the edit forms need, and every health detail', function 
         ->where('family.children.0.guardian_notes', 'Shy at first'));
 });
 
-it('lets a parent edit their family details and their own details', function (): void {
+it('lets a parent edit their family details and their own details @story#30', function (): void {
     [$church, $family, $user] = familyWithGuardian();
     $other = satelliteOf($church, ['name' => 'House Church']);
 
@@ -169,7 +169,7 @@ it('lets a parent edit their family details and their own details', function ():
         ->and($user->fresh()?->email)->toBe($user->email);
 });
 
-it('refuses a satellite from another church', function (): void {
+it('refuses a satellite from another church @story#31', function (): void {
     [, , $user] = familyWithGuardian();
     $foreign = Satellite::factory()->create();
 
@@ -184,7 +184,7 @@ it('needs the parent\'s name and phone', function (): void {
         ->assertSessionHasErrors(['guardian.first_name', 'guardian.phone']);
 });
 
-it('lets a parent fix a child\'s details but never the status or Level', function (): void {
+it('lets a parent fix a child\'s details but never the status or Level @story#34', function (): void {
     [, $family, $user] = familyWithGuardian();
     $child = childOf($family, ['status' => ChildStatusEnum::Active]);
 
@@ -198,7 +198,7 @@ it('lets a parent fix a child\'s details but never the status or Level', functio
         ->and($child->status)->toBe(ChildStatusEnum::Active)->and($child->level)->toBeNull();
 });
 
-it('does not let a parent edit another family', function (): void {
+it('does not let a parent edit another family @story#31', function (): void {
     [$church, , $user] = familyWithGuardian();
     $satellite = Satellite::query()->where('church_id', $church->id)->firstOrFail();
     $otherFamily = familyAt($satellite, ['area_text' => 'Untouched']);

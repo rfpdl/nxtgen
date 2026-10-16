@@ -5,78 +5,21 @@ declare(strict_types=1);
 namespace App\Domains\Registry\Jobs;
 
 use App\Domains\Registry\DataObjects\RegistryRowData;
-use App\Enums\ChildStatusEnum;
-use App\Enums\GenderEnum;
-use App\Enums\RelationshipEnum;
+use App\Domains\Registry\Values\RegistryCsvColumn as Col;
+use App\Domains\Registry\Values\RegistryCsvRecord;
 use App\Foundation\Jobs\BaseJob;
-use Carbon\CarbonImmutable;
+use Illuminate\Support\Str;
 use SplFileObject;
 
 /**
- * Read the Registry tab export (CSV). Columns are read by POSITION because the sheet has two columns named
- * "Complete Name". fgetcsv handles quoted multi-line answers. Nothing is guessed: a value that does not
- * parse becomes null and the proposal quarantines or flags it.
+ * Read the Registry tab export (CSV). fgetcsv handles quoted multi-line answers; RegistryCsvRecord reads each
+ * record by column position and parses its values. Nothing is guessed: a value that does not parse becomes
+ * null and the proposal quarantines or flags it.
  *
  * @extends BaseJob<list<RegistryRowData>>
  */
 final class GetRegistryRowsJob extends BaseJob
 {
-    private const int FIRST = 0;
-
-    private const int LAST = 1;
-
-    private const int NICK = 2;
-
-    private const int GENDER = 3;
-
-    private const int YEAR = 4;
-
-    private const int MONTH = 5;
-
-    private const int DAY = 6;
-
-    private const int ALLERGY_LIST = 8;
-
-    private const int DISLIKES = 9;
-
-    private const int FEARS = 10;
-
-    private const int NOTES = 11;
-
-    private const int FB_GROUP = 12;
-
-    private const int FB_ACCOUNT = 13;
-
-    private const int GUARDIAN = 14;
-
-    private const int RELATION = 15;
-
-    private const int PHONE = 16;
-
-    private const int EMAIL = 17;
-
-    private const int AREA = 18;
-
-    private const int IN_DGROUP = 19;
-
-    private const int DGROUP_AREA = 20;
-
-    private const int DGROUP_LEADER = 21;
-
-    private const int MINISTRY = 22;
-
-    private const int JOIN_DGROUP = 23;
-
-    private const int LIFESTAGE = 24;
-
-    private const int PRIVACY = 25;
-
-    private const int DGROUP_LEADER_PHONE = 26;
-
-    private const int SCHEDULE = 27;
-
-    private const int STATUS = 33;
-
     public function __construct(private readonly string $path) {}
 
     /** @return list<RegistryRowData> */
@@ -96,128 +39,52 @@ final class GetRegistryRowsJob extends BaseJob
             if (implode('', $c) === '') {
                 continue; // a genuinely blank line
             }
-            // A short or malformed record is padded, not dropped: its missing fields send it to quarantine,
-            // so the reconciliation still accounts for it (review-spar B2).
-            $c = array_pad($c, self::STATUS + 1, '');
-            $rows[] = $this->row($line, $c);
+            // A short or malformed record is padded, not dropped (RegistryCsvRecord), so it reaches quarantine.
+            $rows[] = $this->row($line, new RegistryCsvRecord($c));
         }
 
         return $rows;
     }
 
-    /** @param list<string> $c */
-    private function row(int $line, array $c): RegistryRowData
+    private function row(int $line, RegistryCsvRecord $c): RegistryRowData
     {
-        $email = mb_strtolower($c[self::EMAIL] ?? '');
-        $first = $c[self::FIRST] ?? '';
-        $last = $c[self::LAST] ?? '';
-        $dob = $this->date($c[self::YEAR] ?? '', $c[self::MONTH] ?? '', $c[self::DAY] ?? '');
-        [$guardianFirst, $guardianLast] = $this->splitName($c[self::GUARDIAN] ?? '');
-        $status = mb_strtoupper($c[self::STATUS] ?? '');
+        $email = mb_strtolower($c->get(Col::Email));
+        $first = $c->get(Col::FirstName);
+        $dob = $c->dateOfBirth();
+        $guardian = $c->guardianName();
 
         return new RegistryRowData(
             row_number: $line,
-            source_key: substr(hash('sha256', $email.'|'.mb_strtolower($first).'|'.$dob), 0, 20),
+            source_key: Str::substr(hash('sha256', $email.'|'.mb_strtolower($first).'|'.$dob), 0, 20),
             child_first_name: $first,
-            child_last_name: $last,
-            nickname: ($c[self::NICK] ?? '') !== '' ? $c[self::NICK] : $first,
-            gender: $this->gender($c[self::GENDER] ?? ''),
+            child_last_name: $c->get(Col::LastName),
+            nickname: $c->get(Col::Nickname) !== '' ? $c->get(Col::Nickname) : $first,
+            gender: $c->gender(),
             date_of_birth: $dob,
-            allergies: self::blank($c[self::ALLERGY_LIST] ?? ''),
-            dislikes: self::blank($c[self::DISLIKES] ?? ''),
-            fears: self::blank($c[self::FEARS] ?? ''),
-            guardian_notes: self::blank($c[self::NOTES] ?? ''),
-            wants_fb_group: self::yes($c[self::FB_GROUP] ?? ''),
-            fb_account: self::blank($c[self::FB_ACCOUNT] ?? ''),
-            guardian_first_name: $guardianFirst,
-            guardian_last_name: $guardianLast,
-            relationship: $this->relationship($c[self::RELATION] ?? ''),
-            phone: self::blank($c[self::PHONE] ?? ''),
-            phone_key: substr((string) preg_replace('/\D+/', '', $c[self::PHONE] ?? ''), -9),
+            allergies: $c->orNull(Col::Allergies),
+            dislikes: $c->orNull(Col::Dislikes),
+            fears: $c->orNull(Col::Fears),
+            guardian_notes: $c->orNull(Col::Notes),
+            wants_fb_group: $c->yes(Col::WantsFbGroup),
+            fb_account: $c->orNull(Col::FbAccount),
+            guardian_first_name: $guardian->first,
+            guardian_last_name: $guardian->last,
+            relationship: $c->relationship(),
+            phone: $c->orNull(Col::Phone),
+            phone_key: Str::substr((string) preg_replace('/\D+/', '', $c->get(Col::Phone)), -9),
             email: filter_var($email, FILTER_VALIDATE_EMAIL) !== false ? $email : '',
-            area: self::blank($c[self::AREA] ?? ''),
-            in_dgroup: self::yes($c[self::IN_DGROUP] ?? ''),
-            dgroup_area: self::blank($c[self::DGROUP_AREA] ?? ''),
-            dgroup_leader_name: self::blank($c[self::DGROUP_LEADER] ?? ''),
-            dgroup_leader_phone: self::blank($c[self::DGROUP_LEADER_PHONE] ?? ''),
-            ministry: self::blank($c[self::MINISTRY] ?? ''),
-            wants_dgroup: self::yes($c[self::JOIN_DGROUP] ?? ''),
-            lifestage: self::blank($c[self::LIFESTAGE] ?? ''),
-            privacy_consented: self::yes($c[self::PRIVACY] ?? ''),
-            schedule: $c[self::SCHEDULE] ?? '',
-            status: match (true) {
-                str_contains($status, 'ELEVATE') => ChildStatusEnum::Graduated,
-                str_contains($status, 'WENT HOME'), str_contains($status, 'REMOVE') => ChildStatusEnum::Inactive,
-                default => ChildStatusEnum::Active,
-            },
-            is_duplicate: $status === 'DUPLICATE',
+            area: $c->orNull(Col::Area),
+            in_dgroup: $c->yes(Col::InDgroup),
+            dgroup_area: $c->orNull(Col::DgroupArea),
+            dgroup_leader_name: $c->orNull(Col::DgroupLeader),
+            dgroup_leader_phone: $c->orNull(Col::DgroupLeaderPhone),
+            ministry: $c->orNull(Col::Ministry),
+            wants_dgroup: $c->yes(Col::WantsDgroup),
+            lifestage: $c->orNull(Col::Lifestage),
+            privacy_consented: $c->yes(Col::Privacy),
+            schedule: $c->get(Col::Schedule),
+            status: $c->status(),
+            is_duplicate: $c->isDuplicate(),
         );
-    }
-
-    private function date(string $year, string $month, string $day): ?string
-    {
-        if (! ctype_digit($year) || ! ctype_digit($day)) {
-            return null;
-        }
-        // Explicit allowlist: strtotime() turns a blank or unknown month into January (Codex diff review).
-        $months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
-        $name = mb_strtolower(trim($month));
-        $index = array_search($name, $months, true);
-        $shortIndex = array_search($name, array_map(fn (string $m): string => substr($m, 0, 3), $months), true);
-        $m = match (true) {
-            ctype_digit($month) => (int) $month,
-            $index !== false => $index + 1,
-            $shortIndex !== false => $shortIndex + 1,
-            default => 0,
-        };
-        if ($m < 1 || $m > 12 || ! checkdate($m, (int) $day, (int) $year)) {
-            return null;
-        }
-
-        return CarbonImmutable::create((int) $year, $m, (int) $day)?->toDateString();
-    }
-
-    private function gender(string $value): ?GenderEnum
-    {
-        return match (mb_strtolower($value)) {
-            'male', 'boy', 'm' => GenderEnum::Boy,
-            'female', 'girl', 'f' => GenderEnum::Girl,
-            default => null,
-        };
-    }
-
-    private function relationship(string $value): RelationshipEnum
-    {
-        return match (mb_strtolower($value)) {
-            'mother', 'mom', 'mum' => RelationshipEnum::Mother,
-            'father', 'dad' => RelationshipEnum::Father,
-            'grandmother', 'grandfather', 'grandparent' => RelationshipEnum::Grandparent,
-            'aunt', 'uncle' => RelationshipEnum::AuntUncle,
-            'brother', 'sister', 'sibling' => RelationshipEnum::Sibling,
-            'parents', 'guardian' => RelationshipEnum::Guardian,
-            default => RelationshipEnum::Other,
-        };
-    }
-
-    /** @return array{0: string, 1: string} */
-    private function splitName(string $full): array
-    {
-        $parts = preg_split('/\s+/', trim($full)) ?: [];
-        if (count($parts) < 2) {
-            return [trim($full), ''];
-        }
-        $last = (string) array_pop($parts);
-
-        return [implode(' ', $parts), $last];
-    }
-
-    private static function blank(string $value): ?string
-    {
-        return $value === '' ? null : $value;
-    }
-
-    private static function yes(string $value): bool
-    {
-        return str_starts_with(mb_strtolower($value), 'y');
     }
 }

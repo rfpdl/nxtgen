@@ -23,6 +23,7 @@ use App\Enums\GenderEnum;
 use App\Enums\RegistrationOutcomeEnum;
 use App\Enums\RegistrationSourceEnum;
 use App\Enums\RelationshipEnum;
+use App\Foundation\Attributes\UserStory;
 use App\Foundation\Support\EmailAddress;
 use App\Foundation\Support\LevelChart;
 use App\Operations\Family\AddChildToFamilyOperation;
@@ -40,6 +41,12 @@ use Illuminate\Support\Facades\DB;
  *
  * @extends BaseConsoleFeature<ImportResultData>
  */
+#[UserStory(
+    title: 'Load the reviewed registry',
+    persona: 'church admin at the terminal',
+    happyPaths: ['story#82' => 'The approved registry rows load as Families, without emailing anyone, and safely twice'],
+    unhappyPaths: ['story#83' => 'Unapproved, conflicting or broken rows are not loaded, and the command fails'],
+)]
 final class ApplyRegistryImportFeature extends BaseConsoleFeature
 {
     private int $familiesCreated = 0;

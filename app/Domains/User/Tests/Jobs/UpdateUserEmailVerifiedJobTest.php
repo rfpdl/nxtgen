@@ -12,7 +12,8 @@ it('confirms the email when it is still the address the link was sent to', funct
         ->and($user->fresh()?->email_verified_at)->not->toBeNull();
 });
 
-it('never marks a changed address verified from a link sent to the old one (Codex diff review, high)', function (): void {
+// Found by Codex diff review (high).
+it('never marks a changed address verified from a link sent to the old one', function (): void {
     $user = User::factory()->unverified()->create(['email' => 'old@example.com']);
 
     $user->forceFill(['email' => 'new@example.com', 'credential_version' => 2])->save();

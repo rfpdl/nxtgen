@@ -7,6 +7,7 @@ namespace App\Services\Auth\Features\Landing;
 use App\Data\Models\User;
 use App\Domains\Church\DataObjects\LandingOptionData;
 use App\Domains\Church\Jobs\GetLandingOptionsJob;
+use App\Foundation\Attributes\UserStory;
 use App\Services\Auth\Features\BaseAuthFeature;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -18,6 +19,12 @@ use Inertia\Response;
  *
  * @extends BaseAuthFeature<Response|RedirectResponse>
  */
+#[UserStory(
+    title: 'Land in the right place after sign-in',
+    persona: 'anyone signed in',
+    happyPaths: ['story#24' => 'A parent goes to their Family, Staff to the Church, and someone with both chooses'],
+    unhappyPaths: ['story#25' => 'Someone with no Family and no active Role is told there is nothing here yet'],
+)]
 final class ShowLandingFeature extends BaseAuthFeature
 {
     /** The device remembers the "My family / Serve" choice (plan §4.5). Holds one of the person's own URLs. */

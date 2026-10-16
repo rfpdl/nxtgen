@@ -9,6 +9,7 @@ use App\Domains\Family\DataObjects\DuplicatePairData;
 use App\Domains\Family\Jobs\GetOpenDuplicatesJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Attributes\UserStory;
 use App\Services\Church\Features\BaseChurchFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,6 +20,12 @@ use Inertia\Response;
  *
  * @extends BaseChurchFeature<Response>
  */
+#[UserStory(
+    title: 'See possible duplicates',
+    persona: 'church admin or satellite admin',
+    happyPaths: ['story#70' => 'An Admin sees possible duplicates side by side, emails masked, within their scope'],
+    unhappyPaths: ['story#71' => 'Not there for a Lifeshaper'],
+)]
 #[AccessRow(AccessRowEnum::ReviewDuplicates)]
 final class ShowDuplicatesFeature extends BaseChurchFeature
 {

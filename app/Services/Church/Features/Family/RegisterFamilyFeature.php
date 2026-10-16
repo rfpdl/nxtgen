@@ -9,6 +9,7 @@ use App\Enums\AccessRowEnum;
 use App\Enums\RegistrationOutcomeEnum;
 use App\Enums\RegistrationSourceEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Attributes\UserStory;
 use App\Foundation\Inputs\RegisterFamilyInput;
 use App\Operations\Registration\RegisterFamilyOperation;
 use App\Services\Church\Features\BaseChurchFeature;
@@ -20,6 +21,11 @@ use Illuminate\Http\RedirectResponse;
  *
  * @extends BaseChurchFeature<RedirectResponse>
  */
+#[UserStory(
+    title: 'Register a family for a parent',
+    persona: 'staff',
+    happyPaths: ['story#47' => 'Staff register a Family for a parent, email unconfirmed, recording who did it'],
+)]
 #[AccessRow(AccessRowEnum::RegisterFamily)]
 final class RegisterFamilyFeature extends BaseChurchFeature
 {

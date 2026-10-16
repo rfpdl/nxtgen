@@ -8,7 +8,10 @@ import { CHURCH, SATELLITES, sessionFile, uniqueEmail, uniqueSurname } from '../
  * Journey 3 — a church admin adds a new Lifeshaper on People; the Lifeshaper gets an email, signs in from
  * it, and can work in the church straight away. Then the admin removes the role again.
  */
-test('an admin adds a Lifeshaper who then signs in from the email', async ({ page, browser }) => {
+test('an admin adds a Lifeshaper who then signs in from the email @story#76', async ({
+    page,
+    browser,
+}) => {
     const email = uniqueEmail('newlifeshaper')
     const before = mailCount(email)
 
@@ -57,7 +60,7 @@ test('an admin adds a Lifeshaper who then signs in from the email', async ({ pag
  * The family is not attached until they prove the email (claim link); then one login reaches both places,
  * so the landing asks where to go (plan §4.2, §4.5).
  */
-test('a Lifeshaper who registers their own family can reach both, from one login', async ({
+test('a Lifeshaper who registers their own family can reach both, from one login @story#24 @story#26', async ({
     page,
     browser,
 }) => {

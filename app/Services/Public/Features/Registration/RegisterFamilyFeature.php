@@ -7,6 +7,7 @@ namespace App\Services\Public\Features\Registration;
 use App\Data\Models\Church;
 use App\Domains\Church\Jobs\GetSatelliteJob;
 use App\Enums\RegistrationSourceEnum;
+use App\Foundation\Attributes\UserStory;
 use App\Foundation\Inputs\RegisterFamilyInput;
 use App\Operations\Registration\RegisterFamilyOperation;
 use App\Services\Public\Features\BasePublicFeature;
@@ -18,6 +19,15 @@ use Illuminate\Http\RedirectResponse;
  *
  * @extends BasePublicFeature<RedirectResponse>
  */
+#[UserStory(
+    title: 'Register my family',
+    persona: 'parent',
+    happyPaths: ['story#4' => 'A parent registers their Family and Children and is thanked'],
+    unhappyPaths: [
+        'story#5' => 'An email already registered gets the same answer, so nobody learns who is registered',
+        'story#6' => 'A Satellite of another church is refused',
+    ],
+)]
 final class RegisterFamilyFeature extends BasePublicFeature
 {
     public function __construct(private readonly Church $church) {}

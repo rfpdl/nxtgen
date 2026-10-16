@@ -10,6 +10,7 @@ use App\Domains\Family\Jobs\GetPendingClaimForFamilyJob;
 use App\Enums\AccessRowEnum;
 use App\Enums\MagicLinkPurposeEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Attributes\UserStory;
 use App\Foundation\Support\EmailMask;
 use App\Services\Church\Features\BaseChurchFeature;
 use Illuminate\Http\RedirectResponse;
@@ -20,6 +21,12 @@ use Illuminate\Http\RedirectResponse;
  *
  * @extends BaseChurchFeature<RedirectResponse>
  */
+#[UserStory(
+    title: 'Resend the confirmation link',
+    persona: 'staff',
+    happyPaths: ['story#54' => 'Staff resend the confirmation link to an unconfirmed email'],
+    unhappyPaths: ['story#55' => 'Refused outside their scope, and honest when the email was not sent'],
+)]
 #[AccessRow(AccessRowEnum::ResendLink)]
 final class ResendConfirmationFeature extends BaseChurchFeature
 {

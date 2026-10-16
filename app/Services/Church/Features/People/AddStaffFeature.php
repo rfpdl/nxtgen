@@ -15,6 +15,7 @@ use App\Enums\AccessRowEnum;
 use App\Enums\MagicLinkPurposeEnum;
 use App\Enums\ScopeTypeEnum;
 use App\Foundation\Attributes\AccessRow;
+use App\Foundation\Attributes\UserStory;
 use App\Services\Church\Data\AddStaffInput;
 use App\Services\Church\Features\BaseChurchFeature;
 use Illuminate\Http\RedirectResponse;
@@ -27,6 +28,12 @@ use Illuminate\Support\Facades\DB;
  *
  * @extends BaseChurchFeature<RedirectResponse>
  */
+#[UserStory(
+    title: 'Add someone to serve',
+    persona: 'church admin or satellite admin',
+    happyPaths: ['story#76' => 'An Admin adds someone: the login is made or reused, the Role given, a sign-in link emailed'],
+    unhappyPaths: ['story#77' => 'A Satellite admin gives only Lifeshaper, in their own Satellite; another church\'s Satellite is refused'],
+)]
 #[AccessRow(AccessRowEnum::GrantRoles)]
 final class AddStaffFeature extends BaseChurchFeature
 {
