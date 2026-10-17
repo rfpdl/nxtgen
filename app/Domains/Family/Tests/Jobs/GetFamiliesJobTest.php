@@ -44,7 +44,7 @@ it('keeps to the viewer\'s satellites, and a chosen satellite outside them yield
     familyAt($theirs);
 
     $scoped = listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: [$mine->id]));
-    $outside = listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: [$mine->id], filters: new FamilyListFiltersData(satellite_id: $theirs->id)));
+    $outside = listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: [$mine->id], filters: new FamilyListFiltersData(satelliteId: $theirs->id)));
 
     expect($scoped)->toBe([$family->id])->and($outside)->toBeEmpty();
 });
@@ -74,7 +74,7 @@ it('shows only families whose primary guardian has no confirmed login, when aske
     $unconfirmed = familyAt($satellite);
     guardianOf($unconfirmed, User::factory()->unverified()->create());
 
-    $list = listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: null, filters: new FamilyListFiltersData(unconfirmed_only: true)));
+    $list = listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: null, filters: new FamilyListFiltersData(unconfirmedOnly: true)));
 
     expect($list)->toBe([$unconfirmed->id]);
 });
@@ -94,7 +94,7 @@ it('shows only families on an open possible duplicate, when asked — by family 
     (new CreateDuplicateCandidatesJob(family: $new))->handle();
     (new CreateDuplicateCandidatesJob(family: $twinB))->handle();
 
-    $list = fn (): array => listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: null, filters: new FamilyListFiltersData(duplicates_only: true)));
+    $list = fn (): array => listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: null, filters: new FamilyListFiltersData(duplicatesOnly: true)));
 
     expect($list())->toEqualCanonicalizing([$old->id, $new->id, $twinA->id, $twinB->id]);
 

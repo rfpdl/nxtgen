@@ -53,8 +53,8 @@ final class GuardianInput extends Data
     public function toDetails(): GuardianDetailsData
     {
         return new GuardianDetailsData(
-            first_name: $this->first_name,
-            last_name: $this->last_name,
+            firstName: $this->first_name,
+            lastName: $this->last_name,
             relationship: $this->relationship,
             phone: $this->phone,
             email: $this->email,

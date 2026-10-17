@@ -12,8 +12,8 @@ final readonly class GuardianDetailsData
 {
     /** @param list<string> $ministries */
     public function __construct(
-        public string $first_name,
-        public string $last_name,
+        public string $firstName,
+        public string $lastName,
         public RelationshipEnum $relationship,
         public ?string $phone,
         public string $email,

@@ -17,8 +17,8 @@ use function Tests\Support\satelliteOf;
 it('creates the child in the family\'s church, trimming names and dropping blank details', function (): void {
     $family = familyAt(satelliteOf(church()));
     $details = new ChildDetailsData(
-        first_name: '  Amara ', middle_name: '   ', last_name: ' Santos ', nickname: '  ', gender: GenderEnum::Girl,
-        date_of_birth: '2019-03-04', allergies: ' peanuts ', illnesses: '', guardian_notes: null,
+        firstName: '  Amara ', middleName: '   ', lastName: ' Santos ', nickname: '  ', gender: GenderEnum::Girl,
+        dateOfBirth: '2019-03-04', allergies: ' peanuts ', illnesses: '', guardianNotes: null,
     );
 
     $child = (new CreateChildJob(family: $family, details: $details, level: 2, source: RegistrationSourceEnum::Staff))->handle();
@@ -35,8 +35,8 @@ it('creates the child in the family\'s church, trimming names and dropping blank
 it('keeps a given nickname and status, and sets no level date without a level', function (): void {
     $family = familyAt(satelliteOf(church()));
     $details = new ChildDetailsData(
-        first_name: 'Gabriel', middle_name: null, last_name: 'Cruz', nickname: 'Gabby', gender: GenderEnum::Boy,
-        date_of_birth: '2018-01-01', allergies: null, status: ChildStatusEnum::Inactive,
+        firstName: 'Gabriel', middleName: null, lastName: 'Cruz', nickname: 'Gabby', gender: GenderEnum::Boy,
+        dateOfBirth: '2018-01-01', allergies: null, status: ChildStatusEnum::Inactive,
     );
 
     $child = (new CreateChildJob(family: $family, details: $details, level: null, source: RegistrationSourceEnum::Import))->handle();

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -43,6 +44,9 @@ final class E2EServiceProvider extends ServiceProvider
     {
         if ($this->app->environment('e2e')) {
             self::assertSafeDatabase(DB::connection()->getDatabaseName());
+            // Browser journeys run against the built assets `make e2e` just made — never a `make dev` server that
+            // happens to be running (its public/hot file would otherwise win, and the journeys get slower dev code).
+            Vite::useHotFile(storage_path('framework/e2e-no-hot'));
         }
 
         Route::get('/__e2e/health', fn () => response()->json([

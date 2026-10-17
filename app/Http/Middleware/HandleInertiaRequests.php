@@ -14,8 +14,8 @@ use Inertia\Middleware;
 use Lucid\Bus\UnitDispatcher;
 
 /**
- * Props every page receives. Like every prop, their fields are snake_case (DECISIONS 2026-10-17); the
- * frontend's `SharedProps` (resources/js/types) mirrors this method.
+ * Props every page receives. Like every prop, their names and fields are snake_case (DECISIONS 2026-10-17,
+ * later — Roy's answers); the frontend's `SharedProps` (resources/js/types) mirrors this method.
  *
  * Every flash key here must also be READ by a screen — the FlashContractTest enforces both legs, because a
  * key flashed and shared but read by nothing is a message nobody ever sees (PoC lesson).
@@ -51,7 +51,7 @@ final class HandleInertiaRequests extends Middleware
 
             // The staff menu (ChurchShell), from the AccessScope RequireAssignment put on THIS request; null on any
             // page that is not a staff page. Navigation only — every Feature still asks the scope itself.
-            'churchNav' => fn (): ?array => ($scope = RequestContext::scope($request)) !== null ? [
+            'church_nav' => fn (): ?array => ($scope = RequestContext::scope($request)) !== null ? [
                 'can_manage_people' => $scope->canManagePeople(),
                 'can_review_duplicates' => $scope->canReviewDuplicates(),
             ] : null,

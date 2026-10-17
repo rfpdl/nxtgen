@@ -38,7 +38,7 @@ final class GetChildrenJob extends BaseJob
             ->with(['family.homeSatellite'])
             ->where('church_id', $this->church->id)
             ->when($this->satelliteIds !== null, fn (Builder $q) => $q->whereHas('family', fn (Builder $fam) => $fam->whereIn('home_satellite_id', $this->satelliteIds ?? [])))
-            ->when($f->satellite_id !== null, fn (Builder $q) => $q->whereHas('family', fn (Builder $fam) => $fam->where('home_satellite_id', $f->satellite_id)))
+            ->when($f->satelliteId !== null, fn (Builder $q) => $q->whereHas('family', fn (Builder $fam) => $fam->where('home_satellite_id', $f->satelliteId)))
             // The child's own names, OR the family's parent (name, email, phone — Family::scopeMatchingContact), so
             // "Janice" finds Janice's children; a child's name does not drag in their siblings (review 4).
             ->when($like !== null, fn (Builder $q) => $q->where(fn (Builder $n) => $n

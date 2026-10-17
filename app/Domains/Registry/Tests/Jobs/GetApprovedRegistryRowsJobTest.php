@@ -40,15 +40,15 @@ it('keeps the approved rows, grouped by the reviewer\'s family key', function ()
         ['Child first name' => 'Skipped', 'Approve' => 'no'],
     ])))->handle();
 
-    expect(array_keys($approval->rows_by_family))->toBe(['fam-1', 'fam-2'])
-        ->and(array_map(fn ($r) => $r->get('Child first name'), $approval->rows_by_family['fam-1']))->toBe(['Amara', 'Aaron'])
+    expect(array_keys($approval->rowsByFamily))->toBe(['fam-1', 'fam-2'])
+        ->and(array_map(fn ($r) => $r->get('Child first name'), $approval->rowsByFamily['fam-1']))->toBe(['Amara', 'Aaron'])
         ->and($approval->problems)->toBe([]);
 });
 
 it('reports an approved row it cannot load, naming the sheet row and why', function (string $column, string $value, string $why): void {
     $approval = (new GetApprovedRegistryRowsJob(path: reviewedFile([[$column => $value, 'Sheet row' => '7']])))->handle();
 
-    expect($approval->rows_by_family)->toBe([])
+    expect($approval->rowsByFamily)->toBe([])
         ->and($approval->problems)->toBe(["Sheet row 7: {$why} — not loaded"]);
 })->with([
     'no family key' => ['Family key', '', 'approved but has no Family key'],
@@ -62,6 +62,6 @@ it('reports an approved row it cannot load, naming the sheet row and why', funct
 it('loads nothing, and says so, when the file has no Families sheet', function (): void {
     $approval = (new GetApprovedRegistryRowsJob(path: reviewedFile([[]], sheet: 'Sheet1')))->handle();
 
-    expect($approval->rows_by_family)->toBe([])
+    expect($approval->rowsByFamily)->toBe([])
         ->and($approval->problems)->toBe(['The review file has no "Families" sheet — nothing loaded']);
 });

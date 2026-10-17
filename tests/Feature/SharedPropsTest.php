@@ -25,8 +25,8 @@ it('gives a staff page the church it is about', function (): void {
 
     actingAs($admin)->get('/ccf/families')->assertInertia(fn (AssertableInertia $p) => $p
         ->where('church', ['name' => 'CCF', 'slug' => 'ccf'])
-        ->where('churchNav.can_manage_people', true)
-        ->where('churchNav.can_review_duplicates', true));
+        ->where('church_nav.can_manage_people', true)
+        ->where('church_nav.can_review_duplicates', true));
 });
 
 it('gives a parent\'s family page its church', function (): void {
@@ -55,6 +55,6 @@ it('gives the staff menu only to a staff page — never to the next request in t
     guardianOf(familyAt(satelliteOf($church)), $parent);
 
     actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/families')
-        ->assertInertia(fn (AssertableInertia $p) => $p->where('churchNav.can_manage_people', true));
-    actingAs($parent)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('churchNav', null));
+        ->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav.can_manage_people', true));
+    actingAs($parent)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav', null));
 });

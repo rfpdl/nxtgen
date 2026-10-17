@@ -14,7 +14,7 @@ export type SharedProps = {
     /** The church the address names; null on a page outside one. */
     church: Church | null
     /** The staff menu: set on church staff pages (from RequireAssignment's scope), null on every other page. */
-    churchNav: { can_manage_people: boolean; can_review_duplicates: boolean } | null
+    church_nav: { can_manage_people: boolean; can_review_duplicates: boolean } | null
 }
 
 // ─── Enums ──────────────────────────────────────────────────────────────────────────────────────────────

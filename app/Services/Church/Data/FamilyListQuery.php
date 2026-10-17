@@ -21,11 +21,11 @@ final class FamilyListQuery
 
         return new FamilyListFiltersData(
             query: $q === '' ? null : $q,
-            satellite_id: $request->integer('satellite') ?: null,
+            satelliteId: $request->integer('satellite') ?: null,
             status: ChildStatusEnum::tryFrom($request->string('status')->value()),
             level: $request->integer('level') ?: null,
-            unconfirmed_only: $request->boolean('unconfirmed'),
-            duplicates_only: $request->boolean('duplicates'),
+            unconfirmedOnly: $request->boolean('unconfirmed'),
+            duplicatesOnly: $request->boolean('duplicates'),
         );
     }
 }

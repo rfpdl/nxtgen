@@ -40,8 +40,10 @@ test('a satellite admin can only add Lifeshapers to their own satellite @story#7
 }) => {
     await page.goto(`/${CHURCH}/people`)
 
-    const choices = await page.getByTestId('staff-role').locator('option').allTextContents()
-    expect(choices.map((c) => c.trim())).toEqual(['Lifeshaper · House Church'])
+    // A retrying assertion: allTextContents() reads once, before the page may have rendered its options.
+    await expect(page.getByTestId('staff-role').locator('option')).toHaveText([
+        'Lifeshaper · House Church',
+    ])
 })
 
 test('a Lifeshaper can see a family but gets no edit forms @story#50 @story#53', async ({

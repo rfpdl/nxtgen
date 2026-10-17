@@ -73,7 +73,7 @@ final class ApplyRegistryImportFeature extends BaseConsoleFeature
         $mapped = $this->run(new GetImportedSourceKeysJob(church: $this->church));
         $satellites = $this->run(new GetSatellitesByNameJob(church: $this->church));
 
-        foreach ($approval->rows_by_family as $familyKey => $rows) {
+        foreach ($approval->rowsByFamily as $familyKey => $rows) {
             $this->applyFamily((string) $familyKey, $rows, $mapped, $satellites);
         }
 
@@ -202,26 +202,26 @@ final class ApplyRegistryImportFeature extends BaseConsoleFeature
     {
         return new FamilyRegistrationData(
             church: $this->church,
-            home_satellite: $satellite,
+            homeSatellite: $satellite,
             primary: new GuardianDetailsData(
-                first_name: $p->get('Parent first name'),
-                last_name: $p->get('Parent last name'),
+                firstName: $p->get('Parent first name'),
+                lastName: $p->get('Parent last name'),
                 relationship: RelationshipEnum::tryFrom($p->get('Relationship')) ?? RelationshipEnum::Other,
                 phone: $p->orNull('Phone'),
                 email: $p->get('Parent email'),
                 ministries: $p->orNull('Ministry') !== null ? [$p->get('Ministry')] : [],
             ),
             children: [],
-            area_text: $p->orNull('Area'),
-            privacy_consented: $p->yes('Privacy consented'),
+            areaText: $p->orNull('Area'),
+            privacyConsented: $p->yes('Privacy consented'),
             source: RegistrationSourceEnum::Import,
-            fb_account: $p->orNull('FB account'),
-            wants_fb_group: $p->yes('FB group'),
-            in_dgroup: $p->yes('In DGroup'),
-            dgroup_area_text: $p->orNull('DGroup area'),
-            dgroup_leader_name: $p->orNull('DGroup leader'),
-            dgroup_leader_phone: $p->orNull('DGroup leader phone'),
-            wants_dgroup: $p->yes('Wants DGroup'),
+            fbAccount: $p->orNull('FB account'),
+            wantsFbGroup: $p->yes('FB group'),
+            inDgroup: $p->yes('In DGroup'),
+            dgroupAreaText: $p->orNull('DGroup area'),
+            dgroupLeaderName: $p->orNull('DGroup leader'),
+            dgroupLeaderPhone: $p->orNull('DGroup leader phone'),
+            wantsDgroup: $p->yes('Wants DGroup'),
             lifestage: $p->orNull('Lifestage'),
             notify: false,
         );
@@ -230,16 +230,16 @@ final class ApplyRegistryImportFeature extends BaseConsoleFeature
     private function child(ApprovedChildRowData $row): ChildDetailsData
     {
         return new ChildDetailsData(
-            first_name: $row->get('Child first name'),
-            middle_name: null,
-            last_name: $row->get('Child last name'),
+            firstName: $row->get('Child first name'),
+            middleName: null,
+            lastName: $row->get('Child last name'),
             nickname: $row->get('Nickname'),
             gender: GenderEnum::from($row->get('Gender')),
-            date_of_birth: $row->get('Birthday'),
+            dateOfBirth: $row->get('Birthday'),
             allergies: $row->orNull('Allergies'),
             dislikes: $row->orNull('Dislikes'),
             fears: $row->orNull('Fears'),
-            guardian_notes: $row->orNull('Notes'),
+            guardianNotes: $row->orNull('Notes'),
             status: ChildStatusEnum::tryFrom($row->get('Status')) ?? ChildStatusEnum::default(),
         );
     }

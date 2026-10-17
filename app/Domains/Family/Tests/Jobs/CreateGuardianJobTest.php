@@ -16,7 +16,7 @@ use function Tests\Support\satelliteOf;
 it('links the guardian to the login and keeps no email of its own', function (): void {
     $family = familyAt(satelliteOf(church()));
     $user = User::factory()->create();
-    $details = new GuardianDetailsData(first_name: ' Janice ', last_name: ' Santos ', relationship: RelationshipEnum::Mother, phone: ' 050 123 4567 ', email: 'Janice@Example.com', ministries: ['music']);
+    $details = new GuardianDetailsData(firstName: ' Janice ', lastName: ' Santos ', relationship: RelationshipEnum::Mother, phone: ' 050 123 4567 ', email: 'Janice@Example.com', ministries: ['music']);
 
     $guardian = (new CreateGuardianJob(family: $family, details: $details, user: $user))->handle();
 
@@ -29,7 +29,7 @@ it('links the guardian to the login and keeps no email of its own', function ():
 
 it('keeps the normalised email on a guardian with no login, and a blank phone as nothing', function (): void {
     $family = familyAt(satelliteOf(church()));
-    $details = new GuardianDetailsData(first_name: 'Jun', last_name: 'Santos', relationship: RelationshipEnum::Father, phone: '  ', email: ' Jun@Example.COM ');
+    $details = new GuardianDetailsData(firstName: 'Jun', lastName: 'Santos', relationship: RelationshipEnum::Father, phone: '  ', email: ' Jun@Example.COM ');
 
     $guardian = (new CreateGuardianJob(family: $family, details: $details, user: null))->handle();
 

@@ -68,7 +68,7 @@ final class ShowPeopleFeature extends BaseChurchFeature
 
         return Inertia::render('Church/People/Index', [
             'people' => $people->all(),
-            'grantOptions' => $this->grantOptions($church->id, $satellites),
+            'grant_options' => $this->grantOptions($church->id, $satellites),
         ]);
     }
 

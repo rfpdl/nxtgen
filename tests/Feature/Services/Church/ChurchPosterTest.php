@@ -28,7 +28,7 @@ it('gives a staff member a poster whose QR code opens this church\'s registratio
     actingAs($user)->get('/ccf/poster')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
         ->component('Church/Poster')
         ->where('church.name', 'CCF')
-        ->where('registerUrl', url('/ccf/register'))
+        ->where('register_url', url('/ccf/register'))
         ->where('qr', fn (string $qr): bool => str_starts_with($qr, 'data:image/svg+xml;base64,')
             && str_contains((string) base64_decode(substr($qr, 26), true), '<svg')));
 });

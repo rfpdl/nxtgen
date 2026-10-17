@@ -11,8 +11,8 @@ use App\Foundation\Attributes\NonClientFacing;
 final readonly class QuarantinedRowData
 {
     public function __construct(
-        public int $row_number,
-        public string $child_name,
+        public int $rowNumber,
+        public string $childName,
         public string $reason,
     ) {}
 }

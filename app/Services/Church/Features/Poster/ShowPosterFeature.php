@@ -33,7 +33,7 @@ final class ShowPosterFeature extends BaseChurchFeature
         $url = route('public.register', $church->slug);
 
         return Inertia::render('Church/Poster', [
-            'registerUrl' => $url,
+            'register_url' => $url,
             'qr' => 'data:image/svg+xml;base64,'.base64_encode($this->run(new CreateQrCodeSvgJob(text: $url))),
         ]);
     }

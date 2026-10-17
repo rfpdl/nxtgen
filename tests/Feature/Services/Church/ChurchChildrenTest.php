@@ -173,11 +173,11 @@ describe('correcting a child\'s Level', function (): void {
         ['church' => $church, 'dxb' => $dxb, 'amara' => $amara] = kidsChurch();
 
         actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get("/ccf/families/{$amara->family_id}")
-            ->assertInertia(fn (AssertableInertia $p) => $p->where('canSetLevel', true)->has('levels', 4)
+            ->assertInertia(fn (AssertableInertia $p) => $p->where('can_set_level', true)->has('levels', 4)
                 ->where('levels.1', ['level' => 2, 'name' => 'Level 2'])
                 ->where('family.children.0.level', 'Level 2'));
         actingAs(staffMember(RoleEnum::Admin, atSatellite($dxb)))->get("/ccf/families/{$amara->family_id}")
-            ->assertInertia(fn (AssertableInertia $p) => $p->where('canSetLevel', false)->where('levels', []));
+            ->assertInertia(fn (AssertableInertia $p) => $p->where('can_set_level', false)->where('levels', []));
     });
 });
 

@@ -31,7 +31,7 @@ final class RegistryProposeCommand extends Command
         $proposal = (new GetRegistryProposalJob(rows: $rows))->handle();
         (new CreateRegistryReviewSpreadsheetJob(proposal: $proposal, path: $out, inputRows: count($rows)))->handle();
 
-        $this->info(sprintf('%d rows → %d families, %d duplicates dropped, %d quarantined.', count($rows), count($proposal->families), $proposal->dropped_duplicates, count($proposal->quarantined)));
+        $this->info(sprintf('%d rows → %d families, %d duplicates dropped, %d quarantined.', count($rows), count($proposal->families), $proposal->droppedDuplicates, count($proposal->quarantined)));
         $this->info("Review file: {$out}");
 
         return self::SUCCESS;

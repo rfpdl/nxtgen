@@ -11,14 +11,14 @@ import { route } from 'ziggy-js'
 
 /**
  * The church staff frame: church name, the Release 1 tools, People (admins), sign out, and the flash message.
- * The church is the page's shared `church`; what to show comes from the shared `churchNav`.
+ * The church is the page's shared `church`; what to show comes from the shared `church_nav`.
  */
 const church = useChurch()
 
 const { message, dismiss } = useFlashMessages()
 const page = usePage<SharedProps>()
-const canManagePeople = computed(() => page.props.churchNav?.can_manage_people === true)
-const canReviewDuplicates = computed(() => page.props.churchNav?.can_review_duplicates === true)
+const canManagePeople = computed(() => page.props.church_nav?.can_manage_people === true)
+const canReviewDuplicates = computed(() => page.props.church_nav?.can_review_duplicates === true)
 </script>
 
 <template>

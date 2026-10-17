@@ -9,7 +9,7 @@ import { route } from 'ziggy-js'
 
 defineProps<{
     people: StaffMember[]
-    grantOptions: GrantOption[]
+    grant_options: GrantOption[]
 }>()
 
 const church = useChurch()
@@ -25,7 +25,10 @@ function remove(roleId: number): void {
     <Head title="People" />
     <ChurchShell>
         <h1 class="text-text text-2xl font-semibold">People who serve ({{ people.length }})</h1>
-        <AddStaffForm :action="route('church.people.store', church.slug)" :options="grantOptions" />
+        <AddStaffForm
+            :action="route('church.people.store', church.slug)"
+            :options="grant_options"
+        />
         <div class="flex flex-col gap-2">
             <StaffMemberCard
                 v-for="person in people"

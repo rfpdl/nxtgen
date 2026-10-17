@@ -18,7 +18,7 @@ final readonly class ProposedFamilyData
         public string $key,
         public string $email,
         public RegistryRowData $primary,
-        public string $home_satellite,
+        public string $homeSatellite,
         public array $children,
         public array $suggestions,
     ) {}

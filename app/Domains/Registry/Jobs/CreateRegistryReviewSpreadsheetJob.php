@@ -47,12 +47,12 @@ final class CreateRegistryReviewSpreadsheetJob extends BaseJob
             foreach ($family->children as $child) {
                 $accepted++;
                 $writer->addRow(TextRow::of([
-                    'yes', $family->key, $family->email, $p->guardian_first_name, $p->guardian_last_name, $p->relationship->value, $p->phone ?? '',
-                    $family->home_satellite, $p->area ?? '', $yes($p->wants_fb_group), $p->fb_account ?? '', $yes($p->in_dgroup), $p->dgroup_area ?? '',
-                    $p->dgroup_leader_name ?? '', $p->dgroup_leader_phone ?? '', $yes($p->wants_dgroup), $p->ministry ?? '', $p->lifestage ?? '',
-                    $yes($p->privacy_consented), $child->source_key, (string) $child->row_number,
-                    $child->child_first_name, $child->child_last_name, $child->nickname, $child->gender->value ?? '', $child->date_of_birth ?? '',
-                    $child->allergies ?? '', $child->dislikes ?? '', $child->fears ?? '', $child->guardian_notes ?? '', $child->status->value,
+                    'yes', $family->key, $family->email, $p->guardianFirstName, $p->guardianLastName, $p->relationship->value, $p->phone ?? '',
+                    $family->homeSatellite, $p->area ?? '', $yes($p->wantsFbGroup), $p->fbAccount ?? '', $yes($p->inDgroup), $p->dgroupArea ?? '',
+                    $p->dgroupLeaderName ?? '', $p->dgroupLeaderPhone ?? '', $yes($p->wantsDgroup), $p->ministry ?? '', $p->lifestage ?? '',
+                    $yes($p->privacyConsented), $child->sourceKey, (string) $child->rowNumber,
+                    $child->childFirstName, $child->childLastName, $child->nickname, $child->gender->value ?? '', $child->dateOfBirth ?? '',
+                    $child->allergies ?? '', $child->dislikes ?? '', $child->fears ?? '', $child->guardianNotes ?? '', $child->status->value,
                     implode('; ', $family->suggestions),
                     '',
                     '',
@@ -63,7 +63,7 @@ final class CreateRegistryReviewSpreadsheetJob extends BaseJob
         $writer->addNewSheetAndMakeItCurrent()->setName('Quarantine');
         $writer->addRow(TextRow::of(['Sheet row', 'Child', 'Why it was not loaded']));
         foreach ($this->proposal->quarantined as $q) {
-            $writer->addRow(TextRow::of([(string) $q->row_number, $q->child_name, $q->reason]));
+            $writer->addRow(TextRow::of([(string) $q->rowNumber, $q->childName, $q->reason]));
         }
 
         $writer->addNewSheetAndMakeItCurrent()->setName('Reconciliation');
@@ -71,9 +71,9 @@ final class CreateRegistryReviewSpreadsheetJob extends BaseJob
         foreach ([
             ['Rows in the sheet', (string) $this->inputRows],
             ['Children proposed for loading', (string) $accepted],
-            ['Duplicates dropped', (string) $this->proposal->dropped_duplicates],
+            ['Duplicates dropped', (string) $this->proposal->droppedDuplicates],
             ['Quarantined', (string) $quarantined],
-            ['Balances', $accepted + $this->proposal->dropped_duplicates + $quarantined === $this->inputRows ? 'yes' : 'NO — check before loading'],
+            ['Balances', $accepted + $this->proposal->droppedDuplicates + $quarantined === $this->inputRows ? 'yes' : 'NO — check before loading'],
             ['Families proposed', (string) count($this->proposal->families)],
         ] as $line) {
             $writer->addRow(TextRow::of($line));

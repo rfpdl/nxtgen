@@ -26,10 +26,10 @@ use function Tests\Support\exportedRows;
 const SHARED = ['auth.can_switch', 'auth.user.id', 'auth.user.name', 'church.name', 'church.slug', 'errors', 'flash.error', 'flash.success'];
 
 /** A page that is not a staff page: the staff menu is null. */
-const FRAME = [...SHARED, 'churchNav'];
+const FRAME = [...SHARED, 'church_nav'];
 
 /** A staff page: the staff menu's two switches. */
-const STAFF_FRAME = [...SHARED, 'churchNav.can_manage_people', 'churchNav.can_review_duplicates'];
+const STAFF_FRAME = [...SHARED, 'church_nav.can_manage_people', 'church_nav.can_review_duplicates'];
 
 /** Health, photo and contact fields: never on a list or search page, whoever asks — only the allergy yes/no. */
 const NEVER_ON_LISTS = '/photo|allerg|illness|fear|dislike|guardian_notes|phone|notes|ministries/';
@@ -53,7 +53,7 @@ const LITE_FAMILY = ['can_open', 'children.*', 'email_confirmed', 'id', 'masked_
 
 /** A family opened by staff, minus what only an editor gets (Church/Families/Show). */
 const FAMILY_VIEW = [
-    'canSetLevel', 'enums.child_status', 'enums.gender', 'enums.relationship',
+    'can_set_level', 'enums.child_status', 'enums.gender', 'enums.relationship',
     'family.area', 'family.can_edit', 'family.email', 'family.email_confirmed', 'family.id', 'family.primary_name',
     'family.registered_by', 'family.satellite',
     'family.children.*.allergies', 'family.children.*.date_of_birth', 'family.children.*.dislikes', 'family.children.*.fears',
@@ -268,7 +268,7 @@ describe('admin pages', function (): void {
         $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/people');
         $labels = collect(listAt($props, 'people'))->flatMap(fn (mixed $p): array => listAt(is_array($p) ? $p : [], 'roles'))->pluck('label');
 
-        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, ['grantOptions.*.label', 'grantOptions.*.role', 'grantOptions.*.scope_id', 'grantOptions.*.scope_type'], prefixed('people.*', ['email', 'id', 'name', 'roles.*.can_remove', 'roles.*.id', 'roles.*.label'])))
+        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, ['grant_options.*.label', 'grant_options.*.role', 'grant_options.*.scope_id', 'grant_options.*.scope_type'], prefixed('people.*', ['email', 'id', 'name', 'roles.*.can_remove', 'roles.*.id', 'roles.*.label'])))
             ->and($labels->contains(fn (mixed $l): bool => is_string($l) && str_contains($l, 'Home')))->toBe($seesHome);
     })->with([
         Actor::ChurchAdmin->value => [Actor::ChurchAdmin, true],

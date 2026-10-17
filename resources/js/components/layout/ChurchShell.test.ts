@@ -7,7 +7,7 @@ const page = {
         flash: {},
         church: { name: 'CCF', slug: 'ccf' },
         auth: { user: null, can_switch: false },
-        churchNav: { can_manage_people: false, can_review_duplicates: false },
+        church_nav: { can_manage_people: false, can_review_duplicates: false },
     },
 }
 
@@ -38,18 +38,18 @@ describe('ChurchShell', () => {
     })
 
     it('shows People only to someone who may manage people', () => {
-        page.props.churchNav.can_manage_people = false
+        page.props.church_nav.can_manage_people = false
         expect(mount(ChurchShell).text()).not.toContain('People')
 
-        page.props.churchNav.can_manage_people = true
+        page.props.church_nav.can_manage_people = true
         expect(mount(ChurchShell).text()).toContain('People')
     })
 
     it('shows Duplicates only to someone who may review them', () => {
-        page.props.churchNav.can_review_duplicates = false
+        page.props.church_nav.can_review_duplicates = false
         expect(mount(ChurchShell).text()).not.toContain('Duplicates')
 
-        page.props.churchNav.can_review_duplicates = true
+        page.props.church_nav.can_review_duplicates = true
         expect(mount(ChurchShell).text()).toContain('Duplicates')
     })
 })

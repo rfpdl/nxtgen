@@ -7,7 +7,7 @@ import { route } from 'ziggy-js'
  * The registration poster for the foyer (plan §6 R1): print it. Plain big words for parents, the QR code to scan,
  * and the address for anyone whose camera will not. The buttons are hidden on paper.
  */
-defineProps<{ registerUrl: string; qr: string }>()
+defineProps<{ register_url: string; qr: string }>()
 
 const church = useChurch()
 
@@ -45,6 +45,6 @@ function print(): void {
             data-testid="poster-qr"
         />
         <p class="text-text text-2xl font-semibold">Scan with your phone camera</p>
-        <p class="text-text-muted text-lg break-all" data-testid="poster-url">{{ registerUrl }}</p>
+        <p class="text-text-muted text-lg break-all" data-testid="poster-url">{{ register_url }}</p>
     </main>
 </template>

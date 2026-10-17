@@ -11,11 +11,11 @@ use App\Foundation\Attributes\NonClientFacing;
 final readonly class RegistryApprovalData
 {
     /**
-     * @param  array<string, list<ApprovedChildRowData>>  $rows_by_family
+     * @param  array<string, list<ApprovedChildRowData>>  $rowsByFamily
      * @param  list<string>  $problems
      */
     public function __construct(
-        public array $rows_by_family,
+        public array $rowsByFamily,
         public array $problems,
     ) {}
 }

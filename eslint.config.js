@@ -39,6 +39,9 @@ export default tseslint.config(
             // Multi-word names would rename atoms to `BaseAppButton`. The atoms/ prefix convention
             // already prevents collisions with HTML elements.
             'vue/multi-word-component-names': 'off',
+
+            // A page's props arrive from the server, and everything across the wire is snake_case (DECISIONS 2026-10-17, later).
+            'vue/prop-name-casing': 'off',
         },
     },
 

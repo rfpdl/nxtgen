@@ -16,10 +16,10 @@ final readonly class FamilyListFiltersData
 {
     public function __construct(
         public ?string $query = null,
-        public ?int $satellite_id = null,
+        public ?int $satelliteId = null,
         public ?ChildStatusEnum $status = null,
         public ?int $level = null,
-        public bool $unconfirmed_only = false,
-        public bool $duplicates_only = false,
+        public bool $unconfirmedOnly = false,
+        public bool $duplicatesOnly = false,
     ) {}
 }

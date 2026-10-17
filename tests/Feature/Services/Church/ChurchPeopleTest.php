@@ -61,7 +61,7 @@ describe('the People page', function (): void {
             ->where('people.1.name', 'Leo Lifeshaper')
             ->where('people.1.roles.0.label', 'Lifeshaper · Holy Trinity Church')
             ->where('people.1.roles.0.can_remove', true)
-            ->has('grantOptions', 6));
+            ->has('grant_options', 6));
     });
 
     it('shows a satellite admin only their satellite, and only Lifeshaper to give @story#74', function (): void {
@@ -75,16 +75,16 @@ describe('the People page', function (): void {
             ->where('people.0.name', 'Leo Lifeshaper')
             ->where('people.1.name', 'Sam Satellite')
             ->where('people.1.roles.0.can_remove', false)
-            ->has('grantOptions', 1)
-            ->where('grantOptions.0.label', 'Lifeshaper · Holy Trinity Church'));
+            ->has('grant_options', 1)
+            ->where('grant_options.0.label', 'Lifeshaper · Holy Trinity Church'));
     });
 
     it('puts People in the menu for admins only', function (): void {
         ['church' => $church, 'admin' => $admin] = peopleChurch();
         $lifeshaper = staffMember(RoleEnum::Lifeshaper, atChurch($church));
 
-        actingAs($admin)->get('/ccf/families')->assertInertia(fn (AssertableInertia $page) => $page->where('churchNav.can_manage_people', true));
-        actingAs($lifeshaper)->get('/ccf/families')->assertInertia(fn (AssertableInertia $page) => $page->where('churchNav.can_manage_people', false));
+        actingAs($admin)->get('/ccf/families')->assertInertia(fn (AssertableInertia $page) => $page->where('church_nav.can_manage_people', true));
+        actingAs($lifeshaper)->get('/ccf/families')->assertInertia(fn (AssertableInertia $page) => $page->where('church_nav.can_manage_people', false));
     });
 
     it('is not there for a Lifeshaper @story#75', function (): void {

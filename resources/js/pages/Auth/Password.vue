@@ -7,7 +7,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
 /** A staff member's backup password (plan D7): for when the email link is slow. The email link keeps working. */
-defineProps<{ hasPassword: boolean }>()
+defineProps<{ has_password: boolean }>()
 
 const { message, dismiss } = useFlashMessages()
 const form = useForm<UpdatePasswordInput & { password_confirmation: string }>({
@@ -33,7 +33,7 @@ const input = 'min-h-touch border-border bg-surface text-text rounded-md border 
         <p class="text-text text-lg">
             For a morning when the email link is slow to arrive. You can still sign in with the
             email link any time.
-            <span v-if="hasPassword">You already have one; saving replaces it.</span>
+            <span v-if="has_password">You already have one; saving replaces it.</span>
         </p>
         <form class="flex flex-col gap-4" @submit.prevent="submit">
             <FormField

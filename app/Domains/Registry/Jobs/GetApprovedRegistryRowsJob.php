@@ -67,7 +67,7 @@ final class GetApprovedRegistryRowsJob extends BaseJob
             $problems[] = 'The review file has no "Families" sheet — nothing loaded';
         }
 
-        return new RegistryApprovalData(rows_by_family: $rowsByFamily, problems: $problems);
+        return new RegistryApprovalData(rowsByFamily: $rowsByFamily, problems: $problems);
     }
 
     /**

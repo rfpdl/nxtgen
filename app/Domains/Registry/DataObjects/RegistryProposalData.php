@@ -15,7 +15,7 @@ final readonly class RegistryProposalData
      */
     public function __construct(
         public array $families,
-        public int $dropped_duplicates,
+        public int $droppedDuplicates,
         public array $quarantined,
     ) {}
 }

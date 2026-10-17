@@ -99,7 +99,7 @@ final class RegisterFamilyOperation extends Operation
             $issued = $this->link(new CreateMagicLinkJob(purpose: MagicLinkPurposeEnum::ClaimFamily, email: $email, claim: $claim));
             $outcome = RegistrationOutcomeEnum::ClaimSent;
         } else {
-            $user = $this->run(new CreateUserJob(name: $r->primary->first_name.' '.$r->primary->last_name, email: $email));
+            $user = $this->run(new CreateUserJob(name: $r->primary->firstName.' '.$r->primary->lastName, email: $email));
             $guardian = $this->run(new CreateGuardianJob(family: $family, details: $r->primary, user: $user));
             $this->run(new UpdateFamilyPrimaryGuardianJob(family: $family, guardian: $guardian));
             $issued = $this->link(new CreateMagicLinkJob(purpose: MagicLinkPurposeEnum::VerifyEmail, email: $email, user: $user));
@@ -115,7 +115,7 @@ final class RegisterFamilyOperation extends Operation
     private function addChildren(Family $family): void
     {
         foreach ($this->registration->children as $child) {
-            $level = $this->run(new GetSuggestedLevelJob(church: $this->registration->church, dateOfBirth: $child->date_of_birth));
+            $level = $this->run(new GetSuggestedLevelJob(church: $this->registration->church, dateOfBirth: $child->dateOfBirth));
 
             $this->run(new CreateChildJob(family: $family, details: $child, level: $level, source: $this->registration->source));
         }

@@ -17,7 +17,7 @@ final class ChildListQuery
 
         return new ChildListFiltersData(
             query: $q === '' ? null : $q,
-            satellite_id: $request->integer('satellite') ?: null,
+            satelliteId: $request->integer('satellite') ?: null,
             status: ChildStatusEnum::tryFrom($request->string('status')->value()),
             level: $request->integer('level') ?: null,
         );

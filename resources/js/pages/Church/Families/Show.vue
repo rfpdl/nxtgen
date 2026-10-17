@@ -32,7 +32,7 @@ const props = defineProps<{
     primary: GuardianEdit | null
     satellites: SatelliteOption[]
     /** Church admins only (plan §3.2): correct a child's Level outside Moving-Up. */
-    canSetLevel: boolean
+    can_set_level: boolean
     levels: LevelOption[]
 }>()
 
@@ -167,7 +167,7 @@ function setStatus(childId: number, status: ChildStatus): void {
                 <ChildAdminControls
                     :child="child"
                     :can-set-status="family.can_edit"
-                    :can-set-level="canSetLevel"
+                    :can-set-level="can_set_level"
                     :levels="levels"
                     :level-error="lastLevelChild === child.id ? page.props.errors.level : undefined"
                     @status="setStatus"

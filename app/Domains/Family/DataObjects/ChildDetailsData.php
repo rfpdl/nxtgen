@@ -12,17 +12,17 @@ use App\Foundation\Attributes\NonClientFacing;
 final readonly class ChildDetailsData
 {
     public function __construct(
-        public string $first_name,
-        public ?string $middle_name,
-        public string $last_name,
+        public string $firstName,
+        public ?string $middleName,
+        public string $lastName,
         public string $nickname,
         public GenderEnum $gender,
-        public string $date_of_birth,
+        public string $dateOfBirth,
         public ?string $allergies,
         public ?string $illnesses = null,
         public ?string $dislikes = null,
         public ?string $fears = null,
-        public ?string $guardian_notes = null,
+        public ?string $guardianNotes = null,
         public ?ChildStatusEnum $status = null,
     ) {}
 }

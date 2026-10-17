@@ -46,19 +46,19 @@ function registration(Church $church, Satellite $satellite, string $email = 'Jan
 {
     return new FamilyRegistrationData(
         church: $church,
-        home_satellite: $satellite,
+        homeSatellite: $satellite,
         primary: new GuardianDetailsData(
-            first_name: 'Janice', last_name: 'Ramos', relationship: RelationshipEnum::Mother,
+            firstName: 'Janice', lastName: 'Ramos', relationship: RelationshipEnum::Mother,
             phone: '0544897346', email: $email, ministries: ['Music'],
         ),
         children: $children ?? [new ChildDetailsData(
-            first_name: 'Alexis', middle_name: 'Amara', last_name: 'Ramos', nickname: 'Amara',
-            gender: GenderEnum::Girl, date_of_birth: '2019-05-10', allergies: 'Peanuts',
+            firstName: 'Alexis', middleName: 'Amara', lastName: 'Ramos', nickname: 'Amara',
+            gender: GenderEnum::Girl, dateOfBirth: '2019-05-10', allergies: 'Peanuts',
         )],
-        area_text: 'Al Barsha',
-        privacy_consented: true,
+        areaText: 'Al Barsha',
+        privacyConsented: true,
         source: $source,
-        registered_by: $by,
+        registeredBy: $by,
     );
 }
 
@@ -146,8 +146,8 @@ it('stores the Level the child\'s age suggests on the reference date', function 
     [$church, $satellite] = registrationChurch();
 
     register(registration($church, $satellite, children: [new ChildDetailsData(
-        first_name: 'Aaron', middle_name: null, last_name: 'Ramos', nickname: 'Aaron',
-        gender: GenderEnum::Boy, date_of_birth: '2020-01-31', allergies: null,
+        firstName: 'Aaron', middleName: null, lastName: 'Ramos', nickname: 'Aaron',
+        gender: GenderEnum::Boy, dateOfBirth: '2020-01-31', allergies: null,
     )]));
 
     // Seven on 2027-02-01 → Level 2.
@@ -158,8 +158,8 @@ it('leaves the Level empty when no Level fits the age', function (): void {
     [$church, $satellite] = registrationChurch();
 
     register(registration($church, $satellite, children: [new ChildDetailsData(
-        first_name: 'Baby', middle_name: null, last_name: 'Ramos', nickname: 'Baby',
-        gender: GenderEnum::Girl, date_of_birth: '2025-01-01', allergies: null,
+        firstName: 'Baby', middleName: null, lastName: 'Ramos', nickname: 'Baby',
+        gender: GenderEnum::Girl, dateOfBirth: '2025-01-01', allergies: null,
     )]));
 
     expect(Child::query()->sole()->level)->toBeNull()->and(Child::query()->sole()->level_set_at)->toBeNull();

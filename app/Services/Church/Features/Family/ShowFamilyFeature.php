@@ -49,7 +49,7 @@ final class ShowFamilyFeature extends BaseChurchFeature
             'details' => $canEdit ? FamilyDetailsData::fromModel($family) : null,
             'primary' => $canEdit && $primary !== null ? GuardianEditData::fromModel($primary) : null,
             'satellites' => $canEdit ? $this->run(new GetSatellitesJob(church: $church)) : [],
-            'canSetLevel' => $this->scope()->canSetLevel(),
+            'can_set_level' => $this->scope()->canSetLevel(),
             'levels' => $this->scope()->canSetLevel() ? $this->run(new GetLevelsJob) : [],
             'enums' => [...FamilyFormEnums::toFrontend(), 'child_status' => ChildStatusEnum::toFrontend()],
         ]);

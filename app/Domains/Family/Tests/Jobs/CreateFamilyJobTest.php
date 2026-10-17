@@ -19,10 +19,10 @@ it('creates the family at its home satellite, trimming answers and recording con
     $satellite = satelliteOf($church);
     $staff = User::factory()->create();
     $registration = new FamilyRegistrationData(
-        church: $church, home_satellite: $satellite,
-        primary: new GuardianDetailsData(first_name: 'Janice', last_name: 'Santos', relationship: RelationshipEnum::Mother, phone: null, email: 'j@example.com'),
-        children: [], area_text: ' Al Barsha ', privacy_consented: true, source: RegistrationSourceEnum::Staff,
-        registered_by: $staff, fb_account: '   ', in_dgroup: true, dgroup_leader_name: ' Ate Joy ',
+        church: $church, homeSatellite: $satellite,
+        primary: new GuardianDetailsData(firstName: 'Janice', lastName: 'Santos', relationship: RelationshipEnum::Mother, phone: null, email: 'j@example.com'),
+        children: [], areaText: ' Al Barsha ', privacyConsented: true, source: RegistrationSourceEnum::Staff,
+        registeredBy: $staff, fbAccount: '   ', inDgroup: true, dgroupLeaderName: ' Ate Joy ',
     );
 
     $family = (new CreateFamilyJob(registration: $registration))->handle();
@@ -37,9 +37,9 @@ it('creates the family at its home satellite, trimming answers and recording con
 it('records no consent time when privacy was not agreed, and no registrar for a self-registration', function (): void {
     $church = church();
     $registration = new FamilyRegistrationData(
-        church: $church, home_satellite: satelliteOf($church),
-        primary: new GuardianDetailsData(first_name: 'A', last_name: 'B', relationship: RelationshipEnum::Father, phone: null, email: 'a@example.com'),
-        children: [], area_text: null, privacy_consented: false, source: RegistrationSourceEnum::Self,
+        church: $church, homeSatellite: satelliteOf($church),
+        primary: new GuardianDetailsData(firstName: 'A', lastName: 'B', relationship: RelationshipEnum::Father, phone: null, email: 'a@example.com'),
+        children: [], areaText: null, privacyConsented: false, source: RegistrationSourceEnum::Self,
     );
 
     $family = (new CreateFamilyJob(registration: $registration))->handle();

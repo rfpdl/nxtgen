@@ -34,7 +34,7 @@ final class RequireAssignment
         abort_unless($scope->canWorkHere(), 404);
 
         RequestContext::putChurch($request, $church);
-        // The staff menu (HandleInertiaRequests' `churchNav`) is read from here too — never Inertia::share, which
+        // The staff menu (HandleInertiaRequests' `church_nav`) is read from here too — never Inertia::share, which
         // is process-wide and would outlive this request.
         RequestContext::putScope($request, $scope);
 

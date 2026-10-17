@@ -91,17 +91,17 @@ final class ChildInput extends Data
     public function toDetails(): ChildDetailsData
     {
         return new ChildDetailsData(
-            first_name: $this->first_name,
-            middle_name: $this->middle_name,
-            last_name: $this->last_name,
+            firstName: $this->first_name,
+            middleName: $this->middle_name,
+            lastName: $this->last_name,
             nickname: $this->nickname,
             gender: $this->gender,
-            date_of_birth: $this->date_of_birth,
+            dateOfBirth: $this->date_of_birth,
             allergies: $this->has_allergies ? $this->allergies : null,
             illnesses: $this->illnesses,
             dislikes: $this->dislikes,
             fears: $this->fears,
-            guardian_notes: $this->guardian_notes,
+            guardianNotes: $this->guardian_notes,
         );
     }
 }

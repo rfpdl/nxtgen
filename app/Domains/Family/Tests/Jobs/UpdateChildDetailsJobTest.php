@@ -19,8 +19,8 @@ it('saves the details trimmed, blanks as null and an empty nickname as the first
     $child = childOf(familyAt(satelliteOf(church())), ['allergies' => 'Peanuts', 'fears' => 'Dogs']);
 
     (new UpdateChildDetailsJob(child: $child, details: new ChildDetailsData(
-        first_name: ' Amara ', middle_name: '  ', last_name: ' Santos ', nickname: ' ', gender: GenderEnum::Girl,
-        date_of_birth: '2019-03-04', allergies: ' Shellfish ', illnesses: null, dislikes: 'Loud music', fears: '', guardian_notes: ' Shy at first ',
+        firstName: ' Amara ', middleName: '  ', lastName: ' Santos ', nickname: ' ', gender: GenderEnum::Girl,
+        dateOfBirth: '2019-03-04', allergies: ' Shellfish ', illnesses: null, dislikes: 'Loud music', fears: '', guardianNotes: ' Shy at first ',
     )))->handle();
 
     $child->refresh();
@@ -36,8 +36,8 @@ it('leaves the status and the Level alone, even when the details carry a status'
     $child = childOf(familyAt(satelliteOf(church())), ['status' => ChildStatusEnum::Active, 'level' => 2]);
 
     (new UpdateChildDetailsJob(child: $child, details: new ChildDetailsData(
-        first_name: 'Amara', middle_name: null, last_name: 'Santos', nickname: 'Mimi', gender: GenderEnum::Girl,
-        date_of_birth: '2019-03-04', allergies: null, status: ChildStatusEnum::Graduated,
+        firstName: 'Amara', middleName: null, lastName: 'Santos', nickname: 'Mimi', gender: GenderEnum::Girl,
+        dateOfBirth: '2019-03-04', allergies: null, status: ChildStatusEnum::Graduated,
     )))->handle();
 
     $child->refresh();

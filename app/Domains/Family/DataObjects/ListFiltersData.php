@@ -29,16 +29,16 @@ final class ListFiltersData extends Data
     {
         return new self(
             q: $f->query ?? '',
-            satellite: $f->satellite_id,
+            satellite: $f->satelliteId,
             status: $f->status,
             level: $f->level,
-            unconfirmed: $f->unconfirmed_only,
-            duplicates: $f->duplicates_only,
+            unconfirmed: $f->unconfirmedOnly,
+            duplicates: $f->duplicatesOnly,
         );
     }
 
     public static function fromChildFilters(ChildListFiltersData $f): self
     {
-        return new self(q: $f->query ?? '', satellite: $f->satellite_id, status: $f->status, level: $f->level, unconfirmed: false, duplicates: false);
+        return new self(q: $f->query ?? '', satellite: $f->satelliteId, status: $f->status, level: $f->level, unconfirmed: false, duplicates: false);
     }
 }

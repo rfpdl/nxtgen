@@ -42,7 +42,7 @@ it('keeps to the viewer\'s satellites, and a chosen satellite outside them yield
     childOf(familyAt($theirs), ['nickname' => 'Theirs']);
 
     $scoped = listedNicknames(new GetChildrenJob(church: $church, satelliteIds: [$mine->id]));
-    $outside = listedNicknames(new GetChildrenJob(church: $church, satelliteIds: [$mine->id], filters: new ChildListFiltersData(satellite_id: $theirs->id)));
+    $outside = listedNicknames(new GetChildrenJob(church: $church, satelliteIds: [$mine->id], filters: new ChildListFiltersData(satelliteId: $theirs->id)));
 
     expect($scoped)->toBe(['Mine'])
         ->and($outside)->toBeEmpty();

@@ -25,7 +25,7 @@ it('groups siblings by parent email, drops duplicates, and quarantines rows with
 
     expect($proposal->families)->toHaveCount(3)
         ->and($ramos?->children)->toHaveCount(2)
-        ->and($proposal->dropped_duplicates)->toBe(1)
+        ->and($proposal->droppedDuplicates)->toBe(1)
         ->and($proposal->quarantined)->toHaveCount(1)
         ->and($proposal->quarantined[0]->reason)->toBe('No parent email');
 });
@@ -42,13 +42,13 @@ it('balances: every input row is accepted, dropped or quarantined', function ():
 
     $accepted = array_sum(array_map(fn ($f) => count($f->children), $proposal->families));
 
-    expect($accepted + $proposal->dropped_duplicates + count($proposal->quarantined))->toBe(6);
+    expect($accepted + $proposal->droppedDuplicates + count($proposal->quarantined))->toBe(6);
 });
 
 it('picks the home satellite from the worship schedule and flags an "either"', function (): void {
     $rala = collect(sampleProposal()->families)->firstWhere('email', 'rala@example.com');
 
-    expect($rala?->home_satellite)->toBe('House Church');
+    expect($rala?->homeSatellite)->toBe('House Church');
 });
 
 // Found by Codex diff review (medium).

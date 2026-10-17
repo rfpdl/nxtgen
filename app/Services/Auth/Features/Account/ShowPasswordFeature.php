@@ -30,6 +30,6 @@ final class ShowPasswordFeature extends BaseAuthFeature
         $user = request()->user();
         abort_unless($user instanceof User && $this->run(new GetUserIsStaffJob(user: $user)), 404);
 
-        return Inertia::render('Auth/Password', ['hasPassword' => $user->password !== null]);
+        return Inertia::render('Auth/Password', ['has_password' => $user->password !== null]);
     }
 }

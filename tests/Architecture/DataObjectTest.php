@@ -174,3 +174,50 @@ it('never exposes a storage path to the page', function (): void {
 
     expectOnlyKnownGaps($offenders, KnownGaps::DATA_PATH_PROPS, 'Expose a signed _url, never a _path');
 });
+
+/**
+ * The property names a DTO declares: its public properties, promoted or not.
+ *
+ * @param  ReflectionClass<object>  $class
+ * @return list<string>
+ */
+function publicPropertyNames(ReflectionClass $class): array
+{
+    return array_map(fn (\ReflectionProperty $p): string => $p->getName(), $class->getProperties(\ReflectionProperty::IS_PUBLIC));
+}
+
+it('names a #[NonClientFacing] DTO\'s properties in camelCase — it never leaves PHP', function (): void {
+    // DECISIONS 2026-10-17 (later — Roy's answers): what stays inside PHP is camelCase, like every variable.
+    $offenders = [];
+
+    foreach (responseDtos() as $dto) {
+        if ($dto->getAttributes(NON_CLIENT_FACING) === []) {
+            continue;
+        }
+        foreach (publicPropertyNames($dto) as $name) {
+            if (str_contains($name, '_')) {
+                $offenders[] = $dto->getName().'::$'.$name;
+            }
+        }
+    }
+
+    expect($offenders)->toBe([], "Rename to camelCase:\n".implode("\n", $offenders));
+});
+
+it('names a client-facing DTO\'s and an Input\'s properties in snake_case — they cross the wire', function (): void {
+    // DECISIONS 2026-10-17 (later — Roy's answers): everything between the server and the browser is snake_case.
+    $offenders = [];
+
+    foreach ([...responseDtos(), ...inputDtos()] as $dto) {
+        if ($dto->getAttributes(NON_CLIENT_FACING) !== []) {
+            continue;
+        }
+        foreach (publicPropertyNames($dto) as $name) {
+            if (preg_match('/[a-z0-9][A-Z]/', $name) === 1) {
+                $offenders[] = $dto->getName().'::$'.$name;
+            }
+        }
+    }
+
+    expect($offenders)->toBe([], "Rename to snake_case:\n".implode("\n", $offenders));
+});

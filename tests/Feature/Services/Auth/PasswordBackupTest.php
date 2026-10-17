@@ -40,7 +40,7 @@ describe('setting a backup password', function (): void {
         $user = servingUser();
 
         actingAs($user)->get('/account/password')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
-            ->component('Auth/Password')->where('hasPassword', false));
+            ->component('Auth/Password')->where('has_password', false));
         actingAs($user)->put('/account/password', ['password' => 'a-long-passphrase', 'password_confirmation' => 'a-long-passphrase'])
             ->assertRedirect()->assertSessionHas('success');
 
