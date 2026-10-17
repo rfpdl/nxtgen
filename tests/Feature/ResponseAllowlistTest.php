@@ -49,7 +49,7 @@ function forbiddenOnLists(array $props): array
 }
 
 /** A family's lite view — the door search and the duplicates page (FamilySearchResultData). */
-const LITE_FAMILY = ['can_open', 'children.*', 'email_confirmed', 'id', 'masked_email', 'primary_name', 'satellite'];
+const LITE_FAMILY = ['can_open', 'can_resend', 'children.*', 'email_confirmed', 'id', 'masked_email', 'primary_name', 'satellite'];
 
 /** A family opened by staff, minus what only an editor gets (Church/Families/Show). */
 const FAMILY_VIEW = [
@@ -203,7 +203,7 @@ describe('the registration lists', function (): void {
         $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/families');
         $janice = collect(listAt($props, 'families'))->first(fn (mixed $f): bool => in_array('Amara', listAt(is_array($f) ? $f : [], 'children'), true));
 
-        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, LIST_FRAME, prefixed('families.*', ['children.*', 'email', 'email_confirmed', 'id', 'primary_name', 'registered_by', 'registered_on', 'satellite'])))
+        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, LIST_FRAME, prefixed('families.*', ['can_resend', 'children.*', 'email', 'email_confirmed', 'id', 'primary_name', 'registered_by', 'registered_on', 'satellite'])))
             ->and(forbiddenOnLists($props))->toBe([])
             ->and(data_get($janice, 'email'))->toBe($email);
     })->with([
@@ -247,7 +247,7 @@ describe('the registration lists', function (): void {
     it('lists children with an allergy yes/no only — no health details, no photo @story#58', function (Actor $actor): void {
         $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/children');
 
-        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, LIST_FRAME, prefixed('children.*', ['age', 'date_of_birth', 'family_id', 'full_name', 'has_allergies', 'id', 'level', 'nickname', 'satellite', 'status_label'])))
+        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, LIST_FRAME, prefixed('children.*', ['age', 'can_resend', 'date_of_birth', 'family_id', 'full_name', 'has_allergies', 'id', 'level', 'nickname', 'satellite', 'status_label'])))
             ->and(forbiddenOnLists($props))->toBe([]);
     })->with(actors(...Actor::staff()));
 });

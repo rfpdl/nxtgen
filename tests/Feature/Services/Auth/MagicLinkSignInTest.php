@@ -53,6 +53,25 @@ describe('requesting a sign-in link', function (): void {
         Notification::assertSentOnDemandTimes(MagicLinkNotification::class, 0);
     });
 
+    // DECISIONS 2026-10-17 (Roy): a parent whose email is still unconfirmed gets a fresh link by asking at /login.
+    it('sends an unconfirmed parent a sign-in link that also confirms the email @story#9 @story#12', function (): void {
+        Notification::fake();
+        $user = User::factory()->unverified()->create(['email' => 'janice@example.com']);
+
+        post('/login/link', ['email' => 'janice@example.com'])->assertRedirect('/login');
+
+        $url = null;
+        Notification::assertSentOnDemand(MagicLinkNotification::class, function (MagicLinkNotification $n) use (&$url): bool {
+            $url = $n->url;
+
+            return true;
+        });
+        post((string) parse_url((string) $url, PHP_URL_PATH))->assertRedirect('/home');
+
+        expect($user->fresh()?->email_verified_at)->not->toBeNull();
+        assertAuthenticatedAs($user);
+    });
+
     it('refuses an invalid email with a validation error', function (): void {
         post('/login/link', ['email' => 'not-an-email'])->assertSessionHasErrors('email');
     });

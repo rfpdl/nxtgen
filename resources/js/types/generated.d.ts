@@ -47,6 +47,7 @@ declare namespace App {
                     has_allergies: boolean
                     satellite: string
                     family_id: number
+                    can_resend: boolean
                 }
                 export type ChildPortalData = {
                     id: number
@@ -106,6 +107,7 @@ declare namespace App {
                     children: string[]
                     registered_by: string
                     registered_on: string
+                    can_resend: boolean
                 }
                 export type FamilyPortalData = {
                     home_satellite: string
@@ -121,6 +123,7 @@ declare namespace App {
                     satellite: string
                     children: string[]
                     can_open: boolean
+                    can_resend: boolean
                 }
                 export type GuardianEditData = {
                     first_name: string

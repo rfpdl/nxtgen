@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ResendLinkButton from '@/components/atoms/ResendLinkButton.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import Pager from '@/components/molecules/Pager.vue'
 import RegistrationListFilters from '@/components/molecules/RegistrationListFilters.vue'
@@ -75,6 +76,7 @@ const exportHref = computed(() => {
                     {{ family.satellite }} · {{ family.children.join(', ') }} ·
                     {{ family.registered_by }} · {{ family.registered_on }}
                 </p>
+                <ResendLinkButton v-if="family.can_resend" :family-id="family.id" class="mt-2" />
             </li>
         </ul>
         <Pager

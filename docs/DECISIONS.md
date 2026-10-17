@@ -4,6 +4,13 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-10-17 (later still — re-send for a visiting family)
+
+- **Anyone with a staff role in the church may re-send a family's confirmation email** (Roy, replaces the
+  "anyone who can open the family" line below): a Lifeshaper at the door who finds another satellite's family can
+  help that parent; sending an email changes no data. Offered on the family page, unconfirmed list rows and the door
+  search results.
+
 ## 2026-10-17 (later — Roy's answers to the refactor's open decisions)
 
 - **Squads now, the child→Squad lookup with check-in** — confirmed (Roy).

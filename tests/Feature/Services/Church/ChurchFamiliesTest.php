@@ -13,10 +13,10 @@ use App\Enums\ChildStatusEnum;
 use App\Enums\MagicLinkPurposeEnum;
 use App\Enums\RegistrationSourceEnum;
 use App\Enums\RoleEnum;
-use App\Enums\ScopeTypeEnum;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia;
-use Tests\Support\RoleScope;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
@@ -26,6 +26,7 @@ use function Tests\Support\childOf;
 use function Tests\Support\church;
 use function Tests\Support\exportedRows;
 use function Tests\Support\familyAt;
+use function Tests\Support\grantRole;
 use function Tests\Support\guardianOf;
 use function Tests\Support\satelliteOf;
 use function Tests\Support\staffMember;
@@ -199,26 +200,96 @@ it('downloads the visible families as an Excel file @story#45', function (): voi
         ->and((string) $response->headers->get('content-disposition'))->toContain('.xlsx');
 });
 
+/*
+ * Re-sending from the lists (DECISIONS 2026-10-17, Roy): an unconfirmed row offers "Send the confirmation link
+ * again" to anyone who can open the family — the families list and the children list alike.
+ */
+describe('re-sending from the lists', function (): void {
+    it('offers the resend on unconfirmed family rows only @story#84', function (): void {
+        ['church' => $church, 'htc' => $htc] = adminChurch();
+        registeredFamily($htc, 'Ana', 'ana@example.com');
+        registeredFamily($htc, 'Bianca', 'bianca@example.com', verified: false);
+
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get('/ccf/families')
+            ->assertInertia(fn (AssertableInertia $p) => $p->has('families', 2)
+                ->where('families', fn (Collection $rows): bool => $rows->pluck('can_resend', 'primary_name')->sortKeys()->all() === ['Ana Ramos' => false, 'Bianca Ramos' => true]));
+    });
+
+    it('offers the resend on the children of an unconfirmed family only @story#84', function (): void {
+        ['church' => $church, 'htc' => $htc] = adminChurch();
+        registeredFamily($htc, 'Ana', 'ana@example.com');
+        registeredFamily($htc, 'Bianca', 'bianca@example.com', verified: false);
+
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get('/ccf/children')
+            ->assertInertia(fn (AssertableInertia $p) => $p->has('children', 2)
+                ->where('children.0.nickname', 'Ana-kid')->where('children.0.can_resend', false)
+                ->where('children.1.nickname', 'Bianca-kid')->where('children.1.can_resend', true));
+    });
+
+    it('offers the resend on a visiting family found by the door search, which the Lifeshaper cannot open @story#84', function (): void {
+        ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
+        registeredFamily($house, 'Ana', 'ana@example.com');
+        registeredFamily($house, 'Bianca', 'bianca@example.com', verified: false);
+
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get('/ccf/families/new?q=ramos')
+            ->assertInertia(fn (AssertableInertia $p) => $p->has('results', 2)
+                ->where('results', fn (Collection $rows): bool => $rows->pluck('can_resend', 'primary_name')->sortKeys()->all() === ['Ana Ramos' => false, 'Bianca Ramos' => true]
+                    && $rows->pluck('can_open')->unique()->all() === [false]));
+    });
+
+    it('never offers the resend on a possible-duplicate pair @story#84', function (): void {
+        ['church' => $church, 'htc' => $htc] = adminChurch();
+        registeredFamily($htc, 'Ana', 'ana@example.com', verified: false);
+        $new = registeredFamily($htc, 'Anna', 'anna@example.com', verified: false);
+        (new CreateDuplicateCandidatesJob(family: $new))->handle();
+
+        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/duplicates')
+            ->assertInertia(fn (AssertableInertia $p) => $p->where('duplicates.0.subject.can_resend', false)->where('duplicates.0.candidate.can_resend', false));
+    });
+
+    it('loads the children list without a query per row @story#84', function (): void {
+        ['church' => $church, 'htc' => $htc] = adminChurch();
+        foreach (range(1, 6) as $i) {
+            registeredFamily($htc, "Parent{$i}", "p{$i}@example.com", verified: $i % 2 === 0);
+        }
+        $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
+
+        DB::enableQueryLog();
+        actingAs($lifeshaper)->get('/ccf/children')->assertOk();
+        $six = count(DB::getQueryLog());
+        registeredFamily($htc, 'Parent7', 'p7@example.com', verified: false);
+        DB::flushQueryLog();
+        actingAs($lifeshaper)->get('/ccf/children')->assertOk();
+
+        expect(count(DB::getQueryLog()))->toBe($six);
+    });
+});
+
 // Found by review-spar.
 describe('resending a link and registering for a parent, at the edges', function (): void {
-    // Found in review A2.
-    it('refuses resend for a family outside a satellite admin\'s scope, and issues nothing @story#55', function (): void {
+    // DECISIONS 2026-10-17 (later still): a Lifeshaper or admin of another satellite helps a visiting family.
+    it('lets another satellite\'s admin re-send for a visiting family @story#54', function (): void {
         Notification::fake();
         ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
-        $theirs = registeredFamily($house, 'Mira', 'mira@example.com', verified: false);
+        $visiting = registeredFamily($house, 'Mira', 'mira@example.com', verified: false);
+
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->post("/ccf/families/{$visiting->id}/resend")
+            ->assertSessionHas('success', 'We sent the confirmation link to mi•••@example.com again.');
+    });
+
+    // Found in review A2.
+    it('refuses resend for someone whose staff role was switched off, and issues nothing @story#55', function (): void {
+        Notification::fake();
+        ['church' => $church, 'htc' => $htc] = adminChurch();
+        $family = registeredFamily($htc, 'Mira', 'mira@example.com', verified: false);
+        $revoked = User::factory()->create();
+        grantRole($revoked, RoleEnum::Lifeshaper, atSatellite($htc), active: false);
         $before = MagicLink::query()->count();
 
-        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->post("/ccf/families/{$theirs->id}/resend")->assertNotFound();
+        actingAs($revoked)->post("/ccf/families/{$family->id}/resend")->assertNotFound();
 
         expect(MagicLink::query()->count())->toBe($before);
         Notification::assertNothingSent();
-    });
-
-    it('refuses resend for a class admin @story#55', function (): void {
-        ['church' => $church, 'htc' => $htc] = adminChurch();
-        $family = registeredFamily($htc, 'Janice', 'janice@example.com', verified: false);
-
-        actingAs(staffMember(RoleEnum::Admin, new RoleScope($church, ScopeTypeEnum::Schedule, 99)))->post("/ccf/families/{$family->id}/resend")->assertNotFound();
     });
 
     // Found in review B3.

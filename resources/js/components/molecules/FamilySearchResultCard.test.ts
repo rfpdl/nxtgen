@@ -11,6 +11,7 @@ const result = (over: Partial<FamilySearchResult> = {}): FamilySearchResult => (
     satellite: 'House Church',
     children: ['Amara', 'Aaron'],
     can_open: false,
+    can_resend: false,
     ...over,
 })
 
@@ -58,6 +59,29 @@ describe('FamilySearchResultCard', () => {
         await wrapper.find('[data-testid="search-add-child"]').trigger('click')
 
         expect(wrapper.emitted('addChild')).toHaveLength(1)
+    })
+
+    it('offers to re-send the confirmation link only when the server says so', () => {
+        const stubs = {
+            ResendLinkButton: {
+                props: ['familyId'],
+                template: '<b data-testid="resend">{{ familyId }}</b>',
+            },
+        }
+        const offered = mount(FamilySearchResultCard, {
+            props: { result: result({ can_resend: true }), href: '/x' },
+            global: { stubs },
+        }).find('[data-testid="resend"]')
+
+        expect(offered.text()).toBe('3')
+        expect(
+            mount(FamilySearchResultCard, {
+                props: { result: result(), href: '/x' },
+                global: { stubs },
+            })
+                .find('[data-testid="resend"]')
+                .exists(),
+        ).toBe(false)
     })
 
     it('can leave out "Add a child" where it does not belong', () => {

@@ -119,7 +119,7 @@ Not session-based (palo's two-tab bug). `TenancyArchTest` (palo) guards that ten
 | Register a new family + child | ✓ | ✓ | ✓ | ✓ | own (self) |
 | Add a child to an existing family found by search | ✓ | ✓ | ✓ | ✓ | own family |
 | Edit family/guardian/child details | ✓ | families with home branch B | — | — | own family (not status/group) |
-| Resend confirmation link | ✓ | home branch B | — | ✓ (any family found) | — |
+| Resend confirmation link (DECISIONS 2026-10-17, later still: any staff role, a visiting family too) | ✓ | ✓ (any family) | ✓ (any family) | ✓ (any family) | — |
 | Correct family contact (§4.4) | ✓ | home branch B | — | — | — |
 | Set child status | ✓ | home branch B | — | — | — |
 | Set child group (outside Moving-Up) | ✓ | — | — | — | — |

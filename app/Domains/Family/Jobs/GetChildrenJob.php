@@ -35,7 +35,7 @@ final class GetChildrenJob extends BaseJob
         $like = $f->query === null ? null : '%'.str_replace(['%', '_'], ['\%', '\_'], trim($f->query)).'%';
 
         $query = Child::query()
-            ->with(['family.homeSatellite'])
+            ->with(['family.homeSatellite', 'family.primaryGuardian.user'])
             ->where('church_id', $this->church->id)
             ->when($this->satelliteIds !== null, fn (Builder $q) => $q->whereHas('family', fn (Builder $fam) => $fam->whereIn('home_satellite_id', $this->satelliteIds ?? [])))
             ->when($f->satelliteId !== null, fn (Builder $q) => $q->whereHas('family', fn (Builder $fam) => $fam->where('home_satellite_id', $f->satelliteId)))

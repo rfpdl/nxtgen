@@ -27,8 +27,8 @@ final class DuplicatePairData extends Data
         return new self(
             id: $pair->id,
             reason_label: $pair->reason->label(),
-            subject: FamilySearchResultData::fromModel(DuplicateCandidate::familyOf($pair->subject), $canOpenSubject),
-            candidate: FamilySearchResultData::fromModel(DuplicateCandidate::familyOf($pair->candidate), $canOpenCandidate),
+            subject: FamilySearchResultData::fromModel(DuplicateCandidate::familyOf($pair->subject), $canOpenSubject, mayResend: false),
+            candidate: FamilySearchResultData::fromModel(DuplicateCandidate::familyOf($pair->candidate), $canOpenCandidate, mayResend: false),
         );
     }
 }

@@ -15,7 +15,8 @@ use App\Enums\ScopeTypeEnum;
  *   church admin     → everything in the church
  *   satellite admin  → see + edit families whose home satellite is theirs; manage that satellite's Schedules
  *   schedule admin   → that Schedule (shown as "class"; Release 2)
- *   Lifeshaper       → see their satellites' families, register families, add children, resend links
+ *   Lifeshaper       → see their satellites' families, register families, add children
+ *   any staff role   → re-send any family's confirmation link (a visiting family too)
  */
 final readonly class AccessScope
 {
@@ -77,14 +78,13 @@ final readonly class AccessScope
     }
 
     /**
-     * Resend a confirmation/claim link (plan §3.2): church admin, any Lifeshaper (they meet the parent at the door),
-     * or the admin of the family's home satellite. Not a schedule admin.
+     * Re-send a confirmation/claim link: anyone with an active staff role in this church, whichever satellite the
+     * family lives at (DECISIONS 2026-10-17, later still — Roy): a Lifeshaper at the door helps a visiting family,
+     * and sending an email changes no data.
      */
     public function canResendLink(Family $family): bool
     {
-        return $family->church_id === $this->churchId
-            && ($this->isChurchAdmin || $this->isChurchLifeshaper || $this->lifeshaperSatelliteIds !== []
-                || in_array($family->home_satellite_id, $this->adminSatelliteIds, true));
+        return $family->church_id === $this->churchId && $this->canWorkHere();
     }
 
     /** Correct a child's Level outside Moving-Up (plan §3.2): church admin only. */

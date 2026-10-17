@@ -28,8 +28,10 @@ decided by `AccessScope` against the access-matrix row the Feature declares (`#[
 ## Families
 - The family email can be corrected only while the login is this Family's alone, unconfirmed and not Staff;
   otherwise a Satellite admin could take over a Staff account.
-- A resend sends a claim link if a claim is pending, otherwise a fresh confirm link; the page says honestly when
-  the per-address limit stopped it.
+- Any staff member in the Church may re-send a Family's confirmation link, a visiting Family too — from the
+  family page, an unconfirmed row of the families or children list, or the door search. A resend sends a claim link if a claim is pending, otherwise a fresh
+  confirm link; the page says honestly when the per-address limit stopped it. (A parent gets a fresh link by
+  registering again or asking for a sign-in link.)
 - A possible duplicate is answered by someone who may edit the newer Family: not the same, or the same (flagged
   for a later merge; nothing is merged).
 

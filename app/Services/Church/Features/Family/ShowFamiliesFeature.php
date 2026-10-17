@@ -49,7 +49,7 @@ final class ShowFamiliesFeature extends BaseChurchFeature
         ));
 
         return Inertia::render('Church/Families/Index', [
-            'families' => array_map(fn (Family $f) => FamilyListRowData::fromModel($f, fullEmail: $scope->canEditFamily($f)), $page->items),
+            'families' => array_map(fn (Family $f) => FamilyListRowData::fromModel($f, fullEmail: $scope->canEditFamily($f), mayResend: $scope->canResendLink($f)), $page->items),
             'pagination' => $page->meta(),
             'filters' => ListFiltersData::fromFamilyFilters($filters),
             'options' => [

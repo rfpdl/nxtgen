@@ -16,7 +16,7 @@ Props are typed from `@/types` (aliases over the generated, snake_case `generate
 | FamilyChildCard         | molecule | One of the parent's own children on the family page; nickname first, allergy warning                                          |
 | AddChildForm            | organism | "Add a child" on the family page, reusing ChildFieldset                                                                       |
 | ChurchShell             | layout   | Church staff frame: the shared `church`'s name, Families, Children, Register, QR poster, Duplicates/People (admins), sign out |
-| FamilySearchResultCard  | molecule | A church-wide "already registered?" hit: masked email, satellite, add-a-child                                                 |
+| FamilySearchResultCard  | molecule | A church-wide "already registered?" hit: masked email, satellite, add-a-child, re-send if unconfirmed                         |
 | StaffMemberCard         | molecule | One person who serves, with their roles; Remove only where the viewer may                                                     |
 | AddStaffForm            | organism | "Add someone": name, email, one role from the server's allowed choices                                                        |
 | SignOutButton           | atom     | "Sign out" (POST /logout) for every signed-in page: staff menu, family page, landing pages                                    |
@@ -29,4 +29,5 @@ Props are typed from `@/types` (aliases over the generated, snake_case `generate
 | PasswordLoginForm       | organism | "Use a password instead" on sign-in: the staff backup, collapsed by default                                                   |
 | ChildPhotoForm          | organism | A child's photo: take (camera) or choose; parent agrees/takes back consent, staff only after consent                          |
 | ChildAdminControls      | molecule | Staff status (from `enums.child_status`) + Level pickers under a child; a refused Level change shows only on that child       |
+| ResendLinkButton        | atom     | "Send the confirmation link again" (POST) for an unconfirmed family: family page, lists, door search                          |
 | Pager                   | molecule | "Page 2 of 3" with Previous / Next for the registration lists; hidden when one page holds all                                 |

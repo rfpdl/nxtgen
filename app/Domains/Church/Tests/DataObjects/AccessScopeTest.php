@@ -10,6 +10,7 @@ use App\Domains\Church\DataObjects\RoleScope;
 use App\Domains\Church\Jobs\GetAccessScopeJob;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
+use Tests\Support\RoleScope as TestRoleScope;
 
 use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
@@ -153,4 +154,44 @@ it('does not let a Lifeshaper manage people', function (): void {
 
     expect($scope->canManagePeople())->toBeFalse()
         ->and($scope->canGrant(RoleEnum::Lifeshaper, new RoleScope(ScopeTypeEnum::Satellite, $htc->id)))->toBeFalse();
+});
+
+/*
+ * Re-sending the confirmation email (DECISIONS 2026-10-17, later still — Roy): anyone with an active staff role in
+ * the church may, whichever satellite the family lives at — a Lifeshaper at the door helps a visiting family, and
+ * an email changes no data. Never a family of another church, never a revoked role.
+ */
+it('lets anyone with a staff role in the church re-send a family\'s confirmation link', function (RoleEnum $role, string $where): void {
+    ['church' => $church, 'htc' => $htc, 'house' => $house] = fx();
+    $user = User::factory()->create();
+    grantRole($user, $role, match ($where) {
+        'church' => atChurch($church),
+        'home' => atSatellite($htc),
+        'away' => atSatellite($house),
+        'class' => new TestRoleScope($church, ScopeTypeEnum::Schedule, 99),
+        default => throw new LogicException("Unknown place: {$where}"),
+    });
+
+    $scope = (new GetAccessScopeJob(user: $user, church: $church))->handle();
+
+    expect($scope->canResendLink(familyAt($htc)))->toBeTrue()
+        ->and($scope->canResendLink(Family::factory()->create()))->toBeFalse();
+})->with([
+    'church admin' => [RoleEnum::Admin, 'church'],
+    'church Lifeshaper' => [RoleEnum::Lifeshaper, 'church'],
+    'home satellite admin' => [RoleEnum::Admin, 'home'],
+    'home Lifeshaper' => [RoleEnum::Lifeshaper, 'home'],
+    'other-satellite admin' => [RoleEnum::Admin, 'away'],
+    'other-satellite Lifeshaper' => [RoleEnum::Lifeshaper, 'away'],
+    'class admin' => [RoleEnum::Admin, 'class'],
+]);
+
+it('refuses a re-send to someone whose only role was switched off', function (): void {
+    ['church' => $church, 'htc' => $htc] = fx();
+    $user = User::factory()->create();
+    grantRole($user, RoleEnum::Lifeshaper, atSatellite($htc), active: false);
+
+    $scope = (new GetAccessScopeJob(user: $user, church: $church))->handle();
+
+    expect($scope->canResendLink(familyAt($htc)))->toBeFalse();
 });

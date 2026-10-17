@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ResendLinkButton from '@/components/atoms/ResendLinkButton.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import ChildAdminControls from '@/components/molecules/ChildAdminControls.vue'
 import FamilyChildCard from '@/components/molecules/FamilyChildCard.vue'
@@ -37,14 +38,6 @@ const props = defineProps<{
 }>()
 
 const church = useChurch()
-
-function resend(): void {
-    router.post(
-        route('church.families.resend', [church.value.slug, props.family.id]),
-        {},
-        { preserveScroll: true },
-    )
-}
 
 const emailForm = useForm<CorrectFamilyEmailInput>({ email: '' })
 
@@ -91,15 +84,7 @@ function setStatus(childId: number, status: ChildStatus): void {
                 {{ family.satellite }}<span v-if="family.area"> · {{ family.area }}</span> ·
                 registered by {{ family.registered_by }}
             </p>
-            <button
-                v-if="!family.email_confirmed"
-                type="button"
-                class="min-h-touch border-primary text-primary self-start rounded-md border px-4 text-lg font-semibold"
-                data-testid="resend"
-                @click="resend"
-            >
-                Send the confirmation link again
-            </button>
+            <ResendLinkButton v-if="!family.email_confirmed" :family-id="family.id" />
             <form
                 v-if="family.can_edit && !family.email_confirmed"
                 class="flex flex-wrap items-end gap-2"

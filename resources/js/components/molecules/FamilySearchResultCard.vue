@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import ResendLinkButton from '@/components/atoms/ResendLinkButton.vue'
 import type { FamilySearchResult } from '@/types'
 
 /**
  * A church-wide search hit when registering for a parent: "already registered?" at a glance. The email is
  * masked; the family opens only when the staff member's scope allows it. Also one side of a possible duplicate,
- * where "Add a child" does not belong (`canAddChild: false`).
+ * where "Add a child" does not belong (`canAddChild: false`). An unconfirmed email offers "Send the confirmation link
+ * again" when the server says the viewer may (`can_resend`) — a visiting family too.
  */
 withDefaults(defineProps<{ result: FamilySearchResult; href: string; canAddChild?: boolean }>(), {
     canAddChild: true,
@@ -32,6 +34,7 @@ defineEmits<{ addChild: [] }>()
             >
         </p>
         <p class="text-text-muted">{{ result.satellite }} · {{ result.children.join(', ') }}</p>
+        <ResendLinkButton v-if="result.can_resend" :family-id="result.id" />
         <button
             v-if="canAddChild"
             type="button"

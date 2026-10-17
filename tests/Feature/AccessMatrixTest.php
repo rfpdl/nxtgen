@@ -65,9 +65,9 @@ function matrix(): array
         'church.families.show' => [AccessRowEnum::ViewFamily, Actor::seeingFamily()],
         'church.families.update' => [AccessRowEnum::EditFamily, Actor::editingFamily()],
         'church.children.update' => [AccessRowEnum::EditFamily, Actor::editingFamily()],
-        // Any Lifeshaper, wherever they serve: they meet the parent at the door (plan §3.2, read literally) — so an away
-        // Lifeshaper may and an away satellite admin may not. To confirm with Roy (TODO #28).
-        'church.families.resend' => [AccessRowEnum::ResendLink, [...Actor::seeingFamily(), Actor::AwayLifeshaper]],
+        // Anyone with a staff role in the church (DECISIONS 2026-10-17, later still — Roy): a Lifeshaper at the door
+        // helps a visiting family, so the other satellite's staff may too; revoked roles and parents may not.
+        'church.families.resend' => [AccessRowEnum::ResendLink, Actor::staff()],
         'church.families.email' => [AccessRowEnum::CorrectContact, Actor::editingFamily()],
         'church.children.status' => [AccessRowEnum::SetChildStatus, Actor::editingFamily()],
         'church.children.level' => [AccessRowEnum::SetChildLevel, [Actor::ChurchAdmin]],
@@ -293,7 +293,7 @@ describe('a family, for staff', function (): void {
         ->with(cells('church.families.show'));
     it('is edited only by an admin who may edit it @story#52 @story#53', cellTest())
         ->with(cells('church.families.update'));
-    it('has its link resent by its admins or any Lifeshaper @story#54 @story#55', cellTest())
+    it('has its link resent by any staff member in the church @story#54 @story#55', cellTest())
         ->with(cells('church.families.resend'));
     it('has its email corrected only by an admin who may edit it @story#56 @story#57', cellTest())
         ->with(cells('church.families.email'));

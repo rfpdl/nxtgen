@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ResendLinkButton from '@/components/atoms/ResendLinkButton.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import Pager from '@/components/molecules/Pager.vue'
 import RegistrationListFilters from '@/components/molecules/RegistrationListFilters.vue'
@@ -9,7 +10,8 @@ import { route } from 'ziggy-js'
 
 /**
  * The children list (plan §6): every child in the satellites the viewer can see — Level, age, status, an allergy
- * flag — with the same search and filters as the families list. Each child opens their family.
+ * flag — with the same search and filters as the families list. Each child opens their family; a child whose family's
+ * email is unconfirmed offers "Send the confirmation link again" (DECISIONS 2026-10-17).
  */
 defineProps<{
     children: ChildListRow[]
@@ -64,6 +66,7 @@ function apply(params: Record<string, string | number>): void {
                     data-testid="allergy-flag"
                     >Allergies</span
                 >
+                <ResendLinkButton v-if="child.can_resend" :family-id="child.family_id" />
             </li>
         </ul>
         <Pager

@@ -24,8 +24,11 @@ use Illuminate\Http\RedirectResponse;
 #[UserStory(
     title: 'Resend the confirmation link',
     persona: 'staff',
-    happyPaths: ['story#54' => 'Staff resend the confirmation link to an unconfirmed email'],
-    unhappyPaths: ['story#55' => 'Refused outside their scope, and honest when the email was not sent'],
+    happyPaths: [
+        'story#54' => 'Staff resend the confirmation link to an unconfirmed email',
+        'story#84' => 'Any staff member resends it from an unconfirmed row of the lists or the door search, a visiting Family too',
+    ],
+    unhappyPaths: ['story#55' => 'Refused to anyone with no staff Role here, and honest when the email was not sent'],
 )]
 #[AccessRow(AccessRowEnum::ResendLink)]
 final class ResendConfirmationFeature extends BaseChurchFeature

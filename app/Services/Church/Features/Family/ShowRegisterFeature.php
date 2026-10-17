@@ -40,7 +40,7 @@ final class ShowRegisterFeature extends BaseChurchFeature
 
         return Inertia::render('Church/Families/Register', [
             'query' => $query,
-            'results' => array_values($results->map(fn (Family $f) => FamilySearchResultData::fromModel($f, canOpen: $scope->canSeeFamily($f)))->all()),
+            'results' => array_values($results->map(fn (Family $f) => FamilySearchResultData::fromModel($f, canOpen: $scope->canSeeFamily($f), mayResend: $scope->canResendLink($f)))->all()),
             'satellites' => $this->run(new GetSatellitesJob(church: $church)),
             'enums' => FamilyFormEnums::toFrontend(),
         ]);

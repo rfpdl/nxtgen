@@ -15,7 +15,7 @@ Needs PHP 8.4+, Composer, Node 22+, Docker (MySQL + Redis only).
 docker compose up -d --wait mysql redis
 composer install && npm install
 cp .env.example .env && php artisan key:generate
-php artisan migrate --seed          # CCF, two satellites, groups, admin@nxtgen.test, lifeshaper@nxtgen.test
+php artisan migrate --seed          # CCF, two satellites, squads, admin@nxtgen.test, lifeshaper@nxtgen.test
 make dev                            # http://localhost:3020
 ```
 
@@ -47,8 +47,8 @@ They sign in the way people do — by opening the emailed link (copied to `stora
    `APP_DEBUG=false`, a real mailer (`MAIL_MAILER` + its keys — the first admin signs in by email link), and the
    church: `NXTGEN_CHURCH_*`, `NXTGEN_SATELLITES` (spelled as the registry sheet spells them), and
    `NXTGEN_FIRST_ADMIN_EMAIL`. Photos: attach a PRIVATE bucket in Laravel Cloud (it fills in `AWS_*`) and set `PHOTOS_DISK=s3`.
-2. `php artisan migrate --force && php artisan db:seed --force` — creates that church, its satellites, NxtGen's
-   groups and the first admin only (never the demo logins). It refuses to run with a log-only mailer. Running it
+2. `php artisan migrate --force && php artisan db:seed --force` — creates that church, its satellites, each
+   satellite's squads and the first admin only (never the demo logins). It refuses to run with a log-only mailer. Running it
    again adds anything missing and changes nothing that exists.
 3. The first admin signs in at `/login` and adds everyone else on **People** (`/{church}/people`).
 4. Families: the registry import, once (`nxtgen:registry-propose` → review → `nxtgen:registry-apply`). It sends

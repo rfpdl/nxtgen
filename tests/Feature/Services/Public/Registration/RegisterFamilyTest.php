@@ -8,9 +8,11 @@ use App\Data\Models\Family;
 use App\Data\Models\Satellite;
 use App\Data\Models\User;
 use App\Enums\RegistrationOutcomeEnum;
+use App\Notifications\MagicLinkNotification;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia;
 
+use function Pest\Laravel\assertAuthenticatedAs;
 use function Pest\Laravel\get;
 use function Pest\Laravel\post;
 use function Tests\Support\church;
@@ -96,6 +98,30 @@ it('does not register an already-registered email twice, and says nothing that r
         ->assertSessionHas('success', RegistrationOutcomeEnum::Registered->guardianMessage());
 
     expect(Family::query()->count())->toBe(1);
+});
+
+// DECISIONS 2026-10-17 (Roy): a parent whose email is still unconfirmed gets a fresh link by registering again.
+it('sends a parent who registers again with an unconfirmed email a fresh link that confirms it @story#5', function (): void {
+    Notification::fake();
+    [, $satellite] = ccf();
+    post('/ccf/register', validForm($satellite));
+    $user = User::query()->sole();
+    expect($user->email_verified_at)->toBeNull();
+
+    post('/ccf/register', validForm($satellite))->assertRedirect('/ccf/register/thanks');
+
+    $sent = [];
+    Notification::assertSentOnDemand(MagicLinkNotification::class, function (MagicLinkNotification $n) use (&$sent): bool {
+        $sent[] = $n->url;
+
+        return true;
+    });
+    expect($sent)->toHaveCount(2);
+
+    post((string) parse_url($sent[1], PHP_URL_PATH))->assertRedirect('/home');
+
+    expect($user->fresh()?->email_verified_at)->not->toBeNull();
+    assertAuthenticatedAs($user);
 });
 
 it('gives the same public answer for every registration outcome (no membership oracle) @story#5', function (): void {
