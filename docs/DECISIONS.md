@@ -4,6 +4,21 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-10-17 (later — Roy's answers to the refactor's open decisions)
+
+- **Squads now, the child→Squad lookup with check-in** — confirmed (Roy).
+- **Casing** (Roy, replaces Claude's camelCase-page-props rule above): everything that crosses between the server and
+  the browser is **snake_case** — page props included (`can_set_level`); the Vue prop-name-casing lint rule is
+  switched off for this. Anything that stays inside PHP is **camelCase** — variables, arguments and the internal
+  `#[NonClientFacing]` hand-off DTOs. Props passed between Vue components inside the browser stay camelCase
+  (Vue's convention) — they never cross to the server.
+- **Console service** for Features run from the terminal — confirmed (Roy): commands stay in `app/Console/Commands`
+  and serve a Feature from `app/Services/Console`.
+- **Re-sending the confirmation email** (Roy, replaces plan §3.2's role rule; closes TODO #28): anyone who can open
+  the family may re-send it — church admin, the family's satellite admin, any Lifeshaper who can see it. Offered on
+  the family page and on unconfirmed rows of the families and children lists. Parents already get a fresh link by
+  registering again or asking for a sign-in link.
+
 ## 2026-10-17
 
 Grilling session on refactoring Release 1 (Roy). Terms live in `GLOSSARY.md`; the work is

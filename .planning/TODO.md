@@ -8,7 +8,7 @@ Updated 2026-10-17. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 | # | Item | Why | Owner |
 |---|---|---|---|
 | 21 | **Staging dry run:** a real photo upload / show / hide against the private Laravel Cloud bucket; the registry import with the real sheet, reconciliation balances | review 3 · plan §12 | Claude + Roy |
-| 28 | **Confirm with Roy:** resending a confirmation link follows plan §3.2 literally — any Lifeshaper (even another satellite's) may, but another satellite's ADMIN may not (404). Keep, or let any admin resend too? (`AccessScope::canResendLink`; the grid's `church.families.resend` row) | refactor 09 review | Roy |
+| 28 | ~~Resend rule~~ — Roy: anyone who can open the family (issue 11) | decided 2026-10-17 | done |
 | 16 | Try a photo on a real iPhone (camera, Photos, Files) — HEIC is converted on the phone (`lib/photoForUpload`) | photo | Roy |
 
 ## Roy — to go live
