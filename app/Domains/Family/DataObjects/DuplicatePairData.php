@@ -9,7 +9,7 @@ use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
- * One possible duplicate on the review screen: the new family and the existing one, side by side, in the
+ * One possible duplicate on a family's page: the new family and the existing one, side by side, in the
  * church-wide search's limited view (FamilySearchResultData: masked email, no phone, no health).
  */
 #[TypeScript]

@@ -6,7 +6,7 @@ import { computed } from 'vue'
  * One child, for the child's own family and for staff who can see the family (plan §3.3: health details are
  * theirs to see). The nickname leads: it is what the child is called. Allergies stand out; the rest of the
  * health details follow only when given. The photo, if any, is a short-lived signed link. The default slot
- * holds actions (Edit, photo).
+ * holds actions (Edit, photo; for staff, Level and status).
  */
 const props = defineProps<{ child: ChildPortal }>()
 

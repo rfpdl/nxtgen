@@ -110,8 +110,8 @@ final readonly class AccessScope
     }
 
     /**
-     * The possible-duplicates screen: church admins and satellite admins. WHICH pairs each may review is
-     * canEditFamily on the new family (plan §6).
+     * Answering possible duplicates (on a family's page): church admins and satellite admins. WHICH pairs each may
+     * answer is canEditFamily on the new family (plan §6).
      */
     public function canReviewDuplicates(): bool
     {

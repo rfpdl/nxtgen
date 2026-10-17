@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Storage;
 /**
  * The church the access matrix and the response allowlists ask about (TODO #18): church "ccf" with satellites
  * "Home" and "Away"; one family at Home whose child Amara has a photo on file (consent given) and whose parent's
- * email is not yet confirmed, with a staff note; another family at Home; a possible duplicate of the first family;
+ * email is not yet confirmed, with another guardian (Jun, no login) and a staff note; another family at Home; a possible duplicate of the first family;
  * a Home Lifeshaper's role to remove; another church "other" — and one user per Actor. Fake the photos disk before making it.
  */
 final readonly class AccessWorld
@@ -46,6 +46,7 @@ final readonly class AccessWorld
         $family = familyAt($home, ['area_text' => 'Deira', 'notes' => 'Prefers Tagalog']);
         $parent = User::factory()->unverified()->create(['email' => 'janice@example.com']);
         guardianOf($family, $parent, ['first_name' => 'Janice', 'phone' => '0501112222']);
+        otherGuardianOf($family, ['first_name' => 'Jun', 'phone' => '0503334444']);
         $child = childOf($family, ['nickname' => 'Amara', 'gender' => 'girl', 'level' => 2, 'allergies' => 'Peanuts', 'illnesses' => 'Asthma']);
         Storage::disk('photos')->put('children/amara.jpg', 'jpeg');
         $child->forceFill(['photo_path' => 'children/amara.jpg', 'photo_consent_at' => now(), 'photo_consent_by' => $parent->id])->save();

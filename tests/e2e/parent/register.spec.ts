@@ -8,7 +8,7 @@ import { CHURCH, SATELLITES, uniqueEmail } from '../support/world'
  * Journey 1 — the one the stakeholders care about most: a parent registers their family on their phone,
  * confirms their email from the link, sees their family page, and adds another child later.
  */
-test('a parent registers, confirms their email and sees their family @story#4 @story#28', async ({
+test('a parent registers, confirms their email and sees their family @story#4 @story#28 @story#87', async ({
     page,
 }) => {
     const email = uniqueEmail('parent')
@@ -30,6 +30,12 @@ test('a parent registers, confirms their email and sees their family @story#4 @s
             { first: 'Sofia', last: 'Reyes', nickname: 'Sofi', gender: 'girl', dob: '2019-11-02' },
         ],
     )
+    // The father too: he will not sign in, so the form asks him for no email.
+    await page.getByTestId('add-guardian').click()
+    await page.getByTestId('other-guardian-0-first-name').fill('Ramon')
+    await page.getByTestId('other-guardian-0-last-name').fill('Reyes')
+    await page.getByTestId('other-guardian-0-phone').fill('0501234568')
+    await expect(page.getByTestId('other-guardian-0-email')).toHaveCount(0)
     await page.getByTestId('register-submit').click()
 
     await expect(page).toHaveURL(new RegExp(`/${CHURCH}/register/thanks`))
@@ -39,7 +45,10 @@ test('a parent registers, confirms their email and sees their family @story#4 @s
     await openEmailedLink(page, email, before)
     await expect(page).toHaveURL(new RegExp(`/${CHURCH}/family`))
     await expect(page.getByRole('heading', { name: 'My family' })).toBeVisible()
-    await expect(page.getByTestId('guardian')).toContainText('Joy Reyes')
+    await expect(page.getByTestId('guardian')).toHaveText([
+        /Joy Reyes · Mother/,
+        /Ramon Reyes · Father · 0501234568/,
+    ])
     await expect(page.getByTestId('family-child')).toHaveCount(2)
     await expect(
         page.getByTestId('family-child').filter({ hasText: 'Gabby' }).getByTestId('allergy'),

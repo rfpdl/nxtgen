@@ -4,6 +4,17 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-10-17 (Roy, after first look in the browser)
+
+- **No "Register a family" tab**: a "Register a family" button on the Families list (search-first step kept).
+- **After staff register a family, they land on the new family's page** with the success message.
+- **A family has one or more guardians** (mother, father, grandparent …) — added in both registration forms and on
+  the family page. Still **one login per family**: the family email, the primary guardian's. Others don't sign in.
+- **Level and Status sit inside the child's card** on the family page. A wider UI overhaul is wanted later
+  (TODO).
+- **No Duplicates tab**: possible duplicates are found with the Families list's "duplicates" filter. Merging two
+  families or two children (e.g. a child registered again) needs its own spec later (TODO).
+
 ## 2026-10-17 (later still — re-send for a visiting family)
 
 - **Anyone with a staff role in the church may re-send a family's confirmation email** (Roy, replaces the

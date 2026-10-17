@@ -53,7 +53,6 @@ final class HandleInertiaRequests extends Middleware
             // page that is not a staff page. Navigation only — every Feature still asks the scope itself.
             'church_nav' => fn (): ?array => ($scope = RequestContext::scope($request)) !== null ? [
                 'can_manage_people' => $scope->canManagePeople(),
-                'can_review_duplicates' => $scope->canReviewDuplicates(),
             ] : null,
 
             'flash' => [

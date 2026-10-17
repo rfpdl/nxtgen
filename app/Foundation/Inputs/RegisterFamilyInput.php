@@ -8,6 +8,7 @@ use App\Data\Models\Church;
 use App\Data\Models\Satellite;
 use App\Data\Models\User;
 use App\Domains\Family\DataObjects\FamilyRegistrationData;
+use App\Domains\Family\DataObjects\GuardianEditData;
 use App\Enums\RegistrationSourceEnum;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Data;
@@ -15,13 +16,16 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
  * The registration form — parent self-registration AND staff registering for a parent (plan §6 R1):
- * today's Google Form fields + home satellite.
+ * today's Google Form fields + home satellite, and the family's other parents and guardians (no login).
  * The satellite must belong to THIS church — an id from the body never reaches another church.
  */
 #[TypeScript]
 final class RegisterFamilyInput extends Data
 {
-    /** @param list<ChildInput> $children */
+    /**
+     * @param  list<ChildInput>  $children
+     * @param  list<OtherGuardianInput>  $guardians  the family's other parents and guardians, beside `guardian` (who signs in)
+     */
     public function __construct(
         public int $home_satellite_id,
         public ?string $area_text,
@@ -38,6 +42,8 @@ final class RegisterFamilyInput extends Data
         public bool $wants_dgroup = false,
         public ?string $lifestage = null,
         public ?string $notes = null,
+        #[DataCollectionOf(OtherGuardianInput::class)]
+        public array $guardians = [],
     ) {}
 
     /**
@@ -64,6 +70,8 @@ final class RegisterFamilyInput extends Data
             wantsDgroup: $this->wants_dgroup,
             lifestage: $this->lifestage,
             notes: $this->notes,
+            // A new family's guardians are all new: any id sent is ignored.
+            otherGuardians: array_map(fn (OtherGuardianInput $g) => GuardianEditData::fromForm($g->first_name, $g->last_name, $g->relationship, $g->phone, $g->ministries), $this->guardians),
         );
     }
 
@@ -93,6 +101,7 @@ final class RegisterFamilyInput extends Data
             ...FamilyDetailsInput::rules(),
             'privacy_consented' => ['accepted'],
             'children' => ['required', 'array', 'min:1', 'max:10'],
+            'guardians' => ['array', 'max:5'],
         ];
     }
 }

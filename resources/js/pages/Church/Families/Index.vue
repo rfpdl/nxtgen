@@ -40,6 +40,12 @@ const exportHref = computed(() => {
     <ChurchShell>
         <div class="flex flex-wrap items-center gap-4">
             <h1 class="text-text text-2xl font-semibold">Families ({{ pagination.total }})</h1>
+            <Link
+                :href="route('church.families.register', church.slug)"
+                class="min-h-touch bg-primary text-on-primary flex items-center rounded-md px-4 font-semibold"
+                data-testid="register-family"
+                >Register a family</Link
+            >
             <a
                 :href="exportHref"
                 class="min-h-touch border-border bg-surface text-text ml-auto flex items-center rounded-md border px-4"

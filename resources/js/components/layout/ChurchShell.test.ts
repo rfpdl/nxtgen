@@ -7,7 +7,7 @@ const page = {
         flash: {},
         church: { name: 'CCF', slug: 'ccf' },
         auth: { user: null, can_switch: false },
-        church_nav: { can_manage_people: false, can_review_duplicates: false },
+        church_nav: { can_manage_people: false },
     },
 }
 
@@ -19,7 +19,7 @@ vi.mock('@inertiajs/vue3', () => ({
 vi.mock('ziggy-js', () => ({ route: (name: string, slug?: string) => `/${slug ?? ''}#${name}` }))
 
 describe('ChurchShell', () => {
-    it('names the church it shares, and links to the registration tools', () => {
+    it('names the church it shares, and links to the registration lists', () => {
         const wrapper = mount(ChurchShell, {
             slots: { default: '<p>body</p>' },
         })
@@ -27,8 +27,15 @@ describe('ChurchShell', () => {
         expect(wrapper.text()).toContain('CCF')
         expect(wrapper.text()).toContain('Families')
         expect(wrapper.text()).toContain('Children')
-        expect(wrapper.text()).toContain('Register a family')
         expect(wrapper.text()).toContain('body')
+    })
+
+    it('has no Register or Duplicates tab: both start from the Families list', () => {
+        page.props.church_nav.can_manage_people = true
+        const wrapper = mount(ChurchShell)
+
+        expect(wrapper.text()).not.toContain('Register a family')
+        expect(wrapper.text()).not.toContain('Duplicates')
     })
 
     it('offers sign out', () => {
@@ -43,13 +50,5 @@ describe('ChurchShell', () => {
 
         page.props.church_nav.can_manage_people = true
         expect(mount(ChurchShell).text()).toContain('People')
-    })
-
-    it('shows Duplicates only to someone who may review them', () => {
-        page.props.church_nav.can_review_duplicates = false
-        expect(mount(ChurchShell).text()).not.toContain('Duplicates')
-
-        page.props.church_nav.can_review_duplicates = true
-        expect(mount(ChurchShell).text()).toContain('Duplicates')
     })
 })

@@ -68,3 +68,43 @@ it('ignores a phone too short to compare', function (): void {
 
     expect((new CreateDuplicateCandidatesJob(family: $new))->handle())->toBe(0);
 });
+
+// It runs again when an older family changes (a guardian added, a child added): a pair already recorded the other
+// way round — answered or not — is the same pair, and is not flagged again.
+it('never records a pair again the other way round', function (): void {
+    $satellite = satelliteOf(church());
+    $older = familyAt($satellite);
+    Guardian::factory()->create(['family_id' => $older->id, 'phone' => '0501234567']);
+    childOf($older, ['first_name' => 'Amara', 'last_name' => 'Santos', 'date_of_birth' => '2019-03-04']);
+    $newer = familyAt($satellite);
+    Guardian::factory()->create(['family_id' => $newer->id, 'phone' => '0501234567']);
+    childOf($newer, ['first_name' => 'Amara', 'last_name' => 'Santos', 'date_of_birth' => '2019-03-04']);
+    (new CreateDuplicateCandidatesJob(family: $newer))->handle();
+    DuplicateCandidate::query()->update(['status' => DuplicateStatusEnum::Dismissed]);
+
+    $created = (new CreateDuplicateCandidatesJob(family: $older))->handle();
+
+    expect($created)->toBe(0)
+        ->and(DuplicateCandidate::query()->count())->toBe(2);
+});
+
+// Found from an older family (a guardian or a child added to it): the pair still names the NEWER record as the one to
+// answer for, so it is the newer family's editor who answers, as at registration (plan §6).
+it('records the newer family, or the child added later, as the one to answer for — whichever side it was found from', function (): void {
+    $satellite = satelliteOf(church());
+    $older = familyAt($satellite);
+    Guardian::factory()->create(['family_id' => $older->id, 'phone' => '0501234567']);
+    $newer = familyAt($satellite);
+    Guardian::factory()->create(['family_id' => $newer->id, 'phone' => '0501234567']);
+    $first = childOf($newer, ['first_name' => 'Amara', 'last_name' => 'Santos', 'date_of_birth' => '2019-03-04']);
+    // A child added to the older family later, the same as the newer family's.
+    $later = childOf($older, ['first_name' => 'Amara', 'last_name' => 'Santos', 'date_of_birth' => '2019-03-04']);
+
+    (new CreateDuplicateCandidatesJob(family: $older))->handle();
+
+    $pairs = DuplicateCandidate::query()->orderBy('subject_type')->get();
+    expect($pairs->map(fn (DuplicateCandidate $p): array => [$p->subject_type, $p->subject_id, $p->candidate_id])->all())->toBe([
+        ['child', $later->id, $first->id],
+        ['family', $newer->id, $older->id],
+    ]);
+});

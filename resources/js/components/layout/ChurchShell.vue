@@ -11,6 +11,8 @@ import { route } from 'ziggy-js'
 
 /**
  * The church staff frame: church name, the Release 1 tools, People (admins), sign out, and the flash message.
+ * Registering starts from the Families list's button, and possible duplicates from its "duplicates" filter
+ * (DECISIONS 2026-10-17, after first look) — neither has a tab.
  * The church is the page's shared `church`; what to show comes from the shared `church_nav`.
  */
 const church = useChurch()
@@ -18,7 +20,6 @@ const church = useChurch()
 const { message, dismiss } = useFlashMessages()
 const page = usePage<SharedProps>()
 const canManagePeople = computed(() => page.props.church_nav?.can_manage_people === true)
-const canReviewDuplicates = computed(() => page.props.church_nav?.can_review_duplicates === true)
 </script>
 
 <template>
@@ -37,20 +38,9 @@ const canReviewDuplicates = computed(() => page.props.church_nav?.can_review_dup
                     >Children</Link
                 >
                 <Link
-                    :href="route('church.families.register', church.slug)"
-                    class="min-h-touch text-text flex items-center underline-offset-4 hover:underline"
-                    >Register a family</Link
-                >
-                <Link
                     :href="route('church.poster', church.slug)"
                     class="min-h-touch text-text flex items-center underline-offset-4 hover:underline"
                     >QR poster</Link
-                >
-                <Link
-                    v-if="canReviewDuplicates"
-                    :href="route('church.duplicates.index', church.slug)"
-                    class="min-h-touch text-text flex items-center underline-offset-4 hover:underline"
-                    >Duplicates</Link
                 >
                 <Link
                     v-if="canManagePeople"

@@ -18,7 +18,8 @@ use Inertia\Response;
 
 /**
  * The parent's own family page: the family, every child's details including health (plan §3.3 — the child's
- * own family sees them), and what the edit forms need: the family's details and the parent's OWN details.
+ * own family sees them), and what the edit forms need: the family's details, the parent's OWN details, and the
+ * family's other guardians.
  *
  * @extends BaseFamilyFeature<Response>
  */
@@ -40,6 +41,7 @@ final class ShowFamilyFeature extends BaseFamilyFeature
             'family' => $this->run(new GetFamilyPortalJob(family: $family)),
             'details' => FamilyDetailsData::fromModel($family),
             'me' => GuardianEditData::fromModel($me),
+            'other_guardians' => GuardianEditData::othersOf($family),
             'satellites' => $this->run(new GetSatellitesJob(church: $family->church)),
             'enums' => FamilyFormEnums::toFrontend(),
         ]);

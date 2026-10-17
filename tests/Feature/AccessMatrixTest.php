@@ -73,8 +73,8 @@ function matrix(): array
         'church.children.level' => [AccessRowEnum::SetChildLevel, [Actor::ChurchAdmin]],
         'church.children.photo-consent' => [AccessRowEnum::ChildPhoto, Actor::seeingFamily()],
         'church.children.photo' => [AccessRowEnum::ChildPhoto, Actor::seeingFamily()],
-        // The page opens for every admin (the away admin sees an empty list); answering a pair needs the new family.
-        'church.duplicates.index' => [AccessRowEnum::ReviewDuplicates, [Actor::ChurchAdmin, Actor::HomeAdmin, Actor::AwayAdmin]],
+        // Answered from either family's page (there is no Duplicates page — DECISIONS 2026-10-17, after first look);
+        // answering needs the new family.
         'church.duplicates.resolve' => [AccessRowEnum::ReviewDuplicates, Actor::editingFamily()],
         // People opens for every admin; adding or removing a home Lifeshaper needs the home satellite.
         'church.people.index' => [AccessRowEnum::GrantRoles, [Actor::ChurchAdmin, Actor::HomeAdmin, Actor::AwayAdmin]],
@@ -146,7 +146,6 @@ function requestFor(string $route, AccessWorld $w): array
         'church.children.level' => ['PUT', "/ccf/children/{$c}/level", ['level' => 3]],
         'church.children.photo-consent' => ['PUT', "/ccf/children/{$c}/photo-consent", []],
         'church.children.photo' => ['POST', "/ccf/children/{$c}/photo", ['photo' => $photo()]],
-        'church.duplicates.index' => ['GET', '/ccf/duplicates', []],
         'church.duplicates.resolve' => ['PUT', "/ccf/duplicates/{$w->pair->id}", ['status' => 'dismissed']],
         'church.people.index' => ['GET', '/ccf/people', []],
         'church.people.store' => ['POST', '/ccf/people', ['name' => 'Leo Lifeshaper', 'email' => 'leo@example.com', 'role' => 'lifeshaper', 'scope_type' => 'satellite', 'scope_id' => $w->home->id]],
@@ -313,8 +312,6 @@ describe('a child, for staff', function (): void {
 });
 
 describe('duplicates and People, for admins', function (): void {
-    it('opens possible duplicates for admins only @story#70 @story#71', cellTest())
-        ->with(cells('church.duplicates.index'));
     it('lets a pair be answered only by an admin of the new family @story#72 @story#73', cellTest())
         ->with(cells('church.duplicates.resolve'));
     it('opens People for admins only @story#74 @story#75', cellTest())

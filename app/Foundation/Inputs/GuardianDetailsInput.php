@@ -49,12 +49,6 @@ final class GuardianDetailsInput extends Data
 
     public function toEdit(): GuardianEditData
     {
-        return new GuardianEditData(
-            first_name: trim($this->first_name),
-            last_name: trim($this->last_name),
-            relationship: $this->relationship,
-            phone: trim($this->phone),
-            ministries: array_values(array_filter(array_map('trim', $this->ministries), fn (string $m): bool => $m !== '')),
-        );
+        return GuardianEditData::fromForm($this->first_name, $this->last_name, $this->relationship, $this->phone, $this->ministries);
     }
 }

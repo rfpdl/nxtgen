@@ -17,7 +17,9 @@ import {
  */
 test.use({ storageState: sessionFile('lifeshaper') })
 
-test('finds a registered family and adds a child to it @story#46 @story#48', async ({ page }) => {
+test('finds a registered family and adds a child to it @story#46 @story#48 @story#86', async ({
+    page,
+}) => {
     await page.goto(`/${CHURCH}/families/new`)
     await page.getByTestId('family-search').fill('Dela Cruz')
     await page.getByTestId('family-search').press('Enter')
@@ -35,21 +37,20 @@ test('finds a registered family and adds a child to it @story#46 @story#48', asy
     })
     await page.getByTestId('add-child-submit').click()
 
-    await expect(page.getByTestId('flash-success')).toBeVisible()
-    // The child is really on the family now: search again and the family lists Isa.
-    await page.getByTestId('family-search').fill('Dela Cruz')
-    await page.getByTestId('family-search').press('Enter')
-    await expect(
-        page.getByTestId('search-result').filter({ hasText: FAMILIES.dxb.guardian }),
-    ).toContainText('Isa')
+    // Straight to the family's page, with the message: Isa is on the family now.
+    await expect(page.getByTestId('flash-success')).toContainText('Isa is added to the family.')
+    await expect(page.getByRole('heading', { name: FAMILIES.dxb.guardian })).toBeVisible()
+    await expect(page.getByTestId('family-child').filter({ hasText: 'Isa' }).first()).toBeVisible()
 })
 
-test('registers a new family for a parent who is not found @story#46 @story#47', async ({
+test('registers a new family for a parent who is not found @story#46 @story#47 @story#85', async ({
     page,
 }) => {
     const email = uniqueEmail('walkup')
     const surname = uniqueSurname('Mendoza')
-    await page.goto(`/${CHURCH}/families/new`)
+    // Registering starts from the Families list (there is no Register tab).
+    await page.goto(`/${CHURCH}/families`)
+    await page.getByTestId('register-family').click()
     await page.getByTestId('family-search').fill(surname)
     await page.getByTestId('family-search').press('Enter')
     await expect(page.getByText('No family found.')).toBeVisible()
@@ -62,7 +63,10 @@ test('registers a new family for a parent who is not found @story#46 @story#47',
     )
     await page.getByTestId('register-submit').click()
 
-    await expect(page.getByTestId('flash-success')).toBeVisible()
+    // The new family's page, with the message.
+    await expect(page.getByTestId('flash-success')).toContainText('Registered.')
+    await expect(page.getByRole('heading', { name: `Rosa ${surname}` })).toBeVisible()
+    await expect(page.getByTestId('family-child')).toContainText('Pao')
     await page.goto(`/${CHURCH}/families`)
     const row = page.getByTestId('family-row').filter({ hasText: `Rosa ${surname}` })
     await expect(row).toContainText('Email not confirmed')
@@ -129,7 +133,9 @@ test("re-sends a visiting family's confirmation link from the door search @story
         [{ first: 'Gabo', last: surname, nickname: 'Gabo', gender: 'boy', dob: '2018-05-05' }],
     )
     await page.getByTestId('register-submit').click()
-    await expect(page.getByTestId('flash-success')).toBeVisible()
+    // A family this Lifeshaper cannot open: back at the search, with the message.
+    await expect(page.getByTestId('flash-success')).toContainText('Registered.')
+    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/families/new$`))
 
     // Next Sunday the parent visits DXB and says the email never came: search at the door, send it again.
     await page.goto(`/${CHURCH}/families/new`)

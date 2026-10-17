@@ -78,7 +78,7 @@ describe('RegisterFamilyForm', () => {
         const wrapper = mount(RegisterFamilyForm, { props })
 
         await wrapper.find('[data-testid="lifestage"]').setValue('Married with kids')
-        await wrapper.find('[data-testid="ministry"]').setValue('Music')
+        await wrapper.find('[data-testid="guardian-ministry"]').setValue('Music')
         await wrapper.find('form').trigger('submit')
 
         const sent = post.mock.contexts[0] as {
@@ -87,5 +87,19 @@ describe('RegisterFamilyForm', () => {
         }
         expect(sent.lifestage).toBe('Married with kids')
         expect(sent.guardian.ministries).toEqual(['Music'])
+    })
+
+    it("sends the family's other parents and guardians, who are asked no email", async () => {
+        const wrapper = mount(RegisterFamilyForm, { props })
+        expect(wrapper.find('[data-testid="other-guardian-0-first-name"]').exists()).toBe(false)
+
+        await wrapper.find('[data-testid="add-guardian"]').trigger('click')
+        await wrapper.find('[data-testid="other-guardian-0-first-name"]').setValue('Jun')
+        await wrapper.find('[data-testid="other-guardian-0-phone"]').setValue('0509990000')
+        expect(wrapper.find('[data-testid="other-guardian-0-email"]').exists()).toBe(false)
+        await wrapper.find('form').trigger('submit')
+
+        const sent = post.mock.contexts[0] as { guardians: { first_name: string; phone: string }[] }
+        expect(sent.guardians).toMatchObject([{ first_name: 'Jun', phone: '0509990000' }])
     })
 })

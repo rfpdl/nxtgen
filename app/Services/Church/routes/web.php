@@ -42,7 +42,6 @@ Route::get('/people', [PeopleController::class, 'index'])->name('church.people.i
 Route::post('/people', [PeopleController::class, 'store'])->middleware('throttle:per-device')->name('church.people.store');
 Route::delete('/people/roles/{assignment}', [PeopleController::class, 'removeRole'])->whereNumber('assignment')->name('church.people.roles.destroy');
 
-Route::get('/duplicates', [DuplicateController::class, 'index'])->name('church.duplicates.index');
 Route::put('/duplicates/{pair}', [DuplicateController::class, 'resolve'])->whereNumber('pair')->name('church.duplicates.resolve');
 
 Route::get('/poster', [PosterController::class, 'show'])->name('church.poster');

@@ -13,6 +13,7 @@ use function Tests\Support\church;
 use function Tests\Support\familyAt;
 use function Tests\Support\grantRole;
 use function Tests\Support\guardianOf;
+use function Tests\Support\otherGuardianOf;
 use function Tests\Support\satelliteOf;
 use function Tests\Support\staffMember;
 
@@ -87,4 +88,14 @@ it('puts a child on the family, in the family\'s church', function (): void {
     expect($child->family_id)->toBe($family->id)
         ->and($child->church_id)->toBe($family->church_id)
         ->and($child->nickname)->toBe('Amara');
+});
+
+it('makes another guardian of a family, with no login, never the primary', function (): void {
+    $family = familyAt(satelliteOf(church()));
+    $primary = guardianOf($family, User::factory()->create());
+
+    $lola = otherGuardianOf($family, ['first_name' => 'Lola']);
+
+    expect($family->refresh()->primary_guardian_id)->toBe($primary->id)
+        ->and([$lola->family_id, $lola->church_id, $lola->user_id, $lola->first_name])->toBe([$family->id, $family->church_id, null, 'Lola']);
 });

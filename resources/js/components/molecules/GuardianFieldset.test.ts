@@ -38,11 +38,11 @@ describe('GuardianFieldset', () => {
         })
 
         await wrapper.find('[data-testid="guardian-first-name"]').setValue('Janice')
-        await wrapper.find('[data-testid="ministry"]').setValue('Music')
+        await wrapper.find('[data-testid="guardian-ministry"]').setValue('Music')
         expect(g.first_name).toBe('Janice')
         expect(g.ministries).toEqual(['Music'])
 
-        await wrapper.find('[data-testid="ministry"]').setValue('  ')
+        await wrapper.find('[data-testid="guardian-ministry"]').setValue('  ')
         expect(g.ministries).toEqual([])
     })
 
@@ -74,5 +74,25 @@ describe('GuardianFieldset', () => {
         })
 
         expect(wrapper.text()).toContain('Please enter your mobile number.')
+    })
+
+    it('speaks about another guardian, with its own test ids and errors', () => {
+        const wrapper = mount(GuardianFieldset, {
+            props: {
+                modelValue: guardian(),
+                errors: { 'guardians.1.phone': 'Please enter their mobile number.' },
+                withEmail: false,
+                errorKey: 'guardians.1',
+                testid: 'other-guardian-1',
+                other: true,
+            },
+        })
+
+        expect(wrapper.text()).toContain('First name')
+        expect(wrapper.text()).not.toContain('Your first name')
+        expect(wrapper.text()).toContain('Please enter their mobile number.')
+        expect(wrapper.find('[data-testid="other-guardian-1-phone"]').exists()).toBe(true)
+        expect(wrapper.find('[data-testid="other-guardian-1-ministry"]').exists()).toBe(true)
+        expect(wrapper.find('[data-testid="guardian-phone"]').exists()).toBe(false)
     })
 })

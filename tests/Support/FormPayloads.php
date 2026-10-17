@@ -43,6 +43,22 @@ function familyEdit(Satellite $satellite, array $overrides = []): array
 }
 
 /**
+ * The registration form (RegisterFamilyInput) — parent self-registration and staff registering for a parent post the
+ * same shape. One child; `guardians` (the family's other parents and guardians) only when an override gives them.
+ *
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function familyRegistration(Satellite $satellite, string $email, array $overrides = []): array
+{
+    return array_merge([
+        'home_satellite_id' => $satellite->id, 'area_text' => 'Deira', 'privacy_consented' => true,
+        'guardian' => ['first_name' => 'Mira', 'last_name' => 'Bonza', 'relationship' => 'mother', 'phone' => '0523508443', 'email' => $email],
+        'children' => [['first_name' => 'Clarion', 'middle_name' => null, 'last_name' => 'Bonza', 'nickname' => 'Clarion', 'gender' => 'boy', 'date_of_birth' => '2018-02-03', 'has_allergies' => false, 'allergies' => null]],
+    ], $overrides);
+}
+
+/**
  * One child's edit form (ChildInput).
  *
  * @return array<string, mixed>

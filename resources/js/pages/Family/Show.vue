@@ -17,6 +17,7 @@ defineProps<{
     family: FamilyPortal
     details: FamilyDetails
     me: GuardianEdit
+    other_guardians: GuardianEdit[]
     satellites: SatelliteOption[]
 }>()
 
@@ -56,6 +57,7 @@ const { message, dismiss } = useFlashMessages()
                 :action="route('family.update', church.slug)"
                 :details="details"
                 :guardian="me"
+                :others="other_guardians"
                 :satellites="satellites"
             />
         </section>

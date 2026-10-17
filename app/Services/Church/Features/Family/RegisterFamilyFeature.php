@@ -17,14 +17,20 @@ use Illuminate\Http\RedirectResponse;
 
 /**
  * A staff member registers a family for a parent with no internet (plan §7.2). Same single registration path;
- * the email stays unconfirmed until the parent taps the link, which never blocks check-in.
+ * the email stays unconfirmed until the parent taps the link, which never blocks check-in. Staff then land on the
+ * family's page (DECISIONS 2026-10-17, after first look) — unless it is a satellite they cannot open, or the email
+ * already had a family here, when they go back to the search.
  *
  * @extends BaseChurchFeature<RedirectResponse>
  */
 #[UserStory(
     title: 'Register a family for a parent',
     persona: 'staff',
-    happyPaths: ['story#47' => 'Staff register a Family for a parent, email unconfirmed, recording who did it'],
+    happyPaths: [
+        'story#47' => 'Staff register a Family for a parent, email unconfirmed, recording who did it',
+        'story#85' => 'Staff land on the Family\'s page with the message — or back at the search when they cannot open it',
+        'story#88' => 'Staff add the Family\'s other Guardians too; a phone any of them shares flags a possible duplicate',
+    ],
 )]
 #[AccessRow(AccessRowEnum::RegisterFamily)]
 final class RegisterFamilyFeature extends BaseChurchFeature
@@ -47,6 +53,11 @@ final class RegisterFamilyFeature extends BaseChurchFeature
             RegistrationOutcomeEnum::ClaimSent, RegistrationOutcomeEnum::ClaimResent => 'Registered. The email already has an account, so the parent will get a link to connect this family.',
         };
 
-        return redirect()->route('church.families.register', $church)->with('success', $message);
+        $family = $result->outcome === RegistrationOutcomeEnum::AlreadyRegistered ? null : $result->family;
+
+        return ($family !== null && $this->scope()->canSeeFamily($family)
+            ? redirect()->route('church.families.show', [$church, $family])
+            : redirect()->route('church.families.register', $church)
+        )->with('success', $message);
     }
 }

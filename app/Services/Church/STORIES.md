@@ -32,8 +32,15 @@ decided by `AccessScope` against the access-matrix row the Feature declares (`#[
   family page, an unconfirmed row of the families or children list, or the door search. A resend sends a claim link if a claim is pending, otherwise a fresh
   confirm link; the page says honestly when the per-address limit stopped it. (A parent gets a fresh link by
   registering again or asking for a sign-in link.)
-- A possible duplicate is answered by someone who may edit the newer Family: not the same, or the same (flagged
-  for a later merge; nothing is merged).
+- **Registering starts from the Families list** ("Register a family", search first) — there is no Register tab.
+  Staff then land on the Family's page; back at the search if it is a Satellite they cannot open.
+- A Family has one or more Guardians. The primary one's login is the Family's; whoever may edit the Family adds,
+  changes and removes the others (no login) on "Edit family details", each change noted on its history, and a
+  phone they bring is checked for possible duplicates.
+- **Possible duplicates have no page of their own**: the Families list's "duplicates" filter finds them, and they
+  are answered on either Family's page by someone who may edit the newer Family: not the same (clears a false
+  flag), or the same (flagged for a later merge; nothing is merged). A pair is recorded once, whichever Family it
+  was found from.
 
 ## People
 - One login per person: adding someone who already has a login (often a parent) only gives the Role.

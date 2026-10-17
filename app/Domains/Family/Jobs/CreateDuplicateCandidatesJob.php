@@ -13,8 +13,9 @@ use App\Enums\DuplicateStatusEnum;
 use App\Foundation\Jobs\BaseJob;
 
 /**
- * Record possible duplicates of a just-registered family for staff review (plan §4.2). Candidates only —
- * a shared phone or a namesake is evidence, not identity.
+ * Record possible duplicates of a just-registered or just-changed family (a child or a guardian added) for staff
+ * review (plan §4.2). Candidates only — a shared phone or a namesake is evidence, not identity. A pair is recorded
+ * once, whichever of its families it was found from, with the newer record as the one to answer for.
  *
  *   family ↔ family  when a guardian shares a phone (last 9 digits)
  *   child  ↔ child   when first name + last name + birthday match
@@ -67,10 +68,14 @@ final class CreateDuplicateCandidatesJob extends BaseJob
         return $created;
     }
 
-    private function record(string $type, int $subjectId, int $candidateId, DuplicateReasonEnum $reason): int
+    /**
+     * One pair, the NEWER record (the higher id: the family registered later, or the child added later) as its
+     * subject — whichever side it was found from — so the newer family's editor answers it (plan §6). Recorded once.
+     */
+    private function record(string $type, int $foundFrom, int $other, DuplicateReasonEnum $reason): int
     {
         $model = DuplicateCandidate::query()->firstOrCreate(
-            ['subject_type' => $type, 'subject_id' => $subjectId, 'candidate_id' => $candidateId],
+            ['subject_type' => $type, 'subject_id' => max($foundFrom, $other), 'candidate_id' => min($foundFrom, $other)],
             ['church_id' => $this->family->church_id, 'reason' => $reason, 'status' => DuplicateStatusEnum::default()],
         );
 

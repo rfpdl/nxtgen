@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use App\Data\Models\Child;
 use App\Data\Models\Church;
+use App\Data\Models\DuplicateCandidate;
 use App\Data\Models\Family;
+use App\Data\Models\Guardian;
 use App\Data\Models\MagicLink;
 use App\Data\Models\Satellite;
 use App\Data\Models\User;
@@ -26,6 +28,7 @@ use function Tests\Support\childOf;
 use function Tests\Support\church;
 use function Tests\Support\exportedRows;
 use function Tests\Support\familyAt;
+use function Tests\Support\familyRegistration;
 use function Tests\Support\grantRole;
 use function Tests\Support\guardianOf;
 use function Tests\Support\satelliteOf;
@@ -155,6 +158,53 @@ describe('registering for a parent', function (): void {
         expect($family->children()->count())->toBe(2);
     });
 
+    it('takes staff to the new family\'s page, with the message @story#85', function (): void {
+        Notification::fake();
+        ['church' => $church, 'htc' => $htc] = adminChurch();
+
+        $response = actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->post('/ccf/families', familyRegistration($htc, 'mira@example.com'));
+
+        $response->assertRedirect('/ccf/families/'.Family::query()->sole()->id)
+            ->assertSessionHas('success', 'Registered. The parent will get an email to confirm. The children can check in now.');
+    });
+
+    it('sends staff back to the search, with the message, when they cannot open the family they registered @story#85', function (): void {
+        Notification::fake();
+        ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
+
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->post('/ccf/families', familyRegistration($house, 'mira@example.com'))
+            ->assertRedirect('/ccf/families/new')->assertSessionHas('success');
+    });
+
+    it('takes staff to the family\'s page after adding a child, or back where they were if they cannot open it @story#86', function (): void {
+        Notification::fake();
+        ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
+        $mine = registeredFamily($htc, 'Janice', 'janice@example.com');
+        $visiting = registeredFamily($house, 'Mira', 'mira@example.com');
+        $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
+        $child = ['first_name' => 'Baby', 'last_name' => 'Ramos', 'nickname' => 'Baby', 'gender' => 'girl', 'date_of_birth' => '2021-01-01', 'has_allergies' => false];
+
+        actingAs($lifeshaper)->from('/ccf/families/new?q=ramos')->post("/ccf/families/{$mine->id}/children", $child)
+            ->assertRedirect("/ccf/families/{$mine->id}")->assertSessionHas('success', 'Baby is added to the family.');
+        actingAs($lifeshaper)->from('/ccf/families/new?q=ramos')->post("/ccf/families/{$visiting->id}/children", $child)
+            ->assertRedirect('/ccf/families/new?q=ramos')->assertSessionHas('success', 'Baby is added to the family.');
+    });
+
+    it('registers the family\'s other guardians too, and flags a family one of them shares a phone with @story#88', function (): void {
+        Notification::fake();
+        ['church' => $church, 'htc' => $htc] = adminChurch();
+        $existing = registeredFamily($htc, 'Janice', 'janice@example.com');
+
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->post('/ccf/families', familyRegistration($htc, 'mira@example.com', [
+            'guardians' => [['first_name' => 'Lolo', 'last_name' => 'Bonza', 'relationship' => 'grandparent', 'phone' => '+971 54 489 7346']],
+        ]))->assertSessionHas('success');
+
+        $family = Family::query()->latest('id')->firstOrFail();
+        $lolo = Guardian::query()->where('first_name', 'Lolo')->sole();
+        expect([$lolo->family_id, $lolo->user_id])->toBe([$family->id, null])
+            ->and(DuplicateCandidate::query()->sole()->only(['subject_id', 'candidate_id']))->toBe(['subject_id' => $family->id, 'candidate_id' => $existing->id]);
+    });
+
     it('refuses to add a child to a family of another church @story#49', function (): void {
         ['church' => $church, 'htc' => $htc] = adminChurch();
         $foreign = Family::factory()->create();
@@ -243,7 +293,7 @@ describe('re-sending from the lists', function (): void {
         $new = registeredFamily($htc, 'Anna', 'anna@example.com', verified: false);
         (new CreateDuplicateCandidatesJob(family: $new))->handle();
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/duplicates')
+        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get("/ccf/families/{$new->id}")
             ->assertInertia(fn (AssertableInertia $p) => $p->where('duplicates.0.subject.can_resend', false)->where('duplicates.0.candidate.can_resend', false));
     });
 

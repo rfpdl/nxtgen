@@ -7,6 +7,7 @@ namespace App\Domains\Family\DataObjects;
 use App\Enums\RelationshipEnum;
 use App\Foundation\Attributes\NonClientFacing;
 
+/** The guardian who registers a family (the primary): their details and the email that becomes the family's login. */
 #[NonClientFacing]
 final readonly class GuardianDetailsData
 {

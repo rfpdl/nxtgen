@@ -14,6 +14,7 @@ use App\Data\Models\User;
 use App\Domains\Family\DataObjects\ChildDetailsData;
 use App\Domains\Family\DataObjects\FamilyRegistrationData;
 use App\Domains\Family\DataObjects\GuardianDetailsData;
+use App\Domains\Family\DataObjects\GuardianEditData;
 use App\Domains\Family\DataObjects\RegistrationResultData;
 use App\Enums\ChildStatusEnum;
 use App\Enums\FamilyClaimStatusEnum;
@@ -41,8 +42,11 @@ function registrationChurch(): array
     return [$church, satelliteOf($church)];
 }
 
-/** @param list<ChildDetailsData>|null $children */
-function registration(Church $church, Satellite $satellite, string $email = 'Janice@Example.com ', ?array $children = null, RegistrationSourceEnum $source = RegistrationSourceEnum::Self, ?User $by = null): FamilyRegistrationData
+/**
+ * @param  list<ChildDetailsData>|null  $children
+ * @param  list<GuardianEditData>  $others
+ */
+function registration(Church $church, Satellite $satellite, string $email = 'Janice@Example.com ', ?array $children = null, RegistrationSourceEnum $source = RegistrationSourceEnum::Self, ?User $by = null, array $others = []): FamilyRegistrationData
 {
     return new FamilyRegistrationData(
         church: $church,
@@ -59,6 +63,7 @@ function registration(Church $church, Satellite $satellite, string $email = 'Jan
         privacyConsented: true,
         source: $source,
         registeredBy: $by,
+        otherGuardians: $others,
     );
 }
 
@@ -175,6 +180,24 @@ it('flags a possible duplicate child for review without blocking registration', 
         ->and(Family::query()->count())->toBe(2)
         ->and(DuplicateCandidate::query()->where('subject_type', 'child')->where('reason', 'same_name_dob')->count())->toBe(1)
         ->and(DuplicateCandidate::query()->where('subject_type', 'family')->where('reason', 'same_phone')->count())->toBe(1);
+});
+
+it('puts the family\'s other guardians on it with no login, and flags a family that shares one\'s phone', function (): void {
+    [$church, $satellite] = registrationChurch();
+    $existing = register(registration($church, $satellite, email: 'lola@example.com'))->family;
+    Guardian::query()->update(['phone' => '0507654321']);
+    $lola = new GuardianEditData(first_name: 'Lola', last_name: 'Ramos', relationship: RelationshipEnum::Grandparent, phone: '050 765 4321', ministries: []);
+    $dad = new GuardianEditData(first_name: 'Jun', last_name: 'Ramos', relationship: RelationshipEnum::Father, phone: '0509990000', ministries: []);
+    $family = register(registration($church, $satellite, email: 'janice2@example.com', children: [new ChildDetailsData(
+        firstName: 'Bea', middleName: null, lastName: 'Ramos', nickname: 'Bea', gender: GenderEnum::Girl, dateOfBirth: '2018-01-01', allergies: null,
+    )], others: [$lola, $dad]))->family;
+
+    $others = Guardian::query()->where('family_id', $family?->id)->where('id', '!=', $family?->primary_guardian_id)->orderBy('id')->get();
+    expect($others->map(fn (Guardian $g): array => [$g->first_name, $g->relationship, $g->user_id, $g->email])->all())
+        ->toBe([['Lola', RelationshipEnum::Grandparent, null, null], ['Jun', RelationshipEnum::Father, null, null]])
+        ->and(User::query()->count())->toBe(2)
+        ->and(DuplicateCandidate::query()->where('subject_type', 'family')->sole()->only(['subject_id', 'candidate_id']))
+        ->toBe(['subject_id' => $family?->id, 'candidate_id' => $existing?->id]);
 });
 
 it('records who registered on the parent\'s behalf', function (): void {

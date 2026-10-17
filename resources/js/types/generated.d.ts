@@ -131,6 +131,7 @@ declare namespace App {
                     relationship: App.Enums.RelationshipEnum
                     phone: string
                     ministries: string[]
+                    id: number | null
                 }
                 export type GuardianPortalData = {
                     first_name: string
@@ -239,6 +240,8 @@ declare namespace App {
                 wants_dgroup: boolean
                 lifestage: string | null
                 notes: string | null
+                guardians: App.Foundation.Inputs.OtherGuardianInput[]
+                removed_guardian_ids: number[]
             }
             export type GuardianDetailsInput = {
                 first_name: string
@@ -255,6 +258,14 @@ declare namespace App {
                 email: string
                 ministries: string[]
             }
+            export type OtherGuardianInput = {
+                first_name: string
+                last_name: string
+                relationship: App.Enums.RelationshipEnum
+                phone: string
+                ministries: string[]
+                id: number | null
+            }
             export type RegisterFamilyInput = {
                 home_satellite_id: number
                 area_text: string | null
@@ -270,6 +281,7 @@ declare namespace App {
                 wants_dgroup: boolean
                 lifestage: string | null
                 notes: string | null
+                guardians: App.Foundation.Inputs.OtherGuardianInput[]
             }
         }
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Data\Models\Child;
 use App\Data\Models\Church;
 use App\Data\Models\Family;
+use App\Data\Models\Guardian;
 use App\Data\Models\Satellite;
 use App\Data\Models\User;
 use App\Enums\RegistrationOutcomeEnum;
@@ -165,6 +166,38 @@ it('requires the parent email, name and phone and each child\'s name, gender and
     post('/ccf/register', $form)->assertSessionHasErrors([
         'guardian.email', 'guardian.phone', 'children.0.first_name', 'children.0.gender', 'children.0.date_of_birth',
     ]);
+});
+
+it('registers the family\'s other parents and guardians, who get no login — the family has one @story#87', function (): void {
+    Notification::fake();
+    [, $satellite] = ccf();
+    $form = validForm($satellite);
+    $form['guardians'] = [
+        ['first_name' => 'Jun', 'last_name' => 'Ramos', 'relationship' => 'father', 'phone' => '0509990000'],
+        ['first_name' => 'Lola', 'last_name' => 'Ramos', 'relationship' => 'grandparent', 'phone' => '0508887777', 'ministries' => ['Ushers']],
+    ];
+
+    post('/ccf/register', $form)->assertRedirect('/ccf/register/thanks');
+
+    $family = Family::query()->sole();
+    $others = Guardian::query()->whereKeyNot((int) $family->primary_guardian_id)->orderBy('id')->get();
+    expect($others->map(fn (Guardian $g): array => [$g->first_name, $g->relationship->value, $g->phone, $g->user_id, $g->email, $g->ministries])->all())
+        ->toBe([['Jun', 'father', '0509990000', null, null, []], ['Lola', 'grandparent', '0508887777', null, null, ['Ushers']]])
+        ->and(User::query()->count())->toBe(1);
+});
+
+it('asks for each other guardian\'s name, relationship and phone, in words about them @story#87', function (): void {
+    [, $satellite] = ccf();
+    $form = validForm($satellite);
+    $form['guardians'] = [['first_name' => '', 'last_name' => '', 'relationship' => 'dragon', 'phone' => '']];
+
+    post('/ccf/register', $form)->assertSessionHasErrors([
+        'guardians.0.first_name' => 'Please enter their first name.',
+        'guardians.0.last_name' => 'Please enter their last name.',
+        'guardians.0.phone' => 'Please enter their mobile number.',
+        'guardians.0.relationship',
+    ]);
+    expect(Family::query()->count())->toBe(0);
 });
 
 it('refuses a satellite from another church @story#6', function (): void {

@@ -22,7 +22,11 @@ test('an admin finds a child by Level on the children list and corrects their Le
     await expect(row).toContainText('Level 3')
 
     await row.getByRole('link', { name: FAMILIES.dxb.child }).click()
-    const levelPicker = page.locator('[data-testid^="level-"]').first()
+    // The Level control sits inside the child's card.
+    const levelPicker = page
+        .getByTestId('family-child')
+        .filter({ hasText: FAMILIES.dxb.child })
+        .locator('[data-testid^="level-"]')
     await expect(levelPicker).toContainText('Level 3')
 
     await levelPicker.selectOption({ label: 'Level 4' })

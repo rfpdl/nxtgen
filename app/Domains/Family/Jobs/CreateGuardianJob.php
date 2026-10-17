@@ -13,7 +13,8 @@ use App\Foundation\Support\EmailAddress;
 
 /**
  * An adult on a family. Linked to a login (`user`) when the email is new or confirmed; otherwise the email
- * is kept on the guardian until the owner accepts the claim (plan §4.2).
+ * is kept on the guardian until the owner accepts the claim (plan §4.2). The family's other guardians are
+ * CreateOtherGuardianJob's.
  *
  * @extends BaseJob<Guardian>
  */

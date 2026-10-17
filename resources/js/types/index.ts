@@ -14,7 +14,7 @@ export type SharedProps = {
     /** The church the address names; null on a page outside one. */
     church: Church | null
     /** The staff menu: set on church staff pages (from RequireAssignment's scope), null on every other page. */
-    church_nav: { can_manage_people: boolean; can_review_duplicates: boolean } | null
+    church_nav: { can_manage_people: boolean } | null
 }
 
 // ─── Enums ──────────────────────────────────────────────────────────────────────────────────────────────
@@ -71,6 +71,7 @@ export type ListFilters = App.Domains.Family.DataObjects.ListFiltersData
 export type ChildInput = App.Foundation.Inputs.ChildInput
 export type GuardianInput = App.Foundation.Inputs.GuardianInput
 export type GuardianDetailsInput = App.Foundation.Inputs.GuardianDetailsInput
+export type OtherGuardianInput = App.Foundation.Inputs.OtherGuardianInput
 export type FamilyDetailsInput = App.Foundation.Inputs.FamilyDetailsInput
 export type RegisterFamilyInput = App.Foundation.Inputs.RegisterFamilyInput
 export type ChildPhotoInput = App.Foundation.Inputs.ChildPhotoInput
@@ -108,5 +109,14 @@ export type ChildDraft = Draft<ChildInput>
 /** A parent's own fields — with the email on registration, without it when editing (GuardianFieldset). */
 export type GuardianDraft = Draft<GuardianDetailsInput> & { email?: string }
 
+/** One of the family's OTHER parents and guardians (OtherGuardiansFieldset): no email; `id` once saved. */
+export type OtherGuardianDraft = Draft<OtherGuardianInput>
+
 /** The family's own fields, shared by registration and editing (FamilyFieldset). */
-export type FamilyFieldsDraft = Omit<Draft<FamilyDetailsInput>, 'guardian' | 'notes'>
+export type FamilyFieldsDraft = Omit<
+    Draft<FamilyDetailsInput>,
+    'guardian' | 'guardians' | 'removed_guardian_ids' | 'notes'
+>
+
+/** The family edit form (FamilyDetailsForm): the family, the parent's own details, the other guardians' changes. */
+export type FamilyDetailsDraft = Draft<FamilyDetailsInput>

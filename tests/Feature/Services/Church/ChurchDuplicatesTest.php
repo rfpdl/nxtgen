@@ -25,8 +25,8 @@ use function Tests\Support\staffMember;
 
 /*
  * Possible duplicates (plan §4.2, §6 "dismiss/confirm duplicate candidates (confirm = flag for the later
- * merge)"): candidates are written at registration; staff who may edit the NEW family review them. Nothing is
- * ever merged here.
+ * merge)"): candidates are written at registration; staff who may edit the NEW family review them — on either
+ * family's page, since the Duplicates tab went (DECISIONS 2026-10-17, after first look). Nothing is ever merged here.
  */
 
 /** @return array{church: Church, htc: Satellite, house: Satellite, new: Family, old: Family} */
@@ -52,34 +52,61 @@ function dupFamily(Satellite $satellite, string $name, string $email): Family
     return $family;
 }
 
-it('lists open possible duplicates side by side, with masked emails @story#70', function (): void {
-    ['church' => $church] = dupChurch();
+it('shows a family\'s open possible duplicates on its page, both sides in the lite view, to an admin who may answer @story#92', function (): void {
+    ['church' => $church, 'new' => $new, 'old' => $old] = dupChurch();
+    $admin = staffMember(RoleEnum::Admin, atChurch($church));
 
-    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/duplicates')
-        ->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
-        ->component('Church/Duplicates/Index')
-        ->has('duplicates', 1)
-        ->where('duplicates.0.reason_label', 'Same phone')
-        ->where('duplicates.0.subject.primary_name', 'Mary Santos')
-        ->where('duplicates.0.subject.satellite', 'Holy Trinity Church')
-        ->where('duplicates.0.subject.masked_email', 'ma•••@new.com')
-        ->where('duplicates.0.candidate.primary_name', 'Maria Santos')
-        ->where('duplicates.0.candidate.children.0', "Maria's kid"));
+    // On either side's page: the new family's, and the existing one it may duplicate.
+    foreach ([$new, $old] as $family) {
+        actingAs($admin)->get("/ccf/families/{$family->id}")
+            ->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
+            ->component('Church/Families/Show')
+            ->has('duplicates', 1)
+            ->where('duplicates.0.reason_label', 'Same phone')
+            ->where('duplicates.0.subject.primary_name', 'Mary Santos')
+            ->where('duplicates.0.subject.masked_email', 'ma•••@new.com')
+            ->where('duplicates.0.candidate.primary_name', 'Maria Santos')
+            ->where('duplicates.0.candidate.children.0', "Maria's kid"));
+    }
 });
 
-it('shows a satellite admin only the duplicates of families they may edit @story#70', function (): void {
-    ['church' => $church, 'htc' => $htc, 'house' => $house] = dupChurch();
+it('shows a pair of children on both children\'s families\' pages @story#92', function (): void {
+    $church = church(['slug' => 'ccf']);
+    $htc = satelliteOf($church);
+    $old = familyAt($htc);
+    $new = familyAt($htc);
+    guardianOf($old, User::factory()->create(), ['phone' => '0501111111']);
+    guardianOf($new, User::factory()->create(), ['phone' => '0502222222']);
+    childOf($old, ['first_name' => 'Ana', 'last_name' => 'Cruz', 'date_of_birth' => '2018-01-01']);
+    childOf($new, ['first_name' => 'Ana', 'last_name' => 'Cruz', 'date_of_birth' => '2018-01-01']);
+    (new CreateDuplicateCandidatesJob($new))->handle();
+    $admin = staffMember(RoleEnum::Admin, atChurch($church));
 
-    actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->get('/ccf/duplicates')
-        ->assertInertia(fn (AssertableInertia $p) => $p->has('duplicates', 1));
-    actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->get('/ccf/duplicates')
+    foreach ([$new, $old] as $family) {
+        actingAs($admin)->get("/ccf/families/{$family->id}")
+            ->assertInertia(fn (AssertableInertia $p) => $p->has('duplicates', 1)->where('duplicates.0.reason_label', 'Same name and birthday'));
+    }
+});
+
+it('shows a family no possible duplicates its viewer may not answer, nor answered ones @story#93', function (): void {
+    ['church' => $church, 'htc' => $htc, 'house' => $house, 'new' => $new, 'old' => $old] = dupChurch();
+
+    // The House admin sees the existing family, but may not edit the new one, so cannot answer.
+    actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->get("/ccf/families/{$old->id}")
+        ->assertInertia(fn (AssertableInertia $p) => $p->has('duplicates', 0));
+    // A Lifeshaper never answers.
+    actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get("/ccf/families/{$new->id}")
+        ->assertInertia(fn (AssertableInertia $p) => $p->has('duplicates', 0));
+
+    DuplicateCandidate::query()->update(['status' => DuplicateStatusEnum::Dismissed]);
+    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get("/ccf/families/{$new->id}")
         ->assertInertia(fn (AssertableInertia $p) => $p->has('duplicates', 0));
 });
 
-it('is not there for a Lifeshaper @story#71', function (): void {
+it('has no possible-duplicates page of its own: the families list\'s filter finds them', function (): void {
     ['church' => $church] = dupChurch();
 
-    actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get('/ccf/duplicates')->assertNotFound();
+    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/duplicates')->assertNotFound();
 });
 
 it('dismisses a pair, records who, and notes it on the new family @story#72', function (): void {
@@ -126,4 +153,17 @@ it('only takes "dismissed" or "confirmed" @story#73', function (): void {
 
     actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
         ->put("/ccf/duplicates/{$pair->id}", ['status' => 'open'])->assertSessionHasErrors('status');
+});
+
+it('flags a child added to an older family that matches a newer family\'s child, the added child to answer for', function (): void {
+    ['church' => $church, 'htc' => $htc, 'new' => $new, 'old' => $old] = dupChurch();
+    $first = childOf($new, ['first_name' => 'Ana', 'last_name' => 'Santos', 'date_of_birth' => '2018-01-01']);
+
+    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->post("/ccf/families/{$old->id}/children", [
+        'first_name' => 'Ana', 'last_name' => 'Santos', 'nickname' => 'Ana', 'gender' => 'girl', 'date_of_birth' => '2018-01-01', 'has_allergies' => false,
+    ])->assertSessionHas('success');
+
+    $added = $old->children()->latest('id')->firstOrFail();
+    expect(DuplicateCandidate::query()->where('subject_type', 'child')->sole()->only(['subject_id', 'candidate_id']))
+        ->toBe(['subject_id' => $added->id, 'candidate_id' => $first->id]);
 });

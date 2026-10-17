@@ -28,8 +28,8 @@ const SHARED = ['auth.can_switch', 'auth.user.id', 'auth.user.name', 'church.nam
 /** A page that is not a staff page: the staff menu is null. */
 const FRAME = [...SHARED, 'church_nav'];
 
-/** A staff page: the staff menu's two switches. */
-const STAFF_FRAME = [...SHARED, 'church_nav.can_manage_people', 'church_nav.can_review_duplicates'];
+/** A staff page: the staff menu's one switch (People). Duplicates has no tab (DECISIONS 2026-10-17, after first look). */
+const STAFF_FRAME = [...SHARED, 'church_nav.can_manage_people'];
 
 /** Health, photo and contact fields: never on a list or search page, whoever asks — only the allergy yes/no. */
 const NEVER_ON_LISTS = '/photo|allerg|illness|fear|dislike|guardian_notes|phone|notes|ministries/';
@@ -48,7 +48,7 @@ function forbiddenOnLists(array $props): array
     ));
 }
 
-/** A family's lite view — the door search and the duplicates page (FamilySearchResultData). */
+/** A family's lite view — the door search, and each side of a possible duplicate (FamilySearchResultData). */
 const LITE_FAMILY = ['can_open', 'can_resend', 'children.*', 'email_confirmed', 'id', 'masked_email', 'primary_name', 'satellite'];
 
 /** A family opened by staff, minus what only an editor gets (Church/Families/Show). */
@@ -64,12 +64,31 @@ const FAMILY_VIEW = [
     'notes.*.at', 'notes.*.author', 'notes.*.body', 'notes.*.id',
 ];
 
+/** The family's other guardians (no login) as the edit form lists them — for whoever may edit the family. */
+const OTHER_GUARDIANS = [
+    'other_guardians.*.first_name', 'other_guardians.*.id', 'other_guardians.*.last_name', 'other_guardians.*.ministries',
+    'other_guardians.*.phone', 'other_guardians.*.relationship',
+];
+
 /** What an editor of the family gets on top: the edit forms' current values. */
 const FAMILY_EDIT_DETAILS = [
     'details.area_text', 'details.dgroup_area_text', 'details.dgroup_leader_name', 'details.dgroup_leader_phone', 'details.fb_account',
     'details.home_satellite_id', 'details.in_dgroup', 'details.lifestage', 'details.notes', 'details.wants_dgroup', 'details.wants_fb_group',
-    'primary.first_name', 'primary.last_name', 'primary.ministries', 'primary.phone', 'primary.relationship',
+    'primary.first_name', 'primary.id', 'primary.last_name', 'primary.ministries', 'primary.phone', 'primary.relationship',
+    ...OTHER_GUARDIANS,
     'satellites.*.id', 'satellites.*.name',
+];
+
+/**
+ * The family's open possible duplicates, for an admin who may answer them: each side in the lite view (the world's
+ * family is the existing side of the newcomer's pair). Everyone else gets the bare, empty `duplicates`.
+ */
+const POSSIBLE_DUPLICATES = [
+    'duplicates.*.id', 'duplicates.*.reason_label',
+    'duplicates.*.candidate.can_open', 'duplicates.*.candidate.can_resend', 'duplicates.*.candidate.children.*', 'duplicates.*.candidate.email_confirmed',
+    'duplicates.*.candidate.id', 'duplicates.*.candidate.masked_email', 'duplicates.*.candidate.primary_name', 'duplicates.*.candidate.satellite',
+    'duplicates.*.subject.can_open', 'duplicates.*.subject.can_resend', 'duplicates.*.subject.children.*', 'duplicates.*.subject.email_confirmed',
+    'duplicates.*.subject.id', 'duplicates.*.subject.masked_email', 'duplicates.*.subject.primary_name', 'duplicates.*.subject.satellite',
 ];
 
 /** A list page's filters, options and pagination (families and children lists). */
@@ -182,7 +201,7 @@ describe('a family opened by staff', function (): void {
     it('gives an admin who may edit it the edit details, and the Level list only to a church admin @story#50 @story#52', function (Actor $actor, bool $setsLevels): void {
         $props = propsOf($actor, fn (AccessWorld $w): string => "/ccf/families/{$w->family->id}");
 
-        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, FAMILY_VIEW, FAMILY_EDIT_DETAILS, $setsLevels ? ['levels.*.level', 'levels.*.name'] : ['levels']))
+        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, FAMILY_VIEW, FAMILY_EDIT_DETAILS, POSSIBLE_DUPLICATES, $setsLevels ? ['levels.*.level', 'levels.*.name'] : ['levels']))
             ->and(data_get($props, 'family.email'))->toBe('janice@example.com');
     })->with([
         Actor::ChurchAdmin->value => [Actor::ChurchAdmin, true],
@@ -192,7 +211,7 @@ describe('a family opened by staff', function (): void {
     it('gives a Lifeshaper the family and its children, but no edit details and a masked email @story#50 @story#53', function (Actor $actor): void {
         $props = propsOf($actor, fn (AccessWorld $w): string => "/ccf/families/{$w->family->id}");
 
-        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, FAMILY_VIEW, ['details', 'primary', 'satellites', 'levels']))
+        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, FAMILY_VIEW, ['details', 'primary', 'other_guardians', 'satellites', 'levels', 'duplicates']))
             ->and([data_get($props, 'details'), data_get($props, 'primary'), data_get($props, 'satellites')])->toBe([null, null, []])
             ->and(data_get($props, 'family.email'))->toBe('ja•••@example.com');
     })->with(actors(Actor::ChurchLifeshaper, Actor::HomeLifeshaper, Actor::BothHats, Actor::HomeParentLifeshaper));
@@ -253,17 +272,6 @@ describe('the registration lists', function (): void {
 });
 
 describe('admin pages', function (): void {
-    it('shows possible duplicates as two lite families, and none outside the admin\'s satellite @story#70', function (Actor $actor, bool $seesPair): void {
-        $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/duplicates');
-        $pair = ['duplicates.*.id', 'duplicates.*.reason_label', ...prefixed('duplicates.*.subject', LITE_FAMILY), ...prefixed('duplicates.*.candidate', LITE_FAMILY)];
-
-        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, $seesPair ? $pair : ['duplicates']));
-    })->with([
-        Actor::ChurchAdmin->value => [Actor::ChurchAdmin, true],
-        Actor::HomeAdmin->value => [Actor::HomeAdmin, true],
-        Actor::AwayAdmin->value => [Actor::AwayAdmin, false],
-    ]);
-
     it('shows People as names, emails and roles — and an away admin only their own satellite\'s @story#74', function (Actor $actor, bool $seesHome): void {
         $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/people');
         $labels = collect(listAt($props, 'people'))->flatMap(fn (mixed $p): array => listAt(is_array($p) ? $p : [], 'roles'))->pluck('label');
@@ -285,19 +293,20 @@ describe('the parent\'s own family page', function (): void {
             prefixed('family.children.*', ['allergies', 'date_of_birth', 'dislikes', 'fears', 'first_name', 'gender', 'guardian_notes', 'id', 'illnesses', 'last_name', 'level', 'middle_name', 'nickname', 'photo_consent', 'photo_url', 'status_label']),
             prefixed('family.guardians.*', ['first_name', 'last_name', 'phone', 'relationship_label']),
             array_values(array_filter(FAMILY_EDIT_DETAILS, fn (string $p): bool => str_starts_with($p, 'details.'))),
-            prefixed('me', ['first_name', 'last_name', 'ministries', 'phone', 'relationship'])));
+            prefixed('me', ['first_name', 'id', 'last_name', 'ministries', 'phone', 'relationship']),
+            $actor === Actor::Parent ? OTHER_GUARDIANS : ['other_guardians']));
     })->with(actors(...Actor::parents()));
 
-    it('shows each parent only their own family @story#29', function (Actor $actor, string $guardian, string $child): void {
+    it('shows each parent only their own family @story#29', function (Actor $actor, array $guardians, string $child): void {
         $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/family');
 
-        expect(collect(listAt($props, 'family.guardians'))->pluck('first_name')->all())->toBe([$guardian])
+        expect(collect(listAt($props, 'family.guardians'))->pluck('first_name')->all())->toBe($guardians)
             ->and(collect(listAt($props, 'family.children'))->pluck('nickname')->all())->toBe([$child]);
     })->with([
-        Actor::Parent->value => [Actor::Parent, 'Janice', 'Amara'],
-        Actor::OtherParent->value => [Actor::OtherParent, 'Carla', 'Bea'],
-        Actor::BothHats->value => [Actor::BothHats, 'Rhea', 'Cody'],
-        Actor::HomeParentLifeshaper->value => [Actor::HomeParentLifeshaper, 'Hana', 'Hugo'],
-        Actor::RevokedParent->value => [Actor::RevokedParent, 'Rosa', 'Rio'],
+        Actor::Parent->value => [Actor::Parent, ['Janice', 'Jun'], 'Amara'],
+        Actor::OtherParent->value => [Actor::OtherParent, ['Carla'], 'Bea'],
+        Actor::BothHats->value => [Actor::BothHats, ['Rhea'], 'Cody'],
+        Actor::HomeParentLifeshaper->value => [Actor::HomeParentLifeshaper, ['Hana'], 'Hugo'],
+        Actor::RevokedParent->value => [Actor::RevokedParent, ['Rosa'], 'Rio'],
     ]);
 });

@@ -3,6 +3,7 @@ import ResendLinkButton from '@/components/atoms/ResendLinkButton.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import ChildAdminControls from '@/components/molecules/ChildAdminControls.vue'
 import FamilyChildCard from '@/components/molecules/FamilyChildCard.vue'
+import PossibleDuplicateCard from '@/components/organisms/PossibleDuplicateCard.vue'
 import AddChildForm from '@/components/organisms/AddChildForm.vue'
 import ChildPhotoForm from '@/components/organisms/ChildPhotoForm.vue'
 import EditChildForm from '@/components/organisms/EditChildForm.vue'
@@ -11,11 +12,14 @@ import { useChurch } from '@/composables/useChurch'
 import type {
     ChildStatus,
     CorrectFamilyEmailInput,
+    DuplicatePair,
+    DuplicateStatus,
     FamilyAdmin,
     FamilyDetails,
     GuardianEdit,
     LevelOption,
     Note,
+    ResolveDuplicateInput,
     SatelliteOption,
     UpdateChildLevelInput,
     UpdateChildStatusInput,
@@ -28,9 +32,12 @@ const props = defineProps<{
     family: FamilyAdmin
     /** What staff changed on this family and its children (system notes), newest first. Staff only. */
     notes: Note[]
+    /** Open possible duplicates this family is on, for an admin who may answer them (empty for everyone else). */
+    duplicates: DuplicatePair[]
     /** Only for someone who may edit this family (null otherwise). */
     details: FamilyDetails | null
     primary: GuardianEdit | null
+    other_guardians: GuardianEdit[]
     satellites: SatelliteOption[]
     /** Church admins only (plan §3.2): correct a child's Level outside Moving-Up. */
     can_set_level: boolean
@@ -57,6 +64,13 @@ function setLevel(childId: number, level: number): void {
     lastLevelChild.value = childId
     const body: UpdateChildLevelInput = { level }
     router.put(route('church.children.level', [church.value.slug, childId]), body, {
+        preserveScroll: true,
+    })
+}
+
+function answerDuplicate(pairId: number, status: Exclude<DuplicateStatus, 'open'>): void {
+    const body: ResolveDuplicateInput = { status }
+    router.put(route('church.duplicates.resolve', [church.value.slug, pairId]), body, {
         preserveScroll: true,
     })
 }
@@ -113,6 +127,15 @@ function setStatus(childId: number, status: ChildStatus): void {
                 >
             </form>
         </header>
+        <section v-if="duplicates.length > 0" class="flex flex-col gap-3">
+            <h2 class="text-text text-xl font-semibold">Possible duplicates</h2>
+            <PossibleDuplicateCard
+                v-for="pair in duplicates"
+                :key="pair.id"
+                :pair="pair"
+                @answer="answerDuplicate"
+            />
+        </section>
         <section class="flex flex-col gap-2">
             <h2 class="text-text text-xl font-semibold">Parents and guardians</h2>
             <p
@@ -128,27 +151,13 @@ function setStatus(childId: number, status: ChildStatus): void {
                 :action="route('church.families.update', [church.slug, family.id])"
                 :details="details"
                 :guardian="primary"
+                :others="other_guardians"
                 :satellites="satellites"
             />
         </section>
         <section class="flex flex-col gap-3">
             <h2 class="text-text text-xl font-semibold">Children</h2>
-            <div v-for="child in family.children" :key="child.id" class="flex flex-col gap-2">
-                <FamilyChildCard :child="child">
-                    <ChildPhotoForm
-                        :child="child"
-                        who="staff"
-                        :action="route('church.children.photo', [church.slug, child.id])"
-                        :consent-action="
-                            route('church.children.photo-consent', [church.slug, child.id])
-                        "
-                    />
-                    <EditChildForm
-                        v-if="family.can_edit"
-                        :action="route('church.children.update', [church.slug, child.id])"
-                        :child="child"
-                    />
-                </FamilyChildCard>
+            <FamilyChildCard v-for="child in family.children" :key="child.id" :child="child">
                 <ChildAdminControls
                     :child="child"
                     :can-set-status="family.can_edit"
@@ -158,7 +167,20 @@ function setStatus(childId: number, status: ChildStatus): void {
                     @status="setStatus"
                     @level="setLevel"
                 />
-            </div>
+                <ChildPhotoForm
+                    :child="child"
+                    who="staff"
+                    :action="route('church.children.photo', [church.slug, child.id])"
+                    :consent-action="
+                        route('church.children.photo-consent', [church.slug, child.id])
+                    "
+                />
+                <EditChildForm
+                    v-if="family.can_edit"
+                    :action="route('church.children.update', [church.slug, child.id])"
+                    :child="child"
+                />
+            </FamilyChildCard>
             <AddChildForm
                 :action="route('church.families.children.store', [church.slug, family.id])"
             />

@@ -12,6 +12,8 @@ A parent's own family page (`/{church}/family`) and a child's photo link.
 - A parent edits their Family, their own details and their Children's details, but **never a Child's status or
   Level** (status is an Admin action; the Level changes at Moving-Up or by a church admin's correction).
 - A new Child starts at the Level their age suggests.
+- The parent who signs in is the primary Guardian. On "Edit family details" they also add, change and remove the
+  Family's other Guardians, who have no login; each change is noted on the Family's history.
 
 ## Photos and Consent
 - **No photo without Consent.** Consent is given by the parent here, or recorded by a Lifeshaper the parent told

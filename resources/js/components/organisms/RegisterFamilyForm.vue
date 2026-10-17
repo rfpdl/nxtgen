@@ -2,11 +2,13 @@
 import ChildFieldset from '@/components/molecules/ChildFieldset.vue'
 import FamilyFieldset from '@/components/molecules/FamilyFieldset.vue'
 import GuardianFieldset from '@/components/molecules/GuardianFieldset.vue'
+import OtherGuardiansFieldset from '@/components/organisms/OtherGuardiansFieldset.vue'
 import type { ChildDraft, Draft, RegisterFamilyInput, SatelliteOption } from '@/types'
 import { useForm } from '@inertiajs/vue3'
 
 /**
- * The parent registration form (plan §6 R1): today's Google Form fields plus the home satellite.
+ * The parent registration form (plan §6 R1): today's Google Form fields plus the home satellite, and the family's
+ * other parents and guardians (no email: only the parent registering signs in).
  * The form is a draft of RegisterFamilyInput (no `notes`: registration never asks), so server errors land on
  * the right control.
  */
@@ -51,6 +53,7 @@ const form = useForm<Omit<Draft<RegisterFamilyInput>, 'notes'>>({
         ministries: [],
     },
     children: [blankChild()],
+    guardians: [],
 })
 
 const errors = (): Record<string, string | undefined> =>
@@ -74,6 +77,14 @@ function submit(): void {
         <section class="flex flex-col gap-4">
             <h2 class="text-text text-2xl font-semibold">About you</h2>
             <GuardianFieldset v-model="form.guardian" :errors="errors()" with-email />
+        </section>
+
+        <section class="flex flex-col gap-4">
+            <h2 class="text-text text-2xl font-semibold">Other parents and guardians</h2>
+            <p class="text-text-muted">
+                Optional — a father, a grandparent… They do not need to sign in.
+            </p>
+            <OtherGuardiansFieldset v-model="form.guardians" :errors="errors()" />
         </section>
 
         <section class="flex flex-col gap-4">

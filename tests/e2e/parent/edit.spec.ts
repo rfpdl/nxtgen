@@ -6,7 +6,7 @@ import { CHURCH, SATELLITES } from '../support/world'
  * A parent keeps their own details right (plan §3.2 "own family, not status/Level"; review B5): the family's
  * and their own details, and a child's — including health — from the family page, on their phone.
  */
-test("a parent edits their family details and a child's health details @story#30 @story#34", async ({
+test("a parent edits their family details, the other guardians and a child's health details @story#30 @story#34 @story#91", async ({
     page,
 }) => {
     await registerAndConfirm(
@@ -26,6 +26,23 @@ test("a parent edits their family details and a child's health details @story#30
     await expect(page.getByTestId('flash-success')).toContainText('saved')
     await expect(page.getByText('Lives in Deira')).toBeVisible()
     await expect(page.getByTestId('guardian')).toContainText('0559990000')
+
+    // The children's grandmother, who collects them on Sundays; then she is taken off again.
+    await page.getByTestId('edit-family').click()
+    await page.getByTestId('add-guardian').click()
+    await page.getByTestId('other-guardian-0-first-name').fill('Nena')
+    await page.getByTestId('other-guardian-0-last-name').fill('Cruz')
+    await page.getByTestId('other-guardian-0-relationship').selectOption('grandparent')
+    await page.getByTestId('other-guardian-0-phone').fill('0501110001')
+    await page.getByTestId('edit-family-submit').click()
+    await expect(page.getByTestId('flash-success')).toContainText('saved')
+    await expect(page.getByTestId('guardian')).toHaveText([/Mia Cruz/, /Nena Cruz · Grandparent/])
+
+    await page.getByTestId('edit-family').click()
+    await page.getByTestId('other-guardian-0-remove').click()
+    await page.getByTestId('edit-family-submit').click()
+    await expect(page.getByTestId('flash-success')).toContainText('saved')
+    await expect(page.getByTestId('guardian')).toHaveText([/Mia Cruz/])
 
     // A child's health: an allergy found since registering, and a fear.
     const card = page.getByTestId('family-child').filter({ hasText: 'Leo' })

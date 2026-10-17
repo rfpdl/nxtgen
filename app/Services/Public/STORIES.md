@@ -14,3 +14,6 @@ The registration link and the poster's QR code point here, so these addresses mu
 - A Family's home Satellite must be one of this church's.
 - Allergies are an explicit yes or no; "no" keeps no details, whatever was typed.
 - A Child's nickname is required: it is the name on their card.
+- **One login per Family.** The parent who registers gives the email and signs in; the Family's other parents and
+  Guardians (a father, a grandparent …) are added with name, relationship and phone, never an email or a login. A
+  phone any of them shares with another Family flags a possible duplicate.

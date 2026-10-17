@@ -15,7 +15,10 @@ use App\Foundation\Support\EmailAddress;
 #[NonClientFacing]
 final readonly class FamilyRegistrationData
 {
-    /** @param list<ChildDetailsData> $children */
+    /**
+     * @param  list<ChildDetailsData>  $children
+     * @param  list<GuardianEditData>  $otherGuardians  the family's other parents and guardians: no login, no email
+     */
     public function __construct(
         public Church $church,
         public Satellite $homeSatellite,
@@ -35,6 +38,7 @@ final readonly class FamilyRegistrationData
         public ?string $lifestage = null,
         public ?string $notes = null,
         public bool $notify = true,
+        public array $otherGuardians = [],
     ) {}
 
     public function normalisedEmail(): string

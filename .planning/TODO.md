@@ -40,6 +40,13 @@ Updated 2026-10-17. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 | — | "No Level" filter on the children lists (plan §13 q5; was "no group") — the list shows "No Level" today, there is no filter for it | awaiting Roy |
 | 26 | Storybook, as aegis (a story per component) — not now (DECISIONS 2026-10-17) | when components grow |
 
+## Later — from Roy's first look (2026-10-17)
+
+| # | Item | Trigger |
+|---|---|---|
+| 29 | **Merge two families or two children** (a child registered again, legacy duplicates) — write a spec first (who may, what moves, history) | when a re-registration happens |
+| 30 | **UI overhaul** — a design pass over every screen (Roy) | after Release 1 polish |
+
 ## Done
 
 | # | Item | When |

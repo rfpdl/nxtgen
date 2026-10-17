@@ -4,9 +4,10 @@ import type { ChildPortal, ChildStatus, LevelOption } from '@/types'
 import { ref, watch } from 'vue'
 
 /**
- * Staff controls under a child on the family page: status (who may edit the family) and Level (church admins,
- * plan §3.2 — a correction outside Moving-Up). A refused Level change shows only on the child it was for — the
- * page passes `levelError` to that child alone. The statuses come from the page's `enums.child_status`.
+ * Staff controls inside a child's card on the family page (DECISIONS 2026-10-17, after first look): status (who
+ * may edit the family) and Level (church admins, plan §3.2 — a correction outside Moving-Up). A refused Level
+ * change shows only on the child it was for — the page passes `levelError` to that child alone. The statuses come
+ * from the page's `enums.child_status`.
  */
 const props = defineProps<{
     child: Pick<ChildPortal, 'id' | 'level' | 'status_label'>

@@ -44,7 +44,7 @@ function familyAt(Satellite $satellite, array $attributes = []): Family
 
 /**
  * The family's guardian who signs in, as `$user`. A family has one login, and it is the primary guardian's
- * (the family email) — so this guardian is always made primary. Guardians without a login use the factory.
+ * (the family email) — so this guardian is always made primary. Guardians without a login: otherGuardianOf().
  *
  * @param  array<model-property<Guardian>, mixed>  $attributes
  */
@@ -54,6 +54,16 @@ function guardianOf(Family $family, User $user, array $attributes = []): Guardia
     $family->forceFill(['primary_guardian_id' => $guardian->id])->save();
 
     return $guardian;
+}
+
+/**
+ * One of the family's other guardians (a father, a grandparent …): no login, never the primary.
+ *
+ * @param  array<model-property<Guardian>, mixed>  $attributes
+ */
+function otherGuardianOf(Family $family, array $attributes = []): Guardian
+{
+    return Guardian::factory()->create(['family_id' => $family->id, 'church_id' => $family->church_id, 'user_id' => null] + $attributes);
 }
 
 /** @param  array<model-property<Child>, mixed>  $attributes */

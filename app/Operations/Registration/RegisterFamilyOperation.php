@@ -16,6 +16,7 @@ use App\Domains\Family\Jobs\CreateDuplicateCandidatesJob;
 use App\Domains\Family\Jobs\CreateFamilyClaimJob;
 use App\Domains\Family\Jobs\CreateFamilyJob;
 use App\Domains\Family\Jobs\CreateGuardianJob;
+use App\Domains\Family\Jobs\CreateOtherGuardianJob;
 use App\Domains\Family\Jobs\GetGuardianForUserJob;
 use App\Domains\Family\Jobs\GetPendingFamilyClaimJob;
 use App\Domains\Family\Jobs\UpdateFamilyPrimaryGuardianJob;
@@ -35,6 +36,8 @@ use Lucid\Units\Operation;
  *   pending claim already exists for this email     → ClaimResent, nothing created
  *   email belongs to a user with no family here     → family + UNLINKED primary guardian + claim → ClaimSent
  *   unknown email                                    → user (unverified) + family + LINKED primary → Registered
+ *
+ * A new family also gets its other guardians — never a login (one login per family, DECISIONS 2026-10-17).
  *
  * Serialised per (church, email) by a lock, and backed by the database's unique keys, so two submissions
  * of the same form cannot create two families. Emails go out only after the transaction commits — and not at
@@ -106,6 +109,10 @@ final class RegisterFamilyOperation extends Operation
             $outcome = RegistrationOutcomeEnum::Registered;
         }
 
+        // The other guardians before the duplicate check, so a phone any of them shares is found too.
+        foreach ($r->otherGuardians as $other) {
+            $this->run(new CreateOtherGuardianJob(family: $family, details: $other));
+        }
         $this->addChildren($family);
         $this->run(new CreateDuplicateCandidatesJob(family: $family));
 

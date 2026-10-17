@@ -6,9 +6,11 @@ use App\Data\Models\Child;
 use App\Data\Models\Church;
 use App\Data\Models\Family;
 use App\Data\Models\Guardian;
+use App\Data\Models\Note;
 use App\Data\Models\Satellite;
 use App\Data\Models\User;
 use App\Enums\ChildStatusEnum;
+use App\Enums\RelationshipEnum;
 use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
@@ -19,6 +21,7 @@ use function Tests\Support\church;
 use function Tests\Support\familyAt;
 use function Tests\Support\familyEdit;
 use function Tests\Support\guardianOf;
+use function Tests\Support\otherGuardianOf;
 use function Tests\Support\satelliteOf;
 
 /** @return array{0: Church, 1: Family, 2: User} */
@@ -207,4 +210,55 @@ it('does not let a parent edit another family @story#31', function (): void {
     actingAs($user)->put('/ccf/family', familyEdit($satellite))->assertRedirect();
 
     expect($otherFamily->fresh()?->area_text)->toBe('Untouched');
+});
+
+/*
+ * The family's other parents and guardians (DECISIONS 2026-10-17, after first look): the parent who signs in adds,
+ * changes and removes them on "Edit family details". They have no login; the parent's own details are edited as before.
+ */
+it('lets a parent add, change and remove their family\'s other guardians, each change on the history @story#91', function (): void {
+    [$church, $family, $user] = familyWithGuardian();
+    $satellite = Satellite::query()->where('church_id', $church->id)->firstOrFail();
+    $lolo = otherGuardianOf($family, ['first_name' => 'Lolo', 'last_name' => 'Ramos', 'relationship' => RelationshipEnum::Grandparent]);
+
+    actingAs($user)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p
+        ->has('other_guardians', 1)->where('other_guardians.0.id', $lolo->id)->where('me.first_name', 'Janice'));
+
+    actingAs($user)->put('/ccf/family', familyEdit($satellite, [
+        'guardians' => [['first_name' => 'Jun', 'last_name' => 'Ramos', 'relationship' => 'father', 'phone' => '0509990000']],
+        'removed_guardian_ids' => [$lolo->id],
+    ]))->assertRedirect('/ccf/family')->assertSessionHas('success');
+
+    $others = Guardian::query()->where('family_id', $family->id)->whereKeyNot((int) $family->primary_guardian_id)->get();
+    expect($others->map(fn (Guardian $g): array => [$g->first_name, $g->user_id])->all())->toBe([['Jun', null]])
+        ->and(Note::query()->orderBy('id')->get(['body', 'author_id'])->toArray())->toBe([
+            ['body' => 'Jun Ramos (Father) added to the family.', 'author_id' => $user->id],
+            ['body' => 'Lolo Ramos (Grandparent) removed from the family.', 'author_id' => $user->id],
+        ]);
+});
+
+it('never lets a parent change themselves or another family\'s guardian through the list @story#94', function (): void {
+    [$church, $family, $user] = familyWithGuardian();
+    $satellite = Satellite::query()->where('church_id', $church->id)->firstOrFail();
+    $stranger = otherGuardianOf(familyAt($satellite), ['first_name' => 'Stranger']);
+    $row = ['first_name' => 'Hacked', 'last_name' => 'X', 'relationship' => 'father', 'phone' => '0509990000'];
+
+    actingAs($user)->put('/ccf/family', familyEdit($satellite, ['guardians' => [[...$row, 'id' => $stranger->id]]]))->assertNotFound();
+    actingAs($user)->put('/ccf/family', familyEdit($satellite, ['guardians' => [[...$row, 'id' => $family->primary_guardian_id]]]))->assertNotFound();
+    actingAs($user)->put('/ccf/family', familyEdit($satellite, ['removed_guardian_ids' => [$family->primary_guardian_id]]))->assertNotFound();
+    actingAs($user)->put('/ccf/family', familyEdit($satellite, ['removed_guardian_ids' => [$stranger->id]]))->assertNotFound();
+
+    expect(Guardian::query()->pluck('first_name')->sort()->values()->all())->toBe(['Janice', 'Stranger']);
+});
+
+it('refuses guardian changes on a family with no primary guardian, and saves nothing of the edit @story#94', function (): void {
+    [$church, $family, $user] = familyWithGuardian();
+    $satellite = Satellite::query()->where('church_id', $church->id)->firstOrFail();
+    $lolo = otherGuardianOf($family, ['first_name' => 'Lolo']);
+    $family->forceFill(['primary_guardian_id' => null])->save();
+
+    actingAs($user)->put('/ccf/family', familyEdit($satellite, ['area_text' => 'Changed', 'removed_guardian_ids' => [$lolo->id]]))->assertNotFound();
+
+    expect($lolo->fresh())->not->toBeNull()
+        ->and($family->fresh()?->area_text)->toBe('Al Barsha');
 });
