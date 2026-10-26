@@ -1,6 +1,6 @@
 # State
 
-**Read this first at session start.** Updated: 2026-10-17.
+**Read this first at session start.** Updated: 2026-10-27.
 
 ## Where things stand
 
@@ -8,8 +8,8 @@
 |---|---|
 | **What** | NxtGen — kids-church app for CCF (first church), satellite "CCF Dxb". Generic, multi-church; may grow into a whole-church app (names stay ministry-neutral) |
 | **Release 1 — Registration** | **Built and committed** on `release-1`. Ships when plan §12's exit criteria pass: only TODO **#21** (staging dry run) remains — #18 (access-matrix grid + response allowlists) done in refactor 09 |
-| **Release 2 — Check-in** | Not started; waits for the refactor (28 Oct is a target, not a hard date). Was target 2026-10-28, dry run Sat 2026-10-24. Open questions in plan §13 (#2, #3) |
-| **Next step** | **Refactor complete** — `tasks/2026-10-17-refactor/` issues 01–09 all resolved (09: lists paged in the database, TODO #24; access-matrix grid + response allowlists, TODO #18, SECURITY #4/#5). Batch 09 awaits Roy's commit; TODO #28 decided by Roy and built in issue 11 (any staff member re-sends, a visiting family too — family page, lists, door search; awaits commit). Next: Laravel Cloud (#23, Roy) → staging dry run (#21) → go live → Release 2 check-in |
+| **Release 2 — Check-in** | **Slice 1 built and pushed** (`a54324d`): Classes, check-in at the door, Attendance report + Excel — `tasks/2026-10-26-check-in/`. Slice 2 (who's in by Squad, roll call) and slice 3 (barcode, child history, follow-up) wait for Roy's look at slice 1 |
+| **Next step** | Roy looks at slice 1 in the browser (`make migrate` then `make dev`: Classes, Check in, Attendance) → slice 2 issues (grill the who's-in/roll-call screen first) |
 | **Waiting on Roy** | Laravel Cloud + mail provider + Registry CSV (TODO #23); "No group" filter yes/no (plan §13 q5); a real-iPhone photo try (TODO #16) |
 | **Gate** | `make check` green — 1313 Pest + 171 arch (450 access-matrix cells, 64 open-route cells, 48 allowlist cases), 114 Vitest, PHPStan L10 · `make e2e` green — 43 runs (iPhone Safari, Android Chrome, desktop Chrome) |
 
