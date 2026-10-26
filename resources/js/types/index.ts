@@ -14,7 +14,7 @@ export type SharedProps = {
     /** The church the address names; null on a page outside one. */
     church: Church | null
     /** The staff menu: set on church staff pages (from RequireAssignment's scope), null on every other page. */
-    church_nav: { can_manage_people: boolean; can_manage_classes: boolean } | null
+    church_nav: App.Domains.Church.DataObjects.ChurchNavData | null
 }
 
 // ─── Enums ──────────────────────────────────────────────────────────────────────────────────────────────
@@ -73,6 +73,10 @@ export type DoorClass = App.Domains.CheckIn.DataObjects.DoorClassData
 export type DoorFamily = App.Domains.CheckIn.DataObjects.DoorFamilyData
 export type DoorChild = App.Domains.CheckIn.DataObjects.DoorChildData
 export type ChildHealth = App.Domains.CheckIn.DataObjects.ChildHealthData
+/** Attendance (DECISIONS 2026-10-26): a Squad of a Session, one child checked in to it, a satellite in the picker. */
+export type AttendanceSquad = App.Domains.CheckIn.DataObjects.AttendanceSquadData
+export type AttendanceChild = App.Domains.CheckIn.DataObjects.AttendanceChildData
+export type AttendanceSatellite = App.Domains.CheckIn.DataObjects.AttendanceSatelliteData
 /** A registration list's filters, named as the address parameters the filter bar sends back. */
 export type ListFilters = App.Domains.Family.DataObjects.ListFiltersData
 

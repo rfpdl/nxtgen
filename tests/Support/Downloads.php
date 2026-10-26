@@ -22,9 +22,20 @@ function exportedRows(TestResponse $response): array
     if (! $download instanceof BinaryFileResponse) {
         throw new RuntimeException('Expected a file download.');
     }
+
+    return spreadsheetRows($download->getFile()->getPathname());
+}
+
+/**
+ * The rows of a spreadsheet file's first sheet, each as its cells joined by `|`.
+ *
+ * @return list<string>
+ */
+function spreadsheetRows(string $path): array
+{
     $rows = [];
     $reader = new Reader;
-    $reader->open($download->getFile()->getPathname());
+    $reader->open($path);
     foreach ($reader->getSheetIterator() as $sheet) {
         foreach ($sheet->getRowIterator() as $row) {
             $rows[] = implode('|', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $row->toArray()));

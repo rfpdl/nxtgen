@@ -2,6 +2,28 @@ declare namespace App {
     namespace Domains {
         namespace CheckIn {
             namespace DataObjects {
+                export type AttendanceChildData = {
+                    id: number
+                    nickname: string
+                    full_name: string
+                    checked_in_at: string
+                    checked_in_by: string
+                }
+                export type AttendanceClassData = {
+                    id: number
+                    name: string
+                    retired: boolean
+                }
+                export type AttendanceSatelliteData = {
+                    id: number
+                    name: string
+                    classes: App.Domains.CheckIn.DataObjects.AttendanceClassData[]
+                }
+                export type AttendanceSquadData = {
+                    name: string
+                    count: number
+                    children: App.Domains.CheckIn.DataObjects.AttendanceChildData[]
+                }
                 export type ChildHealthData = {
                     id: number
                     nickname: string
@@ -43,6 +65,11 @@ declare namespace App {
                 export type ChurchData = {
                     name: string
                     slug: string
+                }
+                export type ChurchNavData = {
+                    can_manage_people: boolean
+                    can_manage_classes: boolean
+                    can_see_attendance: boolean
                 }
                 export type GrantOptionData = {
                     label: string
@@ -239,6 +266,7 @@ declare namespace App {
             | 'see_child_photo'
             | 'manage_classes'
             | 'check_in'
+            | 'attendance'
         export type CheckInResultEnum =
             'checked_in' | 'already_in' | 'graduated' | 'inactive' | 'needs_level'
         export type ChildStatusEnum = 'active' | 'inactive' | 'graduated'

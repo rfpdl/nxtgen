@@ -50,6 +50,10 @@ _Avoid_: Event, occurrence, service
 Recording that a Child is at a Session, made by Staff at the door. A Check-in can be undone.
 _Avoid_: Attendance (for the act), sign-in, registration
 
+**Attendance**:
+The admins' report of a Session: the Children checked in, by Squad, with counts — on screen and as Excel.
+_Avoid_: Session report, register (and "attendance" for the act of checking in — that is a Check-in)
+
 **Roll call**:
 During a Session, marking which checked-in Children are present in their Squad, or confirming the Squad's head
 count.

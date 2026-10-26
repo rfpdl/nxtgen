@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read Session $session
  * @property-read Child $child
  * @property-read Squad $squad
+ * @property-read User|null $checkedInBy
  */
 final class CheckIn extends Model
 {
@@ -68,5 +69,15 @@ final class CheckIn extends Model
     public function squad(): BelongsTo
     {
         return $this->belongsTo(Squad::class);
+    }
+
+    /**
+     * The Staff member who checked the child in (null if their login has since gone).
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function checkedInBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'checked_in_by');
     }
 }

@@ -81,6 +81,12 @@ final class Child extends Model
         return $this->nickname !== '' ? $this->nickname : $this->first_name;
     }
 
+    /** "Amara Joy Cruz": first, middle and last name, spaces collapsed — the one way lists and Excel write it. */
+    public function fullName(): string
+    {
+        return trim((string) preg_replace('/\s+/', ' ', "{$this->first_name} {$this->middle_name} {$this->last_name}"));
+    }
+
     /** "Level 2", or null while the child has no Level yet. */
     public function levelName(): ?string
     {

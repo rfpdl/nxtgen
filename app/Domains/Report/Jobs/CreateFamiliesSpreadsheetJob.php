@@ -44,7 +44,7 @@ final class CreateFamiliesSpreadsheetJob extends BaseJob
             foreach ($family->children as $child) {
                 $writer->addRow(TextRow::of([...$base,
                     $child->nickname,
-                    trim("{$child->first_name} {$child->middle_name} {$child->last_name}"),
+                    $child->fullName(),
                     $child->date_of_birth->toDateString(),
                     $child->levelName() ?? '',
                     $child->allergies ?? '',

@@ -14,7 +14,8 @@ use App\Enums\ScopeTypeEnum;
  * nothing else compares roles. Built from active role assignments in this church only.
  *
  *   church admin     → everything in the church
- *   satellite admin  → see + edit families whose home satellite is theirs; manage that satellite's Schedules (classes)
+ *   satellite admin  → see + edit families whose home satellite is theirs; manage that satellite's Schedules (classes);
+ *                      see its Attendance
  *   schedule admin   → that Schedule (shown as "class"; Release 2)
  *   Lifeshaper       → see their satellites' families, register families, add children
  *   any staff role   → re-send any family's confirmation link (a visiting family too); check children in at the
@@ -166,6 +167,26 @@ final readonly class AccessScope
         $ids = $this->doorSatelliteIds();
 
         return $satellite->church_id === $this->churchId && $this->canWorkHere() && ($ids === null || in_array($satellite->id, $ids, true));
+    }
+
+    /**
+     * Attendance (reports are admins only — DECISIONS 2026-10-26): church admins and satellite admins. WHICH
+     * satellites' Sessions each may see is attendanceSatelliteIds.
+     */
+    public function canSeeAttendance(): bool
+    {
+        return $this->isAnyAdmin();
+    }
+
+    /**
+     * The satellites whose Attendance this person sees: null = every satellite (church admin); a satellite admin's
+     * own; nobody else's.
+     *
+     * @return list<int>|null
+     */
+    public function attendanceSatelliteIds(): ?array
+    {
+        return $this->isChurchAdmin ? null : $this->adminSatelliteIds;
     }
 
     private function isAnyAdmin(): bool

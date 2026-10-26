@@ -4,6 +4,23 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-10-26 (later still — check-in 03, Attendance built; Claude, for Roy to confirm)
+
+- **The report is called "Attendance"** (menu item for admins only, `church_nav.can_see_attendance`); church admins
+  see every satellite, satellite admins their own (`AccessScope::canSeeAttendance` / `attendanceSatelliteIds`).
+- **It opens on** today's class with a Session (earliest class first), else the latest Session up to today at the first
+  satellite, else that satellite's first class today. `?satellite=&class=&date=` (Y-m-d) pick; anything this admin
+  does not see, or a date that is not one, is a 404 (GetAttendanceSelectionJob).
+- **History stays reportable** (Claude — for Roy to confirm, after review): the class picker lists the active classes
+  PLUS each retired class that has at least one Session, labelled "<name> (retired)"; a retired class that never met
+  stays out (404). Retiring a class never hides its past Sessions.
+- **Squads in Level order, then the mixed Squad, boys, girls; children by nickname.** The Squad heading says the
+  Level (the one the child was checked in at), so there is no Level column. Times are the church's (Asia/Dubai). On a
+  phone each child is one stacked row; from the sm breakpoint up, a table.
+- **Excel columns**: Squad, Child nickname, Child full name, Checked in at, Checked in by — the page's own rows
+  (never rebuilt), no health detail, phone or photo; every cell plain text (TextRow).
+  `nxtgen-attendance-<satellite>-<class>-<date>.xlsx`. A child's full name has one source, `Child::fullName()`.
+
 ## 2026-10-26 (later — check-in 02, door built; Claude, for Roy to confirm)
 
 - **Health details at the door** (Roy, confirmed): tapping any child the door finds shows their health details,

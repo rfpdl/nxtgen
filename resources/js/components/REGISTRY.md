@@ -34,6 +34,7 @@ Props are typed from `@/types` (aliases over the generated, snake_case `generate
 | OtherGuardiansFieldset  | organism | The family's other parents/guardians (no email): add / remove (saved ones reported), via GuardianFieldset                      |
 | PossibleDuplicateCard   | organism | A possible duplicate on a family's page: newer and earlier side by side, "Not the same" / "Same family"                        |
 | ScheduleCard            | molecule | One class (Schedule) on the Classes page: name, day and times; Edit, and Retire after a second tap                             |
+| AttendanceSquadTable    | molecule | One Squad of a Session on Attendance: name, count; a table (sm+) or stacked rows (phone) of names, time, who                   |
 | ScheduleForm            | organism | Add (POST, with `satelliteId`) or edit (PUT, from a saved `schedule`) a class: name, day, times; `done` on save or cancel      |
 | SatelliteSchedules      | organism | One satellite on the Classes page: its classes, one edited in place at a time, "+ Add a class" opening the add form            |
 | DoorChildRow            | molecule | A child on a door family card: tick, nickname (tap → health), Squad, ⚠ flag; ✓ in + Undo; "Make active again?"; pick a Level   |

@@ -31,8 +31,8 @@ const SHARED = ['auth.can_switch', 'auth.user.id', 'auth.user.name', 'church.nam
 /** A page that is not a staff page: the staff menu is null. */
 const FRAME = [...SHARED, 'church_nav'];
 
-/** A staff page: the staff menu's switches (People, Classes). Duplicates has no tab (DECISIONS 2026-10-17, after first look). */
-const STAFF_FRAME = [...SHARED, 'church_nav.can_manage_classes', 'church_nav.can_manage_people'];
+/** A staff page: the staff menu's switches (People, Classes, Attendance). Duplicates has no tab (DECISIONS 2026-10-17, after first look). */
+const STAFF_FRAME = [...SHARED, 'church_nav.can_manage_classes', 'church_nav.can_manage_people', 'church_nav.can_see_attendance'];
 
 /** Health, photo and contact fields: never on a list or search page, whoever asks — only the allergy yes/no. */
 const NEVER_ON_LISTS = '/photo|allerg|illness|fear|dislike|guardian_notes|phone|notes|ministries/';
@@ -340,6 +340,36 @@ describe('the door', function (): void {
             ->toBe(prefixed('health', ['allergies', 'dislikes', 'fears', 'guardian_notes', 'id', 'illnesses', 'nickname']))
             ->and(data_get($props, 'health.allergies'))->toBe('Peanuts');
     })->with(actors(Actor::HomeLifeshaper, Actor::AwayLifeshaper));
+});
+
+/** A child on the Attendance page (AttendanceChildData) — the Excel's columns: no health detail, phone or photo. */
+const ATTENDANCE_CHILD = ['checked_in_at', 'checked_in_by', 'full_name', 'id', 'nickname'];
+
+describe('Attendance', function (): void {
+    it('shows an admin over Home the Session by Squad — names, time and who checked in; no health detail, phone or photo @story#112', function (Actor $actor): void {
+        $props = propsOf($actor, fn (AccessWorld $w): string => "/ccf/attendance?class={$w->schedule->id}&date=2026-10-31");
+
+        expect(keyPaths($props))->toBe(allowlist(
+            STAFF_FRAME,
+            ['class_id', 'date', 'date_label', 'satellite_id', 'satellites.*.id', 'satellites.*.name', 'total'],
+            prefixed('satellites.*.classes.*', ['id', 'name', 'retired']),
+            prefixed('squads.*', ['count', 'name', ...prefixed('children.*', ATTENDANCE_CHILD)]),
+        ))
+            ->and(forbiddenOnLists($props))->toBe([])
+            ->and(data_get($props, 'squads.0.children.0.nickname'))->toBe('Amara');
+    })->with(actors(Actor::ChurchAdmin, Actor::HomeAdmin));
+
+    it('downloads exactly the allowlisted columns — no health detail, phone or photo @story#114', function (): void {
+        Storage::fake('photos');
+        $world = AccessWorld::make();
+
+        $rows = exportedRows(actingAs($world->user(Actor::ChurchAdmin) ?? throw new \LogicException('An admin signs in.'))
+            ->get("/ccf/attendance/export?class={$world->schedule->id}&date=2026-10-31"));
+
+        expect($rows[0])->toBe('Squad|Child nickname|Child full name|Checked in at|Checked in by')
+            ->and($rows)->toHaveCount(2)
+            ->and(preg_match('/Peanuts|Asthma|0501112222|photo/', implode("\n", $rows)))->toBe(0);
+    });
 });
 
 describe('the parent\'s own family page', function (): void {

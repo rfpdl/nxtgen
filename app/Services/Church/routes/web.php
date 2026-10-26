@@ -12,6 +12,7 @@ declare(strict_types=1);
 | up within this church only. The door (R2) is /{church}/door; its class picker names the satellite.
 */
 
+use App\Services\Church\Http\Controllers\Attendance\Controller as AttendanceController;
 use App\Services\Church\Http\Controllers\Child\Controller as ChildController;
 use App\Services\Church\Http\Controllers\Door\Controller as DoorController;
 use App\Services\Church\Http\Controllers\Duplicate\Controller as DuplicateController;
@@ -54,6 +55,10 @@ Route::put('/classes/{schedule}/retire', [ScheduleController::class, 'retire'])-
 Route::get('/door', [DoorController::class, 'show'])->name('church.door.show');
 Route::post('/classes/{schedule}/check-ins', [DoorController::class, 'checkIn'])->whereNumber('schedule')->name('church.door.check-in');
 Route::put('/check-ins/{checkIn}/undo', [DoorController::class, 'undo'])->whereNumber('checkIn')->name('church.door.undo');
+
+// Attendance (DECISIONS 2026-10-26: reports are admins only): ?satellite=&class=&date= picks the Session.
+Route::get('/attendance', [AttendanceController::class, 'show'])->name('church.attendance.show');
+Route::get('/attendance/export', [AttendanceController::class, 'export'])->name('church.attendance.export');
 
 Route::put('/duplicates/{pair}', [DuplicateController::class, 'resolve'])->whereNumber('pair')->name('church.duplicates.resolve');
 

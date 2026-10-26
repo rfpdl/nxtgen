@@ -40,7 +40,7 @@ final class DoorChildData extends Data
         return new self(
             id: $child->id,
             nickname: $child->displayName(),
-            full_name: implode(' ', array_filter([$child->first_name, $child->middle_name, $child->last_name])),
+            full_name: $child->fullName(),
             level: $level,
             squad: $level === null ? null : LevelChart::squadName($level, LevelChart::squadGender($level, $child->gender)),
             status: $child->status,

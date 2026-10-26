@@ -66,3 +66,12 @@ decided by `AccessScope` against the access-matrix row the Feature declares (`#[
   door never changes a Level a child has.
 - Undo keeps the row (who and when it was undone); checking the child in again revives it. Only today's Check-ins.
 - The search shows no photo or phone and only an allergy yes/no; health details only when a name is tapped.
+
+## Attendance
+- Admins only (a church admin every Satellite, a Satellite admin their own): pick a Satellite, class and date and see
+  the children checked in to that Session — undone Check-ins left out — by Squad (Level order, then mixed, boys,
+  girls), each with nickname, full name, check-in time (the church's) and who checked them in; a count per Squad and
+  a total; "No one was checked in" when empty. It opens on today's class with a Session, else the latest Session.
+- A retired class stays in the picker, marked "(retired)", while it has a Session — its history stays reportable.
+- The Excel has the same rows in allowlisted columns, every cell plain text. Another Satellite's or Church's class is a
+  404, and a Lifeshaper has no Attendance (no menu item, 404).

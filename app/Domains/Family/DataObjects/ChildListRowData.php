@@ -35,7 +35,7 @@ final class ChildListRowData extends Data
         return new self(
             id: $child->id,
             nickname: $child->nickname,
-            full_name: trim(implode(' ', array_filter([$child->first_name, $child->middle_name, $child->last_name]))),
+            full_name: $child->fullName(),
             age: (int) $child->date_of_birth->diffInYears(now()),
             date_of_birth: $child->date_of_birth->toDateString(),
             level: $child->levelName(),

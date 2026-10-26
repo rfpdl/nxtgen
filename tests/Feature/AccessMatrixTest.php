@@ -93,6 +93,9 @@ function matrix(): array
         'church.door.show' => [AccessRowEnum::CheckIn, Actor::staff()],
         'church.door.check-in' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
         'church.door.undo' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
+        // Attendance (DECISIONS 2026-10-26: reports are admins only): Home's class, only for an admin over Home.
+        'church.attendance.show' => [AccessRowEnum::Attendance, [Actor::ChurchAdmin, Actor::HomeAdmin]],
+        'church.attendance.export' => [AccessRowEnum::Attendance, [Actor::ChurchAdmin, Actor::HomeAdmin]],
         'family.show' => [AccessRowEnum::OwnFamily, Actor::parents()],
         'family.update' => [AccessRowEnum::OwnFamily, Actor::parents()],
         'family.children.store' => [AccessRowEnum::OwnFamily, Actor::parents()],
@@ -170,6 +173,8 @@ function requestFor(string $route, AccessWorld $w): array
         'church.door.show' => ['GET', '/ccf/door?q=Amara', []],
         'church.door.check-in' => ['POST', "/ccf/classes/{$w->schedule->id}/check-ins", ['children' => [['child_id' => $w->visitor->id, 'level' => 1, 'make_active' => false]]]],
         'church.door.undo' => ['PUT', "/ccf/check-ins/{$w->checkIn->id}/undo", []],
+        'church.attendance.show' => ['GET', "/ccf/attendance?class={$w->schedule->id}&date=2026-10-31", []],
+        'church.attendance.export' => ['GET', "/ccf/attendance/export?class={$w->schedule->id}&date=2026-10-31", []],
         'family.show' => ['GET', '/ccf/family', []],
         'family.update' => ['PUT', '/ccf/family', familyEdit($w->home)],
         'family.children.store' => ['POST', '/ccf/family/children', $newChild],
@@ -364,6 +369,13 @@ describe('the door, for staff', function (): void {
         ->with(cells('church.door.check-in'));
     it('lets a Check-in at Home be undone only by staff whose Role covers Home @story#110 @story#111', cellTest())
         ->with(cells('church.door.undo'));
+});
+
+describe('Attendance, for admins', function (): void {
+    it('shows Home\'s Session only to an admin over Home @story#112 @story#113', cellTest())
+        ->with(cells('church.attendance.show'));
+    it('downloads Home\'s Session only for an admin over Home @story#114 @story#115', cellTest())
+        ->with(cells('church.attendance.export'));
 });
 
 describe('the parent\'s own family', function (): void {

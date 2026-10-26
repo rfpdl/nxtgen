@@ -10,8 +10,8 @@ import { computed } from 'vue'
 import { route } from 'ziggy-js'
 
 /**
- * The church staff frame: church name, Check in (the door, for every staff member), the Release 1 tools, People and
- * Classes (admins), sign out, and the flash message.
+ * The church staff frame: church name, Check in (the door, for every staff member), the Release 1 tools, People,
+ * Classes and Attendance (admins), sign out, and the flash message.
  * Registering starts from the Families list's button, and possible duplicates from its "duplicates" filter
  * (DECISIONS 2026-10-17, after first look) — neither has a tab.
  * The church is the page's shared `church`; what to show comes from the shared `church_nav`.
@@ -22,6 +22,7 @@ const { message, dismiss } = useFlashMessages()
 const page = usePage<SharedProps>()
 const canManagePeople = computed(() => page.props.church_nav?.can_manage_people === true)
 const canManageClasses = computed(() => page.props.church_nav?.can_manage_classes === true)
+const canSeeAttendance = computed(() => page.props.church_nav?.can_see_attendance === true)
 </script>
 
 <template>
@@ -61,6 +62,12 @@ const canManageClasses = computed(() => page.props.church_nav?.can_manage_classe
                     :href="route('church.schedules.index', church.slug)"
                     class="min-h-touch text-text flex items-center underline-offset-4 hover:underline"
                     >Classes</Link
+                >
+                <Link
+                    v-if="canSeeAttendance"
+                    :href="route('church.attendance.show', church.slug)"
+                    class="min-h-touch text-text flex items-center underline-offset-4 hover:underline"
+                    >Attendance</Link
                 >
                 <Link
                     :href="route('account.password')"
