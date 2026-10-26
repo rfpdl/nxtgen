@@ -9,6 +9,7 @@ use App\Enums\WeekdayEnum;
 
 use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
+use function Tests\Support\checkedIn;
 use function Tests\Support\childOf;
 use function Tests\Support\church;
 use function Tests\Support\familyAt;
@@ -17,6 +18,7 @@ use function Tests\Support\guardianOf;
 use function Tests\Support\otherGuardianOf;
 use function Tests\Support\satelliteOf;
 use function Tests\Support\scheduleAt;
+use function Tests\Support\sessionOf;
 use function Tests\Support\staffMember;
 
 /*
@@ -112,4 +114,29 @@ it('makes a satellite\'s class, in the satellite\'s church, active on Saturdays 
         ->toBe([$satellite->church_id, $satellite->id, '7PM', WeekdayEnum::Saturday, true])
         ->and([$class->fresh()?->startsAt(), $class->fresh()?->endsAt()])->toBe(['19:00', '21:00'])
         ->and([$special->weekday, $special->is_active])->toBe([null, false]);
+});
+
+it('makes a class\'s Session on a Saturday, at the class\'s satellite, unless told another date', function (): void {
+    $class = scheduleAt(satelliteOf(church()));
+
+    $session = sessionOf($class);
+    $other = sessionOf($class, '2026-11-07');
+
+    expect([$session->church_id, $session->satellite_id, $session->schedule_id, $session->date->toDateString()])
+        ->toBe([$class->church_id, $class->satellite_id, $class->id, '2026-10-31'])
+        ->and($other->date->toDateString())->toBe('2026-11-07');
+});
+
+it('checks a child in to a Session, in that satellite\'s Squad for their Level and gender', function (): void {
+    $church = church();
+    $dxb = satelliteOf($church);
+    $session = sessionOf(scheduleAt($dxb));
+    $visitor = childOf(familyAt(satelliteOf($church)), ['level' => 2, 'gender' => 'girl']);
+
+    $in = checkedIn($session, $visitor);
+    $undone = checkedIn(sessionOf(scheduleAt($dxb), '2026-11-07'), $visitor, ['undone_at' => now()]);
+
+    expect([$in->church_id, $in->session_id, $in->child_id, $in->squad->satellite_id, $in->squad->name(), $in->isIn()])
+        ->toBe([$church->id, $session->id, $visitor->id, $dxb->id, 'Level 2 Girls', true])
+        ->and($undone->isIn())->toBeFalse();
 });

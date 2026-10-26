@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Feature\ResponseAllowlist;
 
+use App\Http\Middleware\HandleInertiaRequests;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Storage;
 use Tests\Support\AccessWorld;
 use Tests\Support\Actor;
 
 use function Pest\Laravel\actingAs;
+use function Pest\Laravel\travelTo;
 use function Tests\Support\exportedRows;
 
 /*
@@ -296,6 +299,47 @@ describe('the Classes page', function (): void {
         Actor::HomeAdmin->value => [Actor::HomeAdmin, ['Home']],
         Actor::AwayAdmin->value => [Actor::AwayAdmin, ['Away']],
     ]);
+});
+
+/**
+ * A child on a door family card (DoorChildData): Level, Squad, status and an allergy yes/no — never a photo, a phone
+ * or a health detail (DECISIONS 2026-10-26).
+ */
+const DOOR_CHILD = ['check_in_id', 'full_name', 'has_allergies', 'id', 'level', 'nickname', 'squad', 'status', 'status_label', 'suggested_level'];
+
+describe('the door', function (): void {
+    it('shows any staff today\'s classes and the church-wide families with an allergy flag only — no photo, phone or health detail @story#103 @story#104', function (Actor $actor): void {
+        travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
+        $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/door?q=Amara');
+
+        expect(keyPaths($props))->toBe(allowlist(
+            STAFF_FRAME,
+            ['checked_in', 'class_id', 'classes.*.id', 'classes.*.name', 'classes.*.satellite', 'classes.*.times', 'levels.*.level', 'levels.*.name', 'query', 'today'],
+            prefixed('families.*', ['id', 'name', 'primary_name', 'satellite', ...prefixed('children.*', DOOR_CHILD)]),
+        ))
+            ->and(forbiddenOnLists($props))->toBe([])
+            ->and(data_get($props, 'families.0.children.0.nickname'))->toBe('Amara');
+    })->with(actors(...Actor::staff()));
+
+    it('sends a child\'s health details only on the tap, and nothing else with them @story#105', function (Actor $actor): void {
+        travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
+        Storage::fake('photos');
+        $world = AccessWorld::make();
+        $user = $world->user($actor) ?? throw new \LogicException('Staff sign in.');
+
+        $response = actingAs($user)->get("/ccf/door?q=Amara&health={$world->child->id}", [
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => (string) app(HandleInertiaRequests::class)->version(request()),
+            'X-Inertia-Partial-Component' => 'Church/Door/Index',
+            'X-Inertia-Partial-Data' => 'health',
+        ])->assertOk();
+        /** @var array<string, mixed> $props */
+        $props = $response->json('props');
+
+        expect(array_values(array_filter(keyPaths($props), fn (string $p): bool => ! in_array($p, allowlist(STAFF_FRAME), true))))
+            ->toBe(prefixed('health', ['allergies', 'dislikes', 'fears', 'guardian_notes', 'id', 'illnesses', 'nickname']))
+            ->and(data_get($props, 'health.allergies'))->toBe('Peanuts');
+    })->with(actors(Actor::HomeLifeshaper, Actor::AwayLifeshaper));
 });
 
 describe('the parent\'s own family page', function (): void {

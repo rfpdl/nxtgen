@@ -35,6 +35,7 @@ enum AccessRowEnum: string implements HasEnumMetadata
     case ChildPhoto = 'child_photo';
     case SeeChildPhoto = 'see_child_photo';
     case ManageClasses = 'manage_classes';
+    case CheckIn = 'check_in';
 
     /** The rule, in the matrix's words: who may. */
     public function label(): string
@@ -56,6 +57,7 @@ enum AccessRowEnum: string implements HasEnumMetadata
             self::ChildPhoto => 'Record the parent\'s in-person photo consent, and take or upload a child\'s photo once consent is recorded: staff who can see the family',
             self::SeeChildPhoto => 'See a child\'s photo: the child\'s own family, or staff who can see the family; only while consent stands',
             self::ManageClasses => 'Classes (Schedules): see, add, edit and retire — church admin at any satellite; satellite admin at their own',
+            self::CheckIn => 'Check children in at the door, and undo: anyone with a Role at that satellite (church-wide roles: any satellite); any child of the church',
             self::OwnFamily => 'The parent\'s own family: view, edit details, add/edit children (not status/Level)',
         };
     }

@@ -44,6 +44,15 @@ enum Actor: string
         return [self::ChurchAdmin, self::HomeAdmin, self::ChurchLifeshaper, self::HomeLifeshaper, self::BothHats, self::HomeParentLifeshaper];
     }
 
+    /**
+     * @return list<self> staff whose Role covers Home, where the world's family lives and its class meets — who may
+     *                    check children in at Home's door (AccessScope::canCheckInAt)
+     */
+    public static function coveringHome(): array
+    {
+        return [self::ChurchAdmin, self::HomeAdmin, self::ChurchLifeshaper, self::HomeLifeshaper, self::BothHats, self::HomeParentLifeshaper];
+    }
+
     /** @return list<self> staff who may edit it (AccessScope::canEditFamily) */
     public static function editingFamily(): array
     {

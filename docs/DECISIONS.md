@@ -4,6 +4,24 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-10-26 (later — check-in 02, door built; Claude, for Roy to confirm)
+
+- **Health details at the door** (Roy, confirmed): tapping any child the door finds shows their health details,
+  visitors included, so a volunteer can see a visiting child's allergies (SECURITY #21).
+
+- **Sessions live in `schedule_sessions`** (model `Session`): Laravel's database session driver already owns the
+  `sessions` table. `check_ins.squad_id` is required — every child at the door has a Level by then, and a Squad the
+  satellite lacks is made from the chart on the spot.
+- **Undo only today's Check-ins**, at a satellite the Role covers. Older corrections wait for the admin report (03).
+- **The door never changes a Level a child already has** — a picked Level only fills an empty one (correcting a
+  Level stays church-admin only).
+- **Health details on tap, for any child the door finds** (a visitor too) — see SECURITY #21; Roy may narrow it.
+- **Browser tests run the door on a Saturday**: the e2e server (only) sets the door's day to the next Saturday, so
+  1PM shows whatever day the suite runs. Every other clock is real.
+- **Routes**: `GET /{church}/door`, `POST /{church}/classes/{class}/check-ins` (several children of one family, each
+  with its own result), `PUT /{church}/check-ins/{id}/undo`. The Level picked at the door and "make active again"
+  travel in the check-in body. "Check in" is the first item of the staff menu.
+
 ## 2026-10-26
 
 Grilling session on check-in (Release 2), Roy. Terms in `GLOSSARY.md`; work in `.planning/tasks/2026-10-26-check-in/`.

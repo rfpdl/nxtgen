@@ -80,6 +80,15 @@ final class LevelChart
         return $squads;
     }
 
+    /**
+     * The gender of the Squad a child of this gender joins at this Level: theirs where the Level is split, null
+     * (mixed) where it is not — Level 1.
+     */
+    public static function squadGender(int $level, GenderEnum $gender): ?GenderEnum
+    {
+        return (self::chart()[$level]['by_gender'] ?? false) ? $gender : null;
+    }
+
     /** "Level 2 Boys", "Level 2 Girls", or "Level 1" for a mixed squad. */
     public static function squadName(int $level, ?GenderEnum $gender): string
     {

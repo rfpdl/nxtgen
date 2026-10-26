@@ -1,0 +1,162 @@
+import { expect, test, type Locator, type Page } from '@playwright/test'
+import { CHURCH, CLASSES, DOOR, SATELLITES, sessionFile, type DoorProject } from '../support/world'
+
+/*
+ * Journey — a Lifeshaper at the door, on their phone (DECISIONS 2026-10-26): pick today's 1PM, search the church,
+ * tick a family's children and check them in; undo a mistake. The e2e server's door day is a Saturday, when 1PM
+ * meets. Each browser checks in its own Cruz family (E2ESeeder), but all three share today's 1PM Session — so the
+ * count is read before and compared after (the browsers run one after another, never at once).
+ */
+test.use({ storageState: sessionFile('lifeshaper') })
+
+function guardian(project: string): string {
+    return DOOR.guardians[project as DoorProject]
+}
+
+async function openDoor(page: Page): Promise<void> {
+    await page.goto(`/${CHURCH}/door`)
+    const picker = page.getByTestId('door-class')
+    const onePm = await picker
+        .locator('option', { hasText: CLASSES.onePm.name })
+        .getAttribute('value')
+    await picker.selectOption(onePm ?? '')
+    await expect(page).toHaveURL(new RegExp(`class=${onePm}`))
+    await expect(page.getByTestId('door-heading')).toContainText(`${SATELLITES.dxb} · Sat `)
+    // Phone first: nothing pushes the page sideways.
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+        page.viewportSize()?.width ?? 0,
+    )
+}
+
+async function count(page: Page): Promise<number> {
+    const text = (await page.getByTestId('checked-in-count').textContent()) ?? ''
+    return Number(text.match(/\d+/)?.[0] ?? NaN)
+}
+
+async function findFamily(page: Page, search: string, primaryName: string): Promise<Locator> {
+    await page.getByTestId('door-search').fill(search)
+    await page.getByTestId('door-search').press('Enter')
+    const card = page.getByTestId('door-family').filter({ hasText: primaryName })
+    await expect(card).toBeVisible()
+    await expectInsideCard(card)
+    return card
+}
+
+/** Nothing on a family card pokes out past its edges (a phone screen has none to spare). */
+async function expectInsideCard(card: Locator): Promise<void> {
+    const outside = await card.evaluate((el) => {
+        const box = el.getBoundingClientRect()
+        return [...el.querySelectorAll('*')]
+            .map((e) => ({ tag: e.tagName, r: e.getBoundingClientRect() }))
+            .filter(
+                ({ r }) => r.width > 0 && (r.left < box.left - 0.5 || r.right > box.right + 0.5),
+            )
+            .map(({ tag }) => tag)
+    })
+    expect(outside).toEqual([])
+}
+
+function child(card: Locator, nickname: string): Locator {
+    return card
+        .getByTestId('door-child')
+        .filter({ has: card.page().getByTestId('child-name').getByText(nickname, { exact: true }) })
+}
+
+test('checks in two children of a family at 1PM — one made active again — and undoes one @story#103 @story#106 @story#107 @story#110', async ({
+    page,
+}, info) => {
+    await openDoor(page)
+    const before = await count(page)
+    const card = await findFamily(page, 'Cruz', `${guardian(info.project.name)} Cruz`)
+
+    // The allergy is a flag, never the detail.
+    await expect(child(card, DOOR.cruz.allergic).getByTestId('allergy-flag')).toBeVisible()
+    await expect(card).not.toContainText(DOOR.allergy)
+
+    await child(card, DOOR.cruz.allergic).getByTestId('tick-child').check()
+    await child(card, DOOR.cruz.inactive).getByTestId('tick-child').check()
+    await expect(card.getByTestId('make-active')).toContainText(
+        `${DOOR.cruz.inactive} is inactive. Make them active again?`,
+    )
+    await expect(card.getByTestId('check-in')).toBeDisabled()
+    await expectInsideCard(card)
+    await card.getByTestId('make-active-yes').click()
+    await card.getByTestId('check-in').click()
+
+    await expect(page.getByTestId('flash-success')).toContainText(
+        `Checked in ${DOOR.cruz.allergic} and ${DOOR.cruz.inactive}.`,
+    )
+    await expect(child(card, DOOR.cruz.allergic).getByTestId('checked-in')).toBeVisible()
+    await expect(child(card, DOOR.cruz.inactive).getByTestId('checked-in')).toBeVisible()
+    await expect(child(card, DOOR.cruz.inactive)).not.toContainText(/inactive/i)
+    await expect(page.getByTestId('checked-in-count')).toHaveText(`${before + 2} checked in`)
+
+    // A mistake: undo Noah. He can be ticked again, and the count goes down.
+    await child(card, DOOR.cruz.inactive).getByTestId('undo').click()
+    await expect(page.getByTestId('flash-success')).toContainText(
+        `Undid ${DOOR.cruz.inactive}'s check-in.`,
+    )
+    await expect(child(card, DOOR.cruz.inactive).getByTestId('tick-child')).toBeEnabled()
+    await expect(page.getByTestId('checked-in-count')).toHaveText(`${before + 1} checked in`)
+})
+
+test('asks for a Level first for a child with none, the age suggestion picked @story#107', async ({
+    page,
+}, info) => {
+    await openDoor(page)
+    const card = await findFamily(page, 'Cruz', `${guardian(info.project.name)} Cruz`)
+    const lola = child(card, DOOR.cruz.noLevel)
+    await expect(lola).toContainText('No Level yet')
+
+    await lola.getByTestId('tick-child').check()
+    await expectInsideCard(card)
+    await expect(lola.getByTestId('pick-level').locator('option:checked')).toHaveText(
+        DOOR.suggestedLevel,
+    )
+    await card.getByTestId('check-in').click()
+
+    await expect(page.getByTestId('flash-success')).toContainText(
+        `Checked in ${DOOR.cruz.noLevel}.`,
+    )
+    await expect(lola.getByTestId('checked-in')).toBeVisible()
+    await expect(lola).toContainText(`${DOOR.suggestedLevel}`)
+})
+
+test('never lets a Graduated child be ticked @story#108', async ({ page }, info) => {
+    await openDoor(page)
+    const card = await findFamily(page, 'Cruz', `${guardian(info.project.name)} Cruz`)
+    const gabe = child(card, DOOR.cruz.graduated)
+
+    await expect(gabe.getByTestId('tick-child')).toBeDisabled()
+    await expect(gabe).toContainText('Graduated — cannot be checked in')
+})
+
+test('checks in a child visiting from House Church, in a CCF DXB Squad @story#106', async ({
+    page,
+}, info) => {
+    await openDoor(page)
+    const card = await findFamily(page, 'Villa', `${guardian(info.project.name)} Villa`)
+    await expect(card).toContainText(SATELLITES.house)
+    const pia = child(card, DOOR.visitor)
+
+    await pia.getByTestId('tick-child').check()
+    await card.getByTestId('check-in').click()
+
+    await expect(page.getByTestId('flash-success')).toContainText(`Checked in ${DOOR.visitor}.`)
+    await expect(pia.getByTestId('checked-in')).toBeVisible()
+    await expect(pia).toContainText('Level 2 Girls')
+})
+
+test("shows a child's health details only when their name is tapped @story#105", async ({
+    page,
+}, info) => {
+    await openDoor(page)
+    const card = await findFamily(page, 'Cruz', `${guardian(info.project.name)} Cruz`)
+    await expect(page.getByTestId('child-health')).toHaveCount(0)
+
+    await child(card, DOOR.cruz.allergic).getByTestId('child-name').click()
+
+    await expect(page.getByTestId('health-allergies')).toContainText(DOOR.allergy)
+    await page.getByTestId('close-health').click()
+    await expect(page.getByTestId('child-health')).toHaveCount(0)
+})

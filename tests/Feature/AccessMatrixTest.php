@@ -6,6 +6,7 @@ namespace Tests\Feature\AccessMatrix;
 
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
+use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Route;
@@ -24,6 +25,7 @@ use Tests\Support\Actor;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\call;
+use function Pest\Laravel\travelTo;
 use function Tests\Support\childEdit;
 use function Tests\Support\familyEdit;
 
@@ -86,6 +88,11 @@ function matrix(): array
         'church.schedules.store' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin]],
         'church.schedules.update' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin]],
         'church.schedules.retire' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin]],
+        // The door (DECISIONS 2026-10-26): every staff member opens it (their own satellites' classes); checking in at
+        // Home's class, and undoing it, needs a Role covering Home.
+        'church.door.show' => [AccessRowEnum::CheckIn, Actor::staff()],
+        'church.door.check-in' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
+        'church.door.undo' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
         'family.show' => [AccessRowEnum::OwnFamily, Actor::parents()],
         'family.update' => [AccessRowEnum::OwnFamily, Actor::parents()],
         'family.children.store' => [AccessRowEnum::OwnFamily, Actor::parents()],
@@ -160,6 +167,9 @@ function requestFor(string $route, AccessWorld $w): array
         'church.schedules.store' => ['POST', '/ccf/classes', ['satellite_id' => $w->home->id, 'name' => 'Special class', 'weekday' => null, 'starts_at' => null, 'ends_at' => null]],
         'church.schedules.update' => ['PUT', "/ccf/classes/{$w->schedule->id}", ['name' => '1PM', 'weekday' => 'saturday', 'starts_at' => '13:30', 'ends_at' => '15:00']],
         'church.schedules.retire' => ['PUT', "/ccf/classes/{$w->schedule->id}/retire", []],
+        'church.door.show' => ['GET', '/ccf/door?q=Amara', []],
+        'church.door.check-in' => ['POST', "/ccf/classes/{$w->schedule->id}/check-ins", ['children' => [['child_id' => $w->visitor->id, 'level' => 1, 'make_active' => false]]]],
+        'church.door.undo' => ['PUT', "/ccf/check-ins/{$w->checkIn->id}/undo", []],
         'family.show' => ['GET', '/ccf/family', []],
         'family.update' => ['PUT', '/ccf/family', familyEdit($w->home)],
         'family.children.store' => ['POST', '/ccf/family/children', $newChild],
@@ -213,6 +223,10 @@ function expectCell(string $route, Actor $actor, string $expected): void
 {
     Notification::fake();
     Storage::fake('photos');
+    // The door is asked about on the Saturday its classes meet.
+    if (str_starts_with($route, 'church.door.')) {
+        travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
+    }
     $world = AccessWorld::make();
     [$method, $uri, $payload] = requestFor($route, $world);
 
@@ -343,6 +357,15 @@ describe('Classes, for admins', function (): void {
         ->with(cells('church.schedules.retire'));
 });
 
+describe('the door, for staff', function (): void {
+    it('opens the door for any staff, with their own satellites\' classes @story#103 @story#104', cellTest())
+        ->with(cells('church.door.show'));
+    it('lets children be checked in at Home\'s class only by staff whose Role covers Home @story#106 @story#109', cellTest())
+        ->with(cells('church.door.check-in'));
+    it('lets a Check-in at Home be undone only by staff whose Role covers Home @story#110 @story#111', cellTest())
+        ->with(cells('church.door.undo'));
+});
+
 describe('the parent\'s own family', function (): void {
     it('opens a parent\'s own family page, for parents only @story#28 @story#29', cellTest())
         ->with(cells('family.show'));
@@ -363,20 +386,21 @@ describe('the parent\'s own family', function (): void {
 it('shows a child\'s photo to their family and staff who can see the family, and nobody else @story#40', cellTest())
     ->with(cells('photos.child'));
 
-/** @return list<string> the ccf routes whose address names a family, child, pair, role or class */
+/** @return list<string> the ccf routes whose address names a family, child, pair, role, class or Check-in */
 function routesNamingAnId(): array
 {
     return array_values(array_filter(array_keys(matrix()), function (string $route): bool {
         $uri = (string) Router::getRoutes()->getByName($route)?->uri();
 
-        return str_starts_with($uri, '{church}') && preg_match('/\{(family|child|pair|assignment|schedule)\}/', $uri) === 1;
+        return str_starts_with($uri, '{church}') && preg_match('/\{(family|child|pair|assignment|schedule|checkIn)\}/', $uri) === 1;
     }));
 }
 
-// Every refusal is a 404 and changes nothing, so one world serves all eighteen guesses.
-it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in their OWN church\'s address @story#29 @story#49 @story#51 @story#100 @story#102', function (): void {
+// Every refusal is a 404 and changes nothing, so one world serves all twenty guesses.
+it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in their OWN church\'s address @story#29 @story#49 @story#51 @story#100 @story#102 @story#109 @story#111', function (): void {
     Notification::fake();
     Storage::fake('photos');
+    travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
     $world = AccessWorld::make();
     actingAs($world->user(Actor::OtherChurch) ?? throw new LogicException('The other church has an admin.'));
 
@@ -391,6 +415,6 @@ it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in 
         $answers["{$method} {$guessed}"] = outcomeOf(call($method, $guessed, $payload), $method);
     }
 
-    expect($answers)->toHaveCount(18)
+    expect($answers)->toHaveCount(20)
         ->and(array_unique(array_values($answers)))->toBe(['404'], (string) json_encode($answers, JSON_PRETTY_PRINT));
 });

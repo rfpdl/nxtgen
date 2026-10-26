@@ -19,12 +19,13 @@ vi.mock('@inertiajs/vue3', () => ({
 vi.mock('ziggy-js', () => ({ route: (name: string, slug?: string) => `/${slug ?? ''}#${name}` }))
 
 describe('ChurchShell', () => {
-    it('names the church it shares, and links to the registration lists', () => {
+    it('names the church it shares, and links to the door and the registration lists', () => {
         const wrapper = mount(ChurchShell, {
             slots: { default: '<p>body</p>' },
         })
 
         expect(wrapper.text()).toContain('CCF')
+        expect(wrapper.find('[data-testid="nav-door"]').text()).toBe('Check in')
         expect(wrapper.text()).toContain('Families')
         expect(wrapper.text()).toContain('Children')
         expect(wrapper.text()).toContain('body')

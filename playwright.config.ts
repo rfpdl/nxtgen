@@ -54,14 +54,14 @@ export default defineConfig({
             name: 'mobile-webkit',
             dependencies: ['setup'],
             use: { ...devices['iPhone 14'] },
-            testMatch: /(parent\/.*|staff\/lifeshaper)\.spec\.ts/,
+            testMatch: /(parent\/.*|staff\/(lifeshaper|door))\.spec\.ts/,
         },
         {
             // Android: most parents' phones. A narrow Chromium is not Safari, and the reverse holds too.
             name: 'mobile-chromium',
             dependencies: ['setup'],
             use: { ...devices['Pixel 7'] },
-            testMatch: /(parent\/.*|staff\/lifeshaper)\.spec\.ts/,
+            testMatch: /(parent\/.*|staff\/(lifeshaper|door))\.spec\.ts/,
         },
         {
             name: 'desktop-chromium',

@@ -6,6 +6,7 @@ namespace App\Enums;
 
 use App\Enums\Concerns\HasEnumMetadata;
 use App\Enums\Concerns\ProvidesEnumMetadata;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Str;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -25,6 +26,12 @@ enum WeekdayEnum: string implements HasEnumMetadata
     case Friday = 'friday';
     case Saturday = 'saturday';
     case Sunday = 'sunday';
+
+    /** The day `$date` falls on — which classes meet that day. */
+    public static function of(CarbonInterface $date): self
+    {
+        return self::cases()[$date->dayOfWeekIso - 1];
+    }
 
     /** ISO 8601's day number (Carbon's dayOfWeekIso): Monday 1 … Sunday 7. */
     public function isoNumber(): int

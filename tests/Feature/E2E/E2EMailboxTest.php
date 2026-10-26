@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Providers\E2EServiceProvider;
+use Carbon\CarbonImmutable;
 use Illuminate\Mail\Message;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -49,4 +50,18 @@ it('answers the health check only when switched on, naming its database', functi
     app('router')->getRoutes()->refreshNameLookups();
 
     get('/__e2e/health')->assertOk()->assertJson(['e2e' => true, 'database' => DB::connection()->getDatabaseName()]);
+});
+
+it('runs the browser journeys\' door on a Saturday, today if it is one', function (string $now, string $saturday): void {
+    expect(E2EServiceProvider::doorSaturday(CarbonImmutable::parse($now)))->toBe($saturday);
+})->with([
+    'a Monday' => ['2026-10-26 09:00', '2026-10-31'],
+    'a Saturday' => ['2026-10-31 18:00', '2026-10-31'],
+    'a Sunday' => ['2026-11-01 08:00', '2026-11-07'],
+]);
+
+it('counts the door\'s Saturday in the church\'s own timezone, from config', function (): void {
+    config(['nxtgen.church.timezone' => 'America/New_York']);
+
+    expect(E2EServiceProvider::churchTimezone())->toBe('America/New_York');
 });

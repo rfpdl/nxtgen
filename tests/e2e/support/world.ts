@@ -47,3 +47,25 @@ export const uniqueEmail = (who: string): string =>
 /** A surname nobody else in the run has — each browser project registers its own families in one database. */
 export const uniqueSurname = (base: string): string =>
     `${base}${Math.random().toString(36).slice(2, 7)}`
+
+/**
+ * The door journeys' own families, one set per browser project (E2ESeeder::DOOR_GUARDIANS), so three browsers in
+ * one database never check in the same child. At CCF DXB: the Cruz family — Amara (allergic: Peanuts), Ben, Noah
+ * (inactive), Lola (no Level yet; her age suggests Level 1), Gabe (Graduated). Visiting from House Church: the Villa
+ * family's Pia.
+ */
+export const DOOR = {
+    guardians: { 'mobile-webkit': 'Ana', 'mobile-chromium': 'Bela', 'desktop-chromium': 'Carla' },
+    cruz: {
+        allergic: 'Amara',
+        active: 'Ben',
+        inactive: 'Noah',
+        noLevel: 'Lola',
+        graduated: 'Gabe',
+    },
+    allergy: 'Peanuts',
+    suggestedLevel: 'Level 1',
+    visitor: 'Pia',
+} as const
+
+export type DoorProject = keyof typeof DOOR.guardians

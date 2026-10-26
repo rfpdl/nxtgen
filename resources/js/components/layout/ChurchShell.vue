@@ -10,8 +10,8 @@ import { computed } from 'vue'
 import { route } from 'ziggy-js'
 
 /**
- * The church staff frame: church name, the Release 1 tools, People and Classes (admins), sign out, and the flash
- * message.
+ * The church staff frame: church name, Check in (the door, for every staff member), the Release 1 tools, People and
+ * Classes (admins), sign out, and the flash message.
  * Registering starts from the Families list's button, and possible duplicates from its "duplicates" filter
  * (DECISIONS 2026-10-17, after first look) — neither has a tab.
  * The church is the page's shared `church`; what to show comes from the shared `church_nav`.
@@ -29,6 +29,12 @@ const canManageClasses = computed(() => page.props.church_nav?.can_manage_classe
         <header class="border-border bg-surface border-b">
             <nav class="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
                 <span class="text-text text-lg font-semibold">{{ church.name }}</span>
+                <Link
+                    :href="route('church.door.show', church.slug)"
+                    class="min-h-touch text-text flex items-center font-semibold underline-offset-4 hover:underline"
+                    data-testid="nav-door"
+                    >Check in</Link
+                >
                 <Link
                     :href="route('church.families.index', church.slug)"
                     class="min-h-touch text-text flex items-center underline-offset-4 hover:underline"

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Data\Models\Child;
+use App\Data\Models\DuplicateCandidate;
 use App\Data\Models\Family;
 use App\Data\Models\Schedule;
 use App\Data\Models\User;
@@ -24,7 +26,8 @@ it('seeds exactly what the browser journeys expect', function (): void {
         expect(User::query()->where('email', $email)->firstOrFail()->roleAssignments()->where('is_active', true)->exists())->toBeTrue();
     }
 
-    $families = Family::query()->with(['primaryGuardian.user', 'homeSatellite', 'children'])->get();
+    $families = Family::query()->with(['primaryGuardian.user', 'homeSatellite', 'children'])->get()
+        ->reject(fn (Family $f): bool => in_array($f->primaryGuardian?->first_name, E2ESeeder::DOOR_GUARDIANS, true));
     expect($families)->toHaveCount(2);
 
     foreach ($families as $family) {
@@ -45,6 +48,23 @@ it('seeds exactly what the browser journeys expect', function (): void {
     foreach ($classes as $class) {
         expect($world)->toContain("name: '{$class->name}', when: '{$class->weekday?->everyLabel()} · {$class->startsAt()}–{$class->endsAt()}'");
     }
+
+    // The door journeys: each browser's own Cruz family at CCF DXB and visiting Villa family at House Church.
+    foreach (E2ESeeder::DOOR_GUARDIANS as $project => $first) {
+        expect($world)->toContain("'{$project}': '{$first}'");
+        $cruz = Family::query()->with(['children', 'homeSatellite'])->whereHas('primaryGuardian', fn ($g) => $g->where('first_name', $first)->where('last_name', 'Cruz'))->sole();
+        $kid = fn (string $nickname): Child => $cruz->children->firstOrFail(fn (Child $c): bool => $c->nickname === $nickname);
+        expect($cruz->homeSatellite->name)->toBe('CCF DXB')
+            ->and([$kid('Amara')->allergies, $kid('Noah')->status->value, $kid('Lola')->level, $kid('Gabe')->status->value, $kid('Ben')->level])
+            ->toBe(['Peanuts', 'inactive', null, 'graduated', 1]);
+        $villa = Family::query()->with(['children', 'homeSatellite'])->whereHas('primaryGuardian', fn ($g) => $g->where('first_name', $first)->where('last_name', 'Villa'))->sole();
+        expect([$villa->homeSatellite->name, $villa->children->sole()->nickname])->toBe(['House Church', 'Pia']);
+    }
+    foreach (["allergic: 'Amara'", "active: 'Ben'", "inactive: 'Noah'", "noLevel: 'Lola'", "graduated: 'Gabe'", "allergy: 'Peanuts'", "suggestedLevel: 'Level 1'"] as $line) {
+        expect($world)->toContain($line);
+    }
+    expect($world)->toContain("visitor: 'Pia'")
+        ->and(DuplicateCandidate::query()->count())->toBe(0);
 
     expect(User::query()->where('email', E2ESeeder::HOUSE_ADMIN_EMAIL)->firstOrFail()->roleAssignments()->first()?->role)->toBe(RoleEnum::Admin);
 });

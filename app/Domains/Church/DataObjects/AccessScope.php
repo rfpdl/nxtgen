@@ -17,7 +17,8 @@ use App\Enums\ScopeTypeEnum;
  *   satellite admin  → see + edit families whose home satellite is theirs; manage that satellite's Schedules (classes)
  *   schedule admin   → that Schedule (shown as "class"; Release 2)
  *   Lifeshaper       → see their satellites' families, register families, add children
- *   any staff role   → re-send any family's confirmation link (a visiting family too)
+ *   any staff role   → re-send any family's confirmation link (a visiting family too); check children in at the
+ *                      door of the satellite(s) the Role covers — any child of the church (DECISIONS 2026-10-26)
  */
 final readonly class AccessScope
 {
@@ -145,6 +146,26 @@ final readonly class AccessScope
         $ids = $this->classSatelliteIds();
 
         return $satellite->church_id === $this->churchId && ($ids === null || in_array($satellite->id, $ids, true));
+    }
+
+    /**
+     * The satellites whose classes this person checks children into at the door (DECISIONS 2026-10-26): those their
+     * Role covers — null = every satellite (a church-wide Role). Which CHILDREN is not limited: any child of the
+     * church may be checked in, a visitor too.
+     *
+     * @return list<int>|null
+     */
+    public function doorSatelliteIds(): ?array
+    {
+        return $this->visibleSatelliteIds();
+    }
+
+    /** Check children in (and undo) at this satellite's classes: a Role covering it, in this church. */
+    public function canCheckInAt(Satellite $satellite): bool
+    {
+        $ids = $this->doorSatelliteIds();
+
+        return $satellite->church_id === $this->churchId && $this->canWorkHere() && ($ids === null || in_array($satellite->id, $ids, true));
     }
 
     private function isAnyAdmin(): bool

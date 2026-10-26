@@ -53,3 +53,16 @@ decided by `AccessScope` against the access-matrix row the Feature declares (`#[
 - Church admins manage every Satellite's classes, Satellite admins their own; a Lifeshaper has no Classes page.
 - A class is retired, never deleted (Sessions will point at it). Two active classes at a Satellite never share a
   name; a retired class's name is free again.
+
+## The door (check-in)
+- A Session (one class on one date) is never opened or closed: the first Check-in makes it. One Check-in per child
+  per Session, whatever number of phones press at once (the database's unique keys decide; tested with two real
+  connections). "Today" is the church's date (its timezone), not the server's.
+- Staff see today's classes at the satellites their Role covers (church-wide Roles: every satellite); a class with a
+  day only on that day. Any child of the church may be checked in, and joins THIS satellite's Squad for their Level
+  and gender — a visiting child needs nothing.
+- Graduated children are refused. An inactive child is made active again first (the door asks), and a child with no
+  Level gets one picked at the door (their age's suggestion first) — both saved and noted on the child's history. The
+  door never changes a Level a child has.
+- Undo keeps the row (who and when it was undone); checking the child in again revives it. Only today's Check-ins.
+- The search shows no photo or phone and only an allergy yes/no; health details only when a name is tapped.

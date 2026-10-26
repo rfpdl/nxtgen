@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Support;
 
+use App\Data\Models\CheckIn;
 use App\Data\Models\Child;
 use App\Data\Models\Church;
 use App\Data\Models\Family;
@@ -11,9 +12,12 @@ use App\Data\Models\Guardian;
 use App\Data\Models\RoleAssignment;
 use App\Data\Models\Satellite;
 use App\Data\Models\Schedule;
+use App\Data\Models\Session;
+use App\Data\Models\Squad;
 use App\Data\Models\User;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
+use App\Foundation\Support\LevelChart;
 
 /*
  * The shared test World — the building blocks every feature test makes its church from. Named in the
@@ -42,6 +46,31 @@ function satelliteOf(Church $church, array $attributes = []): Satellite
 function scheduleAt(Satellite $satellite, array $attributes = []): Schedule
 {
     return Schedule::factory()->create(['church_id' => $satellite->church_id, 'satellite_id' => $satellite->id] + $attributes);
+}
+
+/**
+ * A Session (GLOSSARY): `$schedule` on `$date` — Saturday 31 Oct 2026 unless told otherwise — at its satellite.
+ */
+function sessionOf(Schedule $schedule, string $date = '2026-10-31'): Session
+{
+    return Session::factory()->create(['schedule_id' => $schedule->id, 'satellite_id' => $schedule->satellite_id, 'church_id' => $schedule->church_id, 'date' => $date]);
+}
+
+/**
+ * `$child` checked in to `$session`, in the session's satellite's Squad for the child's Level and gender (made from the
+ * chart if the satellite has none) — undone when the attributes say so. The child needs a Level.
+ *
+ * @param  array<model-property<CheckIn>, mixed>  $attributes
+ */
+function checkedIn(Session $session, Child $child, array $attributes = []): CheckIn
+{
+    $level = $child->level ?? throw new \LogicException('A child is checked in at a Level: give the child one.');
+    $squad = Squad::query()->firstOrCreate([
+        'church_id' => $session->church_id, 'satellite_id' => $session->satellite_id,
+        'level' => $level, 'gender' => LevelChart::squadGender($level, $child->gender),
+    ]);
+
+    return CheckIn::factory()->create(['church_id' => $session->church_id, 'session_id' => $session->id, 'child_id' => $child->id, 'squad_id' => $squad->id] + $attributes);
 }
 
 /**

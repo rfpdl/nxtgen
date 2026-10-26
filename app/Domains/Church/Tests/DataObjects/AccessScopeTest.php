@@ -225,3 +225,30 @@ it('never lets a Lifeshaper manage classes, nor anyone another church\'s', funct
     expect([$scope->canManageClasses(), $scope->canManageClassesAt($htc), $scope->classSatelliteIds()])->toBe([false, false, []])
         ->and((new GetAccessScopeJob(user: $admin, church: $church))->handle()->canManageClassesAt($elsewhere))->toBeFalse();
 });
+
+it('lets anyone with a Role at a satellite check children in there; a church-wide Role anywhere', function (RoleEnum $role, string $where, bool $atHtc, bool $atHouse): void {
+    ['church' => $church, 'htc' => $htc, 'house' => $house] = fx();
+    $user = User::factory()->create();
+    grantRole($user, $role, $where === 'church' ? atChurch($church) : atSatellite($htc));
+
+    $scope = (new GetAccessScopeJob(user: $user, church: $church))->handle();
+
+    expect([$scope->canCheckInAt($htc), $scope->canCheckInAt($house)])->toBe([$atHtc, $atHouse])
+        ->and($scope->doorSatelliteIds())->toBe($where === 'church' ? null : [$htc->id]);
+})->with([
+    'church admin' => [RoleEnum::Admin, 'church', true, true],
+    'church Lifeshaper' => [RoleEnum::Lifeshaper, 'church', true, true],
+    'satellite admin' => [RoleEnum::Admin, 'satellite', true, false],
+    'satellite Lifeshaper' => [RoleEnum::Lifeshaper, 'satellite', true, false],
+]);
+
+it('never lets anyone check in at another church\'s satellite, nor with a switched-off Role', function (): void {
+    ['church' => $church, 'htc' => $htc] = fx();
+    $admin = User::factory()->create();
+    grantRole($admin, RoleEnum::Admin, atChurch($church));
+    $revoked = User::factory()->create();
+    grantRole($revoked, RoleEnum::Lifeshaper, atSatellite($htc), active: false);
+
+    expect((new GetAccessScopeJob(user: $admin, church: $church))->handle()->canCheckInAt(satelliteOf(church())))->toBeFalse()
+        ->and((new GetAccessScopeJob(user: $revoked, church: $church))->handle()->canCheckInAt($htc))->toBeFalse();
+});

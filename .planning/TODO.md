@@ -25,7 +25,7 @@ Updated 2026-10-17. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 | 9 | Schedule-admin roles (shown as "class", `ScopeTypeEnum::Schedule`) in People — `canGrant` refuses them until Schedules exist | People |
 | 12 | E2E per breakpoint: a **tablet** project (iPad portrait/landscape) and layout assertions per size (no sideways scroll, ≥44/56px targets, menu fits); also run the staff photo-consent journey on phones (needs its own child per run) | Roy 2026-10-15 · review 4 |
 | 13 | E2E for link EXPIRY (2 h login / 7 d verify) — needs a controllable clock in the e2e server; Pest covers it | review 2 |
-| 7, 20 | **Two-connection concurrency tests:** claim acceptance; photo upload vs consent withdrawal; last-admin removal | review-spar · review 3 |
+| 7, 20 | **Two-connection concurrency tests:** claim acceptance; photo upload vs consent withdrawal; last-admin removal. The helper exists (check-in 02): `withCommittedWorld` + `atTheSameTime` in `tests/Support/Concurrency.php` — real forked processes, one MySQL connection each; used by check-in and Session creation | review-spar · review 3 |
 | 10 | E2E "test map" like admin-v2 (`e2e/map/serve.mjs`): the access matrix as a page, each cell → its tests, with Run buttons | Roy: admin-v2 has a good page per item |
 | — | Open questions for R2: `lifeshapers_can_open` default; follow-up threshold (weeks absent) — plan §13 | plan §13 |
 

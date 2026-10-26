@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Data\Models\Schedule;
 use App\Enums\WeekdayEnum;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\QueryException;
 
 use function Tests\Support\church;
@@ -43,4 +44,13 @@ it('keeps the day as a weekday and the times as HH:MM, or none of them', functio
 
     expect([$saturday?->weekday, $saturday?->startsAt(), $saturday?->endsAt()])->toBe([WeekdayEnum::Saturday, '13:00', '15:00'])
         ->and([$anyDay?->weekday, $anyDay?->startsAt(), $anyDay?->endsAt()])->toBe([null, null, null]);
+});
+
+it('meets only on its day, or every day when it has none', function (): void {
+    $satellite = satelliteOf(church());
+    $saturday = CarbonImmutable::parse('2026-10-31');
+
+    expect(scheduleAt($satellite, ['name' => '1PM', 'weekday' => WeekdayEnum::Saturday])->meetsOn($saturday))->toBeTrue()
+        ->and(scheduleAt($satellite, ['name' => 'Sunday school', 'weekday' => WeekdayEnum::Sunday])->meetsOn($saturday))->toBeFalse()
+        ->and(scheduleAt($satellite, ['name' => 'Special class', 'weekday' => null])->meetsOn($saturday))->toBeTrue();
 });

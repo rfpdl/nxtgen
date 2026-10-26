@@ -9,10 +9,11 @@ declare(strict_types=1);
 |
 | For EVERY staff member, not only admins: a Lifeshaper uses these too (registration now, check-in in R2).
 | What each person may do is decided by AccessScope (plan §3.2), never by the URL. Ids in the URL are looked
-| up within this church only. Satellite-specific pages (R2) will nest: /{church}/{satellite}/check-in.
+| up within this church only. The door (R2) is /{church}/door; its class picker names the satellite.
 */
 
 use App\Services\Church\Http\Controllers\Child\Controller as ChildController;
+use App\Services\Church\Http\Controllers\Door\Controller as DoorController;
 use App\Services\Church\Http\Controllers\Duplicate\Controller as DuplicateController;
 use App\Services\Church\Http\Controllers\Family\Controller as FamilyController;
 use App\Services\Church\Http\Controllers\Home\Controller as HomeController;
@@ -48,6 +49,11 @@ Route::get('/classes', [ScheduleController::class, 'index'])->name('church.sched
 Route::post('/classes', [ScheduleController::class, 'store'])->name('church.schedules.store');
 Route::put('/classes/{schedule}', [ScheduleController::class, 'update'])->whereNumber('schedule')->name('church.schedules.update');
 Route::put('/classes/{schedule}/retire', [ScheduleController::class, 'retire'])->whereNumber('schedule')->name('church.schedules.retire');
+
+// The door (DECISIONS 2026-10-26): pick today's class, find a family, check children in; undo a mistake.
+Route::get('/door', [DoorController::class, 'show'])->name('church.door.show');
+Route::post('/classes/{schedule}/check-ins', [DoorController::class, 'checkIn'])->whereNumber('schedule')->name('church.door.check-in');
+Route::put('/check-ins/{checkIn}/undo', [DoorController::class, 'undo'])->whereNumber('checkIn')->name('church.door.undo');
 
 Route::put('/duplicates/{pair}', [DuplicateController::class, 'resolve'])->whereNumber('pair')->name('church.duplicates.resolve');
 

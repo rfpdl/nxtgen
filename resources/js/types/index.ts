@@ -68,6 +68,11 @@ export type LevelOption = App.Domains.Level.DataObjects.LevelOptionData
 /** A class (GLOSSARY "Schedule") on the Classes page, and a satellite with its classes. */
 export type Schedule = App.Domains.Schedule.DataObjects.ScheduleData
 export type SatelliteSchedules = App.Domains.Schedule.DataObjects.SatelliteSchedulesData
+/** The door (DECISIONS 2026-10-26): one of today's classes, a family found, one of its children, a child's health. */
+export type DoorClass = App.Domains.CheckIn.DataObjects.DoorClassData
+export type DoorFamily = App.Domains.CheckIn.DataObjects.DoorFamilyData
+export type DoorChild = App.Domains.CheckIn.DataObjects.DoorChildData
+export type ChildHealth = App.Domains.CheckIn.DataObjects.ChildHealthData
 /** A registration list's filters, named as the address parameters the filter bar sends back. */
 export type ListFilters = App.Domains.Family.DataObjects.ListFiltersData
 
@@ -90,6 +95,8 @@ export type UpdateChildStatusInput = App.Services.Church.Data.UpdateChildStatusI
 export type UpdateChildLevelInput = App.Services.Church.Data.UpdateChildLevelInput
 export type ScheduleInput = App.Services.Church.Data.ScheduleInput
 export type AddScheduleInput = App.Services.Church.Data.AddScheduleInput
+export type CheckInInput = App.Services.Church.Data.CheckInInput
+export type CheckInChildInput = App.Services.Church.Data.CheckInChildInput
 
 /**
  * An Input while a person is still filling it in: every answer may still be blank (`''`), an unanswered

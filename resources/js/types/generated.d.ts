@@ -1,5 +1,43 @@
 declare namespace App {
     namespace Domains {
+        namespace CheckIn {
+            namespace DataObjects {
+                export type ChildHealthData = {
+                    id: number
+                    nickname: string
+                    allergies: string | null
+                    illnesses: string | null
+                    dislikes: string | null
+                    fears: string | null
+                    guardian_notes: string | null
+                }
+                export type DoorChildData = {
+                    id: number
+                    nickname: string
+                    full_name: string
+                    level: number | null
+                    squad: string | null
+                    status: App.Enums.ChildStatusEnum
+                    status_label: string
+                    has_allergies: boolean
+                    check_in_id: number | null
+                    suggested_level: number | null
+                }
+                export type DoorClassData = {
+                    id: number
+                    name: string
+                    satellite: string
+                    times: string | null
+                }
+                export type DoorFamilyData = {
+                    id: number
+                    name: string
+                    primary_name: string
+                    satellite: string
+                    children: App.Domains.CheckIn.DataObjects.DoorChildData[]
+                }
+            }
+        }
         namespace Church {
             namespace DataObjects {
                 export type ChurchData = {
@@ -200,6 +238,9 @@ declare namespace App {
             | 'child_photo'
             | 'see_child_photo'
             | 'manage_classes'
+            | 'check_in'
+        export type CheckInResultEnum =
+            'checked_in' | 'already_in' | 'graduated' | 'inactive' | 'needs_level'
         export type ChildStatusEnum = 'active' | 'inactive' | 'graduated'
         export type DuplicateReasonEnum = 'same_phone' | 'same_name_dob'
         export type DuplicateStatusEnum = 'open' | 'dismissed' | 'confirmed'
@@ -335,6 +376,14 @@ declare namespace App {
                     role: App.Enums.RoleEnum
                     scope_type: App.Enums.ScopeTypeEnum
                     scope_id: number
+                }
+                export type CheckInChildInput = {
+                    child_id: number
+                    level: number | null
+                    make_active: boolean
+                }
+                export type CheckInInput = {
+                    children: App.Services.Church.Data.CheckInChildInput[]
                 }
                 export type CorrectFamilyEmailInput = {
                     email: string

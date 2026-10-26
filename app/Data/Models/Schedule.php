@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Data\Models;
 
 use App\Enums\WeekdayEnum;
+use Carbon\CarbonInterface;
 use Database\Factories\ScheduleFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -41,6 +42,12 @@ final class Schedule extends Model
             'weekday' => WeekdayEnum::class,
             'is_active' => 'boolean',
         ];
+    }
+
+    /** A class with a day meets only on that day; one with no day meets every day (DECISIONS 2026-10-26). */
+    public function meetsOn(CarbonInterface $date): bool
+    {
+        return $this->weekday === null || $this->weekday === WeekdayEnum::of($date);
     }
 
     /** "13:00" — the stored time without seconds; null when the class has none. */
