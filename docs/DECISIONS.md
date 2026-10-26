@@ -4,6 +4,31 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-10-26
+
+Grilling session on check-in (Release 2), Roy. Terms in `GLOSSARY.md`; work in `.planning/tasks/2026-10-26-check-in/`.
+
+- **Online first.** Offline (or low-signal) comes later — possibly one offline device for registration and check-in,
+  which is far easier to sync.
+- **Classes (Schedules) are made by admins** — church admins anywhere, satellite admins at their satellite: a name
+  (e.g. "1PM", "Special class"), an optional weekday and start/end time. CCF Dxb: Saturday 1PM and 7PM.
+- **A Session is never opened or closed.** Staff pick today's class and check children in; the first Check-in
+  creates the Session (one per class per date). A class with a weekday shows only on that day; one without shows
+  every day. **Replaces plan §3.2/§7's generated sessions and open/close**, and `lifeshapers_can_open`.
+- **At the door** (Lifeshaper on their phone): name search church-wide (the existing server search — the plan's
+  whole-list-on-the-phone waits for offline), tick children, check in; inactive → "Make active again?"; Graduated →
+  refused; Undo; a child with no Level gets one picked at the door (age suggestion pre-selected, saved); an allergy
+  flag; no photo or phone. A child may attend 1PM and 7PM the same day. A Lifeshaper sees the classes of the
+  satellite(s) their Role covers; any child in the church can be checked in and joins THIS satellite's Squad for
+  their Level and gender.
+- **Roll call**: any staff who can check in may tap children present or confirm a Squad's head count. "Squad
+  leader" is whoever looks after a Squad that day — not a Role. Class-admin roles (TODO #9) stay parked.
+- **Reports (admins only)**: each Session by Squad with Excel; a child's history; a follow-up list of active
+  children absent 3 weekends.
+- **Not now**: check-out / pick-up; checking in Lifeshapers; Lifeshaper rotas.
+- **Slices**: 1 = classes, door check-in, Session report (aim: 28 Oct). 2 = who's in by Squad + roll call. 3 = barcode
+  scan (Code 39 by phone camera) + child history + follow-up list; QR after the February Moving-Up.
+
 ## 2026-10-17 (Roy, after first look in the browser)
 
 - **No "Register a family" tab**: a "Register a family" button on the Families list (search-first step kept).
