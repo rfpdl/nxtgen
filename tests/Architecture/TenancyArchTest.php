@@ -26,7 +26,7 @@ use function Tests\Architecture\stripComments;
  */
 function tenantModels(): array
 {
-    return ['Family', 'Guardian', 'Child', 'Note', 'DuplicateCandidate', 'RoleAssignment', 'Satellite', 'Squad', 'FamilyClaim', 'RegistryImportMapping'];
+    return ['Family', 'Guardian', 'Child', 'Note', 'DuplicateCandidate', 'RoleAssignment', 'Satellite', 'Squad', 'Schedule', 'FamilyClaim', 'RegistryImportMapping'];
 }
 
 /**

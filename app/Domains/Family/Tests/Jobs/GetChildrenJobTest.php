@@ -64,7 +64,8 @@ it('searches the child\'s own names or the parent, without a child\'s name dragg
     $church = church();
     $satellite = satelliteOf($church);
     $santos = familyAt($satellite);
-    guardianOf($santos, User::factory()->create(), ['first_name' => 'Janice', 'last_name' => 'Santos']);
+    // A pinned email: a random one (tamara.x@example.org) would match "amara" through the parent's contact.
+    guardianOf($santos, User::factory()->create(['email' => 'janice@example.com']), ['first_name' => 'Janice', 'last_name' => 'Santos']);
     childOf($santos, ['nickname' => 'Amara', 'first_name' => 'Amara', 'last_name' => 'Santos']);
     childOf($santos, ['nickname' => 'Bea', 'first_name' => 'Beatriz', 'last_name' => 'Santos']);
     childOf(familyAt($satellite), ['nickname' => 'Carlo', 'first_name' => 'Carlo', 'last_name' => 'Reyes']);

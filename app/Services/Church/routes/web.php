@@ -18,6 +18,7 @@ use App\Services\Church\Http\Controllers\Family\Controller as FamilyController;
 use App\Services\Church\Http\Controllers\Home\Controller as HomeController;
 use App\Services\Church\Http\Controllers\People\Controller as PeopleController;
 use App\Services\Church\Http\Controllers\Poster\Controller as PosterController;
+use App\Services\Church\Http\Controllers\Schedule\Controller as ScheduleController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'show'])->name('church.home');
@@ -41,6 +42,12 @@ Route::put('/children/{child}/status', [ChildController::class, 'updateStatus'])
 Route::get('/people', [PeopleController::class, 'index'])->name('church.people.index');
 Route::post('/people', [PeopleController::class, 'store'])->middleware('throttle:per-device')->name('church.people.store');
 Route::delete('/people/roles/{assignment}', [PeopleController::class, 'removeRole'])->whereNumber('assignment')->name('church.people.roles.destroy');
+
+// Classes (GLOSSARY "Schedule"): admins make a satellite's classes (DECISIONS 2026-10-26).
+Route::get('/classes', [ScheduleController::class, 'index'])->name('church.schedules.index');
+Route::post('/classes', [ScheduleController::class, 'store'])->name('church.schedules.store');
+Route::put('/classes/{schedule}', [ScheduleController::class, 'update'])->whereNumber('schedule')->name('church.schedules.update');
+Route::put('/classes/{schedule}/retire', [ScheduleController::class, 'retire'])->whereNumber('schedule')->name('church.schedules.retire');
 
 Route::put('/duplicates/{pair}', [DuplicateController::class, 'resolve'])->whereNumber('pair')->name('church.duplicates.resolve');
 

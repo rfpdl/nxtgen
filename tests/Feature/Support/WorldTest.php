@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Data\Models\User;
 use App\Domains\Church\Jobs\GetAccessScopeJob;
 use App\Enums\RoleEnum;
+use App\Enums\WeekdayEnum;
 
 use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
@@ -15,6 +16,7 @@ use function Tests\Support\grantRole;
 use function Tests\Support\guardianOf;
 use function Tests\Support\otherGuardianOf;
 use function Tests\Support\satelliteOf;
+use function Tests\Support\scheduleAt;
 use function Tests\Support\staffMember;
 
 /*
@@ -98,4 +100,16 @@ it('makes another guardian of a family, with no login, never the primary', funct
 
     expect($family->refresh()->primary_guardian_id)->toBe($primary->id)
         ->and([$lola->family_id, $lola->church_id, $lola->user_id, $lola->first_name])->toBe([$family->id, $family->church_id, null, 'Lola']);
+});
+
+it('makes a satellite\'s class, in the satellite\'s church, active on Saturdays unless told otherwise', function (): void {
+    $satellite = satelliteOf(church());
+
+    $class = scheduleAt($satellite, ['name' => '7PM', 'starts_at' => '19:00', 'ends_at' => '21:00']);
+    $special = scheduleAt($satellite, ['name' => 'Special class', 'weekday' => null, 'is_active' => false]);
+
+    expect([$class->church_id, $class->satellite_id, $class->name, $class->weekday, $class->is_active])
+        ->toBe([$satellite->church_id, $satellite->id, '7PM', WeekdayEnum::Saturday, true])
+        ->and([$class->fresh()?->startsAt(), $class->fresh()?->endsAt()])->toBe(['19:00', '21:00'])
+        ->and([$special->weekday, $special->is_active])->toBe([null, false]);
 });

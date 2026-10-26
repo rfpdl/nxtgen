@@ -11,7 +11,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 /**
  * The rows of the access matrix (plan §3.2) that Release 1 serves. Each staff or parent Feature declares one
  * with #[AccessRow] (AccessRowTest); AccessScope enforces it; Feature tests prove it. Release 2 adds the
- * class, event, check-in and report rows.
+ * class (ManageClasses), check-in and report rows.
  */
 #[TypeScript]
 enum AccessRowEnum: string implements HasEnumMetadata
@@ -34,6 +34,7 @@ enum AccessRowEnum: string implements HasEnumMetadata
     case OwnFamily = 'own_family';
     case ChildPhoto = 'child_photo';
     case SeeChildPhoto = 'see_child_photo';
+    case ManageClasses = 'manage_classes';
 
     /** The rule, in the matrix's words: who may. */
     public function label(): string
@@ -54,6 +55,7 @@ enum AccessRowEnum: string implements HasEnumMetadata
             self::GrantRoles => 'Grant roles: church admin any; satellite admin Lifeshaper in own satellite',
             self::ChildPhoto => 'Record the parent\'s in-person photo consent, and take or upload a child\'s photo once consent is recorded: staff who can see the family',
             self::SeeChildPhoto => 'See a child\'s photo: the child\'s own family, or staff who can see the family; only while consent stands',
+            self::ManageClasses => 'Classes (Schedules): see, add, edit and retire — church admin at any satellite; satellite admin at their own',
             self::OwnFamily => 'The parent\'s own family: view, edit details, add/edit children (not status/Level)',
         };
     }

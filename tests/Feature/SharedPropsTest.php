@@ -25,7 +25,7 @@ it('gives a staff page the church it is about', function (): void {
 
     actingAs($admin)->get('/ccf/families')->assertInertia(fn (AssertableInertia $p) => $p
         ->where('church', ['name' => 'CCF', 'slug' => 'ccf'])
-        ->where('church_nav', ['can_manage_people' => true]));
+        ->where('church_nav', ['can_manage_people' => true, 'can_manage_classes' => true]));
 });
 
 it('gives a parent\'s family page its church', function (): void {

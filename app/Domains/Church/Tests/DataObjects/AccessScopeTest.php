@@ -195,3 +195,33 @@ it('refuses a re-send to someone whose only role was switched off', function ():
 
     expect($scope->canResendLink(familyAt($htc)))->toBeFalse();
 });
+
+it('lets admins manage classes: a church admin at every satellite, a satellite admin at their own', function (): void {
+    ['church' => $church, 'htc' => $htc, 'house' => $house] = fx();
+    $churchAdmin = User::factory()->create();
+    grantRole($churchAdmin, RoleEnum::Admin, atChurch($church));
+    $htcAdmin = User::factory()->create();
+    grantRole($htcAdmin, RoleEnum::Admin, atSatellite($htc));
+
+    $all = (new GetAccessScopeJob(user: $churchAdmin, church: $church))->handle();
+    $own = (new GetAccessScopeJob(user: $htcAdmin, church: $church))->handle();
+
+    expect([$all->canManageClasses(), $all->canManageClassesAt($htc), $all->canManageClassesAt($house)])->toBe([true, true, true])
+        ->and([$own->canManageClasses(), $own->canManageClassesAt($htc), $own->canManageClassesAt($house)])->toBe([true, true, false])
+        ->and($all->classSatelliteIds())->toBeNull()
+        ->and($own->classSatelliteIds())->toBe([$htc->id]);
+});
+
+it('never lets a Lifeshaper manage classes, nor anyone another church\'s', function (): void {
+    ['church' => $church, 'htc' => $htc] = fx();
+    $lifeshaper = User::factory()->create();
+    grantRole($lifeshaper, RoleEnum::Lifeshaper, atChurch($church));
+    $admin = User::factory()->create();
+    grantRole($admin, RoleEnum::Admin, atChurch($church));
+    $elsewhere = satelliteOf(church());
+
+    $scope = (new GetAccessScopeJob(user: $lifeshaper, church: $church))->handle();
+
+    expect([$scope->canManageClasses(), $scope->canManageClassesAt($htc), $scope->classSatelliteIds()])->toBe([false, false, []])
+        ->and((new GetAccessScopeJob(user: $admin, church: $church))->handle()->canManageClassesAt($elsewhere))->toBeFalse();
+});

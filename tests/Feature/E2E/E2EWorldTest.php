@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Data\Models\Family;
+use App\Data\Models\Schedule;
 use App\Data\Models\User;
 use App\Enums\RoleEnum;
 use Database\Seeders\E2ESeeder;
@@ -37,6 +38,13 @@ it('seeds exactly what the browser journeys expect', function (): void {
     $dxb = $families->first(fn (Family $f): bool => $f->contactEmail() === 'delacruz@nxtgen.test');
     expect($world)->toContain("phone: '0501000001'")
         ->and(substr((string) preg_replace('/\D+/', '', (string) $dxb?->primaryGuardian?->phone), -9))->toBe('501000001');
+
+    // The classes journey finds CCF DXB's Saturday classes, and House Church with none.
+    $classes = Schedule::query()->with('satellite')->where('is_active', true)->get();
+    expect($classes->map(fn (Schedule $s): string => $s->satellite->name)->unique()->values()->all())->toBe(['CCF DXB']);
+    foreach ($classes as $class) {
+        expect($world)->toContain("name: '{$class->name}', when: '{$class->weekday?->everyLabel()} · {$class->startsAt()}–{$class->endsAt()}'");
+    }
 
     expect(User::query()->where('email', E2ESeeder::HOUSE_ADMIN_EMAIL)->firstOrFail()->roleAssignments()->first()?->role)->toBe(RoleEnum::Admin);
 });

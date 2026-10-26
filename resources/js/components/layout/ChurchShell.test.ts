@@ -7,7 +7,7 @@ const page = {
         flash: {},
         church: { name: 'CCF', slug: 'ccf' },
         auth: { user: null, can_switch: false },
-        church_nav: { can_manage_people: false },
+        church_nav: { can_manage_people: false, can_manage_classes: false },
     },
 }
 
@@ -50,5 +50,13 @@ describe('ChurchShell', () => {
 
         page.props.church_nav.can_manage_people = true
         expect(mount(ChurchShell).text()).toContain('People')
+    })
+
+    it('shows Classes only to someone who may manage classes', () => {
+        page.props.church_nav.can_manage_classes = false
+        expect(mount(ChurchShell).text()).not.toContain('Classes')
+
+        page.props.church_nav.can_manage_classes = true
+        expect(mount(ChurchShell).text()).toContain('Classes')
     })
 })

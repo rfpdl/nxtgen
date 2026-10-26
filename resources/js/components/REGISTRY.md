@@ -15,7 +15,7 @@ Props are typed from `@/types` (aliases over the generated, snake_case `generate
 | RegisterFamilyForm      | organism | The registration form (parents and staff): parent, other parents/guardians, family, children, consent                         |
 | FamilyChildCard         | molecule | One of the parent's own children on the family page; nickname first, allergy warning                                          |
 | AddChildForm            | organism | "Add a child" on the family page, reusing ChildFieldset                                                                       |
-| ChurchShell             | layout   | Church staff frame: the shared `church`'s name, Families, Children, QR poster, People (admins), sign out                      |
+| ChurchShell             | layout   | Church staff frame: the shared `church`'s name, Families, Children, QR poster, People and Classes (admins), sign out          |
 | FamilySearchResultCard  | molecule | A church-wide "already registered?" hit (and each side of a possible duplicate): masked email, add-a-child                    |
 | StaffMemberCard         | molecule | One person who serves, with their roles; Remove only where the viewer may                                                     |
 | AddStaffForm            | organism | "Add someone": name, email, one role from the server's allowed choices                                                        |
@@ -33,3 +33,6 @@ Props are typed from `@/types` (aliases over the generated, snake_case `generate
 | Pager                   | molecule | "Page 2 of 3" with Previous / Next for the registration lists; hidden when one page holds all                                 |
 | OtherGuardiansFieldset  | organism | The family's other parents/guardians (no email): add / remove (saved ones reported), via GuardianFieldset                     |
 | PossibleDuplicateCard   | organism | A possible duplicate on a family's page: newer and earlier side by side, "Not the same" / "Same family"                       |
+| ScheduleCard            | molecule | One class (Schedule) on the Classes page: name, day and times; Edit, and Retire after a second tap                            |
+| ScheduleForm            | organism | Add (POST, with `satelliteId`) or edit (PUT, from a saved `schedule`) a class: name, day, times; `done` on save or cancel     |
+| SatelliteSchedules      | organism | One satellite on the Classes page: its classes, one edited in place at a time, "+ Add a class" opening the add form           |

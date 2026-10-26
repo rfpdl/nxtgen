@@ -53,10 +53,11 @@ it('narrows by search text, a child\'s status and a child\'s level', function ()
     $church = church();
     $satellite = satelliteOf($church);
     $santos = familyAt($satellite);
-    guardianOf($santos, User::factory()->create(), ['first_name' => 'Janice', 'last_name' => 'Santos']);
+    // Pinned emails: a random one could contain "santos" and match the search.
+    guardianOf($santos, User::factory()->create(['email' => 'janice@example.com']), ['first_name' => 'Janice', 'last_name' => 'Santos']);
     childOf($santos, ['status' => ChildStatusEnum::Active, 'level' => 2]);
     $reyes = familyAt($satellite);
-    guardianOf($reyes, User::factory()->create(), ['first_name' => 'Carlo', 'last_name' => 'Reyes']);
+    guardianOf($reyes, User::factory()->create(['email' => 'carlo@example.com']), ['first_name' => 'Carlo', 'last_name' => 'Reyes']);
     childOf($reyes, ['status' => ChildStatusEnum::Inactive, 'level' => 3]);
 
     $list = fn (FamilyListFiltersData $f): array => listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: null, filters: $f));
@@ -106,7 +107,7 @@ it('shows only families on an open possible duplicate, when asked — by family 
 it('finds a family by phone whatever spaces or + the phone was saved with', function (): void {
     $church = church();
     $family = familyAt(satelliteOf($church));
-    guardianOf($family, User::factory()->create(), ['phone' => '+971 50 123 4567']);
+    guardianOf($family, User::factory()->create(['email' => 'phone-only@example.com']), ['phone' => '+971 50 123 4567']);
 
     $found = fn (string $q) => listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: null, filters: new FamilyListFiltersData(query: $q)));
 

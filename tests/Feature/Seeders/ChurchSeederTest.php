@@ -5,13 +5,16 @@ declare(strict_types=1);
 use App\Data\Models\Church;
 use App\Data\Models\RoleAssignment;
 use App\Data\Models\Satellite;
+use App\Data\Models\Schedule;
 use App\Data\Models\Squad;
 use App\Data\Models\User;
 use App\Enums\GenderEnum;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
+use App\Enums\WeekdayEnum;
 use Database\Seeders\ChurchSeeder;
 use Database\Seeders\DatabaseSeeder;
+use Database\Seeders\DemoChurchSeeder;
 
 use function Pest\Laravel\seed;
 
@@ -137,4 +140,24 @@ it('adds what is missing on a second run, and changes nothing that exists', func
         ->and(Squad::query()->count())->toBe(21)           // the new satellite got its own seven
         ->and(RoleAssignment::query()->where('is_active', true)->count())->toBe(0)
         ->and(Satellite::query()->pluck('name')->sort()->values()->all())->toBe(['Al Quoz', 'CCF DXB', 'House Church']);
+});
+
+it('gives the demo church\'s CCF DXB its Saturday classes, 1PM and 7PM — and is safe to run again', function (): void {
+    seed(DemoChurchSeeder::class);
+    seed(DemoChurchSeeder::class);
+
+    $classes = Schedule::query()->with('satellite')->orderBy('starts_at')->get();
+
+    expect($classes->map(fn (Schedule $s): array => [$s->satellite->name, $s->name, $s->weekday, $s->startsAt(), $s->endsAt(), $s->is_active])->all())->toBe([
+        ['CCF DXB', '1PM', WeekdayEnum::Saturday, '13:00', '15:00', true],
+        ['CCF DXB', '7PM', WeekdayEnum::Saturday, '19:00', '21:00', true],
+    ]);
+});
+
+it('makes no classes for the real church: its admins add them on the Classes page', function (): void {
+    churchSettings();
+
+    seed(ChurchSeeder::class);
+
+    expect(Schedule::query()->count())->toBe(0);
 });

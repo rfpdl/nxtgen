@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Church\DataObjects;
 
 use App\Data\Models\Family;
+use App\Data\Models\Satellite;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
 
@@ -13,7 +14,7 @@ use App\Enums\ScopeTypeEnum;
  * nothing else compares roles. Built from active role assignments in this church only.
  *
  *   church admin     → everything in the church
- *   satellite admin  → see + edit families whose home satellite is theirs; manage that satellite's Schedules
+ *   satellite admin  → see + edit families whose home satellite is theirs; manage that satellite's Schedules (classes)
  *   schedule admin   → that Schedule (shown as "class"; Release 2)
  *   Lifeshaper       → see their satellites' families, register families, add children
  *   any staff role   → re-send any family's confirmation link (a visiting family too)
@@ -116,6 +117,34 @@ final readonly class AccessScope
     public function canReviewDuplicates(): bool
     {
         return $this->isAnyAdmin();
+    }
+
+    /**
+     * The Classes page (Schedules, shown as "class" — DECISIONS 2026-10-26): church admins and satellite admins.
+     * WHICH satellites' classes each may add, edit and retire is canManageClassesAt.
+     */
+    public function canManageClasses(): bool
+    {
+        return $this->isAnyAdmin();
+    }
+
+    /**
+     * The satellites whose classes this person manages: null = every satellite (church admin); a satellite admin's
+     * own; nobody else's.
+     *
+     * @return list<int>|null
+     */
+    public function classSatelliteIds(): ?array
+    {
+        return $this->isChurchAdmin ? null : $this->adminSatelliteIds;
+    }
+
+    /** A satellite's classes: a church admin anywhere in this church, a satellite admin at their own satellite. */
+    public function canManageClassesAt(Satellite $satellite): bool
+    {
+        $ids = $this->classSatelliteIds();
+
+        return $satellite->church_id === $this->churchId && ($ids === null || in_array($satellite->id, $ids, true));
     }
 
     private function isAnyAdmin(): bool

@@ -27,6 +27,15 @@ export const enums: Required<EnumProps> = {
         { value: 'inactive', label: 'Inactive', color: 'muted' },
         { value: 'graduated', label: 'Graduated', color: 'info' },
     ],
+    weekday: [
+        { value: 'monday', label: 'Monday', color: 'muted' },
+        { value: 'tuesday', label: 'Tuesday', color: 'muted' },
+        { value: 'wednesday', label: 'Wednesday', color: 'muted' },
+        { value: 'thursday', label: 'Thursday', color: 'muted' },
+        { value: 'friday', label: 'Friday', color: 'muted' },
+        { value: 'saturday', label: 'Saturday', color: 'muted' },
+        { value: 'sunday', label: 'Sunday', color: 'muted' },
+    ],
 }
 
 /** Inertia as the real module, except that its page carries `enums`. */

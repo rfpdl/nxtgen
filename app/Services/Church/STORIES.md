@@ -46,3 +46,10 @@ decided by `AccessScope` against the access-matrix row the Feature declares (`#[
 - One login per person: adding someone who already has a login (often a parent) only gives the Role.
 - A Satellite admin gives only Lifeshaper, in their own Satellite. A Role is switched off, never deleted, and the
   Church is never left without a church admin.
+
+## Classes
+- A class (GLOSSARY "Schedule") belongs to one Satellite: a name, and a day and start/end time only if it has them.
+  A class with a day shows at the door only on that day; one with no day shows every day.
+- Church admins manage every Satellite's classes, Satellite admins their own; a Lifeshaper has no Classes page.
+- A class is retired, never deleted (Sessions will point at it). Two active classes at a Satellite never share a
+  name; a retired class's name is free again.

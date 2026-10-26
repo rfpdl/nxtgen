@@ -80,6 +80,12 @@ function matrix(): array
         'church.people.index' => [AccessRowEnum::GrantRoles, [Actor::ChurchAdmin, Actor::HomeAdmin, Actor::AwayAdmin]],
         'church.people.store' => [AccessRowEnum::GrantRoles, Actor::editingFamily()],
         'church.people.roles.destroy' => [AccessRowEnum::GrantRoles, Actor::editingFamily()],
+        // Classes (DECISIONS 2026-10-26): the page opens for every admin; Home's class is changed only by an admin
+        // over Home.
+        'church.schedules.index' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin, Actor::AwayAdmin]],
+        'church.schedules.store' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin]],
+        'church.schedules.update' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin]],
+        'church.schedules.retire' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin]],
         'family.show' => [AccessRowEnum::OwnFamily, Actor::parents()],
         'family.update' => [AccessRowEnum::OwnFamily, Actor::parents()],
         'family.children.store' => [AccessRowEnum::OwnFamily, Actor::parents()],
@@ -150,6 +156,10 @@ function requestFor(string $route, AccessWorld $w): array
         'church.people.index' => ['GET', '/ccf/people', []],
         'church.people.store' => ['POST', '/ccf/people', ['name' => 'Leo Lifeshaper', 'email' => 'leo@example.com', 'role' => 'lifeshaper', 'scope_type' => 'satellite', 'scope_id' => $w->home->id]],
         'church.people.roles.destroy' => ['DELETE', "/ccf/people/roles/{$w->assignment->id}", []],
+        'church.schedules.index' => ['GET', '/ccf/classes', []],
+        'church.schedules.store' => ['POST', '/ccf/classes', ['satellite_id' => $w->home->id, 'name' => 'Special class', 'weekday' => null, 'starts_at' => null, 'ends_at' => null]],
+        'church.schedules.update' => ['PUT', "/ccf/classes/{$w->schedule->id}", ['name' => '1PM', 'weekday' => 'saturday', 'starts_at' => '13:30', 'ends_at' => '15:00']],
+        'church.schedules.retire' => ['PUT', "/ccf/classes/{$w->schedule->id}/retire", []],
         'family.show' => ['GET', '/ccf/family', []],
         'family.update' => ['PUT', '/ccf/family', familyEdit($w->home)],
         'family.children.store' => ['POST', '/ccf/family/children', $newChild],
@@ -322,6 +332,17 @@ describe('duplicates and People, for admins', function (): void {
         ->with(cells('church.people.roles.destroy'));
 });
 
+describe('Classes, for admins', function (): void {
+    it('opens Classes for admins only @story#95 @story#96', cellTest())
+        ->with(cells('church.schedules.index'));
+    it('lets a class be added at Home only by an admin over Home @story#97 @story#98', cellTest())
+        ->with(cells('church.schedules.store'));
+    it('lets a Home class be edited only by an admin over Home @story#99 @story#100', cellTest())
+        ->with(cells('church.schedules.update'));
+    it('lets a Home class be retired only by an admin over Home @story#101 @story#102', cellTest())
+        ->with(cells('church.schedules.retire'));
+});
+
 describe('the parent\'s own family', function (): void {
     it('opens a parent\'s own family page, for parents only @story#28 @story#29', cellTest())
         ->with(cells('family.show'));
@@ -342,18 +363,18 @@ describe('the parent\'s own family', function (): void {
 it('shows a child\'s photo to their family and staff who can see the family, and nobody else @story#40', cellTest())
     ->with(cells('photos.child'));
 
-/** @return list<string> the ccf routes whose address names a family, child, pair or role */
+/** @return list<string> the ccf routes whose address names a family, child, pair, role or class */
 function routesNamingAnId(): array
 {
     return array_values(array_filter(array_keys(matrix()), function (string $route): bool {
         $uri = (string) Router::getRoutes()->getByName($route)?->uri();
 
-        return str_starts_with($uri, '{church}') && preg_match('/\{(family|child|pair|assignment)\}/', $uri) === 1;
+        return str_starts_with($uri, '{church}') && preg_match('/\{(family|child|pair|assignment|schedule)\}/', $uri) === 1;
     }));
 }
 
-// Every refusal is a 404 and changes nothing, so one world serves all sixteen guesses.
-it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in their OWN church\'s address @story#29 @story#49 @story#51', function (): void {
+// Every refusal is a 404 and changes nothing, so one world serves all eighteen guesses.
+it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in their OWN church\'s address @story#29 @story#49 @story#51 @story#100 @story#102', function (): void {
     Notification::fake();
     Storage::fake('photos');
     $world = AccessWorld::make();
@@ -370,6 +391,6 @@ it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in 
         $answers["{$method} {$guessed}"] = outcomeOf(call($method, $guessed, $payload), $method);
     }
 
-    expect($answers)->toHaveCount(16)
+    expect($answers)->toHaveCount(18)
         ->and(array_unique(array_values($answers)))->toBe(['404'], (string) json_encode($answers, JSON_PRETTY_PRINT));
 });

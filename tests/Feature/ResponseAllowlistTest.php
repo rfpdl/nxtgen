@@ -28,8 +28,8 @@ const SHARED = ['auth.can_switch', 'auth.user.id', 'auth.user.name', 'church.nam
 /** A page that is not a staff page: the staff menu is null. */
 const FRAME = [...SHARED, 'church_nav'];
 
-/** A staff page: the staff menu's one switch (People). Duplicates has no tab (DECISIONS 2026-10-17, after first look). */
-const STAFF_FRAME = [...SHARED, 'church_nav.can_manage_people'];
+/** A staff page: the staff menu's switches (People, Classes). Duplicates has no tab (DECISIONS 2026-10-17, after first look). */
+const STAFF_FRAME = [...SHARED, 'church_nav.can_manage_classes', 'church_nav.can_manage_people'];
 
 /** Health, photo and contact fields: never on a list or search page, whoever asks — only the allergy yes/no. */
 const NEVER_ON_LISTS = '/photo|allerg|illness|fear|dislike|guardian_notes|phone|notes|ministries/';
@@ -282,6 +282,19 @@ describe('admin pages', function (): void {
         Actor::ChurchAdmin->value => [Actor::ChurchAdmin, true],
         Actor::HomeAdmin->value => [Actor::HomeAdmin, true],
         Actor::AwayAdmin->value => [Actor::AwayAdmin, false],
+    ]);
+});
+
+describe('the Classes page', function (): void {
+    it('shows admins each satellite\'s classes — names, days and times, no people — and an away admin only Away @story#95', function (Actor $actor, array $satellites): void {
+        $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/classes');
+
+        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, ['enums.weekday', 'satellites.*.id', 'satellites.*.name'], prefixed('satellites.*.schedules.*', ['ends_at', 'id', 'name', 'starts_at', 'weekday', 'weekday_label'])))
+            ->and(collect(listAt($props, 'satellites'))->pluck('name')->all())->toBe($satellites);
+    })->with([
+        Actor::ChurchAdmin->value => [Actor::ChurchAdmin, ['Away', 'Home']],
+        Actor::HomeAdmin->value => [Actor::HomeAdmin, ['Home']],
+        Actor::AwayAdmin->value => [Actor::AwayAdmin, ['Away']],
     ]);
 });
 

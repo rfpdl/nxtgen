@@ -10,6 +10,7 @@ use App\Data\Models\Family;
 use App\Data\Models\Guardian;
 use App\Data\Models\RoleAssignment;
 use App\Data\Models\Satellite;
+use App\Data\Models\Schedule;
 use App\Data\Models\User;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
@@ -30,6 +31,17 @@ function church(array $attributes = []): Church
 function satelliteOf(Church $church, array $attributes = []): Satellite
 {
     return Satellite::factory()->for($church)->create($attributes);
+}
+
+/**
+ * A class (GLOSSARY "Schedule") at `$satellite`, in the satellite's church — active, on Saturdays 13:00–15:00
+ * unless the attributes say otherwise.
+ *
+ * @param  array<model-property<Schedule>, mixed>  $attributes
+ */
+function scheduleAt(Satellite $satellite, array $attributes = []): Schedule
+{
+    return Schedule::factory()->create(['church_id' => $satellite->church_id, 'satellite_id' => $satellite->id] + $attributes);
 }
 
 /**

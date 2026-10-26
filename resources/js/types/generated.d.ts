@@ -163,6 +163,23 @@ declare namespace App {
                 }
             }
         }
+        namespace Schedule {
+            namespace DataObjects {
+                export type SatelliteSchedulesData = {
+                    id: number
+                    name: string
+                    schedules: App.Domains.Schedule.DataObjects.ScheduleData[]
+                }
+                export type ScheduleData = {
+                    id: number
+                    name: string
+                    weekday: App.Enums.WeekdayEnum | null
+                    weekday_label: string | null
+                    starts_at: string | null
+                    ends_at: string | null
+                }
+            }
+        }
     }
     namespace Enums {
         export type AccessRowEnum =
@@ -182,6 +199,7 @@ declare namespace App {
             | 'own_family'
             | 'child_photo'
             | 'see_child_photo'
+            | 'manage_classes'
         export type ChildStatusEnum = 'active' | 'inactive' | 'graduated'
         export type DuplicateReasonEnum = 'same_phone' | 'same_name_dob'
         export type DuplicateStatusEnum = 'open' | 'dismissed' | 'confirmed'
@@ -198,6 +216,8 @@ declare namespace App {
             'mother' | 'father' | 'guardian' | 'grandparent' | 'aunt_uncle' | 'sibling' | 'other'
         export type RoleEnum = 'admin' | 'lifeshaper'
         export type ScopeTypeEnum = 'church' | 'satellite' | 'schedule'
+        export type WeekdayEnum =
+            'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'
     }
     namespace Foundation {
         namespace DataObjects {
@@ -302,6 +322,13 @@ declare namespace App {
         }
         namespace Church {
             namespace Data {
+                export type AddScheduleInput = {
+                    satellite_id: number
+                    name: string
+                    weekday: App.Enums.WeekdayEnum | null
+                    starts_at: string | null
+                    ends_at: string | null
+                }
                 export type AddStaffInput = {
                     name: string
                     email: string
@@ -314,6 +341,12 @@ declare namespace App {
                 }
                 export type ResolveDuplicateInput = {
                     status: App.Enums.DuplicateStatusEnum
+                }
+                export type ScheduleInput = {
+                    name: string
+                    weekday: App.Enums.WeekdayEnum | null
+                    starts_at: string | null
+                    ends_at: string | null
                 }
                 export type UpdateChildLevelInput = {
                     level: number

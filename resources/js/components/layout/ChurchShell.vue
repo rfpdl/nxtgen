@@ -10,7 +10,8 @@ import { computed } from 'vue'
 import { route } from 'ziggy-js'
 
 /**
- * The church staff frame: church name, the Release 1 tools, People (admins), sign out, and the flash message.
+ * The church staff frame: church name, the Release 1 tools, People and Classes (admins), sign out, and the flash
+ * message.
  * Registering starts from the Families list's button, and possible duplicates from its "duplicates" filter
  * (DECISIONS 2026-10-17, after first look) — neither has a tab.
  * The church is the page's shared `church`; what to show comes from the shared `church_nav`.
@@ -20,6 +21,7 @@ const church = useChurch()
 const { message, dismiss } = useFlashMessages()
 const page = usePage<SharedProps>()
 const canManagePeople = computed(() => page.props.church_nav?.can_manage_people === true)
+const canManageClasses = computed(() => page.props.church_nav?.can_manage_classes === true)
 </script>
 
 <template>
@@ -47,6 +49,12 @@ const canManagePeople = computed(() => page.props.church_nav?.can_manage_people 
                     :href="route('church.people.index', church.slug)"
                     class="min-h-touch text-text flex items-center underline-offset-4 hover:underline"
                     >People</Link
+                >
+                <Link
+                    v-if="canManageClasses"
+                    :href="route('church.schedules.index', church.slug)"
+                    class="min-h-touch text-text flex items-center underline-offset-4 hover:underline"
+                    >Classes</Link
                 >
                 <Link
                     :href="route('account.password')"

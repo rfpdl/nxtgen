@@ -11,6 +11,7 @@ use App\Data\Models\Family;
 use App\Data\Models\Note;
 use App\Data\Models\RoleAssignment;
 use App\Data\Models\Satellite;
+use App\Data\Models\Schedule;
 use App\Data\Models\User;
 use App\Domains\Family\Jobs\CreateDuplicateCandidatesJob;
 use App\Enums\RoleEnum;
@@ -20,7 +21,8 @@ use Illuminate\Support\Facades\Storage;
  * The church the access matrix and the response allowlists ask about (TODO #18): church "ccf" with satellites
  * "Home" and "Away"; one family at Home whose child Amara has a photo on file (consent given) and whose parent's
  * email is not yet confirmed, with another guardian (Jun, no login) and a staff note; another family at Home; a possible duplicate of the first family;
- * a Home Lifeshaper's role to remove; another church "other" — and one user per Actor. Fake the photos disk before making it.
+ * a Home Lifeshaper's role to remove; a class at each satellite (Home's "1PM" is the one changed); another church
+ * "other" — and one user per Actor. Fake the photos disk before making it.
  */
 final readonly class AccessWorld
 {
@@ -34,6 +36,7 @@ final readonly class AccessWorld
         public Child $child,
         public RoleAssignment $assignment,
         public DuplicateCandidate $pair,
+        public Schedule $schedule,
         private array $users,
     ) {}
 
@@ -88,6 +91,10 @@ final readonly class AccessWorld
         (new CreateDuplicateCandidatesJob(family: $newcomer))->handle();
         childOf($newcomer, ['nickname' => 'Dina']);
 
+        // A class at each satellite: Home's is the one edited and retired; Away's keeps every admin's page full.
+        $schedule = scheduleAt($home, ['name' => '1PM', 'starts_at' => '13:00', 'ends_at' => '15:00']);
+        scheduleAt($away, ['name' => '7PM', 'starts_at' => '19:00', 'ends_at' => '21:00']);
+
         // A Home Lifeshaper who is no Actor: People removes THEIR role, so no actor loses theirs mid-request.
         $volunteer = staffMember(RoleEnum::Lifeshaper, atSatellite($home));
 
@@ -100,6 +107,7 @@ final readonly class AccessWorld
             child: $child,
             assignment: RoleAssignment::query()->where('user_id', $volunteer->id)->sole(),
             pair: DuplicateCandidate::query()->sole(),
+            schedule: $schedule,
             users: [
                 Actor::Parent->value => $parent,
                 Actor::OtherParent->value => $otherParent,

@@ -31,6 +31,12 @@ export const FAMILIES = {
 
 export const SATELLITES = { dxb: 'CCF DXB', house: 'House Church' } as const
 
+/** CCF DXB's Saturday classes (DemoChurchSeeder). House Church has none. */
+export const CLASSES = {
+    onePm: { name: '1PM', when: 'Saturdays · 13:00–15:00' },
+    sevenPm: { name: '7PM', when: 'Saturdays · 19:00–21:00' },
+} as const
+
 /** Saved sign-in for a staff member, written by auth.setup.ts. */
 export const sessionFile = (role: StaffRole): string => `tests/e2e/.auth/${role}.json`
 

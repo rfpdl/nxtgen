@@ -14,7 +14,7 @@ export type SharedProps = {
     /** The church the address names; null on a page outside one. */
     church: Church | null
     /** The staff menu: set on church staff pages (from RequireAssignment's scope), null on every other page. */
-    church_nav: { can_manage_people: boolean } | null
+    church_nav: { can_manage_people: boolean; can_manage_classes: boolean } | null
 }
 
 // ─── Enums ──────────────────────────────────────────────────────────────────────────────────────────────
@@ -33,6 +33,7 @@ export type EnumMap = {
     gender: App.Enums.GenderEnum
     relationship: App.Enums.RelationshipEnum
     child_status: App.Enums.ChildStatusEnum
+    weekday: App.Enums.WeekdayEnum
 }
 
 export type EnumProps = { [K in keyof EnumMap]?: Option<EnumMap[K]>[] }
@@ -42,6 +43,7 @@ export type Relationship = App.Enums.RelationshipEnum
 export type ChildStatus = App.Enums.ChildStatusEnum
 export type DuplicateStatus = App.Enums.DuplicateStatusEnum
 export type MagicLinkRoute = App.Enums.MagicLinkRouteEnum
+export type Weekday = App.Enums.WeekdayEnum
 
 // ─── Response DTOs ──────────────────────────────────────────────────────────────────────────────────────
 
@@ -63,6 +65,9 @@ export type Note = App.Domains.Family.DataObjects.NoteData
 export type DuplicatePair = App.Domains.Family.DataObjects.DuplicatePairData
 export type ChildListRow = App.Domains.Family.DataObjects.ChildListRowData
 export type LevelOption = App.Domains.Level.DataObjects.LevelOptionData
+/** A class (GLOSSARY "Schedule") on the Classes page, and a satellite with its classes. */
+export type Schedule = App.Domains.Schedule.DataObjects.ScheduleData
+export type SatelliteSchedules = App.Domains.Schedule.DataObjects.SatelliteSchedulesData
 /** A registration list's filters, named as the address parameters the filter bar sends back. */
 export type ListFilters = App.Domains.Family.DataObjects.ListFiltersData
 
@@ -83,6 +88,8 @@ export type CorrectFamilyEmailInput = App.Services.Church.Data.CorrectFamilyEmai
 export type ResolveDuplicateInput = App.Services.Church.Data.ResolveDuplicateInput
 export type UpdateChildStatusInput = App.Services.Church.Data.UpdateChildStatusInput
 export type UpdateChildLevelInput = App.Services.Church.Data.UpdateChildLevelInput
+export type ScheduleInput = App.Services.Church.Data.ScheduleInput
+export type AddScheduleInput = App.Services.Church.Data.AddScheduleInput
 
 /**
  * An Input while a person is still filling it in: every answer may still be blank (`''`), an unanswered

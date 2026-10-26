@@ -10,7 +10,7 @@ it('keeps the stored row names the Features and tests refer to', function (): vo
     expect(array_column(AccessRowEnum::cases(), 'value'))->toBe([
         'staff_area', 'door_search', 'register_family', 'add_child', 'family_list', 'view_family', 'edit_family',
         'resend_link', 'correct_contact', 'set_child_status', 'set_child_level', 'review_duplicates', 'grant_roles',
-        'own_family', 'child_photo', 'see_child_photo',
+        'own_family', 'child_photo', 'see_child_photo', 'manage_classes',
     ]);
 });
 

@@ -6,14 +6,16 @@ namespace Database\Seeders;
 
 use App\Data\Models\Church;
 use App\Data\Models\Satellite;
+use App\Data\Models\Schedule;
 use App\Data\Models\User;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
+use App\Enums\WeekdayEnum;
 use Illuminate\Database\Seeder;
 
 /**
  * A local church to click around in: the same church ChurchSeeder makes (CCF, CCF DXB + House Church, each with its
- * Squads), with demo staff logins. Sign in with a magic link (emails go to storage/logs/laravel.log) or the staff
+ * Squads), with CCF DXB's Saturday classes (1PM, 7PM) and demo staff logins. Sign in with a magic link (emails go to storage/logs/laravel.log) or the staff
  * password "password". NEVER in production — DatabaseSeeder runs ChurchSeeder there.
  */
 final class DemoChurchSeeder extends Seeder
@@ -32,6 +34,14 @@ final class DemoChurchSeeder extends Seeder
 
         $ccf = Church::query()->where('slug', 'ccf')->firstOrFail();
         $dxb = Satellite::query()->where('church_id', $ccf->id)->where('slug', 'ccf-dxb')->firstOrFail();
+
+        // CCF DXB's Saturday classes (DECISIONS 2026-10-26). The real church's admins add theirs on the Classes page.
+        foreach (['1PM' => ['13:00', '15:00'], '7PM' => ['19:00', '21:00']] as $name => [$startsAt, $endsAt]) {
+            Schedule::query()->firstOrCreate(
+                ['church_id' => $ccf->id, 'satellite_id' => $dxb->id, 'name' => $name, 'is_active' => true],
+                ['weekday' => WeekdayEnum::Saturday, 'starts_at' => $startsAt, 'ends_at' => $endsAt],
+            );
+        }
 
         $admin = User::query()->where('email', 'admin@nxtgen.test')->firstOrFail();
         $admin->forceFill(['email_verified_at' => now(), 'password' => 'password', 'is_platform_admin' => true])->save();
