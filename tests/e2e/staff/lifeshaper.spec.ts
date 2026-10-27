@@ -13,7 +13,7 @@ import {
 /*
  * Journey 2 — a Lifeshaper at the door, on their phone: search first; a family that is already registered
  * gets the new child added; a family that is not gets registered for them; a parent whose confirmation email never
- * came gets it again — from the children list, or from the door search for a family visiting from another satellite.
+ * came gets it again — from the families list, or from the door search for a family visiting from another satellite.
  */
 test.use({ storageState: sessionFile('lifeshaper') })
 
@@ -90,7 +90,7 @@ test('prints the registration poster, whose address opens the form @story#80', a
     await expect(page.getByRole('heading', { name: 'Register your family' })).toBeVisible()
 })
 
-test('re-sends the confirmation link from the children list @story#84', async ({ page }) => {
+test('re-sends the confirmation link from the families list @story#84', async ({ page }) => {
     const email = uniqueEmail('resend')
     const surname = uniqueSurname('Reyes')
     await page.goto(`/${CHURCH}/families/new`)
@@ -103,12 +103,12 @@ test('re-sends the confirmation link from the children list @story#84', async ({
     await page.getByTestId('register-submit').click()
     await expect(page.getByTestId('flash-success')).toBeVisible()
 
-    // The parent says the email never came: find their child on the children list and send it again.
-    await page.goto(`/${CHURCH}/children`)
+    // The parent says the email never came: find the family on the families list and send it again.
+    await page.goto(`/${CHURCH}/families`)
     await page.getByTestId('filter-q').fill(surname)
     await page.getByTestId('filter-q').press('Enter')
     await expect(page).toHaveURL(new RegExp(`q=${surname}`))
-    const row = page.getByTestId('child-row').filter({ hasText: 'Nico' })
+    const row = page.getByTestId('family-row').filter({ hasText: surname })
     await expect(row).toHaveCount(1)
 
     const before = mailCount(email)

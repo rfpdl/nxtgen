@@ -10,8 +10,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
  * One child on the staff children list (plan §6 "families/children lists"). Only for staff who can see the child's
- * family; the allergy is a FLAG here — the details are on the family page. `can_resend`: the family's email is
- * unconfirmed and the viewer may re-send the link (AccessScope::canResendLink).
+ * family; the allergy is a FLAG here — the details are on the family page.
  */
 #[TypeScript]
 final class ChildListRowData extends Data
@@ -27,10 +26,9 @@ final class ChildListRowData extends Data
         public bool $has_allergies,
         public string $satellite,
         public int $family_id,
-        public bool $can_resend,
     ) {}
 
-    public static function fromModel(Child $child, bool $mayResend): self
+    public static function fromModel(Child $child): self
     {
         return new self(
             id: $child->id,
@@ -43,7 +41,6 @@ final class ChildListRowData extends Data
             has_allergies: $child->allergies !== null,
             satellite: $child->family->homeSatellite->name,
             family_id: $child->family_id,
-            can_resend: $mayResend && ! $child->family->contactEmailConfirmed(),
         );
     }
 }

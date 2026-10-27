@@ -269,7 +269,7 @@ describe('the registration lists', function (): void {
     it('lists children with an allergy yes/no only — no health details, no photo @story#58', function (Actor $actor): void {
         $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/children');
 
-        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, LIST_FRAME, prefixed('children.*', ['age', 'can_resend', 'date_of_birth', 'family_id', 'full_name', 'has_allergies', 'id', 'level', 'nickname', 'satellite', 'status_label'])))
+        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, LIST_FRAME, prefixed('children.*', ['age', 'date_of_birth', 'family_id', 'full_name', 'has_allergies', 'id', 'level', 'nickname', 'satellite', 'status_label'])))
             ->and(forbiddenOnLists($props))->toBe([]);
     })->with(actors(...Actor::staff()));
 });

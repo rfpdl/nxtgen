@@ -21,6 +21,11 @@ describes the design; this records the choices that shaped or changed it.
   (never rebuilt), no health detail, phone or photo; every cell plain text (TextRow).
   `nxtgen-attendance-<satellite>-<class>-<date>.xlsx`. A child's full name has one source, `Child::fullName()`.
 
+## 2026-10-27
+
+- **No re-send button on the Children list** (Roy): it is the family's (parent's) email, so each child repeated it.
+  It stays on the family page, unconfirmed rows of the Families list and the door search.
+
 ## 2026-10-26 (later — check-in 02, door built; Claude, for Roy to confirm)
 
 - **Health details at the door** (Roy, confirmed): tapping any child the door finds shows their health details,

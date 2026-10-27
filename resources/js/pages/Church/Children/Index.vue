@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import ResendLinkButton from '@/components/atoms/ResendLinkButton.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import Pager from '@/components/molecules/Pager.vue'
 import RegistrationListFilters from '@/components/molecules/RegistrationListFilters.vue'
@@ -66,7 +65,6 @@ function apply(params: Record<string, string | number>): void {
                     data-testid="allergy-flag"
                     >Allergies</span
                 >
-                <ResendLinkButton v-if="child.can_resend" :family-id="child.family_id" />
             </li>
         </ul>
         <Pager

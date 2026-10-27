@@ -112,7 +112,6 @@ declare namespace App {
                     has_allergies: boolean
                     satellite: string
                     family_id: number
-                    can_resend: boolean
                 }
                 export type ChildPortalData = {
                     id: number

@@ -265,15 +265,12 @@ describe('re-sending from the lists', function (): void {
                 ->where('families', fn (Collection $rows): bool => $rows->pluck('can_resend', 'primary_name')->sortKeys()->all() === ['Ana Ramos' => false, 'Bianca Ramos' => true]));
     });
 
-    it('offers the resend on the children of an unconfirmed family only @story#84', function (): void {
+    it('keeps the resend off the children list — it is the family\'s email, not the child\'s (Roy 2026-10-27) @story#84', function (): void {
         ['church' => $church, 'htc' => $htc] = adminChurch();
-        registeredFamily($htc, 'Ana', 'ana@example.com');
         registeredFamily($htc, 'Bianca', 'bianca@example.com', verified: false);
 
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get('/ccf/children')
-            ->assertInertia(fn (AssertableInertia $p) => $p->has('children', 2)
-                ->where('children.0.nickname', 'Ana-kid')->where('children.0.can_resend', false)
-                ->where('children.1.nickname', 'Bianca-kid')->where('children.1.can_resend', true));
+            ->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->missing('children.0.can_resend'));
     });
 
     it('offers the resend on a visiting family found by the door search, which the Lifeshaper cannot open @story#84', function (): void {

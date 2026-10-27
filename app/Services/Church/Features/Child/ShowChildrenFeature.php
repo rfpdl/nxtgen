@@ -45,7 +45,7 @@ final class ShowChildrenFeature extends BaseChurchFeature
         $page = $this->run(new GetChildrenJob(church: $church, satelliteIds: $visible, filters: $filters, page: request()->integer('page', 1)));
 
         return Inertia::render('Church/Children/Index', [
-            'children' => array_map(fn (Child $c): ChildListRowData => ChildListRowData::fromModel($c, mayResend: $scope->canResendLink($c->family)), $page->items),
+            'children' => array_map(fn (Child $c): ChildListRowData => ChildListRowData::fromModel($c), $page->items),
             'pagination' => $page->meta(),
             'filters' => ListFiltersData::fromChildFilters($filters),
             'options' => [
