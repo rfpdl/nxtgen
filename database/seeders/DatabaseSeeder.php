@@ -9,14 +9,14 @@ use RuntimeException;
 
 /**
  * Production: the real church from NXTGEN_* settings (ChurchSeeder) and nothing else. Anywhere else: the demo
- * church with its known logins — which must never exist in production (password "password").
+ * church with its known logins and demo families — which must never exist in production (password "password").
  */
 final class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
         if (! app()->isProduction()) {
-            $this->call(DemoChurchSeeder::class);
+            $this->call([DemoChurchSeeder::class, DemoFamiliesSeeder::class]);
 
             return;
         }
