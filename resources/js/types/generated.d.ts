@@ -33,6 +33,12 @@ declare namespace App {
                     fears: string | null
                     guardian_notes: string | null
                 }
+                export type DoorCheckInData = {
+                    id: number
+                    nickname: string
+                    squad: string
+                    checked_in_at: string
+                }
                 export type DoorChildData = {
                     id: number
                     nickname: string

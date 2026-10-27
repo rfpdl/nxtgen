@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Door;
 
+use App\Data\Models\CheckIn;
 use App\Data\Models\Child;
 use App\Data\Models\Family;
 use App\Data\Models\Schedule;
 use App\Domains\CheckIn\DataObjects\ChildHealthData;
+use App\Domains\CheckIn\DataObjects\DoorCheckInData;
 use App\Domains\CheckIn\DataObjects\DoorClassData;
 use App\Domains\CheckIn\DataObjects\DoorFamilyData;
 use App\Domains\CheckIn\Jobs\GetCheckedInChildrenJob;
@@ -28,7 +30,8 @@ use Inertia\Response;
 
 /**
  * The door (DECISIONS 2026-10-26), phone first: today's date in the church's timezone; today's classes at the
- * satellites the viewer's Role covers (`?class=` picks one — the first by default); how many are checked in; and the
+ * satellites the viewer's Role covers (`?class=` picks one — the first by default); who is checked in to it, newest
+ * first (DECISIONS 2026-10-27 — the page is never empty before a search; its length is the count); and the
  * church-wide family search (SearchFamiliesJob, the same one as registering — Q8) with each child's Level, Squad, an
  * allergy flag and whether they are in. No photo, no phone; a child's health details only when their name is tapped
  * (`?health=`, a partial reload of `health`).
@@ -41,6 +44,7 @@ use Inertia\Response;
     happyPaths: [
         'story#103' => 'Staff see today\'s classes at the satellites their Role covers, how many are checked in, and find any family of the church with each child\'s Level, Squad, allergy flag and whether they are in',
         'story#105' => 'Tapping a child\'s name shows their health details',
+        'story#116' => 'Before and below any search, staff see who is checked in to the chosen class today, newest first — nickname, Squad and time — and can undo one from there',
     ],
     unhappyPaths: ['story#104' => 'Only today\'s classes at satellites their Role covers — another satellite\'s, another church\'s or another day\'s class is a 404; the search never carries a photo, a phone number or a health detail'],
 )]
@@ -55,7 +59,11 @@ final class ShowDoorFeature extends BaseChurchFeature
         $class = $this->chosen($classes);
 
         $session = $class === null ? null : $this->run(new GetSessionJob(schedule: $class, date: $today));
-        $checkedIn = $session === null ? [] : $this->run(new GetCheckedInChildrenJob(session: $session));
+        $checkIns = $session === null ? [] : $this->run(new GetCheckedInChildrenJob(session: $session));
+        $checkedIn = [];   // child id => check-in id: each found child's ✓ and Undo
+        foreach ($checkIns as $checkIn) {
+            $checkedIn[$checkIn->child_id] = $checkIn->id;
+        }
 
         $query = trim(request()->string('q')->value());
         $families = $this->run(new SearchFamiliesJob(church: $church, query: $query));
@@ -65,7 +73,7 @@ final class ShowDoorFeature extends BaseChurchFeature
             'today' => $today->format('D j M'),
             'classes' => array_map(fn (Schedule $s): DoorClassData => DoorClassData::fromModel($s), $classes),
             'class_id' => $class?->id,
-            'checked_in' => count($checkedIn),
+            'checked_in' => array_map(fn (CheckIn $c): DoorCheckInData => DoorCheckInData::fromCheckIn($c, $church->timezone), $checkIns),
             'query' => $query,
             'families' => array_values($families->map(fn (Family $f): DoorFamilyData => DoorFamilyData::fromModel($f, $checkedIn, $suggested))->all()),
             'levels' => $this->run(new GetLevelsJob),

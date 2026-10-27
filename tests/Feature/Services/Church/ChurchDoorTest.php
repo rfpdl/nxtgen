@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Data\Models\CheckIn;
 use App\Data\Models\Child;
 use App\Data\Models\Church;
+use App\Data\Models\Family;
 use App\Data\Models\Note;
 use App\Data\Models\Satellite;
 use App\Data\Models\Schedule;
@@ -16,6 +17,7 @@ use App\Enums\RoleEnum;
 use App\Enums\WeekdayEnum;
 use App\Http\Middleware\HandleInertiaRequests;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
@@ -100,7 +102,7 @@ describe('the door page', function (): void {
             ->where('classes.0.times', '13:00–15:00')
             ->where('classes.1.name', '7PM')
             ->where('class_id', $onePm->id)
-            ->where('checked_in', 1)
+            ->has('checked_in', 1)
             ->where('families', []));
     });
 
@@ -111,6 +113,43 @@ describe('the door page', function (): void {
             ->has('classes', 3)
             ->where('classes.0.satellite', 'CCF DXB')
             ->where('classes.2.name', '10AM'));
+    });
+
+    it('lists who is checked in to the chosen class today, newest first: nickname, Squad and the church\'s time @story#116', function (): void {
+        ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'amara' => $amara, 'ben' => $ben, 'visitor' => $visitor] = doorChurch();
+        $session = sessionOf($onePm);
+        $amaraIn = checkedIn($session, $amara, ['checked_in_at' => CarbonImmutable::parse('2026-10-31 08:40:00', 'Asia/Dubai')->utc()]);
+        $beaIn = checkedIn($session, $visitor, ['checked_in_at' => CarbonImmutable::parse('2026-10-31 08:55:00', 'Asia/Dubai')->utc()]);
+        checkedIn($session, $ben, ['undone_at' => now()]);
+        checkedIn(sessionOf(Schedule::query()->where('name', '7PM')->sole()), $ben);
+
+        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}")->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('checked_in', [
+                ['id' => $beaIn->id, 'nickname' => 'Bea', 'squad' => 'Level 3 Girls', 'checked_in_at' => '08:55'],
+                ['id' => $amaraIn->id, 'nickname' => 'Amara', 'squad' => 'Level 2 Girls', 'checked_in_at' => '08:40'],
+            ]));
+    });
+
+    it('asks the database the same number of times however many children are in @story#116', function (): void {
+        ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'amara' => $amara] = doorChurch();
+        $session = sessionOf($onePm);
+        checkedIn($session, $amara);
+        $count = function () use ($lifeshaper, $onePm): int {
+            DB::flushQueryLog();
+            DB::enableQueryLog();
+            actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=Cruz")->assertOk();
+            DB::disableQueryLog();
+
+            return count(DB::getQueryLog());
+        };
+        $few = $count();
+
+        $family = Family::query()->firstOrFail();
+        foreach (['Ana', 'Bo', 'Cy', 'Di', 'Ed', 'Flo'] as $i => $nickname) {
+            checkedIn($session, childOf($family, ['nickname' => $nickname, 'level' => 1 + $i % 4, 'gender' => $i % 2 === 0 ? GenderEnum::Boy : GenderEnum::Girl]));
+        }
+
+        expect($count())->toBe($few);
     });
 
     it('finds a family church-wide by the parent\'s name, each child with Level, Squad, allergy flag and who is in @story#103', function (): void {
@@ -169,7 +208,7 @@ describe('the door page', function (): void {
         travelTo(CarbonImmutable::parse('2026-11-02 09:00:00', 'Asia/Dubai'));   // a Monday
 
         actingAs($lifeshaper)->get('/ccf/door')->assertInertia(fn (AssertableInertia $page) => $page
-            ->where('today', 'Mon 2 Nov')->where('classes', [])->where('class_id', null)->where('checked_in', 0));
+            ->where('today', 'Mon 2 Nov')->where('classes', [])->where('class_id', null)->where('checked_in', []));
     });
 
     it('refuses a class at a satellite the Role does not cover, another church\'s, or not meeting today @story#104', function (): void {

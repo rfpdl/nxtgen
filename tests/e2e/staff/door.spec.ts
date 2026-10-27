@@ -62,7 +62,7 @@ function child(card: Locator, nickname: string): Locator {
         .filter({ has: card.page().getByTestId('child-name').getByText(nickname, { exact: true }) })
 }
 
-test('checks in two children of a family at 1PM — one made active again — and undoes one @story#103 @story#106 @story#107 @story#110', async ({
+test('checks in two children of a family at 1PM — one made active again — sees them in the list and undoes one there @story#103 @story#106 @story#107 @story#110 @story#116', async ({
     page,
 }, info) => {
     await openDoor(page)
@@ -91,13 +91,36 @@ test('checks in two children of a family at 1PM — one made active again — an
     await expect(child(card, DOOR.cruz.inactive)).not.toContainText(/inactive/i)
     await expect(page.getByTestId('checked-in-count')).toHaveText(`${before + 2} checked in`)
 
-    // A mistake: undo Noah. He can be ticked again, and the count goes down.
-    await child(card, DOOR.cruz.inactive).getByTestId('undo').click()
+    // Below the family, who is in: newest first, so this browser's two are on top; the count is the list's length.
+    const rows = page.getByTestId('checked-in-row')
+    await expect(rows).toHaveCount(before + 2)
+    await expect(page.getByTestId('checked-in-list').locator('h2')).toHaveText(
+        `Checked in (${before + 2})`,
+    )
+    await expect(rows.nth(0).getByTestId('checked-in-name')).toHaveText(DOOR.cruz.inactive)
+    await expect(rows.nth(1).getByTestId('checked-in-name')).toHaveText(DOOR.cruz.allergic)
+    await expect(rows.nth(1)).toContainText('Level 2 Girls')
+    await expect(rows.nth(1)).toContainText(/\d{2}:\d{2}/)
+    await expect(rows.nth(1)).not.toContainText(DOOR.allergy)
+
+    // A mistake: undo Noah from the list. He leaves it, can be ticked again, and the count goes down.
+    await rows.nth(0).getByTestId('checked-in-undo').click()
     await expect(page.getByTestId('flash-success')).toContainText(
         `Undid ${DOOR.cruz.inactive}'s check-in.`,
     )
     await expect(child(card, DOOR.cruz.inactive).getByTestId('tick-child')).toBeEnabled()
     await expect(page.getByTestId('checked-in-count')).toHaveText(`${before + 1} checked in`)
+    await expect(rows).toHaveCount(before + 1)
+    await expect(rows.nth(0).getByTestId('checked-in-name')).toHaveText(DOOR.cruz.allergic)
+})
+
+test('shows who is in before any search @story#116', async ({ page }) => {
+    await openDoor(page)
+    const n = await count(page)
+
+    await expect(page.getByTestId('door-family')).toHaveCount(0)
+    await expect(page.getByTestId('checked-in-list')).toBeVisible()
+    await expect(page.getByTestId('checked-in-row')).toHaveCount(n)
 })
 
 test('asks for a Level first for a child with none, the age suggestion picked @story#107', async ({

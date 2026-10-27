@@ -68,10 +68,11 @@ export type LevelOption = App.Domains.Level.DataObjects.LevelOptionData
 /** A class (GLOSSARY "Schedule") on the Classes page, and a satellite with its classes. */
 export type Schedule = App.Domains.Schedule.DataObjects.ScheduleData
 export type SatelliteSchedules = App.Domains.Schedule.DataObjects.SatelliteSchedulesData
-/** The door (DECISIONS 2026-10-26): one of today's classes, a family found, one of its children, a child's health. */
+/** The door (DECISIONS 2026-10-26/27): one of today's classes, a family found, one of its children, a child checked in, a child's health. */
 export type DoorClass = App.Domains.CheckIn.DataObjects.DoorClassData
 export type DoorFamily = App.Domains.CheckIn.DataObjects.DoorFamilyData
 export type DoorChild = App.Domains.CheckIn.DataObjects.DoorChildData
+export type DoorCheckIn = App.Domains.CheckIn.DataObjects.DoorCheckInData
 export type ChildHealth = App.Domains.CheckIn.DataObjects.ChildHealthData
 /** Attendance (DECISIONS 2026-10-26): a Squad of a Session, one child checked in to it, a satellite in the picker. */
 export type AttendanceSquad = App.Domains.CheckIn.DataObjects.AttendanceSquadData

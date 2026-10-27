@@ -40,3 +40,4 @@ Props are typed from `@/types` (aliases over the generated, snake_case `generate
 | DoorChildRow            | molecule | A child on a door family card: tick, nickname (tap → health), Squad, ⚠ flag; ✓ in + Undo; "Make active again?"; pick a Level   |
 | ChildHealthPanel        | molecule | A child's health details at the door, only after their name is tapped; allergies first and loud; Close                         |
 | DoorFamilyCard          | organism | A family found at the door: its children (DoorChildRow), "Check in N children" into the chosen class (POST), Undo (PUT)        |
+| DoorCheckedInList       | molecule | Who is in the chosen class today at the door, newest first: nickname, Squad, time, Undo; empty state says how to start         |

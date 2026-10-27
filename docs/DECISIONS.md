@@ -25,6 +25,12 @@ describes the design; this records the choices that shaped or changed it.
 
 - **No re-send button on the Children list** (Roy): it is the family's (parent's) email, so each child repeated it.
   It stays on the family page, unconfirmed rows of the Families list and the door search.
+- **The door shows who is checked in** (Roy): it was empty until someone searched, so it looked broken. Under the
+  search, and below any results found, "Checked in (N)" lists the chosen class's Check-ins today, newest first: the
+  nickname (bold), this satellite's Squad, the time (the church's) and Undo (the same Undo as on a family card).
+  With no one in: "No one checked in yet. Search a child's or parent's name to check them in." The page sends the
+  list (`checked_in`, DoorCheckInData — nickname, Squad, time, the Check-in's id; no photo, phone or health detail)
+  and "N checked in" is its length, so the two cannot disagree. One query for the list however many are in.
 
 ## 2026-10-26 (later — check-in 02, door built; Claude, for Roy to confirm)
 

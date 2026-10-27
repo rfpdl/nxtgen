@@ -307,14 +307,24 @@ describe('the Classes page', function (): void {
  */
 const DOOR_CHILD = ['check_in_id', 'full_name', 'has_allergies', 'id', 'level', 'nickname', 'squad', 'status', 'status_label', 'suggested_level'];
 
+/**
+ * A child checked in to the chosen class today, on the door's list (DoorCheckInData): nickname, Squad and time — no
+ * photo, phone or health detail (DECISIONS 2026-10-27).
+ */
+const DOOR_CHECK_IN = ['checked_in_at', 'id', 'nickname', 'squad'];
+
 describe('the door', function (): void {
-    it('shows any staff today\'s classes and the church-wide families with an allergy flag only — no photo, phone or health detail @story#103 @story#104', function (Actor $actor): void {
+    it('shows any staff today\'s classes, who is in, and the church-wide families with an allergy flag only — no photo, phone or health detail @story#103 @story#104 @story#116', function (Actor $actor): void {
         travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
-        $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/door?q=Amara');
+        // A Role covering Home opens Home's 1PM, which Amara is in; Away's staff see their 7PM, with no one in yet.
+        $home = in_array($actor, Actor::coveringHome(), true);
+        $props = propsOf($actor, fn (AccessWorld $w): string => $home ? "/ccf/door?class={$w->schedule->id}&q=Amara" : '/ccf/door?q=Amara');
+        $checkedIn = $home ? prefixed('checked_in.*', DOOR_CHECK_IN) : ['checked_in'];
 
         expect(keyPaths($props))->toBe(allowlist(
             STAFF_FRAME,
-            ['checked_in', 'class_id', 'classes.*.id', 'classes.*.name', 'classes.*.satellite', 'classes.*.times', 'levels.*.level', 'levels.*.name', 'query', 'today'],
+            $checkedIn,
+            ['class_id', 'classes.*.id', 'classes.*.name', 'classes.*.satellite', 'classes.*.times', 'levels.*.level', 'levels.*.name', 'query', 'today'],
             prefixed('families.*', ['id', 'name', 'primary_name', 'satellite', ...prefixed('children.*', DOOR_CHILD)]),
         ))
             ->and(forbiddenOnLists($props))->toBe([])

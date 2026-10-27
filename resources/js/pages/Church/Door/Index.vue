@@ -1,23 +1,25 @@
 <script setup lang="ts">
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import ChildHealthPanel from '@/components/molecules/ChildHealthPanel.vue'
+import DoorCheckedInList from '@/components/molecules/DoorCheckedInList.vue'
 import DoorFamilyCard from '@/components/organisms/DoorFamilyCard.vue'
 import { useChurch } from '@/composables/useChurch'
-import type { ChildHealth, DoorClass, DoorFamily, LevelOption } from '@/types'
+import type { ChildHealth, DoorCheckIn, DoorClass, DoorFamily, LevelOption } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import { route } from 'ziggy-js'
 
 /**
  * The door (DECISIONS 2026-10-26), phone first: today, the class picker (today's classes at the satellites the
- * viewer's Role covers), how many are checked in, the church-wide search, and a card per family found. A child's
- * health details come only when their name is tapped — a partial reload of `health`.
+ * viewer's Role covers), how many are checked in, the church-wide search, a card per family found, and below them
+ * who is in the chosen class, with Undo (DECISIONS 2026-10-27) — the count is that list's length. A child's health
+ * details come only when their name is tapped — a partial reload of `health`.
  */
 const props = defineProps<{
     today: string
     classes: DoorClass[]
     class_id: number | null
-    checked_in: number
+    checked_in: DoorCheckIn[]
     query: string
     families: DoorFamily[]
     levels: LevelOption[]
@@ -46,6 +48,14 @@ function visit(params: { class?: number | null; q?: string }): void {
 
 function pickClass(event: Event): void {
     visit({ class: Number((event.target as HTMLSelectElement).value) })
+}
+
+function undo(checkInId: number): void {
+    router.put(
+        route('church.door.undo', [church.value.slug, checkInId]),
+        {},
+        { preserveScroll: true },
+    )
 }
 
 function openHealth(childId: number): void {
@@ -95,7 +105,7 @@ function openHealth(childId: number): void {
                     class="text-text text-xl font-semibold"
                     data-testid="checked-in-count"
                 >
-                    {{ checked_in }} checked in
+                    {{ checked_in.length }} checked in
                 </p>
             </header>
 
@@ -133,6 +143,8 @@ function openHealth(childId: number): void {
                 :class-id="class_id"
                 @health="openHealth"
             />
+
+            <DoorCheckedInList v-if="chosen" :check-ins="checked_in" @undo="undo" />
         </div>
     </ChurchShell>
 </template>

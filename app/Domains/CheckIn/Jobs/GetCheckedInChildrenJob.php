@@ -9,27 +9,26 @@ use App\Data\Models\Session;
 use App\Foundation\Jobs\BaseJob;
 
 /**
- * Who is in a Session right now: each checked-in child's Check-in id, keyed by child id (undone ones left out) — the
- * door's ✓ and Undo, and, counted, its "N checked in".
+ * Who is in a Session right now: each Check-in not undone, newest first, with its child and Squad — the door's
+ * checked-in list, each found child's ✓ and Undo, and its "N checked in".
  *
- * @extends BaseJob<array<int, int>>
+ * @extends BaseJob<list<CheckIn>>
  */
 final class GetCheckedInChildrenJob extends BaseJob
 {
     public function __construct(private readonly Session $session) {}
 
-    /** @return array<int, int> child id => check-in id */
+    /** @return list<CheckIn> */
     public function handle(): array
     {
-        /** @var array<int, int> $in */
-        $in = CheckIn::query()
+        return array_values(CheckIn::query()
             ->where('church_id', $this->session->church_id)
             ->where('session_id', $this->session->id)
             ->whereNull('undone_at')
-            ->orderBy('id')
-            ->pluck('id', 'child_id')
-            ->all();
-
-        return $in;
+            ->with(['child', 'squad'])
+            ->orderByDesc('checked_in_at')
+            ->orderByDesc('id')
+            ->get()
+            ->all());
     }
 }
