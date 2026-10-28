@@ -13,6 +13,7 @@ use App\Data\Models\Note;
 use App\Data\Models\RoleAssignment;
 use App\Data\Models\Satellite;
 use App\Data\Models\Schedule;
+use App\Data\Models\SquadHeadCount;
 use App\Data\Models\User;
 use App\Domains\Family\Jobs\CreateDuplicateCandidatesJob;
 use App\Enums\RoleEnum;
@@ -104,6 +105,8 @@ final readonly class AccessWorld
 
         // Amara is checked in to Home's 1PM on the Saturday: the Check-in undone. Bea (no Level yet) is the one checked in.
         $checkIn = checkedIn(sessionOf($schedule, '2026-10-31'), $child);
+        // Her Squad's head count is confirmed (roll call): 1.
+        SquadHeadCount::factory()->create(['session_id' => $checkIn->session_id, 'squad_id' => $checkIn->squad_id, 'head_count' => 1]);
 
         // A Home Lifeshaper who is no Actor: People removes THEIR role, so no actor loses theirs mid-request.
         $volunteer = staffMember(RoleEnum::Lifeshaper, atSatellite($home));

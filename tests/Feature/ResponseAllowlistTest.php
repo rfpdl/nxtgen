@@ -367,12 +367,12 @@ describe('the door', function (): void {
 const WHOS_IN_CHILD = ['has_allergies', 'id', 'nickname', 'present'];
 
 describe('Who\'s in', function (): void {
-    it('shows any staff today\'s classes and who is in by Squad, with an allergy flag and the present mark only — no photo, phone or health detail @story#117 @story#118', function (Actor $actor): void {
+    it('shows any staff today\'s classes and who is in by Squad, with an allergy flag, the present mark and the head count only — no photo, phone or health detail @story#117 @story#118 @story#121', function (Actor $actor): void {
         travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
         // A Role covering Home opens Home's 1PM, which Amara is in; Away's staff see their 7PM, with no one in yet.
         $home = in_array($actor, Actor::coveringHome(), true);
         $props = propsOf($actor, fn (AccessWorld $w): string => $home ? "/ccf/door/whos-in?class={$w->schedule->id}" : '/ccf/door/whos-in');
-        $squads = $home ? prefixed('squads.*', ['count', 'id', 'level.name', 'level.number', 'name', 'present', ...prefixed('children.*', WHOS_IN_CHILD)]) : ['squads'];
+        $squads = $home ? prefixed('squads.*', ['count', 'id', 'level.name', 'level.number', 'name', 'present', ...prefixed('children.*', WHOS_IN_CHILD), ...prefixed('head_count', ['count', 'counted_at', 'counted_by'])]) : ['squads'];
 
         expect(keyPaths($props))->toBe(allowlist(
             STAFF_FRAME,

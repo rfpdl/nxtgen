@@ -2,15 +2,22 @@
 import Card from '@/components/atoms/Card.vue'
 import CheckRow from '@/components/atoms/CheckRow.vue'
 import Pill from '@/components/atoms/Pill.vue'
+import HeadCountForm from '@/components/molecules/HeadCountForm.vue'
 import type { WhosInSquad } from '@/types'
 
 /**
  * One Squad on Who's in (roll call, DECISIONS 2026-10-28): the Squad as a Pill in its Level's colour and "N of M
  * present", then each child checked in — the whole row is the tick (CheckRow, 64px tall): the nickname and the
- * allergy flag ⚠ as at the door. A tap asks the page to mark the child present, or unmark them.
+ * allergy flag ⚠ as at the door. A tap asks the page to mark the child present, or unmark them. Under the list, the
+ * Squad's head count (HeadCountForm) — below the rows, so its lines never push a child from under a finger.
  */
-defineProps<{ squad: WhosInSquad }>()
-const emit = defineEmits<{ present: [checkInId: number, present: boolean] }>()
+withDefaults(defineProps<{ squad: WhosInSquad; confirming?: boolean; countError?: string }>(), {
+    countError: undefined,
+})
+const emit = defineEmits<{
+    present: [checkInId: number, present: boolean]
+    confirm: [count: number]
+}>()
 </script>
 
 <template>
@@ -48,5 +55,13 @@ const emit = defineEmits<{ present: [checkInId: number, present: boolean] }>()
                 </CheckRow>
             </li>
         </ul>
+        <div class="border-border border-t-2 px-4 py-4">
+            <HeadCountForm
+                :squad="squad"
+                :confirming="confirming"
+                :error="countError"
+                @confirm="(count: number) => emit('confirm', count)"
+            />
+        </div>
     </Card>
 </template>

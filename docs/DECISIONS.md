@@ -21,6 +21,13 @@ describes the design; this records the choices that shaped or changed it.
   The Squad chips are "All Squads" then each Squad's name, scrolling sideways like the class chips. Taps go to the
   server one after another and show at once. A row is the nickname and the allergy flag only — no "not marked"
   words; the empty box says it. Which class is picked has one rule for both tabs (GetChosenScheduleJob).
+- Claude, low-stakes (issue 02, for Roy to confirm): **confirming a head count says nothing at the top** either — the
+  Squad's own "✓ Confirmed 13:20 by Joy (4)" line is the answer. The field starts at the last confirmed count, else
+  the number checked in, and follows the server until the leader types — and again once their confirm is answered
+  (after review). Confirming is one atomic upsert. The warning and "Not marked: …" are worked out on the page from the Squad as shown (so a
+  tap, a Check-in or an Undo shows at once); "Not marked" only once some child is marked. A count is refused with
+  "Please type a number from 0 to 200." (on the phone too, before it is sent). On a phone the field and the button
+  are stacked full width; from the sm breakpoint up, one row. Two leaders at once: one row, the later write kept.
 
 ## 2026-10-28 (later — ui-theme 03, parent and public pages on the kit; Claude, for Roy to confirm)
 

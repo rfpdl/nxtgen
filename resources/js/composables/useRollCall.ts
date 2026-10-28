@@ -9,25 +9,30 @@ export const ROLL_CALL_POLL_MS = 20_000
 type Cancellable = { cancel: () => void }
 
 /**
- * Who's in's taps and refresh (roll call, DECISIONS 2026-10-28).
+ * Who's in's taps, head counts and refresh (roll call, DECISIONS 2026-10-28).
  *
- * - A tap shows at once (`pending`, by Check-in id) and goes to the server one after another, in the order made, so
- *   a quick tap on a second child neither cancels the first nor lets an older answer overwrite a newer one.
- * - The refresh (every 20 s, `squads` only) is skipped while a tap is waiting, and a refresh already on its way is
- *   cancelled when a tap starts: it read the list before the tap and would undo the tick until the next one.
- * - `stop()` drops the taps not yet sent — when the page is left, or before a chip moves to another class or Squad,
- *   so a queued tap never fires from the next page.
+ * - A tap shows at once (`pending`, by Check-in id); a head count shows "Confirming…" (`confirming`, by Squad id). Both
+ *   go to the server one after another, in the order made, so a quick tap on a second child neither cancels the first
+ *   nor lets an older answer overwrite a newer one. A refused count's message is kept by Squad id (`countErrors`).
+ * - The refresh (every 20 s, `squads` only) is skipped while anything is waiting, and a refresh already on its way is
+ *   cancelled when a tap or a count starts: it read the list before and would undo it until the next one.
+ * - `stop()` drops what is not yet sent — when the page is left, or before a chip moves to another class or Squad,
+ *   so nothing queued fires from the next page.
  */
 export function useRollCall(slug: () => string) {
     const pending = reactive<Record<number, boolean>>({})
+    const confirming = reactive<Record<number, boolean>>({})
+    const countErrors = reactive<Record<number, string>>({})
+    /** How many of each thing are still to be answered: taps by Check-in id, counts by Squad id. */
     const waiting = new Map<number, number>()
+    const counting = new Map<number, number>()
     let queue: Promise<void> = Promise.resolve()
     let round = 0
     let refreshing: Cancellable | null = null
 
     usePoll(ROLL_CALL_POLL_MS, () => ({
         only: ['squads', 'squad_id'],
-        onBefore: () => waiting.size === 0,
+        onBefore: () => waiting.size === 0 && Object.keys(confirming).length === 0,
         onCancelToken: (token: Cancellable) => {
             refreshing = token
         },
@@ -36,49 +41,81 @@ export function useRollCall(slug: () => string) {
         },
     }))
 
-    function settle(checkInId: number): void {
-        const left = (waiting.get(checkInId) ?? 1) - 1
-        if (left > 0) {
-            waiting.set(checkInId, left)
-            return
-        }
-        waiting.delete(checkInId)
-        delete pending[checkInId]
+    /** Send a PUT after everything before it; `done` runs when it is answered (not when it is dropped by stop()). */
+    function enqueue(
+        url: string,
+        data: Record<string, boolean | number>,
+        done: () => void,
+        more: { errorBag?: string; onError?: (errors: Record<string, string>) => void } = {},
+    ): void {
+        refreshing?.cancel()
+        const ours = round
+        queue = queue.then(() =>
+            ours !== round
+                ? undefined
+                : new Promise<void>((resolve) => {
+                      router.put(url, data, {
+                          preserveScroll: true,
+                          ...more,
+                          onFinish: () => {
+                              done()
+                              resolve()
+                          },
+                      })
+                  }),
+        )
     }
 
-    function send(checkInId: number, present: boolean): Promise<void> {
-        return new Promise<void>((resolve) => {
-            router.put(
-                route('church.door.present', [slug(), checkInId]),
-                { present },
-                {
-                    preserveScroll: true,
-                    onFinish: () => {
-                        settle(checkInId)
-                        resolve()
-                    },
-                },
-            )
-        })
+    /** One more answered for `id`; true when none is left. */
+    function answered(left: Map<number, number>, id: number): boolean {
+        const now = (left.get(id) ?? 1) - 1
+        if (now > 0) {
+            left.set(id, now)
+            return false
+        }
+        left.delete(id)
+        return true
     }
 
     function mark(checkInId: number, present: boolean): void {
         pending[checkInId] = present
         waiting.set(checkInId, (waiting.get(checkInId) ?? 0) + 1)
-        refreshing?.cancel()
-        const ours = round
-        queue = queue.then(() => (ours === round ? send(checkInId, present) : undefined))
+        enqueue(route('church.door.present', [slug(), checkInId]), { present }, () => {
+            if (answered(waiting, checkInId)) delete pending[checkInId]
+        })
+    }
+
+    function confirm(classId: number, squadId: number, count: number): void {
+        confirming[squadId] = true
+        counting.set(squadId, (counting.get(squadId) ?? 0) + 1)
+        delete countErrors[squadId]
+        enqueue(
+            route('church.door.head-count', [slug(), classId, squadId]),
+            { count },
+            () => {
+                if (answered(counting, squadId)) delete confirming[squadId]
+            },
+            {
+                errorBag: `head-count-${squadId}`,
+                onError: (errors) => {
+                    countErrors[squadId] = errors.count ?? 'The head count was not saved.'
+                },
+            },
+        )
     }
 
     function stop(): void {
         round++
         waiting.clear()
-        for (const id of Object.keys(pending)) {
-            delete pending[Number(id)]
+        counting.clear()
+        for (const store of [pending, confirming, countErrors]) {
+            for (const id of Object.keys(store)) {
+                delete store[Number(id)]
+            }
         }
     }
 
     onBeforeUnmount(stop)
 
-    return { pending, mark, stop }
+    return { pending, confirming, countErrors, mark, confirm, stop }
 }

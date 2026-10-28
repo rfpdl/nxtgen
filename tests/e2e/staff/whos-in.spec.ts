@@ -3,9 +3,10 @@ import { CHURCH, CLASSES, DOOR, ROLL_CALL, sessionFile, type DoorProject } from 
 
 /*
  * Journey — a Squad leader's roll call, on their phone (DECISIONS 2026-10-28): check two girls in at 1PM, switch to
- * Who's in, pick Level 2 Girls, tap them present (and one again to untick her); back on Check in the class is still
- * 1PM; a child undone at the door leaves Who's in. The three browsers share today's 1PM Session and its Level 2 Girls
- * Squad, so each ticks its own Reyes girls (E2ESeeder) and reads "N of M present" before comparing after.
+ * Who's in, pick Level 2 Girls, tap them present (and one again to untick her), confirm a head count one short (a
+ * warning names who is not marked) then the right one; back on Check in the class is still 1PM; a child undone at
+ * the door leaves Who's in. The three browsers share today's 1PM Session and its Level 2 Girls Squad, so each ticks
+ * its own Reyes girls (E2ESeeder) and reads "N of M present" before comparing after.
  */
 test.use({ storageState: sessionFile('lifeshaper') })
 
@@ -33,7 +34,7 @@ async function present(squad: Locator): Promise<[number, number]> {
     return [Number(n), Number(m)]
 }
 
-test("marks children present by Squad on Who's in, keeps the class across the tabs, and drops a child undone at the door @story#117 @story#119", async ({
+test("marks children present by Squad on Who's in, keeps the class across the tabs, and drops a child undone at the door; confirms the Squad's head count @story#117 @story#119 @story#121 @story#122", async ({
     page,
 }, info) => {
     const project = info.project.name as DoorProject
@@ -97,6 +98,32 @@ test("marks children present by Squad on Who's in, keeps the class across the ta
     await expect(child(page, isabel).getByRole('checkbox')).toHaveAttribute('aria-checked', 'true')
     await expect(child(page, sofia).getByRole('checkbox')).toHaveAttribute('aria-checked', 'false')
 
+    // The head count. Counting one short warns, naming who is not marked (Sofia, not
+    // Isabel); the right count clears the warning. No band at the top — the Squad's own line says it.
+    const count = squad.getByTestId('head-count')
+    const mismatch = count.getByTestId('head-count-mismatch')
+    // It starts at the last count confirmed (the browsers share this Squad), else the number checked in.
+    const confirmedBefore = count.getByTestId('head-count-confirmed')
+    const start =
+        (await confirmedBefore.count()) > 0
+            ? ((await confirmedBefore.textContent())?.match(/\((\d+)\)/)?.[1] ?? '')
+            : String(all)
+    await expect(count.getByTestId('head-count-input')).toHaveValue(start)
+    await count.getByTestId('head-count-input').fill(String(all - 1))
+    await count.getByTestId('head-count-confirm').click()
+    await expect(count.getByTestId('head-count-confirmed')).toHaveText(
+        new RegExp(`✓ Confirmed \\d{2}:\\d{2} by \\S+ \\(${all - 1}\\)`),
+    )
+    await expect(mismatch).toContainText(`Checked in ${all}, counted ${all - 1}. Not marked:`)
+    await expect(mismatch).toContainText(sofia)
+    await expect(mismatch).not.toContainText(isabel)
+    await expect(page.getByTestId('flash-success')).toHaveCount(0)
+
+    await count.getByTestId('head-count-input').fill(String(all))
+    await count.getByTestId('head-count-confirm').click()
+    await expect(count.getByTestId('head-count-confirmed')).toContainText(`(${all})`)
+    await expect(mismatch).toHaveCount(0)
+
     // Back on Check in, the class is still 1PM. Undo Isabel there: she leaves Who's in, and her mark with her.
     await page.getByTestId('door-tab-check-in').click()
     await expect(page.getByTestId('door-tab-check-in')).toHaveAttribute('aria-current', 'page')
@@ -117,5 +144,9 @@ test("marks children present by Squad on Who's in, keeps the class across the ta
     await expect(child(page, isabel)).toHaveCount(0)
     await expect(page.getByTestId('whos-in-squad').getByTestId('squad-present')).toHaveText(
         `${before} of ${all - 1} present`,
+    )
+    // The count was right before the Undo; worked out again now, it is one too many.
+    await expect(page.getByTestId('head-count-mismatch')).toContainText(
+        `Checked in ${all - 1}, counted ${all}.`,
     )
 })

@@ -28,6 +28,7 @@ const girls: WhosInSquad = {
     level: { number: 2, name: 'Level 2' },
     present: 0,
     count: 1,
+    head_count: null,
     children: [{ id: 31, nickname: 'Amara', has_allergies: false, present: false }],
 }
 

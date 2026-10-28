@@ -8,6 +8,7 @@ use App\Data\Models\Schedule;
 use App\Domains\CheckIn\DataObjects\DoorClassData;
 use App\Domains\CheckIn\DataObjects\WhosInSquadData;
 use App\Domains\CheckIn\Jobs\GetSessionAttendanceJob;
+use App\Domains\CheckIn\Jobs\GetSessionHeadCountsJob;
 use App\Domains\CheckIn\Jobs\GetSessionJob;
 use App\Domains\Church\Jobs\GetChurchTodayJob;
 use App\Domains\Schedule\Jobs\GetChosenScheduleJob;
@@ -24,7 +25,8 @@ use Inertia\Response;
  * Who's in, the door's second tab (DECISIONS 2026-10-28 — roll call): the same class picker, date and people as the
  * door (`?class=`, GetChosenScheduleJob); the children checked in to that class today (not undone), by Squad in the
  * Attendance order, each Squad with how many are marked present; each child's nickname, allergy flag and present
- * mark. `?squad=` picks one Squad (a Squad with no one in now falls back to All). No photo, no phone.
+ * mark; each Squad's confirmed head count (who and when). `?squad=` picks one Squad (a Squad with no one in now falls
+ * back to All). No photo, no phone.
  *
  * @extends BaseChurchFeature<Response>
  */
@@ -47,7 +49,11 @@ final class ShowWhosInFeature extends BaseChurchFeature
         $class = $this->run(new GetChosenScheduleJob(classes: $classes, id: $address->class));
 
         $session = $class === null ? null : $this->run(new GetSessionJob(schedule: $class, date: $today));
-        $squads = WhosInSquadData::groupsOf($session === null ? [] : $this->run(new GetSessionAttendanceJob(session: $session)));
+        $squads = $session === null ? [] : WhosInSquadData::groupsOf(
+            $this->run(new GetSessionAttendanceJob(session: $session)),
+            $this->run(new GetSessionHeadCountsJob(session: $session)),
+            $church->timezone,
+        );
 
         return Inertia::render('Church/Door/WhosIn', [
             'today' => $today->format('D j M'),

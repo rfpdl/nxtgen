@@ -6,6 +6,8 @@ use App\Data\Models\CheckIn;
 use App\Data\Models\Child;
 use App\Data\Models\Satellite;
 use App\Data\Models\Schedule;
+use App\Data\Models\Squad;
+use App\Data\Models\SquadHeadCount;
 use App\Data\Models\User;
 use App\Enums\GenderEnum;
 use App\Enums\RoleEnum;
@@ -18,6 +20,7 @@ use function Pest\Laravel\get;
 use function Pest\Laravel\travelTo;
 use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
+use function Tests\Support\atTheSameTime;
 use function Tests\Support\checkedIn;
 use function Tests\Support\childOf;
 use function Tests\Support\church;
@@ -26,6 +29,7 @@ use function Tests\Support\guardianOf;
 use function Tests\Support\scheduleAt;
 use function Tests\Support\sessionOf;
 use function Tests\Support\staffMember;
+use function Tests\Support\withCommittedWorld;
 
 /*
  * Who's in, the door's second tab (DECISIONS 2026-10-28; GLOSSARY "Roll call", "Squad leader"): the children checked
@@ -68,7 +72,7 @@ function whosInChurch(): array
 }
 
 describe('the Who\'s in page', function (): void {
-    it('lists today\'s class by Squad in the Attendance order — each with how many are present — children by nickname @story#117', function (): void {
+    it('lists today\'s class by Squad in the Attendance order — each with how many are present and its head count — children by nickname @story#117 @story#121', function (): void {
         $w = whosInChurch();
         $session = sessionOf($w['onePm']);
         $sofia = checkedIn($session, $w['sofia'], ['present_at' => now(), 'present_by' => $w['lifeshaper']->id]);
@@ -78,6 +82,7 @@ describe('the Who\'s in page', function (): void {
         $ben = checkedIn($session, $w['ben']);
         checkedIn($session, $w['isabel'], ['undone_at' => now(), 'present_at' => now()]);
         checkedIn(sessionOf(Schedule::query()->where('name', '7PM')->sole()), $w['visitor']);
+        SquadHeadCount::factory()->create(['session_id' => $session->id, 'squad_id' => $amara->squad_id, 'head_count' => 3, 'counted_at' => CarbonImmutable::parse('2026-10-31 08:50:00', 'Asia/Dubai')->utc(), 'counted_by' => User::factory()->create(['name' => 'Joy Santos'])->id]);
 
         actingAs($w['lifeshaper'])->get('/ccf/door/whos-in')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
             ->component('Church/Door/WhosIn')
@@ -88,17 +93,17 @@ describe('the Who\'s in page', function (): void {
             ->where('squads', [
                 ['id' => $kai->squad_id, 'name' => 'Level 1', 'level' => ['number' => 1, 'name' => 'Level 1'], 'present' => 1, 'count' => 1, 'children' => [
                     ['id' => $kai->id, 'nickname' => 'Kai', 'has_allergies' => false, 'present' => true],
-                ]],
+                ], 'head_count' => null],
                 ['id' => $ben->squad_id, 'name' => 'Level 2 Boys', 'level' => ['number' => 2, 'name' => 'Level 2'], 'present' => 0, 'count' => 1, 'children' => [
                     ['id' => $ben->id, 'nickname' => 'Ben', 'has_allergies' => false, 'present' => false],
-                ]],
+                ], 'head_count' => null],
                 ['id' => $amara->squad_id, 'name' => 'Level 2 Girls', 'level' => ['number' => 2, 'name' => 'Level 2'], 'present' => 1, 'count' => 2, 'children' => [
                     ['id' => $amara->id, 'nickname' => 'Amara', 'has_allergies' => true, 'present' => false],
                     ['id' => $sofia->id, 'nickname' => 'Sofia', 'has_allergies' => false, 'present' => true],
-                ]],
+                ], 'head_count' => ['count' => 3, 'counted_at' => '08:50', 'counted_by' => 'Joy']],
                 ['id' => $bea->squad_id, 'name' => 'Level 3 Girls', 'level' => ['number' => 3, 'name' => 'Level 3'], 'present' => 0, 'count' => 1, 'children' => [
                     ['id' => $bea->id, 'nickname' => 'Bea', 'has_allergies' => false, 'present' => false],
-                ]],
+                ], 'head_count' => null],
             ]));
     });
 
@@ -215,4 +220,98 @@ describe('marking a child present', function (): void {
 
         expect(CheckIn::query()->whereNotNull('present_at')->count())->toBe(0);
     });
+});
+
+describe('confirming a head count', function (): void {
+    it('confirms a Squad\'s head count with who and when, saying nothing — the Squad\'s line says it — and replaces it when confirmed again @story#121', function (): void {
+        $w = whosInChurch();
+        $in = checkedIn(sessionOf($w['onePm']), $w['amara']);
+        $url = "/ccf/classes/{$w['onePm']->id}/squads/{$in->squad_id}/head-count";
+
+        actingAs($w['lifeshaper'])->put($url, ['count' => 2])->assertRedirect()->assertSessionMissing('success')->assertSessionHasNoErrors();
+        travelTo(CarbonImmutable::parse('2026-10-31 13:20:00', 'Asia/Dubai'));
+        actingAs($w['lifeshaper'])->put($url, ['count' => 1])->assertRedirect();
+
+        $row = SquadHeadCount::query()->sole();
+        expect([$row->head_count, $row->counted_by, $row->squad_id])->toBe([1, $w['lifeshaper']->id, $in->squad_id]);
+        actingAs($w['lifeshaper'])->get('/ccf/door/whos-in')->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('squads.0.head_count.count', 1)
+            ->where('squads.0.head_count.counted_at', '13:20')
+            ->where('squads.0.head_count.counted_by', explode(' ', $w['lifeshaper']->name)[0]));
+    });
+
+    it('sends the count beside who is in NOW, so a later Undo shows as a mismatch on the next load @story#122', function (): void {
+        $w = whosInChurch();
+        $session = sessionOf($w['onePm']);
+        $amara = checkedIn($session, $w['amara'], ['present_at' => now()]);
+        $sofia = checkedIn($session, $w['sofia']);
+        actingAs($w['lifeshaper'])->put("/ccf/classes/{$w['onePm']->id}/squads/{$amara->squad_id}/head-count", ['count' => 2]);
+
+        actingAs($w['lifeshaper'])->put("/ccf/check-ins/{$sofia->id}/undo");
+
+        actingAs($w['lifeshaper'])->get('/ccf/door/whos-in')->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('squads.0.count', 1)
+            ->where('squads.0.head_count.count', 2)
+            ->where('squads.0.children', [['id' => $amara->id, 'nickname' => 'Amara', 'has_allergies' => true, 'present' => true]]));
+    });
+
+    it('keeps ONE head count when two leaders confirm the same Squad at the same moment, through the whole request — first count or a later one @story#121', function (bool $counted): void {
+        $w = whosInChurch();
+        $in = checkedIn(sessionOf($w['onePm']), $w['amara']);
+        if ($counted) {
+            SquadHeadCount::factory()->create(['session_id' => $in->session_id, 'squad_id' => $in->squad_id, 'head_count' => 9]);
+        }
+        $other = staffMember(RoleEnum::Lifeshaper, atSatellite($w['dxb']));
+        $url = "/ccf/classes/{$w['onePm']->id}/squads/{$in->squad_id}/head-count";
+
+        withCommittedWorld(function () use ($w, $other, $url): void {
+            $answers = atTheSameTime(
+                fn (): int => actingAs($w['lifeshaper'])->put($url, ['count' => 2])->getStatusCode(),
+                fn (): int => actingAs($other)->put($url, ['count' => 3])->getStatusCode(),
+            );
+
+            expect($answers)->toBe([302, 302])
+                ->and(SquadHeadCount::query()->count())->toBe(1)
+                ->and(SquadHeadCount::query()->sole()->head_count)->toBeIn([2, 3]);
+        });
+    })->with(['no count yet' => [false], 'already counted' => [true]]);
+
+    it('refuses before the class has a Session, for a Squad with no one in, and another day\'s, satellite\'s or church\'s class @story#123', function (): void {
+        $w = whosInChurch();
+        $girls = Squad::query()->where('satellite_id', $w['dxb']->id)->where('level', 2)->where('gender', 'girl')->sole();
+        $put = fn (User $who, string $url) => actingAs($who)->put($url, ['count' => 2])->assertNotFound();
+
+        $put($w['lifeshaper'], "/ccf/classes/{$w['onePm']->id}/squads/{$girls->id}/head-count");   // no Session yet
+
+        $session = sessionOf($w['onePm']);
+        checkedIn($session, $w['ben']);
+        checkedIn($session, $w['sofia'], ['undone_at' => now()]);
+        $put($w['lifeshaper'], "/ccf/classes/{$w['onePm']->id}/squads/{$girls->id}/head-count");   // only an undone child
+
+        $house = Schedule::query()->where('satellite_id', $w['house']->id)->sole();
+        $atHouse = checkedIn(sessionOf($house), $w['visitor']);
+        $put($w['lifeshaper'], "/ccf/classes/{$house->id}/squads/{$atHouse->squad_id}/head-count");
+        $sunday = Schedule::query()->where('name', 'Sunday school')->sole();
+        $put($w['lifeshaper'], "/ccf/classes/{$sunday->id}/squads/{$girls->id}/head-count");
+        $put(staffMember(RoleEnum::Admin, atChurch(church(['slug' => 'other']))), "/other/classes/{$w['onePm']->id}/squads/{$atHouse->squad_id}/head-count");
+
+        expect(SquadHeadCount::query()->count())->toBe(0);
+    });
+
+    it('needs a whole number from 0 to 200 @story#123', function (mixed $count): void {
+        $w = whosInChurch();
+        $in = checkedIn(sessionOf($w['onePm']), $w['amara']);
+
+        actingAs($w['lifeshaper'])->put("/ccf/classes/{$w['onePm']->id}/squads/{$in->squad_id}/head-count", ['count' => $count])
+            ->assertSessionHasErrors(['count' => 'Please type a number from 0 to 200.']);
+        expect(SquadHeadCount::query()->count())->toBe(0);
+    })->with(['none' => [null], 'below 0' => [-1], 'over 200' => [201], 'not whole' => [2.5], 'not a number' => ['four'], 'a yes (JSON true is not 1)' => [true]]);
+
+    it('takes 0 and 200, the ends of the range @story#121', function (int $count): void {
+        $w = whosInChurch();
+        $in = checkedIn(sessionOf($w['onePm']), $w['amara']);
+
+        actingAs($w['lifeshaper'])->put("/ccf/classes/{$w['onePm']->id}/squads/{$in->squad_id}/head-count", ['count' => $count])->assertSessionHasNoErrors();
+        expect(SquadHeadCount::query()->sole()->head_count)->toBe($count);
+    })->with([0, 200]);
 });

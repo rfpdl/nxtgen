@@ -9,6 +9,7 @@ const squad: WhosInSquad = {
     level: { number: 2, name: 'Level 2' },
     present: 1,
     count: 3,
+    head_count: null,
     children: [
         { id: 31, nickname: 'Amara', has_allergies: true, present: false },
         { id: 32, nickname: 'Isabel', has_allergies: false, present: false },
@@ -53,5 +54,15 @@ describe('WhosInSquadCard', () => {
             [31, true],
             [33, false],
         ])
+    })
+
+    it('carries the head count under the list, passing a confirm up', async () => {
+        const wrapper = mount(WhosInSquadCard, { props: { squad, countError: 'Nope.' } })
+
+        expect(wrapper.find('[data-testid="head-count"]').exists()).toBe(true)
+        expect(wrapper.find('[role="alert"]').text()).toBe('Nope.')
+        await wrapper.find('form').trigger('submit')
+
+        expect(wrapper.emitted('confirm')).toEqual([[3]])
     })
 })

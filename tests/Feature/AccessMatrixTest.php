@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\AccessMatrix;
 
+use App\Data\Models\SquadHeadCount;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
 use Carbon\CarbonImmutable;
@@ -96,6 +97,7 @@ function matrix(): array
         // Who's in (DECISIONS 2026-10-28): the door's people; marking a Home child present, as Undo.
         'church.door.whos-in' => [AccessRowEnum::CheckIn, Actor::staff()],
         'church.door.present' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
+        'church.door.head-count' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
         // Attendance (DECISIONS 2026-10-26: reports are admins only): Home's class, only for an admin over Home.
         'church.attendance.show' => [AccessRowEnum::Attendance, [Actor::ChurchAdmin, Actor::HomeAdmin]],
         'church.attendance.export' => [AccessRowEnum::Attendance, [Actor::ChurchAdmin, Actor::HomeAdmin]],
@@ -178,6 +180,7 @@ function requestFor(string $route, AccessWorld $w): array
         'church.door.undo' => ['PUT', "/ccf/check-ins/{$w->checkIn->id}/undo", []],
         'church.door.whos-in' => ['GET', '/ccf/door/whos-in', []],
         'church.door.present' => ['PUT', "/ccf/check-ins/{$w->checkIn->id}/present", ['present' => true]],
+        'church.door.head-count' => ['PUT', "/ccf/classes/{$w->schedule->id}/squads/{$w->checkIn->squad_id}/head-count", ['count' => 3]],
         'church.attendance.show' => ['GET', "/ccf/attendance?class={$w->schedule->id}&date=2026-10-31", []],
         'church.attendance.export' => ['GET', "/ccf/attendance/export?class={$w->schedule->id}&date=2026-10-31", []],
         'family.show' => ['GET', '/ccf/family', []],
@@ -194,8 +197,8 @@ function requestFor(string $route, AccessWorld $w): array
 
 /**
  * The changes that say nothing when they work, and what proves each one happened instead. A tap on Who's in marks a
- * child present with no message (DECISIONS 2026-10-28): a band appearing at the top would push the list down under
- * the next tap.
+ * child present, and a head count is confirmed, with no message (DECISIONS 2026-10-28): a band appearing at the top
+ * would push the list down under the next tap; the Squad's own line says it.
  *
  * @return array<string, Closure(AccessWorld): bool>
  */
@@ -203,6 +206,7 @@ function quietChanges(): array
 {
     return [
         'church.door.present' => fn (AccessWorld $w): bool => $w->checkIn->fresh()?->isPresent() === true,
+        'church.door.head-count' => fn (AccessWorld $w): bool => SquadHeadCount::query()->where('session_id', $w->checkIn->session_id)->where('squad_id', $w->checkIn->squad_id)->value('head_count') === 3,
     ];
 }
 
@@ -397,6 +401,8 @@ describe('the door, for staff', function (): void {
         ->with(cells('church.door.whos-in'));
     it('lets a child at Home\'s class be marked present only by staff whose Role covers Home @story#119 @story#120', cellTest())
         ->with(cells('church.door.present'));
+    it('lets a head count at Home\'s class be confirmed only by staff whose Role covers Home @story#121 @story#123', cellTest())
+        ->with(cells('church.door.head-count'));
 });
 
 describe('Attendance, for admins', function (): void {
@@ -436,8 +442,8 @@ function routesNamingAnId(): array
     }));
 }
 
-// Every refusal is a 404 and changes nothing, so one world serves all twenty-one guesses.
-it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in their OWN church\'s address @story#29 @story#49 @story#51 @story#100 @story#102 @story#109 @story#111 @story#120', function (): void {
+// Every refusal is a 404 and changes nothing, so one world serves all twenty-two guesses.
+it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in their OWN church\'s address @story#29 @story#49 @story#51 @story#100 @story#102 @story#109 @story#111 @story#120 @story#123', function (): void {
     Notification::fake();
     Storage::fake('photos');
     travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
@@ -455,6 +461,6 @@ it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in 
         $answers["{$method} {$guessed}"] = outcomeOf(call($method, $guessed, $payload), $method);
     }
 
-    expect($answers)->toHaveCount(21)
+    expect($answers)->toHaveCount(22)
         ->and(array_unique(array_values($answers)))->toBe(['404'], (string) json_encode($answers, JSON_PRETTY_PRINT));
 });

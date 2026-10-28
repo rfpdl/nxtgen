@@ -17,7 +17,8 @@ import { route } from 'ziggy-js'
  * Who's in, the door's second tab (roll call, DECISIONS 2026-10-28): the same class picker and day as Check in; the
  * children checked in to the chosen class, by Squad, each Squad with "N of M present"; chips pick one Squad
  * (`?squad=`) or all. A tap on a child marks them present or unmarks them — shown at once, then confirmed by the
- * server; the list refreshes about every 20 seconds, so children checked in at the door appear (useRollCall).
+ * server; under each Squad, its head count is confirmed (issue 02). The list refreshes about every 20 seconds, so
+ * children checked in at the door appear (useRollCall).
  */
 const props = defineProps<{
     today: string
@@ -29,7 +30,9 @@ const props = defineProps<{
 
 const ALL = 'all'
 const church = useChurch()
-const { pending, mark, stop } = useRollCall(() => church.value.slug)
+const { pending, confirming, countErrors, mark, confirm, stop } = useRollCall(
+    () => church.value.slug,
+)
 
 const squadChips = computed(() => [
     { value: ALL, label: 'All Squads', testid: 'squad-chip' },
@@ -102,7 +105,13 @@ function pickSquad(id: string | number | null): void {
                         v-for="squad in shown"
                         :key="squad.id"
                         :squad="squad"
+                        :confirming="confirming[squad.id] === true"
+                        :count-error="countErrors[squad.id]"
                         @present="mark"
+                        @confirm="
+                            (count: number) =>
+                                class_id !== null && confirm(class_id, squad.id, count)
+                        "
                     />
                 </template>
             </template>

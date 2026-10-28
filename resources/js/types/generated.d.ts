@@ -67,6 +67,11 @@ declare namespace App {
                     children: App.Domains.CheckIn.DataObjects.DoorChildData[]
                     can_open: boolean
                 }
+                export type SquadHeadCountData = {
+                    count: number
+                    counted_at: string
+                    counted_by: string
+                }
                 export type WhosInChildData = {
                     id: number
                     nickname: string
@@ -80,6 +85,7 @@ declare namespace App {
                     present: number
                     count: number
                     children: App.Domains.CheckIn.DataObjects.WhosInChildData[]
+                    head_count: App.Domains.CheckIn.DataObjects.SquadHeadCountData | null
                 }
             }
         }
@@ -449,6 +455,9 @@ declare namespace App {
                 export type DoorQueryInput = {
                     class: number | null
                     squad: number | null
+                }
+                export type HeadCountInput = {
+                    count: number
                 }
                 export type MarkPresentInput = {
                     present: boolean

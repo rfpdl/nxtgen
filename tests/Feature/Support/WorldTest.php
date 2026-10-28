@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Data\Models\Session;
+use App\Data\Models\Squad;
+use App\Data\Models\SquadHeadCount;
 use App\Data\Models\User;
 use App\Domains\Church\Jobs\GetAccessScopeJob;
 use App\Enums\RoleEnum;
@@ -139,4 +142,12 @@ it('checks a child in to a Session, in that satellite\'s Squad for their Level a
     expect([$in->church_id, $in->session_id, $in->child_id, $in->squad->satellite_id, $in->squad->name(), $in->isIn()])
         ->toBe([$church->id, $session->id, $visitor->id, $dxb->id, 'Level 2 Girls', true])
         ->and($undone->isIn())->toBeFalse();
+});
+
+it('makes a head count for a Squad of the Session\'s own satellite and church by default', function (): void {
+    $count = SquadHeadCount::factory()->create();
+    $session = Session::query()->findOrFail($count->session_id);
+    $squad = Squad::query()->findOrFail($count->squad_id);
+
+    expect([$squad->church_id, $squad->satellite_id, $count->church_id])->toBe([$session->church_id, $session->satellite_id, $session->church_id]);
 });

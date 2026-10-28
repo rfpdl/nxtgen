@@ -3,7 +3,11 @@ import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
-type PutOptions = { onFinish: () => void }
+type PutOptions = {
+    onFinish: () => void
+    errorBag?: string
+    onError?: (errors: Record<string, string>) => void
+}
 type PollOptions = {
     only: string[]
     onBefore: () => boolean
@@ -11,7 +15,7 @@ type PollOptions = {
     onFinish: () => void
 }
 
-const puts: { url: string; data: { present: boolean }; options: PutOptions }[] = []
+const puts: { url: string; data: Record<string, unknown>; options: PutOptions }[] = []
 let pollInterval = 0
 let pollOptions: () => PollOptions = () => {
     throw new Error('usePoll was not called')
@@ -19,7 +23,7 @@ let pollOptions: () => PollOptions = () => {
 
 vi.mock('@inertiajs/vue3', () => ({
     router: {
-        put: (url: string, data: { present: boolean }, options: PutOptions) =>
+        put: (url: string, data: Record<string, unknown>, options: PutOptions) =>
             puts.push({ url, data, options }),
     },
     usePoll: (interval: number, options: () => PollOptions) => {
@@ -94,7 +98,7 @@ describe('useRollCall', () => {
 
         puts[1]?.options.onFinish()
         await flush()
-        expect(puts.map((p) => p.data.present)).toEqual([true, true, false])
+        expect(puts.map((p) => p.data['present'])).toEqual([true, true, false])
     })
 
     it('skips the refresh while a tap is waiting, and cancels one already on its way', async () => {
@@ -139,5 +143,66 @@ describe('useRollCall', () => {
 
         expect(puts).toHaveLength(1)
         expect(pollOptions().onBefore()).toBe(true)
+    })
+
+    it('confirms a head count after the taps before it, showing "Confirming…" until answered', async () => {
+        const { api } = host()
+
+        api.mark(31, true)
+        api.confirm(1, 5, 4)
+        expect(api.confirming[5]).toBe(true)
+        expect(pollOptions().onBefore()).toBe(false)
+        await flush()
+        puts[0]?.options.onFinish()
+        await flush()
+
+        expect(puts[1]?.url).toBe('church.door.head-count:["ccf",1,5]')
+        expect(puts[1]?.data).toEqual({ count: 4 })
+        expect(puts[1]?.options.errorBag).toBe('head-count-5')
+        puts[1]?.options.onFinish()
+        expect(api.confirming[5]).toBeUndefined()
+        expect(pollOptions().onBefore()).toBe(true)
+    })
+
+    it("keeps a refused count's message by Squad, and clears it on the next try", async () => {
+        const { api } = host()
+
+        api.confirm(1, 5, 999)
+        await flush()
+        puts[0]?.options.onError?.({ count: 'Please type a number from 0 to 200.' })
+        puts[0]?.options.onFinish()
+        expect(api.countErrors[5]).toBe('Please type a number from 0 to 200.')
+
+        api.confirm(1, 5, 4)
+        expect(api.countErrors[5]).toBeUndefined()
+    })
+
+    it('drops a head count not yet sent on stop', async () => {
+        const { api } = host()
+
+        api.mark(31, true)
+        api.confirm(1, 5, 4)
+        await flush()
+        api.stop()
+        expect(api.confirming).toEqual({})
+        puts[0]?.options.onFinish()
+        await flush()
+
+        expect(puts).toHaveLength(1)
+    })
+
+    it('keeps "Confirming…" until the last of two counts for one Squad is answered', async () => {
+        const { api } = host()
+
+        api.confirm(1, 5, 3)
+        api.confirm(1, 5, 4)
+        await flush()
+        puts[0]?.options.onFinish()
+        expect(api.confirming[5]).toBe(true)
+        expect(pollOptions().onBefore()).toBe(false)
+
+        await flush()
+        puts[1]?.options.onFinish()
+        expect(api.confirming[5]).toBeUndefined()
     })
 })
