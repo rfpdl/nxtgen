@@ -21,6 +21,14 @@ describes the design; this records the choices that shaped or changed it.
   (never rebuilt), no health detail, phone or photo; every cell plain text (TextRow).
   `nxtgen-attendance-<satellite>-<class>-<date>.xlsx`. A child's full name has one source, `Child::fullName()`.
 
+## 2026-10-28
+
+- **The app's look is "Bold"** (Roy, from three directions: https://claude.ai/artifact/Jr2PHSMmx3VKXZcEmCVXw8): amber
+  top bar with the logo, chunky pressable buttons (thick bottom edge), coloured Squad/Level pills in the age-level
+  chart's colours (Level 1 blue, 2 yellow, 3 red, 4 green), Lexend (a typeface made for easy reading), big text and
+  thumb-sized targets — modern, mobile-first and kind to older eyes. Built ONCE as a UI kit (tokens + atoms + app
+  shell) that every page uses; a test blocks hand-styled buttons, inputs and colours outside the kit (TODO #30).
+
 ## 2026-10-27
 
 - **No re-send button on the Children list** (Roy): it is the family's (parent's) email, so each child repeated it.
