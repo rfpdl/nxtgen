@@ -104,6 +104,22 @@ it('shows only families on an open possible duplicate, when asked — by family 
     expect($list())->toBe([]);
 });
 
+it('narrows by every word of the search, all on the same family — the door\'s rule', function (): void {
+    $church = church();
+    $satellite = satelliteOf($church);
+    $ana = familyAt($satellite);
+    guardianOf($ana, User::factory()->create(), ['first_name' => 'Ana', 'last_name' => 'Reyes']);
+    $joy = familyAt($satellite);
+    guardianOf($joy, User::factory()->create(), ['first_name' => 'Joy', 'last_name' => 'Reyes']);
+    childOf($joy, ['first_name' => 'Ana', 'nickname' => 'Ana', 'last_name' => 'Santos']);
+
+    $search = fn (string $q): array => listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: null, filters: new FamilyListFiltersData(query: $q)));
+
+    expect($search('Ana Reyes'))->toEqualCanonicalizing([$ana->id, $joy->id])   // Joy's family: parent Reyes + child Ana
+        ->and($search('Ana Santos'))->toBe([$joy->id])
+        ->and($search('Joy Ana'))->toBe([$joy->id]);
+});
+
 it('finds a family by phone whatever spaces or + the phone was saved with', function (): void {
     $church = church();
     $family = familyAt(satelliteOf($church));

@@ -10,8 +10,9 @@ use App\Foundation\Jobs\BaseJob;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
- * Church-wide "is this family already registered?" (plan §7.2): parent name, email, phone digits, or a
- * child's name/nickname. Church-wide on purpose — same umbrella — and the caller only gets a lite projection.
+ * Church-wide "is this family already registered?" (plan §7.2): every word on a parent's name, email or phone, or a
+ * child's name/nickname (Family::scopeMatching — nothing left to match finds nothing). Church-wide on purpose — same
+ * umbrella — and the caller only gets a lite projection.
  *
  * @extends BaseJob<Collection<int, Family>>
  */
@@ -25,10 +26,6 @@ final class SearchFamiliesJob extends BaseJob
     /** @return Collection<int, Family> */
     public function handle(): Collection
     {
-        if (mb_strlen(trim($this->query)) < 2) {
-            return new Collection;
-        }
-
         return Family::query()
             ->with(['primaryGuardian.user', 'homeSatellite', 'children'])
             ->where('church_id', $this->church->id)

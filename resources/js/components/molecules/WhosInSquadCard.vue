@@ -7,9 +7,10 @@ import type { WhosInSquad } from '@/types'
 
 /**
  * One Squad on Who's in (roll call, DECISIONS 2026-10-28): the Squad as a Pill in its Level's colour and "N of M
- * present", then each child checked in — the whole row is the tick (CheckRow, 64px tall): the nickname and the
- * allergy flag ⚠ as at the door. A tap asks the page to mark the child present, or unmark them. Under the list, the
- * Squad's head count (HeadCountForm) — below the rows, so its lines never push a child from under a finger.
+ * present", then each child checked in — the whole row is the tick (CheckRow, 64px tall): the nickname, the allergy
+ * flag ⚠ as at the door, and the first + last name small under them, so two Amaras in a Squad differ (issue 04). A tap asks
+ * the page to mark the child present, or unmark them. Under the list, the Squad's head count (HeadCountForm) — below
+ * the rows, so its lines never push a child from under a finger.
  */
 withDefaults(defineProps<{ squad: WhosInSquad; confirming?: boolean; countError?: string }>(), {
     countError: undefined,
@@ -44,13 +45,21 @@ const emit = defineEmits<{
                     data-testid="present-toggle"
                     @update:model-value="(on: boolean) => emit('present', child.id, on)"
                 >
-                    <span class="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
-                        <span class="text-text text-xl font-bold" data-testid="child-name">{{
-                            child.nickname
+                    <span class="flex flex-col py-2">
+                        <span class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <span class="text-text text-xl font-bold" data-testid="child-name">{{
+                                child.nickname
+                            }}</span>
+                            <Pill
+                                v-if="child.has_allergies"
+                                variant="danger"
+                                data-testid="allergy-flag"
+                                >⚠ Allergies</Pill
+                            >
+                        </span>
+                        <span class="text-text-muted text-base" data-testid="child-full-name">{{
+                            child.short_name
                         }}</span>
-                        <Pill v-if="child.has_allergies" variant="danger" data-testid="allergy-flag"
-                            >⚠ Allergies</Pill
-                        >
                     </span>
                 </CheckRow>
             </li>

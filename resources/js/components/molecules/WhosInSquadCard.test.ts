@@ -11,9 +11,27 @@ const squad: WhosInSquad = {
     count: 3,
     head_count: null,
     children: [
-        { id: 31, nickname: 'Amara', has_allergies: true, present: false },
-        { id: 32, nickname: 'Isabel', has_allergies: false, present: false },
-        { id: 33, nickname: 'Sofia', has_allergies: false, present: true },
+        {
+            id: 31,
+            nickname: 'Amara',
+            short_name: 'Amara Reyes',
+            has_allergies: true,
+            present: false,
+        },
+        {
+            id: 32,
+            nickname: 'Isabel',
+            short_name: 'Isabel Reyes',
+            has_allergies: false,
+            present: false,
+        },
+        {
+            id: 33,
+            nickname: 'Sofia',
+            short_name: 'Sofia Reyes',
+            has_allergies: false,
+            present: true,
+        },
     ],
 }
 
@@ -64,5 +82,42 @@ describe('WhosInSquadCard', () => {
         await wrapper.find('form').trigger('submit')
 
         expect(wrapper.emitted('confirm')).toEqual([[3]])
+    })
+
+    it('tells two children of one nickname apart by first and last name, small under the nickname, inside the tick', () => {
+        const amaras: WhosInSquad = {
+            ...squad,
+            children: [
+                {
+                    id: 41,
+                    nickname: 'Amara',
+                    short_name: 'Amara Reyes',
+                    has_allergies: false,
+                    present: false,
+                },
+                {
+                    id: 42,
+                    nickname: 'Amara',
+                    short_name: 'Amara Santos',
+                    has_allergies: false,
+                    present: false,
+                },
+            ],
+        }
+        const wrapper = mount(WhosInSquadCard, { props: { squad: amaras } })
+
+        const rows = wrapper.findAll('[data-testid="whos-in-child"]')
+        expect(
+            rows.map((r) => [
+                r.find('[data-testid="child-name"]').text(),
+                r.find('[data-testid="child-full-name"]').text(),
+            ]),
+        ).toEqual([
+            ['Amara', 'Amara Reyes'],
+            ['Amara', 'Amara Santos'],
+        ])
+        const small = rows[0]?.find('[data-testid="child-full-name"]')
+        expect(small?.classes()).toEqual(expect.arrayContaining(['text-text-muted', 'text-base']))
+        expect(rows[1]?.find('[role="checkbox"]').text()).toContain('Amara Santos')
     })
 })

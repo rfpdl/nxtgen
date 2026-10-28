@@ -110,6 +110,27 @@ test('checks in two children of a family at 1PM — one made active again — se
     await expect(rows.nth(0).getByTestId('checked-in-name')).toHaveText(DOOR.cruz.allergic)
 })
 
+test('narrows the search with more words — every word on the same family @story#103', async ({
+    page,
+}, info) => {
+    await openDoor(page)
+    const parent = guardian(info.project.name)
+    const families = page.getByTestId('door-family')
+
+    // "Reyes" is every browser's Reyes family (E2ESeeder); with the parent's name too, only this one.
+    await page.getByTestId('door-search').fill('Reyes')
+    await page.getByTestId('door-search').press('Enter')
+    await expect(families.filter({ hasText: `${parent} Reyes` })).toHaveCount(1)
+    expect(await families.count()).toBeGreaterThan(1)
+
+    for (const words of [`${parent} Reyes`, `reyes ${parent.toLowerCase()}`]) {
+        await page.getByTestId('door-search').fill(words)
+        await page.getByTestId('door-search').press('Enter')
+        await expect(families).toHaveCount(1)
+        await expect(families.first()).toContainText(`${parent} Reyes`)
+    }
+})
+
 test('shows who is in before any search @story#116', async ({ page }) => {
     await openDoor(page)
     const n = await count(page)

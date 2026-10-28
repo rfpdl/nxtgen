@@ -77,6 +77,25 @@ it('searches the child\'s own names or the parent, without a child\'s name dragg
         ->and($byParent)->toBe(['Amara', 'Bea']);
 });
 
+it('narrows with every word, each on the child or their parent — a sibling only when the words say the parent', function (string $query, array $nicknames): void {
+    $church = church();
+    $satellite = satelliteOf($church);
+    $reyes = familyAt($satellite);
+    guardianOf($reyes, User::factory()->create(['email' => 'ana.r@example.com']), ['first_name' => 'Ana', 'last_name' => 'Reyes']);
+    childOf($reyes, ['nickname' => 'Amara', 'first_name' => 'Amara', 'last_name' => 'Reyes']);
+    childOf($reyes, ['nickname' => 'Ben', 'first_name' => 'Benjamin', 'last_name' => 'Reyes']);
+    $other = familyAt($satellite);
+    guardianOf($other, User::factory()->create(['email' => 'joy.r@example.com']), ['first_name' => 'Joy', 'last_name' => 'Reyes']);
+    childOf($other, ['nickname' => 'Mara', 'first_name' => 'Amara', 'last_name' => 'Reyes']);
+
+    expect(listedNicknames(new GetChildrenJob(church: $church, satelliteIds: null, filters: new ChildListFiltersData(query: $query))))->toBe($nicknames);
+})->with([
+    'a child + last name' => ['Amara Reyes', ['Amara', 'Mara']],
+    'a child + their parent' => ['Amara Ana', ['Amara']],
+    'a parent + last name: all their children' => ['Ana Reyes', ['Amara', 'Ben']],
+    'another family\'s parent' => ['Ben Joy', []],
+]);
+
 it('treats % and _ in the search as letters, not wildcards', function (): void {
     $church = church();
     childOf(familyAt(satelliteOf($church)), ['nickname' => 'Amara', 'first_name' => 'Amara', 'last_name' => 'Santos']);

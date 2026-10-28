@@ -72,6 +72,8 @@ test("marks children present by Squad on Who's in, keeps the class across the ta
     await expect(squad).toHaveCount(1)
     await expect(squad.getByTestId('squad-name')).toHaveText(ROLL_CALL.squad)
     const [before, all] = await present(squad)
+    // First + last name under the nickname tells two children of the same nickname apart.
+    await expect(child(page, sofia).getByTestId('child-full-name')).toHaveText(`${sofia} Reyes`)
     // Phone first: nothing pushes the page sideways, and each tick is a thumb-sized row.
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         page.viewportSize()?.width ?? 0,

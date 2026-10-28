@@ -77,6 +77,7 @@ declare namespace App {
                 export type WhosInChildData = {
                     id: number
                     nickname: string
+                    short_name: string
                     has_allergies: boolean
                     present: boolean
                 }

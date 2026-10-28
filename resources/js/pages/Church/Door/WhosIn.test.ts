@@ -29,7 +29,15 @@ const girls: WhosInSquad = {
     present: 0,
     count: 1,
     head_count: null,
-    children: [{ id: 31, nickname: 'Amara', has_allergies: false, present: false }],
+    children: [
+        {
+            id: 31,
+            nickname: 'Amara',
+            short_name: 'Amara Reyes',
+            has_allergies: false,
+            present: false,
+        },
+    ],
 }
 
 function page(squads: WhosInSquad[]) {

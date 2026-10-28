@@ -56,7 +56,7 @@ function whosInChurch(): array
 
     $cruz = familyAt($dxb);
     guardianOf($cruz, User::factory()->create(), ['first_name' => 'Maria', 'last_name' => 'Cruz', 'phone' => '0501234567']);
-    $girl = fn (string $nickname, int $level, ?string $allergies = null): Child => childOf($cruz, ['nickname' => $nickname, 'gender' => GenderEnum::Girl, 'level' => $level, 'allergies' => $allergies, 'illnesses' => $allergies === null ? null : 'Asthma']);
+    $girl = fn (string $nickname, int $level, ?string $allergies = null): Child => childOf($cruz, ['nickname' => $nickname, 'first_name' => $nickname, 'middle_name' => null, 'last_name' => 'Cruz', 'gender' => GenderEnum::Girl, 'level' => $level, 'allergies' => $allergies, 'illnesses' => $allergies === null ? null : 'Asthma']);
 
     return [
         'dxb' => $dxb, 'house' => $house, 'onePm' => $onePm,
@@ -64,8 +64,8 @@ function whosInChurch(): array
         'amara' => $girl('Amara', 2, 'Peanuts'),
         'sofia' => $girl('Sofia', 2),
         'isabel' => $girl('Isabel', 2),
-        'ben' => childOf($cruz, ['nickname' => 'Ben', 'gender' => GenderEnum::Boy, 'level' => 2]),
-        'kai' => childOf($cruz, ['nickname' => 'Kai', 'gender' => GenderEnum::Boy, 'level' => 1]),
+        'ben' => childOf($cruz, ['nickname' => 'Ben', 'first_name' => 'Benjamin', 'middle_name' => null, 'last_name' => 'Cruz', 'gender' => GenderEnum::Boy, 'level' => 2]),
+        'kai' => childOf($cruz, ['nickname' => 'Kai', 'first_name' => 'Kai', 'middle_name' => null, 'last_name' => 'Cruz', 'gender' => GenderEnum::Boy, 'level' => 1]),
         'bea' => $girl('Bea', 3),
         'visitor' => childOf(familyAt($house), ['nickname' => 'Pia', 'gender' => GenderEnum::Girl, 'level' => 2]),
     ];
@@ -92,19 +92,33 @@ describe('the Who\'s in page', function (): void {
             ->where('squad_id', null)
             ->where('squads', [
                 ['id' => $kai->squad_id, 'name' => 'Level 1', 'level' => ['number' => 1, 'name' => 'Level 1'], 'present' => 1, 'count' => 1, 'children' => [
-                    ['id' => $kai->id, 'nickname' => 'Kai', 'has_allergies' => false, 'present' => true],
+                    ['id' => $kai->id, 'nickname' => 'Kai', 'short_name' => 'Kai Cruz', 'has_allergies' => false, 'present' => true],
                 ], 'head_count' => null],
                 ['id' => $ben->squad_id, 'name' => 'Level 2 Boys', 'level' => ['number' => 2, 'name' => 'Level 2'], 'present' => 0, 'count' => 1, 'children' => [
-                    ['id' => $ben->id, 'nickname' => 'Ben', 'has_allergies' => false, 'present' => false],
+                    ['id' => $ben->id, 'nickname' => 'Ben', 'short_name' => 'Benjamin Cruz', 'has_allergies' => false, 'present' => false],
                 ], 'head_count' => null],
                 ['id' => $amara->squad_id, 'name' => 'Level 2 Girls', 'level' => ['number' => 2, 'name' => 'Level 2'], 'present' => 1, 'count' => 2, 'children' => [
-                    ['id' => $amara->id, 'nickname' => 'Amara', 'has_allergies' => true, 'present' => false],
-                    ['id' => $sofia->id, 'nickname' => 'Sofia', 'has_allergies' => false, 'present' => true],
+                    ['id' => $amara->id, 'nickname' => 'Amara', 'short_name' => 'Amara Cruz', 'has_allergies' => true, 'present' => false],
+                    ['id' => $sofia->id, 'nickname' => 'Sofia', 'short_name' => 'Sofia Cruz', 'has_allergies' => false, 'present' => true],
                 ], 'head_count' => ['count' => 3, 'counted_at' => '08:50', 'counted_by' => 'Joy']],
                 ['id' => $bea->squad_id, 'name' => 'Level 3 Girls', 'level' => ['number' => 3, 'name' => 'Level 3'], 'present' => 0, 'count' => 1, 'children' => [
-                    ['id' => $bea->id, 'nickname' => 'Bea', 'has_allergies' => false, 'present' => false],
+                    ['id' => $bea->id, 'nickname' => 'Bea', 'short_name' => 'Bea Cruz', 'has_allergies' => false, 'present' => false],
                 ], 'head_count' => null],
             ]));
+    });
+
+    it('tells two children of one nickname apart in a Squad by first and last name — no middle name @story#117', function (): void {
+        $w = whosInChurch();
+        $santos = childOf(familyAt($w['dxb']), ['nickname' => 'Amara', 'first_name' => 'Amara', 'middle_name' => 'Joy', 'last_name' => 'Santos', 'gender' => GenderEnum::Girl, 'level' => 2]);
+        $session = sessionOf($w['onePm']);
+        checkedIn($session, $w['amara']);
+        checkedIn($session, $santos);
+
+        actingAs($w['lifeshaper'])->get('/ccf/door/whos-in')->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('squads.0.children.0.nickname', 'Amara')
+            ->where('squads.0.children.0.short_name', 'Amara Cruz')
+            ->where('squads.0.children.1.nickname', 'Amara')
+            ->where('squads.0.children.1.short_name', 'Amara Santos'));
     });
 
     it('keeps the Squad picked with ?squad=, and falls back to All when that Squad has no one in @story#117', function (): void {
@@ -252,7 +266,7 @@ describe('confirming a head count', function (): void {
         actingAs($w['lifeshaper'])->get('/ccf/door/whos-in')->assertInertia(fn (AssertableInertia $page) => $page
             ->where('squads.0.count', 1)
             ->where('squads.0.head_count.count', 2)
-            ->where('squads.0.children', [['id' => $amara->id, 'nickname' => 'Amara', 'has_allergies' => true, 'present' => true]]));
+            ->where('squads.0.children', [['id' => $amara->id, 'nickname' => 'Amara', 'short_name' => 'Amara Cruz', 'has_allergies' => true, 'present' => true]]));
     });
 
     it('keeps ONE head count when two leaders confirm the same Squad at the same moment, through the whole request — first count or a later one @story#121', function (bool $counted): void {

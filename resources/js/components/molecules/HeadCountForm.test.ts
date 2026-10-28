@@ -13,9 +13,27 @@ function girls(more: Partial<WhosInSquad> = {}): WhosInSquad {
         count: 3,
         head_count: null,
         children: [
-            { id: 31, nickname: 'Amara', has_allergies: false, present: true },
-            { id: 32, nickname: 'Isabel', has_allergies: false, present: false },
-            { id: 33, nickname: 'Sofia', has_allergies: false, present: true },
+            {
+                id: 31,
+                nickname: 'Amara',
+                short_name: 'Amara Reyes',
+                has_allergies: false,
+                present: true,
+            },
+            {
+                id: 32,
+                nickname: 'Isabel',
+                short_name: 'Isabel Reyes',
+                has_allergies: false,
+                present: false,
+            },
+            {
+                id: 33,
+                nickname: 'Sofia',
+                short_name: 'Sofia Reyes',
+                has_allergies: false,
+                present: true,
+            },
         ],
         ...more,
     }

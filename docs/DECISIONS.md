@@ -34,6 +34,17 @@ describes the design; this records the choices that shaped or changed it.
   `resources/js/lib/rollCall.ts`). Only children still in are listed, so an undone child's old mark never shows. The
   head count field on Who's in follows the server again from the moment a count is SENT (a number typed while it is
   on its way is kept) — found by the e2e. The Excel's head count repeats on each row of its Squad.
+- Claude, low-stakes (issue 04, raised by Roy; for Roy to confirm): **a search narrows with every word** — each word
+  must hit the SAME family (a parent's name, email or phone digits, or a child's name), in any order: "Ana Reyes" is
+  Ana's family, not every Reyes. Words under two letters are skipped, and only the first five are read (a long paste
+  cannot make a slow query); a search with nothing left (one letter, only spaces) finds nothing — on the Children list
+  too, which used to list everyone for a blank-ish search. A phone-shaped part ("050 123 4567", "+971 (50) …", four
+  digits or more) is matched as one number against parents' phones, AND'ed with the name words around it ("Reyes 050
+  444 5566"); digits inside a word such as an email are never compared with phones. The same rule runs the door, the Families list
+  (and its Excel) and staff registration; on the Children list each word may hit the child or their parent, so
+  "Janice" still finds Janice's children and "Amara Reyes" no siblings. **Who's in shows the first + last name** (no
+  middle name, to keep the row short) small and muted under the nickname (inside the tick; no photo or phone). The door's own "Checked in" list still shows
+  nicknames only.
 
 ## 2026-10-28 (later — ui-theme 03, parent and public pages on the kit; Claude, for Roy to confirm)
 

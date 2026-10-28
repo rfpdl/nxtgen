@@ -16,3 +16,12 @@ it('joins first, middle and last name, with no gap where a part is missing or pa
     'an empty middle name' => ['', 'Cruz', 'Amara Cruz'],
     'spaces inside a part' => ['Joy  Marie', 'Dela  Cruz', 'Amara Joy Marie Dela Cruz'],
 ]);
+
+it('gives a short name — first and last, no middle — for a tight row', function (?string $middle, string $short): void {
+    $child = (new Child)->forceFill(['first_name' => ' Amara ', 'middle_name' => $middle, 'last_name' => 'Dela  Cruz']);
+
+    expect($child->shortName())->toBe($short);
+})->with([
+    'with a middle name' => ['Joy', 'Amara Dela Cruz'],
+    'without one' => [null, 'Amara Dela Cruz'],
+]);

@@ -87,6 +87,12 @@ final class Child extends Model
         return $this->allergies !== null && trim($this->allergies) !== '';
     }
 
+    /** "Amara Cruz": first and last name, no middle — for a tight row (Who's in, issue 04). */
+    public function shortName(): string
+    {
+        return trim((string) preg_replace('/\s+/', ' ', "{$this->first_name} {$this->last_name}"));
+    }
+
     /** "Amara Joy Cruz": first, middle and last name, spaces collapsed — the one way lists and Excel write it. */
     public function fullName(): string
     {

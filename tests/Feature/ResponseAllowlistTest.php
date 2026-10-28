@@ -361,10 +361,10 @@ describe('the door', function (): void {
 });
 
 /**
- * A child on Who's in (WhosInChildData): nickname, an allergy yes/no and the present mark — no photo, phone or health
- * detail (DECISIONS 2026-10-28).
+ * A child on Who's in (WhosInChildData): nickname and first + last name (issue 04), an allergy yes/no and the present mark — no
+ * photo, phone or health detail (DECISIONS 2026-10-28).
  */
-const WHOS_IN_CHILD = ['has_allergies', 'id', 'nickname', 'present'];
+const WHOS_IN_CHILD = ['has_allergies', 'id', 'nickname', 'present', 'short_name'];
 
 describe('Who\'s in', function (): void {
     it('shows any staff today\'s classes and who is in by Squad, with an allergy flag, the present mark and the head count only — no photo, phone or health detail @story#117 @story#118 @story#121', function (Actor $actor): void {
