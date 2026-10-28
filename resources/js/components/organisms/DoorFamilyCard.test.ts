@@ -57,7 +57,7 @@ function tick(wrapper: ReturnType<typeof card>, index: number) {
     return wrapper
         .findAll('[data-testid="door-child"]')
         [index]!.find('[data-testid="tick-child"]')
-        .setValue(true)
+        .trigger('click')
 }
 
 describe('DoorFamilyCard', () => {
@@ -78,6 +78,8 @@ describe('DoorFamilyCard', () => {
         const wrapper = card()
         const button = wrapper.find('[data-testid="check-in"]')
         expect(button.attributes('disabled')).toBeDefined()
+        // Short enough not to wrap on a phone.
+        expect(button.text()).toBe('Tick to check in')
 
         await tick(wrapper, 0)
         expect(button.text()).toBe('Check in 1 child')
@@ -131,10 +133,10 @@ describe('DoorFamilyCard', () => {
         )
     })
 
-    it('passes a tapped name up for its health details', async () => {
+    it('passes a tapped Health up for its health details', async () => {
         const wrapper = card()
 
-        await wrapper.find('[data-testid="child-name"]').trigger('click')
+        await wrapper.find('[data-testid="child-health-open"]').trigger('click')
         expect(wrapper.emitted('health')).toEqual([[1]])
     })
 

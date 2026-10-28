@@ -1,87 +1,68 @@
 <script setup lang="ts">
-import SignOutButton from '@/components/atoms/SignOutButton.vue'
-import SwitchLink from '@/components/atoms/SwitchLink.vue'
-import FlashBanner from '@/components/molecules/FlashBanner.vue'
+import AppShell from '@/components/layout/AppShell.vue'
 import { useChurch } from '@/composables/useChurch'
-import { useFlashMessages } from '@/composables/useFlashMessages'
-import type { SharedProps } from '@/types'
-import { Link, usePage } from '@inertiajs/vue3'
+import type { SharedProps, ShellItem } from '@/types'
+import { usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { route } from 'ziggy-js'
 
 /**
- * The church staff frame: church name, Check in (the door, for every staff member), the Release 1 tools, People,
- * Classes and Attendance (admins), sign out, and the flash message.
+ * The church staff frame (AppShell, the Bold look): Check in (the door, for every staff member), the Release 1
+ * tools, People, Classes and Attendance (admins), Password, Switch and Sign out.
  * Registering starts from the Families list's button, and possible duplicates from its "duplicates" filter
  * (DECISIONS 2026-10-17, after first look) — neither has a tab.
+ * The bar names the page: `title` if given, else the menu item whose address the page is under, else the church.
  * The church is the page's shared `church`; what to show comes from the shared `church_nav`.
  */
-const church = useChurch()
+const props = defineProps<{ title?: string }>()
 
-const { message, dismiss } = useFlashMessages()
+const church = useChurch()
 const page = usePage<SharedProps>()
-const canManagePeople = computed(() => page.props.church_nav?.can_manage_people === true)
-const canManageClasses = computed(() => page.props.church_nav?.can_manage_classes === true)
-const canSeeAttendance = computed(() => page.props.church_nav?.can_see_attendance === true)
+
+const items = computed<ShellItem[]>(() => {
+    const nav = page.props.church_nav
+    const slug = church.value.slug
+    const all: (ShellItem | false)[] = [
+        { label: 'Check in', href: route('church.door.show', slug), testid: 'nav-door' },
+        { label: 'Families', href: route('church.families.index', slug) },
+        { label: 'Children', href: route('church.children.index', slug) },
+        { label: 'QR poster', href: route('church.poster', slug) },
+        nav?.can_manage_people === true && {
+            label: 'People',
+            href: route('church.people.index', slug),
+        },
+        nav?.can_manage_classes === true && {
+            label: 'Classes',
+            href: route('church.schedules.index', slug),
+        },
+        nav?.can_see_attendance === true && {
+            label: 'Attendance',
+            href: route('church.attendance.show', slug),
+        },
+        { label: 'Password', href: route('account.password'), testid: 'backup-password' },
+    ]
+    const path = page.url.split('?')[0] ?? ''
+    return all
+        .filter((item): item is ShellItem => item !== false)
+        .map((item) => ({ ...item, current: isUnder(path, pathOf(item.href)) }))
+})
+
+const title = computed(
+    () => props.title ?? items.value.find((item) => item.current)?.label ?? church.value.name,
+)
+
+function pathOf(href: string): string {
+    return new URL(href, 'http://x').pathname
+}
+
+/** `/ccf/families/12` is under `/ccf/families`; `/ccf/families-x` is not. */
+function isUnder(path: string, base: string): boolean {
+    return path === base || path.startsWith(`${base}/`)
+}
 </script>
 
 <template>
-    <div class="bg-surface-sunken min-h-dvh">
-        <header class="border-border bg-surface border-b">
-            <nav class="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
-                <span class="text-text text-lg font-semibold">{{ church.name }}</span>
-                <Link
-                    :href="route('church.door.show', church.slug)"
-                    class="min-h-touch text-text flex items-center font-semibold underline-offset-4 hover:underline"
-                    data-testid="nav-door"
-                    >Check in</Link
-                >
-                <Link
-                    :href="route('church.families.index', church.slug)"
-                    class="min-h-touch text-text flex items-center underline-offset-4 hover:underline"
-                    >Families</Link
-                >
-                <Link
-                    :href="route('church.children.index', church.slug)"
-                    class="min-h-touch text-text flex items-center underline-offset-4 hover:underline"
-                    >Children</Link
-                >
-                <Link
-                    :href="route('church.poster', church.slug)"
-                    class="min-h-touch text-text flex items-center underline-offset-4 hover:underline"
-                    >QR poster</Link
-                >
-                <Link
-                    v-if="canManagePeople"
-                    :href="route('church.people.index', church.slug)"
-                    class="min-h-touch text-text flex items-center underline-offset-4 hover:underline"
-                    >People</Link
-                >
-                <Link
-                    v-if="canManageClasses"
-                    :href="route('church.schedules.index', church.slug)"
-                    class="min-h-touch text-text flex items-center underline-offset-4 hover:underline"
-                    >Classes</Link
-                >
-                <Link
-                    v-if="canSeeAttendance"
-                    :href="route('church.attendance.show', church.slug)"
-                    class="min-h-touch text-text flex items-center underline-offset-4 hover:underline"
-                    >Attendance</Link
-                >
-                <Link
-                    :href="route('account.password')"
-                    class="min-h-touch text-text-muted ml-auto flex items-center underline-offset-4 hover:underline"
-                    data-testid="backup-password"
-                    >Password</Link
-                >
-                <SwitchLink />
-                <SignOutButton />
-            </nav>
-        </header>
-        <FlashBanner :message="message" @dismiss="dismiss" />
-        <main class="mx-auto flex max-w-5xl flex-col gap-6 p-4">
-            <slot />
-        </main>
-    </div>
+    <AppShell :title="title" :place="church.name" :items="items">
+        <slot />
+    </AppShell>
 </template>

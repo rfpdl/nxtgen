@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { fillChild, fillFamily } from '../support/forms'
 import { latestMail, mailCount } from '../support/mailbox'
+import { openMenu } from '../support/menu'
 import {
     CHURCH,
     FAMILIES,
@@ -75,6 +76,7 @@ test('registers a new family for a parent who is not found @story#46 @story#47 @
 
 test('prints the registration poster, whose address opens the form @story#80', async ({ page }) => {
     await page.goto(`/${CHURCH}/families`)
+    await openMenu(page)
     await page.getByRole('link', { name: 'QR poster' }).click()
 
     const qr = page.getByTestId('poster-qr')
@@ -151,4 +153,32 @@ test("re-sends a visiting family's confirmation link from the door search @story
         'We sent the confirmation link to',
     )
     await latestMail(email, before)
+})
+
+test('on a phone the menu is a sheet: Password and Sign out are in it, focus stays in it, Esc closes it', async ({
+    page,
+}, info) => {
+    test.skip(!info.project.name.startsWith('mobile'), 'The menu is a sheet on a phone only.')
+    await page.goto(`/${CHURCH}/door`)
+    await openMenu(page)
+    const sheet = page.getByTestId('menu-sheet')
+
+    await expect(sheet.getByTestId('sign-out')).toBeEnabled()
+    await expect(sheet.getByTestId('backup-password')).toBeVisible()
+
+    // Tab round the sheet more times than it has controls: focus never leaves it. Safari's plain Tab reaches only
+    // text fields unless a setting is on; Option+Tab reaches every control, as a keyboard user there would press.
+    const tab = info.project.name === 'mobile-webkit' ? 'Alt+Tab' : 'Tab'
+    for (let i = 0; i < 12; i++) {
+        await page.keyboard.press(tab)
+        expect(await sheet.evaluate((el) => el.contains(document.activeElement))).toBe(true)
+    }
+
+    await page.keyboard.press('Escape')
+    await expect(sheet).toBeHidden()
+    await expect(page.getByTestId('menu-open')).toBeFocused()
+
+    await openMenu(page)
+    await sheet.getByTestId('backup-password').click()
+    await expect(page).toHaveURL(/\/account\/password/)
 })

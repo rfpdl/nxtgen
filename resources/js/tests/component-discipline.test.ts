@@ -149,20 +149,61 @@ describe('layer dependency direction', () => {
     })
 })
 
+/**
+ * A colour picked in a class instead of a token: a Tailwind palette colour, white/black, or an arbitrary value
+ * (`bg-[#fff]`, `text-[var(--x)]`, `bg-(--x)`, `[color:…]`).
+ */
+const COLOUR_UTILITY =
+    '(?:bg|text|border(?:-[trblxy])?|ring(?:-offset)?|from|to|via|fill|stroke|divide|outline|shadow|accent|decoration|caret|placeholder)'
+const RAW_COLOUR = new RegExp(
+    [
+        `\\b${COLOUR_UTILITY}-(?:slate|gray|grey|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\\d{2,3}\\b`,
+        `\\b${COLOUR_UTILITY}-(?:white|black)\\b`,
+        `\\b${COLOUR_UTILITY}-\\[(?:[\\w-]+:)?(?:#|rgba?\\(|hsla?\\(|oklch\\(|oklab\\(|lab\\(|lch\\(|color\\(|var\\(|--)`,
+        `\\b${COLOUR_UTILITY}-\\(--`,
+        `\\[(?:color|background(?:-color)?|border-color|fill|stroke):`,
+    ].join('|'),
+)
+
 describe('design tokens', () => {
+    it.each([
+        'text-red-500',
+        'bg-white',
+        'border-black',
+        'bg-[#f2b32a]',
+        'text-[oklch(0.5_0.1_20)]',
+        'bg-[var(--color-x)]',
+        'text-[color:var(--x)]',
+        'bg-(--brand)',
+        'border-t-[#000]',
+        '[color:red]',
+        'hover:bg-gray-100',
+    ])('the colour rule catches %s', (cls) => {
+        expect(RAW_COLOUR.test(`<p class="${cls}">`)).toBe(true)
+    })
+
+    it.each([
+        'bg-surface',
+        'text-on-level-2',
+        'border-b-[5px]',
+        'translate-y-[5px]',
+        'size-[1.875rem]',
+        'bg-current/10',
+        'text-text-muted',
+    ])('the colour rule lets %s through', (cls) => {
+        expect(RAW_COLOUR.test(`<p class="${cls}">`)).toBe(false)
+    })
+
     it('no component or page uses a raw Tailwind colour', () => {
         // Raw colours are decisions made in one component that cannot be revisited anywhere else,
         // and teacher screens have a hard 7:1 contrast requirement (plan §5.10) that can only be
         // held if the pairs live in one place. Semantic tokens only.
-        const RAW =
-            /\b(?:bg|text|border|ring|from|to|via|fill|stroke|divide|outline|shadow|accent|decoration)-(?:slate|gray|grey|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d{2,3}\b/
-
         const bad = [
             ...files('resources/js/components/**/*.vue'),
             ...files('resources/js/pages/**/*.vue'),
         ].flatMap((file) =>
             codeLines(file)
-                .filter(({ line }) => RAW.test(line))
+                .filter(({ line }) => RAW_COLOUR.test(line))
                 .map(({ number, line }) => `${rel(file)}:${number} → ${line.trim().slice(0, 80)}`),
         )
 
@@ -182,6 +223,126 @@ describe('design tokens', () => {
         )
 
         expect(bad, 'Use size, weight or space for de-emphasis — not less contrast').toEqual([])
+    })
+})
+
+/*
+ * The UI kit gate (the Bold look, DECISIONS 2026-10-28; ui-theme spec seam 2).
+ *
+ * Only the kit — `components/atoms` — may draw a raw `<button>`, `<input>`, `<select>` or `<textarea>`. Everything
+ * else asks for AppButton, TextField, SelectField, TextArea, CheckRow or ChoiceChips, so a button looks and presses
+ * the same on every screen and a label is always wired to its control. A file input (the photo picker) and a hidden
+ * one are not drawn, so they are allowed.
+ *
+ * KNOWN_GAPS are the pages and components not on the kit yet (issues 02 and 03 move them). The list may only
+ * shrink: a file on it that no longer offends fails here until it is taken off.
+ */
+const KIT_ONLY = /<(?:button|select|textarea)\b/g
+/** An `<input …>` tag, reading past a `>` inside a quoted attribute (`@change="(e) => …"`). */
+const RAW_INPUT = /<input\b(?:[^>"']|"[^"]*"|'[^']*')*>/g
+/** Only a STATIC `type="file"` / `type="hidden"` is allowed — a bound `:type` could be anything. */
+const UNDRAWN_INPUT = /\s(?<![:.\w-])type="(?:file|hidden)"/
+
+const KNOWN_GAPS = [
+    'resources/js/components/molecules/ChildAdminControls.vue',
+    'resources/js/components/molecules/ChildFieldset.vue',
+    'resources/js/components/molecules/FamilyFieldset.vue',
+    'resources/js/components/molecules/FamilySearchResultCard.vue',
+    'resources/js/components/molecules/GuardianFieldset.vue',
+    'resources/js/components/molecules/Pager.vue',
+    'resources/js/components/molecules/RegistrationListFilters.vue',
+    'resources/js/components/molecules/ScheduleCard.vue',
+    'resources/js/components/molecules/StaffMemberCard.vue',
+    'resources/js/components/organisms/AddChildForm.vue',
+    'resources/js/components/organisms/AddStaffForm.vue',
+    'resources/js/components/organisms/ChildPhotoForm.vue',
+    'resources/js/components/organisms/EditChildForm.vue',
+    'resources/js/components/organisms/FamilyDetailsForm.vue',
+    'resources/js/components/organisms/OtherGuardiansFieldset.vue',
+    'resources/js/components/organisms/PasswordLoginForm.vue',
+    'resources/js/components/organisms/PossibleDuplicateCard.vue',
+    'resources/js/components/organisms/RegisterFamilyForm.vue',
+    'resources/js/components/organisms/SatelliteSchedules.vue',
+    'resources/js/components/organisms/ScheduleForm.vue',
+    'resources/js/pages/Auth/ConfirmLink.vue',
+    'resources/js/pages/Auth/Login.vue',
+    'resources/js/pages/Auth/Password.vue',
+    'resources/js/pages/Church/Attendance/Index.vue',
+    'resources/js/pages/Church/Families/Register.vue',
+    'resources/js/pages/Church/Families/Show.vue',
+    'resources/js/pages/Church/Poster.vue',
+]
+
+/** The raw controls a source file draws outside the kit, as "line → tag". */
+function rawControls(source: string): string[] {
+    const start = source.indexOf('<template>')
+    const template = start === -1 ? '' : source.slice(start).replace(/<!--[\s\S]*?-->/g, '')
+    const offset = start === -1 ? 0 : source.slice(0, start).split('\n').length - 1
+    const lineOf = (index: number): number => offset + template.slice(0, index).split('\n').length
+
+    const tags = [...template.matchAll(KIT_ONLY)].map((m) => `${lineOf(m.index)} → ${m[0]}`)
+    const inputs = [...template.matchAll(RAW_INPUT)]
+        .filter((m) => !UNDRAWN_INPUT.test(m[0]))
+        .map((m) => `${lineOf(m.index)} → <input`)
+
+    return [...tags, ...inputs]
+}
+
+describe('the UI kit', () => {
+    const outsideKit = () =>
+        [
+            ...files('resources/js/components/molecules/**/*.vue'),
+            ...files('resources/js/components/organisms/**/*.vue'),
+            ...files('resources/js/components/layout/**/*.vue'),
+            ...files('resources/js/pages/**/*.vue'),
+        ].map((file) => ({ file: rel(file), raw: rawControls(readFileSync(file, 'utf-8')) }))
+
+    it.each([
+        '<button type="button">Go</button>',
+        '<select v-model="x"></select>',
+        '<textarea v-model="x" />',
+        '<input v-model="q" type="search" />',
+        '<input :type="kind" />',
+        '<input v-bind:type="kind" />',
+        '<input @change="(e) => pick(e)" :type="kind" />',
+        '<input\n    v-model="q"\n/>',
+    ])('the control rule catches %s', (tag) => {
+        expect(rawControls(`<template>${tag}</template>`)).toHaveLength(1)
+    })
+
+    it.each([
+        '<input type="file" accept="image/*" />',
+        '<input @change="(e) => pick(e)" type="file" />',
+        '<input type="hidden" name="x" />',
+        '<AppButton>Go</AppButton>',
+        '<TextField v-model="q" type="search" />',
+        '<!-- <button>not drawn</button> -->',
+    ])('the control rule lets %s through', (tag) => {
+        expect(rawControls(`<template>${tag}</template>`)).toEqual([])
+    })
+
+    it('no page or component outside the kit draws a raw button, input, select or textarea', () => {
+        const bad = outsideKit()
+            .filter(({ file, raw }) => raw.length > 0 && !KNOWN_GAPS.includes(file))
+            .flatMap(({ file, raw }) => raw.map((r) => `${file}:${r}`))
+
+        expect(
+            bad,
+            'Use AppButton, TextField, SelectField, TextArea, CheckRow or ChoiceChips (components/atoms)',
+        ).toEqual([])
+    })
+
+    it('the known gaps only shrink: a file on the kit comes off the list', () => {
+        const offending = new Set(
+            outsideKit()
+                .filter(({ raw }) => raw.length > 0)
+                .map(({ file }) => file),
+        )
+
+        expect(
+            KNOWN_GAPS.filter((file) => !offending.has(file)),
+            'These are on the kit now (or gone) — take them off KNOWN_GAPS',
+        ).toEqual([])
     })
 })
 

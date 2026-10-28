@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import AppButton from '@/components/atoms/AppButton.vue'
+import ChoiceChips from '@/components/atoms/ChoiceChips.vue'
+import EmptyState from '@/components/atoms/EmptyState.vue'
+import PageHeader from '@/components/atoms/PageHeader.vue'
+import TextField from '@/components/atoms/TextField.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import ChildHealthPanel from '@/components/molecules/ChildHealthPanel.vue'
 import DoorCheckedInList from '@/components/molecules/DoorCheckedInList.vue'
@@ -6,6 +11,7 @@ import DoorFamilyCard from '@/components/organisms/DoorFamilyCard.vue'
 import { useChurch } from '@/composables/useChurch'
 import type { ChildHealth, DoorCheckIn, DoorClass, DoorFamily, LevelOption } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
+import { Search } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import { route } from 'ziggy-js'
 
@@ -13,7 +19,8 @@ import { route } from 'ziggy-js'
  * The door (DECISIONS 2026-10-26), phone first: today, the class picker (today's classes at the satellites the
  * viewer's Role covers), how many are checked in, the church-wide search, a card per family found, and below them
  * who is in the chosen class, with Undo (DECISIONS 2026-10-27) — the count is that list's length. A child's health
- * details come only when their name is tapped — a partial reload of `health`.
+ * details come only when their name is tapped — a partial reload of `health`. On the kit (the Bold look): the class
+ * picker is a row of pressable chips, not a dropdown.
  */
 const props = defineProps<{
     today: string
@@ -33,10 +40,14 @@ const showHealth = ref(false)
 const chosen = computed(() => props.classes.find((c) => c.id === props.class_id) ?? null)
 const manySatellites = computed(() => new Set(props.classes.map((c) => c.satellite)).size > 1)
 
-/** "1PM · 13:00–15:00", and the satellite when the viewer's Role covers more than one. */
-function optionLabel(c: DoorClass): string {
-    return [c.name, c.times, manySatellites.value ? c.satellite : null].filter(Boolean).join(' · ')
-}
+/** A chip per class: "1PM" over "13:00–15:00", and the satellite when the viewer's Role covers more than one. */
+const classChips = computed(() =>
+    props.classes.map((c: DoorClass) => ({
+        value: c.id,
+        label: c.name,
+        sub: [c.times, manySatellites.value ? c.satellite : null].filter(Boolean).join(' · '),
+    })),
+)
 
 function visit(params: { class?: number | null; q?: string }): void {
     router.get(
@@ -46,8 +57,10 @@ function visit(params: { class?: number | null; q?: string }): void {
     )
 }
 
-function pickClass(event: Event): void {
-    visit({ class: Number((event.target as HTMLSelectElement).value) })
+function pickClass(id: string | number | null): void {
+    if (id !== null) {
+        visit({ class: Number(id) })
+    }
 }
 
 function undo(checkInId: number): void {
@@ -73,57 +86,41 @@ function openHealth(childId: number): void {
     <Head title="Check in" />
     <ChurchShell>
         <div class="flex flex-col gap-4" data-surface="door">
-            <header class="flex flex-col gap-2">
-                <h1 class="text-text text-2xl font-semibold" data-testid="door-heading">
-                    {{ chosen ? chosen.satellite : church.name }} · {{ today }}
-                </h1>
-                <label v-if="classes.length > 0" class="text-text flex items-center gap-3">
-                    <span class="font-semibold">Class</span>
-                    <span class="relative flex min-w-0 flex-1">
-                        <select
-                            :value="class_id ?? ''"
-                            class="min-h-touch-door border-input bg-surface min-w-0 flex-1 appearance-none rounded-md border pr-10 pl-3 text-lg"
-                            data-testid="door-class"
-                            @change="pickClass"
-                        >
-                            <option v-for="c in classes" :key="c.id" :value="c.id">
-                                {{ optionLabel(c) }}
-                            </option>
-                        </select>
-                        <span
-                            class="text-text pointer-events-none absolute top-1/2 right-3 -translate-y-1/2"
-                            aria-hidden="true"
-                            >▾</span
-                        >
-                    </span>
-                </label>
-                <p v-else class="text-text text-lg" data-testid="no-class">
-                    No class meets today. Admins add classes on the Classes page.
-                </p>
-                <p
-                    v-if="chosen"
-                    class="text-text text-xl font-semibold"
-                    data-testid="checked-in-count"
-                >
-                    {{ checked_in.length }} checked in
-                </p>
-            </header>
+            <PageHeader
+                :title="`${chosen ? chosen.satellite : church.name} · ${today}`"
+                title-testid="door-heading"
+            />
+            <ChoiceChips
+                v-if="classes.length > 0"
+                label="Class"
+                :options="classChips"
+                :model-value="class_id"
+                data-testid="door-class"
+                @update:model-value="pickClass"
+            />
+            <EmptyState v-else data-testid="no-class">
+                No class meets today. Admins add classes on the Classes page.
+            </EmptyState>
+            <p v-if="chosen" class="text-text text-xl font-semibold" data-testid="checked-in-count">
+                <strong class="text-primary text-4xl font-bold tabular-nums">{{
+                    checked_in.length
+                }}</strong>
+                checked in
+            </p>
 
-            <form class="flex gap-2" role="search" @submit.prevent="visit({ q })">
-                <input
+            <form class="flex items-end gap-2" role="search" @submit.prevent="visit({ q })">
+                <TextField
                     v-model="q"
+                    class="flex-1"
                     type="search"
-                    class="min-h-touch-door border-border bg-surface text-text min-w-0 flex-1 rounded-md border px-4 text-lg"
-                    placeholder="Search name or parent"
-                    aria-label="Search a child's or parent's name"
+                    label="Search a child's or parent's name"
+                    hide-label
+                    placeholder="Search a name"
                     data-testid="door-search"
-                />
-                <button
-                    type="submit"
-                    class="bg-primary text-on-primary rounded-md px-4 text-lg font-semibold"
                 >
-                    Search
-                </button>
+                    <template #leading><Search class="size-6" /></template>
+                </TextField>
+                <AppButton type="submit" variant="secondary" size="lg">Search</AppButton>
             </form>
 
             <ChildHealthPanel
@@ -132,9 +129,9 @@ function openHealth(childId: number): void {
                 @close="showHealth = false"
             />
 
-            <p v-if="query && families.length === 0" class="text-text">
+            <EmptyState v-if="query && families.length === 0">
                 No family found. Check the spelling, or register them from the Families list.
-            </p>
+            </EmptyState>
             <DoorFamilyCard
                 v-for="family in families"
                 :key="`${family.id}-${class_id}`"

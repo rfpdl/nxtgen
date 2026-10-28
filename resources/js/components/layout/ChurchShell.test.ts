@@ -1,8 +1,9 @@
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import { mount } from '@vue/test-utils'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const page = {
+    url: '/ccf/door?class=1',
     props: {
         flash: {},
         church: { name: 'CCF', slug: 'ccf' },
@@ -20,7 +21,24 @@ vi.mock('@inertiajs/vue3', () => ({
     usePage: () => page,
 }))
 
-vi.mock('ziggy-js', () => ({ route: (name: string, slug?: string) => `/${slug ?? ''}#${name}` }))
+const PATHS: Record<string, string> = {
+    'church.door.show': 'door',
+    'church.families.index': 'families',
+    'church.children.index': 'children',
+    'church.poster': 'poster',
+    'church.people.index': 'people',
+    'church.schedules.index': 'classes',
+    'church.attendance.show': 'attendance',
+}
+
+vi.mock('ziggy-js', () => ({
+    route: (name: string, slug?: string) =>
+        PATHS[name] ? `http://app.test/${slug}/${PATHS[name]}` : `http://app.test/#${name}`,
+}))
+
+beforeEach(() => {
+    page.url = '/ccf/door?class=1'
+})
 
 describe('ChurchShell', () => {
     it('names the church it shares, and links to the door and the registration lists', () => {
@@ -35,6 +53,25 @@ describe('ChurchShell', () => {
         expect(wrapper.text()).toContain('body')
     })
 
+    it('names the page in the bar: from the menu item it is under, else the title it is given, else the church', () => {
+        expect(mount(ChurchShell).find('[data-testid="page-name"]').text()).toBe('Check in')
+        expect(mount(ChurchShell).find('[aria-current="page"]').attributes('data-testid')).toBe(
+            'nav-door',
+        )
+
+        page.url = '/ccf/families/12'
+        expect(mount(ChurchShell).find('[data-testid="page-name"]').text()).toBe('Families')
+
+        expect(
+            mount(ChurchShell, { props: { title: 'Register a family' } })
+                .find('[data-testid="page-name"]')
+                .text(),
+        ).toBe('Register a family')
+
+        page.url = '/ccf'
+        expect(mount(ChurchShell).find('[data-testid="page-name"]').text()).toBe('CCF')
+    })
+
     it('has no Register or Duplicates tab: both start from the Families list', () => {
         page.props.church_nav.can_manage_people = true
         const wrapper = mount(ChurchShell)
@@ -43,9 +80,10 @@ describe('ChurchShell', () => {
         expect(wrapper.text()).not.toContain('Duplicates')
     })
 
-    it('offers sign out', () => {
+    it('offers the backup password and sign out', () => {
         const wrapper = mount(ChurchShell)
 
+        expect(wrapper.find('[data-testid="backup-password"]').text()).toBe('Password')
         expect(wrapper.find('[data-testid="sign-out"]').exists()).toBe(true)
     })
 
@@ -71,5 +109,19 @@ describe('ChurchShell', () => {
 
         page.props.church_nav.can_see_attendance = true
         expect(mount(ChurchShell).text()).toContain('Attendance')
+    })
+
+    it('puts the menu behind a Menu button on a phone, as a sheet of big buttons', async () => {
+        const wrapper = mount(ChurchShell, { attachTo: document.body })
+
+        await wrapper.find('[data-testid="menu-open"]').trigger('click')
+        await new Promise((resolve) => setTimeout(resolve))
+
+        const sheet = document.body.querySelector('[data-testid="menu-sheet"]')
+        expect(sheet?.getAttribute('role')).toBe('dialog')
+        expect(sheet?.querySelector('[data-testid="nav-door"]')?.textContent).toBe('Check in')
+        expect(sheet?.querySelector('[data-testid="backup-password"]')).not.toBeNull()
+        expect(sheet?.querySelector('[data-testid="sign-out"]')).not.toBeNull()
+        wrapper.unmount()
     })
 })

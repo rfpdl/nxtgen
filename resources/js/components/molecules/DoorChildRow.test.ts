@@ -36,17 +36,35 @@ describe('DoorChildRow', () => {
         )
     })
 
+    it("colours the Squad by the child's Level, and flags allergies in red", () => {
+        const wrapper = row()
+
+        expect(wrapper.find('[data-testid="level-dot"]').classes()).toContain('bg-level-2')
+        expect(wrapper.find('[data-testid="allergy-flag"]').classes()).toContain('bg-danger-soft')
+    })
+
     it('ticks and unticks the child', async () => {
         const wrapper = row()
 
-        await wrapper.find('[data-testid="tick-child"]').setValue(true)
+        const box = wrapper.find('[data-testid="tick-child"]')
+        expect(box.attributes('role')).toBe('checkbox')
+        expect(box.attributes('aria-label')).toBe('Tick Amara')
+        await box.trigger('click')
         expect(wrapper.emitted('update:ticked')).toEqual([[true]])
     })
 
-    it('asks for the health details when the name is tapped', async () => {
+    it('shows the name as plain bold text, and asks for the health details from its Health button', async () => {
         const wrapper = row()
+        const name = wrapper.find('[data-testid="child-name"]')
 
-        await wrapper.find('[data-testid="child-name"]').trigger('click')
+        expect(name.element.tagName).toBe('SPAN')
+        expect(name.text()).toBe('Amara')
+        expect(name.classes()).not.toContain('underline')
+
+        const health = wrapper.find('[data-testid="child-health-open"]')
+        expect(health.text()).toBe('Health')
+        expect(health.attributes('aria-label')).toBe('Health details for Amara')
+        await health.trigger('click')
         expect(wrapper.emitted('health')).toEqual([[1]])
     })
 
@@ -85,7 +103,7 @@ describe('DoorChildRow', () => {
         const wrapper = row({ level: null, squad: null, suggested_level: 3 })
         expect(wrapper.text()).toContain('No Level yet')
 
-        await wrapper.find('[data-testid="tick-child"]').setValue(true)
+        await wrapper.find('[data-testid="tick-child"]').trigger('click')
         expect(wrapper.emitted('update:level')).toEqual([[3]])
 
         const ticked = row(

@@ -15,12 +15,10 @@ function guardian(project: string): string {
 
 async function openDoor(page: Page): Promise<void> {
     await page.goto(`/${CHURCH}/door`)
-    const picker = page.getByTestId('door-class')
-    const onePm = await picker
-        .locator('option', { hasText: CLASSES.onePm.name })
-        .getAttribute('value')
-    await picker.selectOption(onePm ?? '')
-    await expect(page).toHaveURL(new RegExp(`class=${onePm}`))
+    // The class picker is a row of chips, a radio group (the Bold look): pick 1PM.
+    const chip = page.getByTestId('door-class').getByRole('radio', { name: CLASSES.onePm.name })
+    await chip.click()
+    await expect(chip).toHaveAttribute('aria-checked', 'true')
     await expect(page.getByTestId('door-heading')).toContainText(`${SATELLITES.dxb} · Sat `)
     // Phone first: nothing pushes the page sideways.
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
@@ -94,9 +92,7 @@ test('checks in two children of a family at 1PM — one made active again — se
     // Below the family, who is in: newest first, so this browser's two are on top; the count is the list's length.
     const rows = page.getByTestId('checked-in-row')
     await expect(rows).toHaveCount(before + 2)
-    await expect(page.getByTestId('checked-in-list').locator('h2')).toHaveText(
-        `Checked in (${before + 2})`,
-    )
+    await expect(page.getByTestId('checked-in-list').locator('h2')).toHaveText('Checked in')
     await expect(rows.nth(0).getByTestId('checked-in-name')).toHaveText(DOOR.cruz.inactive)
     await expect(rows.nth(1).getByTestId('checked-in-name')).toHaveText(DOOR.cruz.allergic)
     await expect(rows.nth(1)).toContainText('Level 2 Girls')
@@ -170,14 +166,14 @@ test('checks in a child visiting from House Church, in a CCF DXB Squad @story#10
     await expect(pia).toContainText('Level 2 Girls')
 })
 
-test("shows a child's health details only when their name is tapped @story#105", async ({
+test("shows a child's health details only when their Health is tapped @story#105", async ({
     page,
 }, info) => {
     await openDoor(page)
     const card = await findFamily(page, 'Cruz', `${guardian(info.project.name)} Cruz`)
     await expect(page.getByTestId('child-health')).toHaveCount(0)
 
-    await child(card, DOOR.cruz.allergic).getByTestId('child-name').click()
+    await child(card, DOOR.cruz.allergic).getByTestId('child-health-open').click()
 
     await expect(page.getByTestId('health-allergies')).toContainText(DOOR.allergy)
     await page.getByTestId('close-health').click()

@@ -27,4 +27,13 @@ describe('SwitchLink', () => {
         expect(link.exists()).toBe(true)
         expect(link.attributes('href')).toBe('#home?choose=1')
     })
+
+    it('takes its look from explicit props', () => {
+        page.props.auth.can_switch = true
+        const link = mount(SwitchLink, {
+            props: { variant: 'secondary', size: 'lg', block: true },
+        }).find('[data-testid="switch-place"]')
+
+        expect(link.classes()).toEqual(expect.arrayContaining(['bg-surface', 'text-xl', 'w-full']))
+    })
 })

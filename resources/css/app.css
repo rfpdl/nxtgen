@@ -1,11 +1,11 @@
 @import 'tailwindcss';
-@import '@fontsource-variable/inter/index.css';
+@import '@fontsource-variable/lexend/index.css';
 
 /*
  * The brand mark's colours. Referenced only inside `BrandMark.vue`'s SVG, where Tailwind's scanner
  * does see them — a class the scanner misses compiles to nothing and the mark renders as a grey blob with no error anywhere.
  */
-@source inline("fill-brand-cyan fill-brand-orange fill-brand-amber stroke-brand-orange");
+@source inline("fill-brand-cyan fill-brand-orange fill-brand-amber fill-surface stroke-brand-orange");
 
 /*
  * Design tokens.
@@ -17,7 +17,11 @@
  * screens (plan §5.10) that can only be held if the pairs live in one place.
  */
 @theme {
-    --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+    /*
+     * Lexend (the Bold look, DECISIONS 2026-10-28): a typeface made for easy reading, self-hosted through
+     * @fontsource so the door never waits on a font CDN over the venue's wifi.
+     */
+    --font-sans: 'Lexend Variable', ui-sans-serif, system-ui, sans-serif;
 
     /* ── Brand ────────────────────────────────────────────────────────────────
      * Taken from the NXTGEN logo's cyan, darkened until it clears 7:1 on white.
@@ -58,7 +62,8 @@
     --color-sidebar: oklch(1 0 0);
     --color-sidebar-active: oklch(0.955 0.02 226);
     --color-border: oklch(0.9 0.004 255);
-    --color-border-strong: oklch(0.72 0.006 250);
+    /* ≥3:1 on surface and sunken (contrast.test.ts): it is the edge of an empty tick box and an input. */
+    --color-border-strong: oklch(0.6 0.008 250);
 
     /* ── Text ─────────────────────────────────────────────────────────────────
      * `--color-text` is 16.8:1 on surface and `--color-text-muted` is 7.4:1.
@@ -70,7 +75,12 @@
      */
     --color-text: oklch(0.22 0.006 250);
     --color-text-muted: oklch(0.44 0.008 250);
-    --color-on-dark: oklch(0.98 0 0);
+
+    /*
+     * The focus ring: dark enough to show on white, grey and the soft tints (≥3:1, contrast.test.ts). On a
+     * coloured band (the bar, a flash) the band's own `on-` colour is the ring instead — `focus-on-bar` etc.
+     */
+    --color-focus: oklch(0.42 0.14 45);
 
     /* ── Status ───────────────────────────────────────────────────────────────
      * Each `-fg` is ≥7:1 on its matching `-soft`. The danger pair is the one
@@ -82,6 +92,7 @@
     --color-warning: oklch(0.44 0.11 74);
     --color-warning-soft: oklch(0.97 0.04 85);
     --color-danger: oklch(0.45 0.17 25);
+    --color-on-danger: oklch(0.98 0 0);
     --color-danger-soft: oklch(0.96 0.02 25);
     --color-info: oklch(0.43 0.11 250);
     --color-info-soft: oklch(0.96 0.02 250);
@@ -105,6 +116,54 @@
      */
     --color-gender-boy: oklch(0.52 0.19 258);
     --color-gender-girl: oklch(0.55 0.2 5);
+
+    /* ── The Bold look (DECISIONS 2026-10-28) ─────────────────────────────────
+     * Only the UI kit (`components/atoms`) reads these. A page asks for an
+     * AppButton or a Pill, never for a colour.
+     *
+     * `bar`: the amber top bar, the logo's own amber; its ink is 8.8:1 on it.
+     * `action`: the green of the pressable primary button. The chart's Level 4
+     * green (#2a9d3a) is 3.5:1 with white — unreadable — so this is that green
+     * taken down to 7.6:1. `-edge` is the thick bottom edge it presses into.
+     */
+    --color-bar: #f2b32a;
+    --color-on-bar: #2b1d00;
+    --color-action: #14611f;
+    --color-action-strong: #10521a;
+    --color-action-edge: #0a3a11;
+    --color-on-action: oklch(1 0 0);
+    --color-danger-edge: oklch(0.32 0.13 25);
+    --color-control-edge: oklch(0.82 0.008 250);
+
+    /* ── Levels: the age-level chart's colours ────────────────────────────────
+     * Level 1 blue, 2 yellow, 3 red, 4 green. The chart colour itself is only
+     * ever a DOT (no text sits on it); a Pill is the `-soft` tint with `on-level-N`
+     * text, each pair ≥7.7:1 — yellow can never carry white or black text
+     * readably at full strength, which is why the pairs exist.
+     */
+    --color-level-1: #12a3dc;
+    --color-level-1-soft: #e2f4fc;
+    --color-on-level-1: #064a66;
+    --color-level-2: #f2c200;
+    --color-level-2-soft: #fff6c7;
+    --color-on-level-2: #5a4500;
+    --color-level-3: #e1262c;
+    --color-level-3-soft: #fde4e5;
+    --color-on-level-3: #8a1116;
+    --color-level-4: #2a9d3a;
+    --color-level-4-soft: #e6f4e8;
+    --color-on-level-4: #14561f;
+
+    /* ── Pressable edges and corners ──────────────────────────────────────────
+     * A button sits on a 5px edge of its own darker colour and drops onto it
+     * when pressed (`active:translate-y-[5px] active:shadow-none` in AppButton).
+     */
+    --shadow-press-action: 0 5px 0 var(--color-action-edge);
+    --shadow-press-danger: 0 5px 0 var(--color-danger-edge);
+    --shadow-press-control: 0 4px 0 var(--color-control-edge);
+    --radius-tick: 0.625rem;
+    --radius-control: 1rem;
+    --radius-card: 1.25rem;
 
     /* ── Hit areas ────────────────────────────────────────────────────────────
      * In `rem`, so they scale with the type rather than being pinned to pixels —
@@ -169,7 +228,7 @@
     --color-accent-foreground: var(--color-primary);
 
     --color-destructive: var(--color-danger);
-    --color-destructive-foreground: var(--color-on-dark);
+    --color-destructive-foreground: var(--color-on-danger);
 
     --color-input: var(--color-border-strong);
     --color-ring: var(--color-primary);
@@ -224,10 +283,35 @@
  * hit areas on `[data-surface="teacher"]`, in `rem`, whatever anybody asks for.
  */
 
-/* Never below 16px, whatever a component asks for. */
+/*
+ * 18px base text (the Bold look): big type is kinder to older eyes, and nothing goes below 16px whatever a
+ * component asks for. The rem stays 16px, so hit areas and spacing do not move under pages not yet on the kit.
+ */
 body {
-    font-size: max(1rem, 16px);
+    font-size: max(1.125rem, 18px);
     font-family: var(--font-sans);
+    line-height: 1.5;
+}
+
+/*
+ * One focus ring, thick enough to see in a bright foyer, in a colour that clears 3:1 on what it sits on: `focus`
+ * on the page, and the band's own `on-` colour inside the amber bar or a flash (`focus-on-*`).
+ */
+:focus-visible {
+    outline: 3px solid var(--focus-ring, var(--color-focus));
+    outline-offset: 2px;
+}
+
+@utility focus-on-bar {
+    --focus-ring: var(--color-on-bar);
+}
+
+@utility focus-on-action {
+    --focus-ring: var(--color-on-action);
+}
+
+@utility focus-on-danger {
+    --focus-ring: var(--color-on-danger);
 }
 
 /*

@@ -139,3 +139,8 @@ export type FamilyFieldsDraft = Omit<
 
 /** The family edit form (FamilyDetailsForm): the family, the parent's own details, the other guardians' changes. */
 export type FamilyDetailsDraft = Draft<FamilyDetailsInput>
+
+// ─── The UI kit ─────────────────────────────────────────────────────────────────────────────────────────
+
+/** One item of the app shell's menu (AppShell): where it goes, and whether the page is under it. */
+export type ShellItem = { label: string; href: string; testid?: string; current?: boolean }

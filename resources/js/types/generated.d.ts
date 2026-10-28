@@ -37,6 +37,7 @@ declare namespace App {
                     id: number
                     nickname: string
                     squad: string
+                    level: number
                     checked_in_at: string
                 }
                 export type DoorChildData = {

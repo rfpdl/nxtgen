@@ -20,12 +20,10 @@ function doorSaturday(): string {
 /** Ben of this browser's own Cruz family is in at 1PM (checked in now, unless an earlier try already did). */
 async function checkInBen(page: Page): Promise<void> {
     await page.goto(`/${CHURCH}/door`)
-    const picker = page.getByTestId('door-class')
-    const onePm = await picker
-        .locator('option', { hasText: CLASSES.onePm.name })
-        .getAttribute('value')
-    await picker.selectOption(onePm ?? '')
-    await expect(page).toHaveURL(new RegExp(`class=${onePm}`))
+    // The class picker is a row of chips, a radio group (the Bold look): pick 1PM.
+    const chip = page.getByTestId('door-class').getByRole('radio', { name: CLASSES.onePm.name })
+    await chip.click()
+    await expect(chip).toHaveAttribute('aria-checked', 'true')
     await page.getByTestId('door-search').fill('Cruz')
     await page.getByTestId('door-search').press('Enter')
     const card = page

@@ -1,12 +1,19 @@
 <script setup lang="ts">
+import AppButton from '@/components/atoms/AppButton.vue'
+import CheckRow from '@/components/atoms/CheckRow.vue'
+import Pill from '@/components/atoms/Pill.vue'
+import SelectField from '@/components/atoms/SelectField.vue'
 import type { DoorChild, LevelOption } from '@/types'
+import { HeartPulse } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 /**
- * One child on a door family card (DECISIONS 2026-10-26): a box to tick, the nickname (tap it for the health
- * details), this satellite's Squad and an allergy flag ⚠ — no photo, no phone. A child who is in shows ✓ and Undo.
- * A Graduated child cannot be ticked. Ticking an inactive child asks "Make active again?"; ticking a child with no
- * Level asks for one, the age suggestion picked first. The answers are the card's (v-model).
+ * One child on a door family card (DECISIONS 2026-10-26): a box to tick, the nickname with a Health button beside it
+ * (the health details), this satellite's Squad and an allergy flag ⚠ — no photo, no phone. A child who is in shows
+ * ✓ and Undo. A Graduated child cannot be ticked. Ticking an inactive child asks "Make active again?"; ticking a
+ * child with no Level asks for one, the age suggestion picked first. The answers are the card's (v-model).
+ * On the kit (the Bold look): a big tick (CheckRow) beside the name rather than the whole row, because the row also
+ * holds Health (pending Roy's OK); the Squad as a Level-coloured Pill and the allergy flag as a red one.
  */
 const props = defineProps<{ child: DoorChild; levels: LevelOption[]; canCheckIn: boolean }>()
 const ticked = defineModel<boolean>('ticked', { default: false })
@@ -29,133 +36,99 @@ function tick(on: boolean): void {
     }
 }
 
-function onTick(event: Event): void {
-    tick((event.target as HTMLInputElement).checked)
-}
+const levelOptions = computed(() => props.levels.map((o) => ({ value: o.level, label: o.name })))
 
-function onLevel(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value
-    level.value = value === '' ? null : Number(value)
+function onLevel(value: string | number | null): void {
+    level.value = value === null ? null : Number(value)
 }
 </script>
 
 <template>
-    <li
-        class="grid grid-cols-[2.5rem_minmax(0,1fr)] items-start gap-x-3 py-3"
-        data-testid="door-child"
-    >
+    <li class="flex items-start gap-2 py-2" data-testid="door-child">
         <span
             v-if="isIn"
-            class="text-success flex h-10 items-center justify-center text-2xl font-bold"
+            class="bg-success-soft text-success rounded-tick grid size-16 shrink-0 place-items-center text-3xl font-bold"
             aria-hidden="true"
             >✓</span
         >
-        <input
+        <CheckRow
             v-else
-            type="checkbox"
-            class="accent-primary mt-1 size-8"
-            :checked="ticked"
+            :model-value="ticked"
             :disabled="graduated || !canCheckIn"
-            :aria-label="`Tick ${child.nickname}`"
+            :label="`Tick ${child.nickname}`"
             data-testid="tick-child"
-            @change="onTick"
+            @update:model-value="tick"
         />
 
-        <div class="flex min-w-0 flex-col gap-2">
-            <p class="flex flex-wrap items-baseline gap-x-2">
-                <button
-                    type="button"
-                    class="text-text text-left text-xl font-semibold underline underline-offset-4"
-                    :title="`${child.full_name} — health details`"
+        <div class="flex min-w-0 flex-1 flex-col gap-2 py-1">
+            <p class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span
+                    class="text-text text-xl font-bold"
+                    :title="child.full_name"
                     data-testid="child-name"
+                    >{{ child.nickname }}</span
+                >
+                <AppButton
+                    variant="secondary"
+                    size="sm"
+                    :aria-label="`Health details for ${child.nickname}`"
+                    data-testid="child-health-open"
                     @click="emit('health', child.id)"
                 >
-                    {{ child.nickname }}
-                </button>
-                <span class="text-text">{{ child.squad ?? 'No Level yet' }}</span>
+                    <HeartPulse class="size-5" aria-hidden="true" />Health
+                </AppButton>
             </p>
-
-            <p
-                v-if="child.has_allergies || inactive || graduated || isIn"
-                class="flex flex-wrap items-center gap-x-4 gap-y-2"
-            >
-                <span v-if="isIn" class="text-success font-semibold" data-testid="checked-in"
-                    >✓ Checked in</span
-                >
-                <span
+            <p class="flex flex-wrap items-center gap-2">
+                <Pill :level="child.level">{{ child.squad ?? 'No Level yet' }}</Pill>
+                <Pill v-if="isIn" variant="success" data-testid="checked-in">✓ Checked in</Pill>
+                <Pill
                     v-if="child.has_allergies"
-                    class="text-danger font-bold"
-                    title="Has allergies — tap the name"
+                    variant="danger"
+                    title="Has allergies — tap Health"
                     data-testid="allergy-flag"
-                    >⚠ Allergies</span
+                    >⚠ Allergies</Pill
                 >
-                <span v-if="inactive" class="text-text-muted font-semibold">Inactive</span>
+                <Pill v-if="inactive">Inactive</Pill>
                 <span v-if="graduated" class="text-text-muted font-semibold"
                     >Graduated — cannot be checked in</span
                 >
-                <button
+                <AppButton
                     v-if="isIn"
-                    type="button"
-                    class="border-border-strong text-text rounded-md border px-4"
+                    variant="secondary"
                     data-testid="undo"
                     @click="emit('undo', child.check_in_id ?? 0)"
                 >
                     Undo
-                </button>
+                </AppButton>
             </p>
 
             <div
                 v-if="ticked && inactive"
-                class="bg-warning-soft text-text flex flex-wrap items-center gap-3 rounded-md p-3"
+                class="bg-warning-soft text-text rounded-control flex flex-wrap items-center gap-3 p-3"
                 data-testid="make-active"
             >
                 <p class="w-full">{{ child.nickname }} is inactive. Make them active again?</p>
                 <p v-if="makeActive" class="text-success font-semibold">
                     Yes — {{ child.nickname }} will be made active.
                 </p>
-                <button
-                    v-else
-                    type="button"
-                    class="bg-primary text-on-primary rounded-md px-4 font-semibold"
-                    data-testid="make-active-yes"
-                    @click="makeActive = true"
-                >
+                <AppButton v-else data-testid="make-active-yes" @click="makeActive = true">
                     Yes, make active
-                </button>
-                <button
-                    type="button"
-                    class="text-text px-2 underline"
-                    data-testid="make-active-no"
-                    @click="tick(false)"
-                >
+                </AppButton>
+                <AppButton variant="link" data-testid="make-active-no" @click="tick(false)">
                     No
-                </button>
+                </AppButton>
             </div>
 
-            <label
-                v-if="ticked && needsLevel"
-                class="bg-warning-soft text-text flex flex-wrap items-center gap-3 rounded-md p-3"
-            >
-                <span>{{ child.nickname }} has no Level yet. Pick one:</span>
-                <span class="relative flex">
-                    <select
-                        :value="level ?? ''"
-                        class="min-h-touch-door border-input bg-surface min-w-0 appearance-none rounded-md border pr-10 pl-3"
-                        data-testid="pick-level"
-                        @change="onLevel"
-                    >
-                        <option value="">Choose…</option>
-                        <option v-for="option in levels" :key="option.level" :value="option.level">
-                            {{ option.name }}
-                        </option>
-                    </select>
-                    <span
-                        class="text-text pointer-events-none absolute top-1/2 right-3 -translate-y-1/2"
-                        aria-hidden="true"
-                        >▾</span
-                    >
-                </span>
-            </label>
+            <div v-if="ticked && needsLevel" class="bg-warning-soft rounded-control p-3">
+                <SelectField
+                    :label="`${child.nickname} has no Level yet. Pick one:`"
+                    :options="levelOptions"
+                    placeholder="Choose…"
+                    :model-value="level"
+                    data-testid="pick-level"
+                    @update:model-value="onLevel"
+                />
+            </div>
         </div>
     </li>
 </template>

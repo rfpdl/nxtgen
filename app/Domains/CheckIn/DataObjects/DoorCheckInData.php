@@ -10,7 +10,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
  * A child checked in to the chosen class today, on the door's list (DECISIONS 2026-10-27): nickname, this
- * satellite's Squad and when — no photo, no phone, no health detail. `id` is the Check-in's, for Undo. Needs the
+ * satellite's Squad (and its Level, for the Level colour — DECISIONS 2026-10-28) and when — no photo, no phone, no health detail. `id` is the Check-in's, for Undo. Needs the
  * Check-in's child and squad loaded (GetCheckedInChildrenJob does).
  */
 #[TypeScript]
@@ -21,6 +21,8 @@ final class DoorCheckInData extends Data
         public int $id,
         public string $nickname,
         public string $squad,
+        /** The Squad's Level (1–4), which picks the pill's colour from the age-level chart */
+        public int $level,
         /** "13:05", in the church's timezone */
         public string $checked_in_at,
     ) {}
@@ -31,6 +33,7 @@ final class DoorCheckInData extends Data
             id: $checkIn->id,
             nickname: $checkIn->child->displayName(),
             squad: $checkIn->squad->name(),
+            level: $checkIn->squad->level,
             checked_in_at: $checkIn->checked_in_at->setTimezone($timezone)->format('H:i'),
         );
     }

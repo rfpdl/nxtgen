@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AppButton from '@/components/atoms/AppButton.vue'
+import Card from '@/components/atoms/Card.vue'
 import type { ChildHealth } from '@/types'
 import { computed } from 'vue'
 
@@ -21,13 +23,13 @@ const nothing = computed(() => !props.health.allergies && rows.value.length === 
 </script>
 
 <template>
-    <section
-        class="border-border-strong bg-surface flex flex-col gap-3 rounded-lg border-2 p-4"
-        aria-live="polite"
-        data-testid="child-health"
-    >
-        <h2 class="text-text text-xl font-semibold">{{ health.nickname }} — health</h2>
-        <p v-if="health.allergies" class="text-danger font-bold" data-testid="health-allergies">
+    <Card as="section" class="flex flex-col gap-3" aria-live="polite" data-testid="child-health">
+        <h2 class="text-text text-xl font-bold">{{ health.nickname }} — health</h2>
+        <p
+            v-if="health.allergies"
+            class="bg-danger-soft text-danger rounded-control p-3 text-lg font-bold"
+            data-testid="health-allergies"
+        >
             ⚠ Allergies: {{ health.allergies }}
         </p>
         <dl v-if="rows.length > 0" class="text-text grid gap-x-3 gap-y-1 sm:grid-cols-[auto_1fr]">
@@ -37,13 +39,13 @@ const nothing = computed(() => !props.health.allergies && rows.value.length === 
             </template>
         </dl>
         <p v-if="nothing" class="text-text">No allergies or health details given.</p>
-        <button
-            type="button"
-            class="border-border-strong text-text self-start rounded-md border px-4"
+        <AppButton
+            variant="secondary"
+            class="self-start"
             data-testid="close-health"
             @click="emit('close')"
         >
             Close
-        </button>
-    </section>
+        </AppButton>
+    </Card>
 </template>

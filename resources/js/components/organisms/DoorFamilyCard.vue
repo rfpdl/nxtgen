@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AppButton from '@/components/atoms/AppButton.vue'
+import Card from '@/components/atoms/Card.vue'
 import DoorChildRow from '@/components/molecules/DoorChildRow.vue'
 import { useChurch } from '@/composables/useChurch'
 import type { CheckInInput, DoorFamily, LevelOption } from '@/types'
@@ -40,9 +42,7 @@ const ready = computed(
 )
 const label = computed(() => {
     const n = ticked.value.length
-    return n === 0
-        ? 'Tick the children to check in'
-        : `Check in ${n} ${n === 1 ? 'child' : 'children'}`
+    return n === 0 ? 'Tick to check in' : `Check in ${n} ${n === 1 ? 'child' : 'children'}`
 })
 
 function checkIn(): void {
@@ -80,13 +80,10 @@ function undo(checkInId: number): void {
 </script>
 
 <template>
-    <article
-        class="border-border bg-surface flex flex-col gap-2 rounded-lg border p-4"
-        data-testid="door-family"
-    >
-        <h2 class="text-text text-2xl font-semibold">{{ family.name }}</h2>
-        <p class="text-text">{{ family.primary_name }} · {{ family.satellite }}</p>
-        <ul class="divide-border flex flex-col divide-y">
+    <Card as="article" class="flex flex-col gap-1" data-testid="door-family">
+        <h2 class="text-text text-2xl font-bold">{{ family.name }}</h2>
+        <p class="text-text-muted text-lg">{{ family.primary_name }} · {{ family.satellite }}</p>
+        <ul class="divide-border flex flex-col divide-y-2">
             <template v-for="child in family.children" :key="child.id">
                 <DoorChildRow
                     v-if="picks[child.id]"
@@ -101,15 +98,17 @@ function undo(checkInId: number): void {
                 />
             </template>
         </ul>
-        <button
+        <AppButton
             v-if="classId !== null"
-            type="button"
-            class="bg-primary text-on-primary self-end rounded-md px-5 text-lg font-semibold disabled:opacity-60"
-            :disabled="!ready || sending"
+            size="lg"
+            block
+            class="mt-2 mb-1.5"
+            :disabled="!ready"
+            :loading="sending"
             data-testid="check-in"
             @click="checkIn"
         >
             {{ label }}
-        </button>
-    </article>
+        </AppButton>
+    </Card>
 </template>

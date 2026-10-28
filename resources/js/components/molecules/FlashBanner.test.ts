@@ -53,11 +53,22 @@ describe('FlashBanner', () => {
                 banner({ message: message({ tone: 'error' }) })
                     .find('[role="alert"]')
                     .classes(),
-            ).toContain('bg-danger-soft')
+            ).toContain('bg-danger')
 
             expect(
                 banner({ message: message() }).find('[data-testid="flash-success"]').classes(),
-            ).toContain('bg-success-soft')
+            ).toContain('bg-action')
+        })
+
+        it("rings a focused control in the band's own text colour, which shows on it", () => {
+            expect(
+                banner({ message: message({ tone: 'error' }) })
+                    .find('[role="alert"]')
+                    .classes(),
+            ).toContain('focus-on-danger')
+            expect(
+                banner({ message: message() }).find('[data-testid="flash-success"]').classes(),
+            ).toContain('focus-on-action')
         })
     })
 

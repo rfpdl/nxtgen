@@ -28,6 +28,13 @@ describes the design; this records the choices that shaped or changed it.
   chart's colours (Level 1 blue, 2 yellow, 3 red, 4 green), Lexend (a typeface made for easy reading), big text and
   thumb-sized targets — modern, mobile-first and kind to older eyes. Built ONCE as a UI kit (tokens + atoms + app
   shell) that every page uses; a test blocks hand-styled buttons, inputs and colours outside the kit (TODO #30).
+- **The kit as built** (Claude, issue 01): the primary button is the chart's green darkened to 7.6:1 with white (the
+  chart green itself is 3.5:1); Level pills are a soft tint with dark text plus a dot of the chart colour (each pair
+  ≥7.7:1). Text on a colour is always `on-<colour>` (`on-danger`, `on-level-N`); the focus ring is dark (`focus`)
+  and, on a coloured band, the band's own `on-` colour. The door's checked-in list also sends each Squad's `level`.
+- **Health at the door is a "Health" button beside the name** (review of issue 01, replacing "tap the name"; the
+  name is plain bold text). The tick is a big box beside the name, not the whole row as in option C, because the row
+  also holds Health — **pending Roy's OK**.
 
 ## 2026-10-27
 

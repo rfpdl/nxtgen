@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { FlashMessage } from '@/composables/useFlashMessages'
+import AppButton from '@/components/atoms/AppButton.vue'
 import { AlertTriangle, Check, X } from 'lucide-vue-next'
 
 /**
@@ -17,6 +18,8 @@ import { AlertTriangle, Check, X } from 'lucide-vue-next'
  *
  * **`role="alert"` only for errors.** On a success it would interrupt a screen reader mid-name for
  * information the list is already carrying; `aria-live="polite"` waits its turn.
+ *
+ * The Bold look (DECISIONS 2026-10-28): a solid band — green for done, red for not done — in bold type.
  *
  * Dismissible because it covers the heading while it is up, and a staff member who has read it should be
  * able to put it away rather than scroll around it.
@@ -36,36 +39,36 @@ defineEmits<{ dismiss: [] }>()
         v-if="message"
         :key="message.id"
         class="sticky top-0 z-30 px-4 py-2"
-        :class="message.tone === 'error' ? 'bg-danger-soft' : 'bg-success-soft'"
+        :class="
+            message.tone === 'error'
+                ? 'bg-danger text-on-danger focus-on-danger'
+                : 'bg-action text-on-action focus-on-action'
+        "
         :role="message.tone === 'error' ? 'alert' : undefined"
         :aria-live="message.tone === 'error' ? undefined : 'polite'"
         :data-testid="`flash-${message.tone}`"
     >
-        <div class="mx-auto flex w-full max-w-3xl items-center gap-3">
+        <div class="mx-auto flex w-full max-w-5xl items-center gap-3">
             <component
                 :is="message.tone === 'error' ? AlertTriangle : Check"
                 class="size-6 shrink-0"
-                :class="message.tone === 'error' ? 'text-danger' : 'text-success'"
+                :stroke-width="3"
                 aria-hidden="true"
             />
 
-            <p
-                class="min-w-0 flex-1 text-lg"
-                :class="message.tone === 'error' ? 'text-danger font-semibold' : 'text-success'"
-            >
+            <p class="min-w-0 flex-1 text-lg font-bold">
                 {{ message.text }}
             </p>
 
-            <button
-                type="button"
+            <AppButton
+                variant="quiet"
+                size="icon"
                 data-testid="dismiss-flash"
                 aria-label="Dismiss this message"
-                class="focus-visible:ring-primary/40 -m-2 shrink-0 rounded-lg p-2 focus-visible:ring-4 focus-visible:outline-none"
-                :class="message.tone === 'error' ? 'text-danger' : 'text-success'"
                 @click="$emit('dismiss')"
             >
-                <X class="size-5" aria-hidden="true" />
-            </button>
+                <X class="size-6" aria-hidden="true" />
+            </AppButton>
         </div>
     </div>
 </template>
