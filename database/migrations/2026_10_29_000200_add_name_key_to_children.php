@@ -2,17 +2,16 @@
 
 declare(strict_types=1);
 
-use App\Foundation\Support\NameKey;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /*
  * Scan a name card at the door (slice 3, DECISIONS 2026-10-28 night). The NXTGEN name cards carry a Code 39 barcode of
  * the child's full name in capitals, no spaces (ADAMMATTHIASABERGOS): `name_key` is that, kept in step by the Child
  * model on every save (NameKey). `name_key_first` / `name_key_last` let a card match a child whose middle name is
- * missing on one side (first + last only, never fuzzier). Existing children are filled in here.
+ * missing on one side (first + last only, never fuzzier). Existing children are filled in by the next migration, once
+ * the columns are wide enough (2026_10_29_000300 — Astra: a long name failed here).
  */
 return new class extends Migration
 {
@@ -23,15 +22,6 @@ return new class extends Migration
             $table->string('name_key_first', 191)->default('')->after('name_key')->comment('The first name as a key (the card match without a middle name)');
             $table->string('name_key_last', 191)->default('')->after('name_key_first')->comment('The last name as a key (the card match without a middle name)');
             $table->index(['church_id', 'name_key']);
-        });
-
-        DB::table('children')->select(['id', 'first_name', 'middle_name', 'last_name'])->orderBy('id')->chunkById(500, function ($children): void {
-            foreach ($children as $child) {
-                $first = is_string($child->first_name) ? $child->first_name : '';
-                $middle = is_string($child->middle_name) ? $child->middle_name : null;
-                $last = is_string($child->last_name) ? $child->last_name : '';
-                DB::table('children')->where('id', $child->id)->update(NameKey::keysFor($first, $middle, $last));
-            }
         });
     }
 

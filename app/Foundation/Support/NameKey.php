@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Foundation\Support;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -13,6 +14,14 @@ use Illuminate\Support\Str;
  */
 final class NameKey
 {
+    /**
+     * The stored keys' widths (ASCII columns): three name parts of up to 100 characters, each letter spelled out as at
+     * most two (ß → SS, æ → AE), with room to spare — a longer spelling is cut, never a failed save.
+     */
+    public const int KEY_LENGTH = 640;
+
+    public const int PART_KEY_LENGTH = 220;
+
     /** A close match (a middle name on one side only) is tried only for a code at least this long. */
     public const int CLOSE_MATCH_MIN_LETTERS = 6;
 
@@ -35,7 +44,28 @@ final class NameKey
      */
     public static function keysFor(string $first, ?string $middle, string $last): array
     {
-        return ['name_key' => self::of($first, $middle, $last), 'name_key_first' => self::code($first), 'name_key_last' => self::code($last)];
+        return [
+            'name_key' => substr(self::of($first, $middle, $last), 0, self::KEY_LENGTH),
+            'name_key_first' => substr(self::code($first), 0, self::PART_KEY_LENGTH),
+            'name_key_last' => substr(self::code($last), 0, self::PART_KEY_LENGTH),
+        ];
+    }
+
+    /**
+     * Work out every child's keys from their names, in batches — what a migration runs when the keys are added or the
+     * rule changes. Safe to run again: the same names give the same keys.
+     */
+    public static function fillIn(): void
+    {
+        DB::table('children')->select(['id', 'first_name', 'middle_name', 'last_name'])->orderBy('id')->chunkById(500, function ($children): void {
+            foreach ($children as $child) {
+                DB::table('children')->where('id', $child->id)->update(self::keysFor(
+                    is_string($child->first_name) ? $child->first_name : '',
+                    is_string($child->middle_name) ? $child->middle_name : null,
+                    is_string($child->last_name) ? $child->last_name : '',
+                ));
+            }
+        });
     }
 
     /** A search term that could be a card's code: one word of letters only, at least two of them. */

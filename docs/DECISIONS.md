@@ -37,6 +37,10 @@ describes the design; this records the choices that shaped or changed it.
   search on a phone; its sheet slides up from the bottom with a big Cancel. The decoder is `@zxing/browser` 0.2.1 +
   `@zxing/library` 0.23.0 (pinned), loaded only when a scan starts (its own chunk, ~120 kB gzipped); the native
   BarcodeDetector fast path was left out — one decoder, the same on every phone.
+- Claude, low-stakes (slice 3 issue 03, Astra; for Roy to confirm): **a save that changes any part of a child's name
+  writes the whole name and its keys** — two edits of different parts at the same moment end with the later edit's
+  whole name (not a mix), and the card key always spells the stored name. The keys are ASCII columns wide enough for
+  any name the forms allow (a longer spelling is cut, never a failed save), filled in by `NameKey::fillIn`.
 
 ## 2026-10-28 (roll call — slice 2 grilling; Roy)
 

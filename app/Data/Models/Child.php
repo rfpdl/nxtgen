@@ -82,12 +82,24 @@ final class Child extends Model
 
     /**
      * The name-card keys (slice 3, NameKey) follow the names on EVERY save — registration, edits by a parent or staff,
-     * the registry import, seeders — so the door's card scan always matches the names as they are now.
+     * the registry import, seeders — so the door's card scan always matches the names as they are now. A save that
+     * changes any part of the name writes all of it, with its keys.
      */
     protected static function booted(): void
     {
         self::saving(function (Child $child): void {
-            $child->forceFill(NameKey::keysFor($child->first_name, $child->middle_name, $child->last_name));
+            $parts = ['first_name', 'middle_name', 'last_name'];
+            if ($child->exists && ! $child->isDirty($parts)) {
+                return;
+            }
+            // Write the WHOLE name with its keys, not only the part that changed: Eloquent saves dirty columns only, so
+            // two edits of different parts at once would otherwise store one name with the other's keys (Astra). The
+            // later edit wins the whole name.
+            $keys = NameKey::keysFor($child->first_name, $child->middle_name, $child->last_name);
+            foreach ([...$parts, ...array_keys($keys)] as $column) {
+                unset($child->original[$column]);
+            }
+            $child->forceFill($keys);
         });
     }
 

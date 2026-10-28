@@ -43,6 +43,7 @@ function crossChurchOnPurpose(): array
         'GetLandingOptionsJob.php — RoleAssignment' => 'After sign-in: which churches does this login serve in?',
         'GetChildWithFamilyJob.php — Child' => 'A photo link carries only the child id: the church is read FROM the child, then the viewer is checked against it (ShowChildPhotoFeature).',
         'GetUserIsStaffJob.php — RoleAssignment' => 'Backup password (plan D7): does this login serve in ANY church right now? Parents never get one.',
+        'NameKey.php — DB::table(children)' => 'The name-card keys\' backfill (NameKey::fillIn, run by a migration): every child of every church gets the keys of their OWN names, row by row — nothing is read across to another row.',
         'RedeemMagicLinkJob.php — join(family_claims)' => 'Consuming a claim link: the join re-checks the one claim the link names (family_claims.id = magic_links.family_claim_id), and the link was found by its secret token.',
     ];
 }
