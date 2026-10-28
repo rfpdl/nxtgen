@@ -57,15 +57,32 @@ final class NameKey
      */
     public static function fillIn(): void
     {
-        DB::table('children')->select(['id', 'first_name', 'middle_name', 'last_name'])->orderBy('id')->chunkById(500, function ($children): void {
+        DB::table('children')->select(['id', 'church_id', 'first_name', 'middle_name', 'last_name'])->orderBy('id')->chunkById(500, function ($children): void {
             foreach ($children as $child) {
-                DB::table('children')->where('id', $child->id)->update(self::keysFor(
-                    is_string($child->first_name) ? $child->first_name : '',
-                    is_string($child->middle_name) ? $child->middle_name : null,
-                    is_string($child->last_name) ? $child->last_name : '',
-                ));
+                self::fillInRow($child);
             }
         });
+    }
+
+    /**
+     * One child's keys, from the names `fillIn` read — written only if the row still has exactly those names. A name
+     * edited since was saved with its own keys by the Child model; overwriting them with keys of the old name would
+     * make a card tick the wrong child (Astra). False when nothing was written: the row had changed (left alone), or
+     * already had these keys.
+     */
+    public static function fillInRow(object $child): bool
+    {
+        $first = isset($child->first_name) && is_string($child->first_name) ? $child->first_name : '';
+        $middle = isset($child->middle_name) && is_string($child->middle_name) ? $child->middle_name : null;
+        $last = isset($child->last_name) && is_string($child->last_name) ? $child->last_name : '';
+
+        return DB::table('children')
+            ->where('id', $child->id ?? 0)
+            ->where('church_id', $child->church_id ?? 0)
+            ->where('first_name', $first)
+            ->whereRaw('middle_name <=> ?', [$middle])
+            ->where('last_name', $last)
+            ->update(self::keysFor($first, $middle, $last)) > 0;
     }
 
     /** A search term that could be a card's code: one word of letters only, at least two of them. */

@@ -38,3 +38,11 @@ The tenancy guard lists `NameKey::fillIn` as cross-church on purpose (each child
 Gates: `make check` green (Pest 1884 + arch 173, Vitest 416, PHPStan L10, migrate-check); `make e2e` green (94 passed,
 1 skipped).
 
+**2026-10-29 — Astra re-check, one more [high] (agent).** The backfill read a batch, then wrote keys by id alone: a
+name edited between the read and the write had its fresh keys (written by the Child model) overwritten by keys of the
+stale name. `NameKey::fillIn` now writes each row through `NameKey::fillInRow`, whose UPDATE names the child's id,
+church and the EXACT names it read (`first_name = ?`, `middle_name <=> ?`, `last_name = ?`); 0 rows means the row
+changed and already has its own keys — left alone. Test: read the row, rename the child through the model, run the
+row's step → nothing written, the keys spell the new name (MARIAREYES). Revert-checked: the id-only write fails it.
+Gates: `make check` green (Pest 1885 + arch 173, Vitest 416, PHPStan L10); `make e2e` green (94 passed, 1 skipped).
+

@@ -120,3 +120,16 @@ it('fills in every child\'s keys, and can run again safely — long names too', 
     expect(Child::query()->findOrFail($amara->id)->name_key)->toBe('AMARAJOYREYES')
         ->and(Child::query()->findOrFail($long->id)->name_key)->toBe(str_repeat('SS', 100).'REYES');
 });
+
+it('never overwrites the keys of a name edited between the backfill reading a row and writing it (Astra)', function (): void {
+    $child = childOf(familyAt(satelliteOf(church())), ['first_name' => 'Ana', 'middle_name' => null, 'last_name' => 'Reyes']);
+    $read = DB::table('children')->select(['id', 'church_id', 'first_name', 'middle_name', 'last_name'])->where('id', $child->id)->first();
+    // The backfill has read "Ana Reyes"; a staff member renames her before it writes.
+    Child::query()->findOrFail($child->id)->forceFill(['first_name' => 'Maria'])->save();
+
+    $wrote = NameKey::fillInRow($read ?? throw new LogicException('read'));
+
+    $stored = Child::query()->findOrFail($child->id);
+    expect($wrote)->toBeFalse()
+        ->and([$stored->name_key, $stored->name_key_first])->toBe(['MARIAREYES', 'MARIA']);
+});
