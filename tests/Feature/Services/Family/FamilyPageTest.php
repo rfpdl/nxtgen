@@ -11,10 +11,12 @@ use App\Data\Models\Satellite;
 use App\Data\Models\User;
 use App\Enums\ChildStatusEnum;
 use App\Enums\RelationshipEnum;
+use Illuminate\Support\Collection;
 use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
+use function Tests\Support\checkedIn;
 use function Tests\Support\childEdit;
 use function Tests\Support\childOf;
 use function Tests\Support\church;
@@ -23,6 +25,8 @@ use function Tests\Support\familyEdit;
 use function Tests\Support\guardianOf;
 use function Tests\Support\otherGuardianOf;
 use function Tests\Support\satelliteOf;
+use function Tests\Support\scheduleAt;
+use function Tests\Support\sessionOf;
 
 /** @return array{0: Church, 1: Family, 2: User} */
 function familyWithGuardian(string $slug = 'ccf'): array
@@ -53,6 +57,16 @@ it('shows a parent their own family, satellite and children with health details 
         ->where('family.guardians.0.first_name', 'Janice')
         ->where('family.children.0.nickname', 'Amara')
         ->where('family.children.0.allergies', 'Peanuts'));
+});
+
+it('never shows a parent their child\'s attendance — that is for staff @story#127', function (): void {
+    [, $family, $parent] = familyWithGuardian();
+    $child = childOf($family, ['nickname' => 'Amara', 'level' => 2]);
+    checkedIn(sessionOf(scheduleAt($family->homeSatellite)), $child, ['present_at' => now()]);
+
+    actingAs($parent)->get('/ccf/family')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        ->missing('attendance')
+        ->where('family.children', fn (Collection $children): bool => $children->every(fn (array $c): bool => ! array_key_exists('check_ins', $c) && ! array_key_exists('attendance', $c))));
 });
 
 it('404s for someone signed in without a family in this church @story#29', function (): void {

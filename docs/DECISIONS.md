@@ -4,6 +4,24 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-10-28 (night — slice 3 decisions; Roy)
+
+- **Child history: staff only, on the staff child page** (date, class, satellite, Squad, present). Parents don't see it yet.
+- **Follow-up list (children who stopped coming): not now.**
+- **Two children with the exact same full name in one Squad: leave as is** (no parent name added).
+- **Barcode = the existing NXTGEN name cards**: Code 39 of the child's full name in capitals, no spaces
+  (`ADAMMATTHIASABERGOS`). The door matches it against first + middle + last name, letters only — no new ID, the
+  cards children already have keep working. A desk scanner typing into the search box works the same way.
+- Claude, low-stakes (issue 01, for Roy to confirm): **the child's attendance sits inside each child's card** on the
+  staff family page (Families → a family; the door's "Open family page" lands there), above the photo and edit
+  controls: "Sat 31 Oct · 1PM · CCF DXB · Level 2 Girls" and "Present ✓" / "Not marked". Newest Session first (then
+  the later class). The page carries every line and shows the last 12, then "Show all N" — a child's year is about 50
+  lines. The year shows only when it is not this year (the church's year: "Sat 27 Dec 2025"). Never an undone
+  Check-in; a parent's own page never carries it (tested). Past lines show the class's, satellite's and Squad's names
+  as they are TODAY — renaming a class rewrites its history lines (no copy is kept per Check-in). Every line is sent
+  and 12 shown; if a child's history grows large, "Show all" can fetch the rest when tapped instead.
+
+
 ## 2026-10-28 (roll call — slice 2 grilling; Roy)
 
 - **"Who's in" is a second tab on the door page** (Check in · Who's in), same class and date; switching keeps the

@@ -68,6 +68,9 @@ const FAMILY_VIEW = [
     'family.children.*.nickname', 'family.children.*.photo_consent', 'family.children.*.photo_url', 'family.children.*.status_label',
     'family.guardians.*.first_name', 'family.guardians.*.last_name', 'family.guardians.*.phone', 'family.guardians.*.relationship_label',
     'notes.*.at', 'notes.*.author', 'notes.*.body', 'notes.*.id',
+    // Each child's attendance (slice 3) — staff only: when, where, which Squad, present. No health detail or photo.
+    'attendance.*.child_id', 'attendance.*.check_ins.*.class', 'attendance.*.check_ins.*.date', 'attendance.*.check_ins.*.id',
+    'attendance.*.check_ins.*.present', 'attendance.*.check_ins.*.satellite', 'attendance.*.check_ins.*.squad',
 ];
 
 /** The family's other guardians (no login) as the edit form lists them — for whoever may edit the family. */

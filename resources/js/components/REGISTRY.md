@@ -75,3 +75,4 @@ every staff, parent and public page is on the kit (issues 02 and 03 of `.plannin
 | WhosInSquadCard         | molecule | One Squad on Who's in: Level Pill, "N of M present"; each child a whole-row tick: nickname, allergy flag, first + last name; its head count |
 | DoorClassPicker         | molecule | The top of both door tabs: "CCF DXB · Sat 31 Oct" and today's classes as chips (satellite named when several), or no-class note             |
 | HeadCountForm           | molecule | A Squad's head count on Who's in: number (the count checked in at first) + Confirm; "✓ Confirmed 13:20 by Joy (4)"; mismatch + Not marked   |
+| ChildAttendanceList     | molecule | A child's attendance on the staff family page, newest first: date · class · satellite · Squad, present or not; last 12, "Show all"          |

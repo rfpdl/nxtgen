@@ -27,6 +27,18 @@ declare namespace App {
                     children: App.Domains.CheckIn.DataObjects.AttendanceChildData[]
                     head_count: App.Domains.CheckIn.DataObjects.SquadHeadCountData | null
                 }
+                export type ChildAttendanceData = {
+                    child_id: number
+                    check_ins: App.Domains.CheckIn.DataObjects.ChildCheckInData[]
+                }
+                export type ChildCheckInData = {
+                    id: number
+                    date: string
+                    class: string
+                    satellite: string
+                    squad: string
+                    present: boolean
+                }
                 export type ChildHealthData = {
                     id: number
                     nickname: string

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Data\Models\CheckIn;
 use App\Data\Models\Child;
 use App\Data\Models\Church;
 use App\Data\Models\DuplicateCandidate;
@@ -12,9 +13,11 @@ use App\Data\Models\Satellite;
 use App\Data\Models\User;
 use App\Domains\Family\Jobs\CreateDuplicateCandidatesJob;
 use App\Enums\ChildStatusEnum;
+use App\Enums\GenderEnum;
 use App\Enums\MagicLinkPurposeEnum;
 use App\Enums\RegistrationSourceEnum;
 use App\Enums\RoleEnum;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -22,8 +25,10 @@ use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
+use function Pest\Laravel\travelTo;
 use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
+use function Tests\Support\checkedIn;
 use function Tests\Support\childOf;
 use function Tests\Support\church;
 use function Tests\Support\exportedRows;
@@ -32,6 +37,8 @@ use function Tests\Support\familyRegistration;
 use function Tests\Support\grantRole;
 use function Tests\Support\guardianOf;
 use function Tests\Support\satelliteOf;
+use function Tests\Support\scheduleAt;
+use function Tests\Support\sessionOf;
 use function Tests\Support\staffMember;
 
 /** @return array{church: Church, htc: Satellite, house: Satellite} */
@@ -225,6 +232,65 @@ describe('a family\'s page', function (): void {
         actingAs($lifeshaper)->get("/ccf/families/{$mine->id}")->assertOk()
             ->assertInertia(fn (AssertableInertia $p) => $p->component('Church/Families/Show')->where('family.children.0.nickname', 'Janice-kid'));
         actingAs($lifeshaper)->get("/ccf/families/{$theirs->id}")->assertNotFound();
+    });
+
+    it('shows each child\'s attendance, newest first — date, class, satellite, Squad, present — never an undone one; an empty list for a child never in @story#126', function (): void {
+        ['church' => $church, 'htc' => $htc] = adminChurch();
+        $church->forceFill(['timezone' => 'Asia/Dubai'])->save();
+        travelTo(CarbonImmutable::parse('2026-11-02 10:00:00', 'Asia/Dubai'));
+        $family = familyAt($htc);
+        guardianOf($family, User::factory()->create(), ['first_name' => 'Ana', 'last_name' => 'Reyes']);
+        $amara = childOf($family, ['nickname' => 'Amara', 'level' => 2, 'gender' => GenderEnum::Girl, 'date_of_birth' => '2019-03-01']);
+        $ben = childOf($family, ['nickname' => 'Ben', 'level' => 1, 'gender' => GenderEnum::Boy, 'date_of_birth' => '2021-06-01']);
+        $onePm = scheduleAt($htc, ['name' => '1PM', 'starts_at' => '13:00']);
+        checkedIn(sessionOf($onePm, '2026-10-31'), $amara, ['present_at' => now()]);
+        checkedIn(sessionOf($onePm, '2025-12-27'), $amara);
+        checkedIn(sessionOf($onePm, '2026-10-24'), $amara, ['undone_at' => now()]);
+
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get("/ccf/families/{$family->id}")
+            ->assertInertia(fn (AssertableInertia $p) => $p->where('attendance', [
+                ['child_id' => $amara->id, 'check_ins' => [
+                    ['id' => CheckIn::query()->whereHas('session', fn ($s) => $s->where('date', '2026-10-31'))->sole()->id, 'date' => 'Sat 31 Oct', 'class' => '1PM', 'satellite' => 'Holy Trinity Church', 'squad' => 'Level 2 Girls', 'present' => true],
+                    ['id' => CheckIn::query()->whereHas('session', fn ($s) => $s->where('date', '2025-12-27'))->sole()->id, 'date' => 'Sat 27 Dec 2025', 'class' => '1PM', 'satellite' => 'Holy Trinity Church', 'squad' => 'Level 2 Girls', 'present' => false],
+                ]],
+                ['child_id' => $ben->id, 'check_ins' => []],
+            ]));
+    });
+
+    it('decides "this year" in the church\'s time — on 1 Jan in Dubai, while still 2026 in UTC, an Oct 2026 line has its year @story#126', function (): void {
+        ['church' => $church, 'htc' => $htc] = adminChurch();
+        $church->forceFill(['timezone' => 'Asia/Dubai'])->save();
+        travelTo(CarbonImmutable::parse('2027-01-01 01:00:00', 'Asia/Dubai'));
+        $family = familyAt($htc);
+        $amara = childOf($family, ['nickname' => 'Amara', 'level' => 2, 'gender' => GenderEnum::Girl]);
+        checkedIn(sessionOf(scheduleAt($htc), '2026-10-31'), $amara);
+
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get("/ccf/families/{$family->id}")
+            ->assertInertia(fn (AssertableInertia $p) => $p->where('attendance.0.check_ins.0.date', 'Sat 31 Oct 2026'));
+    });
+
+    it('asks the database the same number of times however many check-ins the children have @story#126', function (): void {
+        ['htc' => $htc] = adminChurch();
+        $family = registeredFamily($htc, 'Janice', 'janice@example.com');
+        $kid = Child::query()->where('family_id', $family->id)->sole();
+        $kid->forceFill(['level' => 1])->save();
+        $admin = staffMember(RoleEnum::Admin, atSatellite($htc));
+        $onePm = scheduleAt($htc);
+        checkedIn(sessionOf($onePm, '2026-10-03'), $kid);
+        $count = function () use ($admin, $family): int {
+            DB::flushQueryLog();
+            DB::enableQueryLog();
+            actingAs($admin)->get("/ccf/families/{$family->id}")->assertOk();
+            DB::disableQueryLog();
+
+            return count(DB::getQueryLog());
+        };
+        $few = $count();
+        foreach (['2026-10-10', '2026-10-17', '2026-10-24'] as $date) {
+            checkedIn(sessionOf(scheduleAt($htc), $date), $kid);
+        }
+
+        expect($count())->toBe($few);
     });
 
     it('resends the confirmation link for an unconfirmed email @story#54', function (): void {

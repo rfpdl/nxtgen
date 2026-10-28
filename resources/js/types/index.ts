@@ -83,6 +83,10 @@ export type WhosInSquad = App.Domains.CheckIn.DataObjects.WhosInSquadData
 export type WhosInChild = App.Domains.CheckIn.DataObjects.WhosInChildData
 /** A Squad's confirmed head count: how many, when (church time) and who (first name). */
 export type SquadHeadCount = App.Domains.CheckIn.DataObjects.SquadHeadCountData
+/** A child's attendance on the staff family page (slice 3): one per child, each Check-in a line. Staff only. */
+export type ChildAttendance = App.Domains.CheckIn.DataObjects.ChildAttendanceData
+/** One line of a child's attendance: date, class, satellite, Squad, present. */
+export type ChildCheckIn = App.Domains.CheckIn.DataObjects.ChildCheckInData
 /** Attendance (DECISIONS 2026-10-26): a Squad of a Session, one child checked in to it, a satellite in the picker. */
 export type AttendanceSquad = App.Domains.CheckIn.DataObjects.AttendanceSquadData
 export type AttendanceChild = App.Domains.CheckIn.DataObjects.AttendanceChildData

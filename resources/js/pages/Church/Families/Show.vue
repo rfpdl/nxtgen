@@ -8,6 +8,7 @@ import RowList from '@/components/atoms/RowList.vue'
 import SectionHeading from '@/components/atoms/SectionHeading.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import ChildAdminControls from '@/components/molecules/ChildAdminControls.vue'
+import ChildAttendanceList from '@/components/molecules/ChildAttendanceList.vue'
 import FamilyChildCard from '@/components/molecules/FamilyChildCard.vue'
 import PossibleDuplicateCard from '@/components/organisms/PossibleDuplicateCard.vue'
 import AddChildForm from '@/components/organisms/AddChildForm.vue'
@@ -17,6 +18,8 @@ import EditChildForm from '@/components/organisms/EditChildForm.vue'
 import FamilyDetailsForm from '@/components/organisms/FamilyDetailsForm.vue'
 import { useChurch } from '@/composables/useChurch'
 import type {
+    ChildAttendance,
+    ChildCheckIn,
     ChildStatus,
     DuplicatePair,
     DuplicateStatus,
@@ -36,6 +39,8 @@ import { route } from 'ziggy-js'
 
 const props = defineProps<{
     family: FamilyAdmin
+    /** Each child's attendance, newest first (slice 3). Staff only. */
+    attendance: ChildAttendance[]
     /** What staff changed on this family and its children (system notes), newest first. Staff only. */
     notes: Note[]
     /** Open possible duplicates this family is on, for an admin who may answer them (empty for everyone else). */
@@ -51,6 +56,11 @@ const props = defineProps<{
 }>()
 
 const church = useChurch()
+
+/** A child's Check-ins, newest first ([] = not checked in yet). */
+function checkInsOf(childId: number): ChildCheckIn[] {
+    return props.attendance.find((a) => a.child_id === childId)?.check_ins ?? []
+}
 
 /** "CCF DXB · Al Barsha · registered by Lifeshaper" under the name. */
 const sub = computed(() =>
@@ -133,6 +143,7 @@ function setStatus(childId: number, status: ChildStatus): void {
         <section class="flex flex-col gap-3">
             <SectionHeading>Children</SectionHeading>
             <FamilyChildCard v-for="child in family.children" :key="child.id" :child="child">
+                <ChildAttendanceList :check-ins="checkInsOf(child.id)" />
                 <ChildAdminControls
                     :child="child"
                     :can-set-status="family.can_edit"
