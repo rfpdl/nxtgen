@@ -45,7 +45,7 @@ Updated 2026-10-17. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 | # | Item | Trigger |
 |---|---|---|
 | 29 | **Merge two families or two children** (a child registered again, legacy duplicates) — write a spec first (who may, what moves, history) | when a re-registration happens |
-| 30 | **UI overhaul** — a design pass over every screen (Roy) | after Release 1 polish |
+| 30 | ~~UI overhaul~~ — done: the Bold theme, one UI kit for every page (`tasks/2026-10-28-ui-theme/`) | done 2026-10-28 |
 
 ## Done
 
