@@ -31,7 +31,7 @@ const child = (allergies: string | null): ChildPortal => ({
     dislikes: null,
     fears: 'Dogs',
     guardian_notes: null,
-    level: 'Level 3',
+    level: { number: 3, name: 'Level 3' },
     status_label: 'Active',
     photo_consent: false,
     photo_url: null,
@@ -50,8 +50,8 @@ describe('EditChildForm', () => {
             (wrapper.find('[data-testid="child-0-nickname"]').element as HTMLInputElement).value,
         ).toBe('Gabby')
         expect(
-            (wrapper.find('[data-testid="child-0-has-allergies-yes"]').element as HTMLInputElement)
-                .checked,
+            wrapper.find('[data-testid="child-0-has-allergies-yes"]').attributes('aria-checked') ===
+                'true',
         ).toBe(true)
         expect(form).toMatchObject({ has_allergies: true, allergies: 'Peanuts', fears: 'Dogs' })
     })

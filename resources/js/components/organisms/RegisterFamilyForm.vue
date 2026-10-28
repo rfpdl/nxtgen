@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import AppButton from '@/components/atoms/AppButton.vue'
+import Card from '@/components/atoms/Card.vue'
+import CheckRow from '@/components/atoms/CheckRow.vue'
+import SectionHeading from '@/components/atoms/SectionHeading.vue'
 import ChildFieldset from '@/components/molecules/ChildFieldset.vue'
 import FamilyFieldset from '@/components/molecules/FamilyFieldset.vue'
 import GuardianFieldset from '@/components/molecules/GuardianFieldset.vue'
@@ -10,7 +14,7 @@ import { useForm } from '@inertiajs/vue3'
  * The parent registration form (plan §6 R1): today's Google Form fields plus the home satellite, and the family's
  * other parents and guardians (no email: only the parent registering signs in).
  * The form is a draft of RegisterFamilyInput (no `notes`: registration never asks), so server errors land on
- * the right control.
+ * the right control. On the kit (the Bold look): each part is a Card; "Register my family" is the one primary button.
  */
 const props = defineProps<{
     action: string
@@ -74,68 +78,69 @@ function submit(): void {
 
 <template>
     <form class="flex flex-col gap-6" novalidate @submit.prevent="submit">
-        <section class="flex flex-col gap-4">
-            <h2 class="text-text text-2xl font-semibold">About you</h2>
+        <Card as="section" class="flex flex-col gap-4">
+            <SectionHeading>About you</SectionHeading>
             <GuardianFieldset v-model="form.guardian" :errors="errors()" with-email />
-        </section>
+        </Card>
 
         <section class="flex flex-col gap-4">
-            <h2 class="text-text text-2xl font-semibold">Other parents and guardians</h2>
-            <p class="text-text-muted">
+            <SectionHeading>Other parents and guardians</SectionHeading>
+            <p class="text-text-muted text-lg">
                 Optional — a father, a grandparent… They do not need to sign in.
             </p>
             <OtherGuardiansFieldset v-model="form.guardians" :errors="errors()" />
         </section>
 
-        <section class="flex flex-col gap-4">
-            <h2 class="text-text text-2xl font-semibold">Your family</h2>
+        <Card as="section" class="flex flex-col gap-4">
+            <SectionHeading>Your family</SectionHeading>
             <FamilyFieldset v-model="form" :satellites="satellites" :errors="errors()" />
-        </section>
+        </Card>
 
         <section class="flex flex-col gap-4">
-            <h2 class="text-text text-2xl font-semibold">Your children</h2>
+            <SectionHeading>Your children</SectionHeading>
             <p v-if="errors()['children']" role="alert" class="text-danger font-semibold">
                 {{ errors()['children'] }}
             </p>
-            <ChildFieldset
-                v-for="(_, index) in form.children"
-                :key="index"
-                v-model="form.children[index]!"
-                :index="index"
-                :errors="errors()"
-                :removable="form.children.length > 1"
-                @remove="removeChild(index)"
-            />
-            <button
-                type="button"
-                class="min-h-touch border-primary text-primary self-start rounded-md border px-4 text-lg font-semibold"
+            <Card v-for="(_, index) in form.children" :key="index">
+                <ChildFieldset
+                    v-model="form.children[index]!"
+                    :index="index"
+                    :errors="errors()"
+                    :removable="form.children.length > 1"
+                    @remove="removeChild(index)"
+                />
+            </Card>
+            <AppButton
+                variant="secondary"
+                class="self-start"
                 data-testid="add-child"
                 @click="addChild"
             >
                 + Add another child
-            </button>
+            </AppButton>
         </section>
 
-        <label class="text-text flex items-start gap-3 text-lg">
-            <input
-                v-model="form.privacy_consented"
-                type="checkbox"
-                class="mt-1 size-6"
+        <div class="flex flex-col gap-1.5">
+            <CheckRow
+                :model-value="form.privacy_consented === true"
+                class="text-lg"
                 data-testid="privacy"
-            />
-            <span>I agree that NxtGen may keep these details to care for my children.</span>
-        </label>
-        <p v-if="errors()['privacy_consented']" role="alert" class="text-danger font-semibold">
-            {{ errors()['privacy_consented'] }}
-        </p>
+                @update:model-value="form.privacy_consented = $event"
+                >I agree that NxtGen may keep these details to care for my children.</CheckRow
+            >
+            <p v-if="errors()['privacy_consented']" role="alert" class="text-danger font-semibold">
+                {{ errors()['privacy_consented'] }}
+            </p>
+        </div>
 
-        <button
+        <AppButton
             type="submit"
-            :disabled="form.processing"
-            class="min-h-touch bg-primary text-on-primary rounded-md px-4 text-lg font-semibold"
+            size="lg"
+            block
+            :loading="form.processing"
             data-testid="register-submit"
         >
             Register my family
-        </button>
+        </AppButton>
     </form>
 </template>

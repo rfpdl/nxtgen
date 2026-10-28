@@ -125,8 +125,8 @@ describe('the door page', function (): void {
 
         actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}")->assertInertia(fn (AssertableInertia $page) => $page
             ->where('checked_in', [
-                ['id' => $beaIn->id, 'nickname' => 'Bea', 'squad' => 'Level 3 Girls', 'level' => 3, 'checked_in_at' => '08:55'],
-                ['id' => $amaraIn->id, 'nickname' => 'Amara', 'squad' => 'Level 2 Girls', 'level' => 2, 'checked_in_at' => '08:40'],
+                ['id' => $beaIn->id, 'nickname' => 'Bea', 'squad' => 'Level 3 Girls', 'level' => ['number' => 3, 'name' => 'Level 3'], 'checked_in_at' => '08:55'],
+                ['id' => $amaraIn->id, 'nickname' => 'Amara', 'squad' => 'Level 2 Girls', 'level' => ['number' => 2, 'name' => 'Level 2'], 'checked_in_at' => '08:40'],
             ]));
     });
 
@@ -165,6 +165,7 @@ describe('the door page', function (): void {
             ->has('families.0.children', 4)
             ->where('families.0.children.0.nickname', 'Amara')
             ->where('families.0.children.0.squad', 'Level 2 Girls')
+            ->where('families.0.children.0.level', ['number' => 2, 'name' => 'Level 2'])
             ->where('families.0.children.0.has_allergies', true)
             ->where('families.0.children.0.check_in_id', null)
             ->where('families.0.children.1.nickname', 'Ben')

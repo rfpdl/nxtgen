@@ -74,6 +74,17 @@ describe('AppButton', () => {
         expect(link.text()).toBe('Families')
     })
 
+    it('is a plain link with `external`, so the browser downloads the file instead of Inertia visiting it', () => {
+        const link = mount(AppButton, {
+            props: { href: '/ccf/families/export?q=a', external: true, variant: 'secondary' },
+            slots: { default: 'Download Excel' },
+        }).find('a')
+
+        expect(link.attributes('href')).toBe('/ccf/families/export?q=a')
+        expect(link.attributes('data-method')).toBeUndefined()
+        expect(link.classes()).toContain('bg-surface')
+    })
+
     it('sends a POST from a link as a button, so a link preview cannot fire it', () => {
         const link = mount(AppButton, { props: { href: '/logout', method: 'post' } }).find('a')
 

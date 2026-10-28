@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import AppButton from '@/components/atoms/AppButton.vue'
+import EmptyState from '@/components/atoms/EmptyState.vue'
+import PageHeader from '@/components/atoms/PageHeader.vue'
+import SelectField from '@/components/atoms/SelectField.vue'
+import TextField from '@/components/atoms/TextField.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import AttendanceSquadTable from '@/components/molecules/AttendanceSquadTable.vue'
 import { useChurch } from '@/composables/useChurch'
@@ -10,7 +15,8 @@ import { route } from 'ziggy-js'
 /**
  * Attendance (DECISIONS 2026-10-26: reports are admins only, with Excel): pick a satellite, a class and a date; the
  * children checked in to that Session by Squad, with a count per Squad and in total; and the same rows as Excel. A
- * retired class that met stays in the picker, marked "(retired)".
+ * retired class that met stays in the picker, marked "(retired)". On the kit (the Bold look): each Squad a Card
+ * headed by a Pill in its Level's colour.
  */
 const props = defineProps<{
     satellites: AttendanceSatellite[]
@@ -62,72 +68,82 @@ function classLabel(c: AttendanceSatellite['classes'][number]): string {
     return c.retired ? `${c.name} (retired)` : c.name
 }
 
+const satelliteOptions = computed(() =>
+    props.satellites.map((s) => ({ value: s.id, label: s.name })),
+)
+const classOptions = computed(() =>
+    (satellite.value?.classes ?? []).map((c) => ({ value: c.id, label: classLabel(c) })),
+)
+
+/** The control's own value on `change` — sent even when the same choice is picked again, as before. */
 function valueOf(event: Event): string {
     return (event.target as HTMLInputElement | HTMLSelectElement).value
+}
+
+function pickDate(event: Event): void {
+    if (valueOf(event) !== '') pick({ date: valueOf(event) })
 }
 </script>
 
 <template>
     <Head title="Attendance" />
     <ChurchShell>
-        <h1 class="text-text text-2xl font-semibold">Attendance</h1>
+        <PageHeader title="Attendance">
+            <template #actions>
+                <AppButton
+                    v-if="schedule"
+                    :href="exportHref"
+                    external
+                    variant="secondary"
+                    data-testid="attendance-export"
+                    >Download Excel</AppButton
+                >
+            </template>
+        </PageHeader>
 
-        <form class="flex flex-wrap items-end gap-4" @submit.prevent>
-            <label class="text-text flex flex-col gap-1">
-                <span class="font-semibold">Satellite</span>
-                <select
-                    :value="satellite_id ?? ''"
-                    class="min-h-touch border-input bg-surface rounded-md border px-3"
-                    data-testid="attendance-satellite"
-                    @change="pick({ satellite: Number(valueOf($event)) })"
-                >
-                    <option v-for="s in satellites" :key="s.id" :value="s.id">{{ s.name }}</option>
-                </select>
-            </label>
-            <label class="text-text flex flex-col gap-1">
-                <span class="font-semibold">Class</span>
-                <select
-                    :value="class_id ?? ''"
-                    :disabled="!satellite || satellite.classes.length === 0"
-                    class="min-h-touch border-input bg-surface rounded-md border px-3"
-                    data-testid="attendance-class"
-                    @change="pick({ class: Number(valueOf($event)) })"
-                >
-                    <option v-for="c in satellite?.classes ?? []" :key="c.id" :value="c.id">
-                        {{ classLabel(c) }}
-                    </option>
-                </select>
-            </label>
-            <label class="text-text flex flex-col gap-1">
-                <span class="font-semibold">Date</span>
-                <input
-                    type="date"
-                    :value="date"
-                    class="min-h-touch border-input bg-surface rounded-md border px-3"
-                    data-testid="attendance-date"
-                    @change="valueOf($event) !== '' && pick({ date: valueOf($event) })"
-                />
-            </label>
-            <a
-                v-if="schedule"
-                :href="exportHref"
-                class="min-h-touch border-border text-text flex items-center rounded-md border px-4 font-semibold"
-                data-testid="attendance-export"
-                >Download Excel</a
-            >
+        <form class="grid gap-3 sm:grid-cols-3" @submit.prevent>
+            <SelectField
+                label="Satellite"
+                :options="satelliteOptions"
+                :model-value="satellite_id"
+                data-testid="attendance-satellite"
+                @change="pick({ satellite: Number(valueOf($event)) })"
+            />
+            <SelectField
+                label="Class"
+                :options="classOptions"
+                :model-value="class_id"
+                :disabled="!satellite || satellite.classes.length === 0"
+                data-testid="attendance-class"
+                @change="pick({ class: Number(valueOf($event)) })"
+            />
+            <TextField
+                type="date"
+                label="Date"
+                :model-value="date"
+                data-testid="attendance-date"
+                @change="pickDate"
+            />
         </form>
 
-        <p v-if="!schedule" class="text-text" data-testid="attendance-no-class">
+        <EmptyState v-if="!schedule" data-testid="attendance-no-class">
             This satellite has no classes yet. Admins add them on the Classes page.
-        </p>
+        </EmptyState>
         <template v-else>
-            <p class="text-text text-xl font-semibold" data-testid="attendance-heading">
-                {{ satellite?.name }} · {{ classLabel(schedule) }} · {{ date_label }}
-            </p>
-            <p class="text-text text-lg" data-testid="attendance-total">{{ total }} checked in</p>
-            <p v-if="total === 0" class="text-text" data-testid="attendance-empty">
+            <div class="flex flex-col gap-1">
+                <p class="text-text text-xl font-bold" data-testid="attendance-heading">
+                    {{ satellite?.name }} · {{ classLabel(schedule) }} · {{ date_label }}
+                </p>
+                <p class="text-text text-xl font-semibold" data-testid="attendance-total">
+                    <strong class="text-primary text-4xl font-bold tabular-nums">{{
+                        total
+                    }}</strong>
+                    checked in
+                </p>
+            </div>
+            <EmptyState v-if="total === 0" data-testid="attendance-empty">
                 No one was checked in.
-            </p>
+            </EmptyState>
             <AttendanceSquadTable v-for="squad in squads" :key="squad.name" :squad="squad" />
         </template>
     </ChurchShell>

@@ -52,7 +52,10 @@ function forbiddenOnLists(array $props): array
 }
 
 /** A family's lite view — the door search, and each side of a possible duplicate (FamilySearchResultData). */
-const LITE_FAMILY = ['can_open', 'can_resend', 'children.*', 'email_confirmed', 'id', 'masked_email', 'primary_name', 'satellite'];
+/** A child in a list row or a search hit: the nickname and the Level (LevelData — its number picks the pill's colour). */
+const LIST_CHILD = ['children.*.level.name', 'children.*.level.number', 'children.*.nickname'];
+
+const LITE_FAMILY = ['can_open', 'can_resend', ...LIST_CHILD, 'email_confirmed', 'id', 'masked_email', 'primary_name', 'satellite'];
 
 /** A family opened by staff, minus what only an editor gets (Church/Families/Show). */
 const FAMILY_VIEW = [
@@ -61,7 +64,7 @@ const FAMILY_VIEW = [
     'family.registered_by', 'family.satellite',
     'family.children.*.allergies', 'family.children.*.date_of_birth', 'family.children.*.dislikes', 'family.children.*.fears',
     'family.children.*.first_name', 'family.children.*.gender', 'family.children.*.guardian_notes', 'family.children.*.id',
-    'family.children.*.illnesses', 'family.children.*.last_name', 'family.children.*.level', 'family.children.*.middle_name',
+    'family.children.*.illnesses', 'family.children.*.last_name', 'family.children.*.level.name', 'family.children.*.level.number', 'family.children.*.middle_name',
     'family.children.*.nickname', 'family.children.*.photo_consent', 'family.children.*.photo_url', 'family.children.*.status_label',
     'family.guardians.*.first_name', 'family.guardians.*.last_name', 'family.guardians.*.phone', 'family.guardians.*.relationship_label',
     'notes.*.at', 'notes.*.author', 'notes.*.body', 'notes.*.id',
@@ -88,9 +91,9 @@ const FAMILY_EDIT_DETAILS = [
  */
 const POSSIBLE_DUPLICATES = [
     'duplicates.*.id', 'duplicates.*.reason_label',
-    'duplicates.*.candidate.can_open', 'duplicates.*.candidate.can_resend', 'duplicates.*.candidate.children.*', 'duplicates.*.candidate.email_confirmed',
+    'duplicates.*.candidate.can_open', 'duplicates.*.candidate.can_resend', 'duplicates.*.candidate.children.*.level.name', 'duplicates.*.candidate.children.*.level.number', 'duplicates.*.candidate.children.*.nickname', 'duplicates.*.candidate.email_confirmed',
     'duplicates.*.candidate.id', 'duplicates.*.candidate.masked_email', 'duplicates.*.candidate.primary_name', 'duplicates.*.candidate.satellite',
-    'duplicates.*.subject.can_open', 'duplicates.*.subject.can_resend', 'duplicates.*.subject.children.*', 'duplicates.*.subject.email_confirmed',
+    'duplicates.*.subject.can_open', 'duplicates.*.subject.can_resend', 'duplicates.*.subject.children.*.level.name', 'duplicates.*.subject.children.*.level.number', 'duplicates.*.subject.children.*.nickname', 'duplicates.*.subject.email_confirmed',
     'duplicates.*.subject.id', 'duplicates.*.subject.masked_email', 'duplicates.*.subject.primary_name', 'duplicates.*.subject.satellite',
 ];
 
@@ -109,6 +112,11 @@ const LIST_FRAME = [
  */
 function keyPaths(mixed $value, string $prefix = ''): array
 {
+    // A child with no Level yet sends `level: null`; it stands for the LevelData shape, so the allowlist does not
+    // depend on whether this world's children have one.
+    if ($value === null && preg_match('/(^|\.)children\.\*\.level$/', $prefix) === 1) {
+        return ["{$prefix}.name", "{$prefix}.number"];
+    }
     if (! is_array($value) || $value === [] || preg_match('/^enums\.\w+$/', $prefix) === 1) {
         return [$prefix];
     }
@@ -221,11 +229,11 @@ describe('a family opened by staff', function (): void {
 });
 
 describe('the registration lists', function (): void {
-    it('lists families with nicknames only, the email in full only for an editor @story#43', function (Actor $actor, string $email): void {
+    it('lists families with nicknames and Levels only, the email in full only for an editor @story#43', function (Actor $actor, string $email): void {
         $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/families');
-        $janice = collect(listAt($props, 'families'))->first(fn (mixed $f): bool => in_array('Amara', listAt(is_array($f) ? $f : [], 'children'), true));
+        $janice = collect(listAt($props, 'families'))->first(fn (mixed $f): bool => in_array('Amara', array_column(listAt(is_array($f) ? $f : [], 'children'), 'nickname'), true));
 
-        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, LIST_FRAME, prefixed('families.*', ['can_resend', 'children.*', 'email', 'email_confirmed', 'id', 'primary_name', 'registered_by', 'registered_on', 'satellite'])))
+        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, LIST_FRAME, prefixed('families.*', ['can_resend', ...LIST_CHILD, 'email', 'email_confirmed', 'id', 'primary_name', 'registered_by', 'registered_on', 'satellite'])))
             ->and(forbiddenOnLists($props))->toBe([])
             ->and(data_get($janice, 'email'))->toBe($email);
     })->with([
@@ -269,7 +277,7 @@ describe('the registration lists', function (): void {
     it('lists children with an allergy yes/no only — no health details, no photo @story#58', function (Actor $actor): void {
         $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/children');
 
-        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, LIST_FRAME, prefixed('children.*', ['age', 'date_of_birth', 'family_id', 'full_name', 'has_allergies', 'id', 'level', 'nickname', 'satellite', 'status_label'])))
+        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, LIST_FRAME, prefixed('children.*', ['age', 'date_of_birth', 'family_id', 'full_name', 'has_allergies', 'id', 'level.name', 'level.number', 'nickname', 'satellite', 'status_label'])))
             ->and(forbiddenOnLists($props))->toBe([]);
     })->with(actors(...Actor::staff()));
 });
@@ -305,13 +313,13 @@ describe('the Classes page', function (): void {
  * A child on a door family card (DoorChildData): Level, Squad, status and an allergy yes/no — never a photo, a phone
  * or a health detail (DECISIONS 2026-10-26).
  */
-const DOOR_CHILD = ['check_in_id', 'full_name', 'has_allergies', 'id', 'level', 'nickname', 'squad', 'status', 'status_label', 'suggested_level'];
+const DOOR_CHILD = ['check_in_id', 'full_name', 'has_allergies', 'id', 'level.name', 'level.number', 'nickname', 'squad', 'status', 'status_label', 'suggested_level'];
 
 /**
  * A child checked in to the chosen class today, on the door's list (DoorCheckInData): nickname, Squad (+ its Level) and time — no
  * photo, phone or health detail (DECISIONS 2026-10-27).
  */
-const DOOR_CHECK_IN = ['checked_in_at', 'id', 'level', 'nickname', 'squad'];
+const DOOR_CHECK_IN = ['checked_in_at', 'id', 'level.name', 'level.number', 'nickname', 'squad'];
 
 describe('the door', function (): void {
     it('shows any staff today\'s classes, who is in, and the church-wide families with an allergy flag only — no photo, phone or health detail @story#103 @story#104 @story#116', function (Actor $actor): void {
@@ -363,10 +371,11 @@ describe('Attendance', function (): void {
             STAFF_FRAME,
             ['class_id', 'date', 'date_label', 'satellite_id', 'satellites.*.id', 'satellites.*.name', 'total'],
             prefixed('satellites.*.classes.*', ['id', 'name', 'retired']),
-            prefixed('squads.*', ['count', 'name', ...prefixed('children.*', ATTENDANCE_CHILD)]),
+            prefixed('squads.*', ['count', 'level.name', 'level.number', 'name', ...prefixed('children.*', ATTENDANCE_CHILD)]),
         ))
             ->and(forbiddenOnLists($props))->toBe([])
-            ->and(data_get($props, 'squads.0.children.0.nickname'))->toBe('Amara');
+            ->and(data_get($props, 'squads.0.children.0.nickname'))->toBe('Amara')
+            ->and(data_get($props, 'squads.0.level'))->toBe(['number' => 2, 'name' => 'Level 2']);
     })->with(actors(Actor::ChurchAdmin, Actor::HomeAdmin));
 
     it('downloads exactly the allowlisted columns — no health detail, phone or photo @story#114', function (): void {
@@ -387,7 +396,7 @@ describe('the parent\'s own family page', function (): void {
         $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/family');
 
         expect(keyPaths($props))->toBe(allowlist(FRAME, ['enums.gender', 'enums.relationship', 'family.area', 'family.home_satellite', 'satellites.*.id', 'satellites.*.name'],
-            prefixed('family.children.*', ['allergies', 'date_of_birth', 'dislikes', 'fears', 'first_name', 'gender', 'guardian_notes', 'id', 'illnesses', 'last_name', 'level', 'middle_name', 'nickname', 'photo_consent', 'photo_url', 'status_label']),
+            prefixed('family.children.*', ['allergies', 'date_of_birth', 'dislikes', 'fears', 'first_name', 'gender', 'guardian_notes', 'id', 'illnesses', 'last_name', 'level.name', 'level.number', 'middle_name', 'nickname', 'photo_consent', 'photo_url', 'status_label']),
             prefixed('family.guardians.*', ['first_name', 'last_name', 'phone', 'relationship_label']),
             array_values(array_filter(FAMILY_EDIT_DETAILS, fn (string $p): bool => str_starts_with($p, 'details.'))),
             prefixed('me', ['first_name', 'id', 'last_name', 'ministries', 'phone', 'relationship']),

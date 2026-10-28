@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import AppButton from '@/components/atoms/AppButton.vue'
 import { useChurch } from '@/composables/useChurch'
-import { Head, Link } from '@inertiajs/vue3'
+import { Head } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
 /**
@@ -21,19 +22,13 @@ function print(): void {
     <main
         class="bg-surface mx-auto flex min-h-dvh max-w-3xl flex-col items-center justify-center gap-6 p-8 text-center"
     >
-        <div class="flex gap-4 print:hidden">
-            <button
-                type="button"
-                class="min-h-touch bg-primary text-on-primary rounded-md px-4 text-lg font-semibold"
-                data-testid="print-poster"
-                @click="print"
-            >
-                Print
-            </button>
-            <Link
+        <div class="flex items-center gap-4 print:hidden">
+            <AppButton size="lg" data-testid="print-poster" @click="print">Print</AppButton>
+            <AppButton
                 :href="route('church.families.index', church.slug)"
-                class="min-h-touch text-text flex items-center underline"
-                >Back</Link
+                variant="secondary"
+                size="lg"
+                >Back</AppButton
             >
         </div>
         <h1 class="text-text text-5xl font-bold">Register your kids for NxtGen</h1>
@@ -41,7 +36,7 @@ function print(): void {
         <img
             :src="qr"
             alt="QR code for the registration form"
-            class="size-96"
+            class="aspect-square w-full max-w-96"
             data-testid="poster-qr"
         />
         <p class="text-text text-2xl font-semibold">Scan with your phone camera</p>

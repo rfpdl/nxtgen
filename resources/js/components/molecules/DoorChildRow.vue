@@ -37,9 +37,7 @@ const isIn = computed(() => props.child.check_in_id !== null)
 const graduated = computed(() => props.child.status === 'graduated')
 const inactive = computed(() => props.child.status === 'inactive')
 const needsLevel = computed(() => props.child.level === null)
-const levelName = computed(
-    () => props.levels.find((o) => o.level === props.child.level)?.name ?? 'No Level yet',
-)
+const levelName = computed(() => props.child.level?.name ?? 'No Level yet')
 
 function toggle(on: boolean): void {
     open.value = on

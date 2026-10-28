@@ -4,7 +4,8 @@ import { computed, useAttrs, useId } from 'vue'
 
 /**
  * A labelled pick-one list (the Bold look), the same frame as TextField. The model is the option's own value — a
- * number stays a number — and the empty `placeholder` choice is `null`. Hint and error are tied to it
+ * number stays a number — and the empty `placeholder` choice is `null` (`placeholderDisabled`: shown, not
+ * pickable — a current value to change from). Hint and error are tied to it
  * (`aria-describedby`). Attributes (`data-testid`…) land on the select; `class` on the field.
  */
 defineOptions({ inheritAttrs: false })
@@ -20,6 +21,7 @@ const props = withDefaults(
         error?: string
         required?: boolean
         hideLabel?: boolean
+        placeholderDisabled?: boolean
     }>(),
     { placeholder: undefined, hint: undefined, error: undefined },
 )
@@ -64,7 +66,9 @@ function onChange(event: Event): void {
                 :class="error ? 'border-danger' : 'border-border-strong'"
                 @change="onChange"
             >
-                <option v-if="placeholder !== undefined" value="">{{ placeholder }}</option>
+                <option v-if="placeholder !== undefined" value="" :disabled="placeholderDisabled">
+                    {{ placeholder }}
+                </option>
                 <option v-for="option in options" :key="option.value" :value="option.value">
                     {{ option.label }}
                 </option>

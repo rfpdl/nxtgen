@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import FormField from '@/components/atoms/FormField.vue'
+import AppButton from '@/components/atoms/AppButton.vue'
+import Card from '@/components/atoms/Card.vue'
+import SelectField from '@/components/atoms/SelectField.vue'
+import TextField from '@/components/atoms/TextField.vue'
 import type { AddStaffInput, Draft, GrantOption } from '@/types'
 import { useForm } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 /**
  * "Add someone who serves": name, email and ONE role from the choices the server says this viewer may give
@@ -10,7 +13,10 @@ import { ref } from 'vue'
  */
 const props = defineProps<{ action: string; options: GrantOption[] }>()
 
-const choice = ref('0')
+const choice = ref<string | number | null>('0')
+const roleOptions = computed(() =>
+    props.options.map((o, i) => ({ value: String(i), label: o.label })),
+)
 
 const form = useForm<Draft<AddStaffInput>>({
     name: '',
@@ -31,48 +37,40 @@ function submit(): void {
 </script>
 
 <template>
-    <form
-        class="border-border bg-surface flex flex-col gap-4 rounded-lg border p-4"
-        novalidate
-        @submit.prevent="submit"
-    >
-        <h2 class="text-text text-xl font-semibold">Add someone</h2>
-        <FormField label="Name" :error="form.errors.name">
-            <input
-                v-model="form.name"
-                type="text"
-                autocomplete="off"
-                class="min-h-touch border-input rounded-md border px-3"
-                data-testid="staff-name"
-            />
-        </FormField>
-        <FormField label="Email" :error="form.errors.email">
-            <input
-                v-model="form.email"
-                type="email"
-                autocomplete="off"
-                class="min-h-touch border-input rounded-md border px-3"
-                data-testid="staff-email"
-            />
-        </FormField>
-        <FormField label="Role">
-            <select
+    <Card as="section">
+        <form class="flex flex-col gap-4" novalidate @submit.prevent="submit">
+            <h2 class="text-text text-xl font-bold">Add someone</h2>
+            <div class="grid gap-4 sm:grid-cols-2">
+                <TextField
+                    v-model="form.name"
+                    label="Name"
+                    autocomplete="off"
+                    :error="form.errors.name"
+                    data-testid="staff-name"
+                />
+                <TextField
+                    v-model="form.email"
+                    type="email"
+                    label="Email"
+                    autocomplete="off"
+                    :error="form.errors.email"
+                    data-testid="staff-email"
+                />
+            </div>
+            <SelectField
                 v-model="choice"
-                class="min-h-touch border-input rounded-md border px-3"
+                label="Role"
+                :options="roleOptions"
                 data-testid="staff-role"
+            />
+            <AppButton
+                type="submit"
+                class="self-start"
+                :loading="form.processing"
+                data-testid="add-staff-submit"
             >
-                <option v-for="(option, i) in options" :key="option.label" :value="String(i)">
-                    {{ option.label }}
-                </option>
-            </select>
-        </FormField>
-        <button
-            type="submit"
-            :disabled="form.processing"
-            class="min-h-touch bg-primary text-on-primary self-start rounded-md px-4 text-lg font-semibold"
-            data-testid="add-staff-submit"
-        >
-            Add and email a sign-in link
-        </button>
-    </form>
+                Add and email a sign-in link
+            </AppButton>
+        </form>
+    </Card>
 </template>

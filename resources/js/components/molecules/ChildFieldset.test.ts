@@ -94,17 +94,27 @@ describe('ChildFieldset', () => {
 
         const yes = wrapper.find('[data-testid="child-0-has-allergies-yes"]')
         const no = wrapper.find('[data-testid="child-0-has-allergies-no"]')
-        expect((yes.element as HTMLInputElement).checked).toBe(false)
-        expect((no.element as HTMLInputElement).checked).toBe(false)
+        expect(yes.attributes('aria-checked')).toBe('false')
+        expect(no.attributes('aria-checked')).toBe('false')
         expect(wrapper.find('[data-testid="child-0-allergies"]').exists()).toBe(false)
 
-        await yes.setValue(true)
+        await yes.trigger('click')
         expect(child.has_allergies).toBe(true)
         expect(wrapper.find('[data-testid="child-0-allergies"]').exists()).toBe(true)
 
-        await no.setValue(true)
+        await no.trigger('click')
         expect(child.has_allergies).toBe(false)
         expect(wrapper.find('[data-testid="child-0-allergies"]').exists()).toBe(false)
+    })
+
+    it('writes the picked gender back as its value, and the placeholder as blank', async () => {
+        const child = reactive(blank())
+        const wrapper = fieldset({ modelValue: child })
+
+        await wrapper.find('[data-testid="child-0-gender"]').setValue('girl')
+        expect(child.gender).toBe('girl')
+        await wrapper.find('[data-testid="child-0-gender"]').setValue('')
+        expect(child.gender).toBe('')
     })
 
     it("shows the server's allergy messages on this child", () => {
@@ -115,5 +125,23 @@ describe('ChildFieldset', () => {
         })
 
         expect(wrapper.text()).toContain('Please answer: does your child have any allergies?')
+        const group = wrapper.find('[role="radiogroup"]')
+        expect(group.attributes('aria-invalid')).toBe('true')
+        expect(group.attributes('aria-describedby')).toBe(
+            wrapper.find('[role="alert"]').attributes('id'),
+        )
+    })
+
+    it('names the allergy chips by the question, and marks them required', () => {
+        const group = fieldset().find('[role="radiogroup"]')
+
+        expect(group.attributes('aria-labelledby')).toBe('child-0-has-allergies-label')
+        expect(group.attributes('aria-required')).toBe('true')
+    })
+
+    it('draws "Remove this child" as a destructive button', () => {
+        expect(
+            fieldset({ removable: true }).find('[data-testid="child-0-remove"]').classes(),
+        ).toContain('bg-danger')
     })
 })

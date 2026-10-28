@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Family\DataObjects;
 
 use App\Data\Models\Child;
+use App\Foundation\DataObjects\LevelData;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -21,7 +22,7 @@ final class ChildListRowData extends Data
         public string $full_name,
         public int $age,
         public string $date_of_birth,
-        public ?string $level,
+        public ?LevelData $level,
         public string $status_label,
         public bool $has_allergies,
         public string $satellite,
@@ -36,7 +37,7 @@ final class ChildListRowData extends Data
             full_name: $child->fullName(),
             age: (int) $child->date_of_birth->diffInYears(now()),
             date_of_birth: $child->date_of_birth->toDateString(),
-            level: $child->levelName(),
+            level: LevelData::fromNumber($child->level),
             status_label: $child->status->label(),
             has_allergies: $child->allergies !== null,
             satellite: $child->family->homeSatellite->name,

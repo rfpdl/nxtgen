@@ -51,7 +51,7 @@ describe('the children list', function (): void {
             ->component('Church/Children/Index')
             ->has('children', 2)
             ->where('children.0.nickname', 'Amara')
-            ->where('children.0.level', 'Level 2')
+            ->where('children.0.level', ['number' => 2, 'name' => 'Level 2'])
             ->where('children.0.age', 7)
             ->where('children.0.status_label', 'Active')
             ->where('children.0.has_allergies', true)
@@ -175,7 +175,7 @@ describe('correcting a child\'s Level', function (): void {
         actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get("/ccf/families/{$amara->family_id}")
             ->assertInertia(fn (AssertableInertia $p) => $p->where('can_set_level', true)->has('levels', 4)
                 ->where('levels.1', ['level' => 2, 'name' => 'Level 2'])
-                ->where('family.children.0.level', 'Level 2'));
+                ->where('family.children.0.level', ['number' => 2, 'name' => 'Level 2']));
         actingAs(staffMember(RoleEnum::Admin, atSatellite($dxb)))->get("/ccf/families/{$amara->family_id}")
             ->assertInertia(fn (AssertableInertia $p) => $p->where('can_set_level', false)->where('levels', []));
     });

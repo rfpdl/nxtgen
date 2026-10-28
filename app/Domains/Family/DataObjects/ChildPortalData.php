@@ -6,6 +6,7 @@ namespace App\Domains\Family\DataObjects;
 
 use App\Data\Models\Child;
 use App\Enums\GenderEnum;
+use App\Foundation\DataObjects\LevelData;
 use Illuminate\Support\Facades\URL;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -31,7 +32,7 @@ final class ChildPortalData extends Data
         public ?string $dislikes,
         public ?string $fears,
         public ?string $guardian_notes,
-        public ?string $level,
+        public ?LevelData $level,
         public string $status_label,
         public bool $photo_consent,
         public ?string $photo_url,
@@ -52,7 +53,7 @@ final class ChildPortalData extends Data
             dislikes: $child->dislikes,
             fears: $child->fears,
             guardian_notes: $child->guardian_notes,
-            level: $child->levelName(),
+            level: LevelData::fromNumber($child->level),
             status_label: $child->status->label(),
             photo_consent: $child->photo_consent_at !== null,
             photo_url: $child->photo_path === null || $child->photo_consent_at === null ? null

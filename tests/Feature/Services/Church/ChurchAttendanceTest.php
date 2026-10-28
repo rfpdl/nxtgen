@@ -87,6 +87,7 @@ describe('the Attendance page', function (): void {
             ->where('total', 3)
             ->has('squads', 2)
             ->where('squads.0.name', 'Level 1')
+            ->where('squads.0.level', ['number' => 1, 'name' => 'Level 1'])
             ->where('squads.0.count', 1)
             ->where('squads.0.children.0.nickname', 'Ben')
             ->where('squads.0.children.0.full_name', 'Benjamin Cruz')

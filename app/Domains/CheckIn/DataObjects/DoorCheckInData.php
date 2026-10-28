@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\CheckIn\DataObjects;
 
 use App\Data\Models\CheckIn;
+use App\Foundation\DataObjects\LevelData;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -21,8 +22,8 @@ final class DoorCheckInData extends Data
         public int $id,
         public string $nickname,
         public string $squad,
-        /** The Squad's Level (1–4), which picks the pill's colour from the age-level chart */
-        public int $level,
+        /** The Squad's Level: its number picks the pill's colour from the age-level chart. */
+        public LevelData $level,
         /** "13:05", in the church's timezone */
         public string $checked_in_at,
     ) {}
@@ -33,7 +34,7 @@ final class DoorCheckInData extends Data
             id: $checkIn->id,
             nickname: $checkIn->child->displayName(),
             squad: $checkIn->squad->name(),
-            level: $checkIn->squad->level,
+            level: LevelData::of($checkIn->squad->level),
             checked_in_at: $checkIn->checked_in_at->setTimezone($timezone)->format('H:i'),
         );
     }

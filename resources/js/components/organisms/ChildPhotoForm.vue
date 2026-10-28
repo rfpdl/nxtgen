@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AppButton from '@/components/atoms/AppButton.vue'
+import FileButton from '@/components/atoms/FileButton.vue'
 import { photoForUpload } from '@/lib/photoForUpload'
 import type { ChildPhotoInput, ChildPortal, Draft } from '@/types'
 import { router, useForm } from '@inertiajs/vue3'
@@ -8,7 +10,8 @@ import { ref } from 'vue'
  * A child's photo (Roy 2026-10-16): a parent or a Lifeshaper can take one with the phone camera or choose one —
  * once consent is recorded. The parent agrees with its own button; a staff member can record that the parent said
  * yes in person (saved with their name, noted on the child). Only the parent takes consent back, which hides
- * the photo until they agree again. Choosing a file sends it straight away.
+ * the photo until they agree again. Choosing a file sends it straight away. On the kit (the Bold look): the
+ * pickers are FileButtons.
  */
 const props = defineProps<{
     child: ChildPortal
@@ -43,48 +46,36 @@ function giveConsent(): void {
 function withdraw(): void {
     if (props.withdrawAction) router.delete(props.withdrawAction, { preserveScroll: true })
 }
-
-const button =
-    'min-h-touch border-primary text-primary flex cursor-pointer items-center rounded-md border px-4 font-semibold'
 </script>
 
 <template>
     <div class="flex flex-col gap-2" data-testid="child-photo">
         <div v-if="who === 'staff' && !child.photo_consent" class="flex flex-col gap-2">
             <p class="text-text-muted">The parent has not agreed to a photo yet.</p>
-            <button
+            <AppButton
                 v-if="consentAction && !confirming"
-                type="button"
-                class="min-h-touch border-primary text-primary self-start rounded-md border px-4 font-semibold"
+                variant="secondary"
+                class="self-start"
                 data-testid="record-photo-consent"
                 @click="confirming = true"
             >
                 The parent said yes — record consent
-            </button>
-            <div
-                v-if="confirming"
-                class="border-warning bg-warning-soft flex flex-col gap-2 rounded-md border p-3"
-            >
+            </AppButton>
+            <div v-if="confirming" class="bg-warning-soft rounded-control flex flex-col gap-3 p-3">
                 <p class="text-text font-semibold">
                     Are you sure the parent said yes to a photo of {{ child.nickname }}?
                 </p>
-                <div class="flex gap-3">
-                    <button
-                        type="button"
-                        class="min-h-touch bg-primary text-on-primary rounded-md px-4 font-semibold"
-                        data-testid="confirm-photo-consent"
-                        @click="giveConsent"
-                    >
+                <div class="flex flex-wrap gap-3">
+                    <AppButton data-testid="confirm-photo-consent" @click="giveConsent">
                         Yes, they said yes
-                    </button>
-                    <button
-                        type="button"
-                        class="min-h-touch text-text px-2 underline"
+                    </AppButton>
+                    <AppButton
+                        variant="secondary"
                         data-testid="cancel-photo-consent"
                         @click="confirming = false"
                     >
                         Cancel
-                    </button>
+                    </AppButton>
                 </div>
             </div>
         </div>
@@ -97,47 +88,36 @@ const button =
                 recognise them at church. Only our volunteers and our family can see it, and I can
                 take this back any time.
             </p>
-            <button
-                type="button"
-                class="min-h-touch border-primary text-primary self-start rounded-md border px-4 font-semibold"
+            <AppButton
+                variant="secondary"
+                class="self-start"
                 data-testid="give-photo-consent"
                 @click="giveConsent"
             >
                 Yes, I agree to a photo
-            </button>
+            </AppButton>
         </div>
         <div v-if="child.photo_consent" class="flex flex-wrap gap-3">
             <!-- `image/*` (not a list of types) so iPhones offer every photo, HEIC included. -->
-            <label :class="button">
+            <FileButton
+                accept="image/*"
+                capture="environment"
+                data-testid="take-photo"
+                @change="send"
+            >
                 {{ child.photo_url ? 'Take a new photo' : 'Take a photo' }}
-                <input
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    class="sr-only"
-                    data-testid="take-photo"
-                    @change="send"
-                />
-            </label>
-            <label :class="button">
+            </FileButton>
+            <FileButton accept="image/*" data-testid="choose-photo" @change="send">
                 Choose a photo
-                <input
-                    type="file"
-                    accept="image/*"
-                    class="sr-only"
-                    data-testid="choose-photo"
-                    @change="send"
-                />
-            </label>
-            <button
+            </FileButton>
+            <AppButton
                 v-if="who === 'guardian' && child.photo_consent"
-                type="button"
-                class="min-h-touch text-danger px-2 underline"
+                variant="link"
                 data-testid="withdraw-photo-consent"
                 @click="withdraw"
             >
                 Take back my consent (hides the photo)
-            </button>
+            </AppButton>
         </div>
         <p v-if="form.errors.photo" role="alert" class="text-danger font-semibold">
             {{ form.errors.photo }}

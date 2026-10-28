@@ -9,7 +9,10 @@ const result = (over: Partial<FamilySearchResult> = {}): FamilySearchResult => (
     masked_email: 'ja•••@example.com',
     email_confirmed: false,
     satellite: 'House Church',
-    children: ['Amara', 'Aaron'],
+    children: [
+        { nickname: 'Amara', level: { number: 2, name: 'Level 2' } },
+        { nickname: 'Aaron', level: null },
+    ],
     can_open: false,
     can_resend: false,
     ...over,
@@ -24,7 +27,8 @@ describe('FamilySearchResultCard', () => {
         expect(text).toContain('Janice Ramos')
         expect(text).toContain('ja•••@example.com')
         expect(text).toContain('House Church')
-        expect(text).toContain('Amara, Aaron')
+        expect(text).toContain('Amara')
+        expect(text).toContain('Aaron')
     })
 
     it('flags an email that is not confirmed yet', () => {
@@ -90,5 +94,16 @@ describe('FamilySearchResultCard', () => {
         })
 
         expect(wrapper.find('[data-testid="search-add-child"]').exists()).toBe(false)
+    })
+    it("shows the children as pills in their Level's colour", () => {
+        const pills = mount(FamilySearchResultCard, {
+            props: { result: result(), href: '/x' },
+        })
+            .findAll('span.rounded-full.px-3')
+            .filter((p) => p.text() !== 'Email not confirmed')
+
+        expect(pills[0]?.text()).toBe('Amara')
+        expect(pills[0]?.classes()).toContain('bg-level-2-soft')
+        expect(pills[1]?.classes()).toContain('bg-surface-sunken')
     })
 })

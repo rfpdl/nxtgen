@@ -11,23 +11,28 @@ Props are typed from `@/types` (aliases over the generated, snake_case `generate
 
 Pages, molecules, organisms and layouts never draw a raw `<button>`, `<input>`, `<select>` or `<textarea>`, and
 never pick a colour: they use these atoms, which read the tokens in `app.css`. The discipline test enforces it
-(with a known-gaps list that only shrinks — issues 02 and 03 of `.planning/tasks/2026-10-28-ui-theme`).
+(with a known-gaps list that only shrinks — issue 03 of `.planning/tasks/2026-10-28-ui-theme`; every staff page is on
+the kit since issue 02).
 
-| Component   | Layer  | Purpose                                                                                                                                |
-| ----------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------- |
-| AppButton   | atom   | THE button: `primary` (green, pressable) / `secondary` / `quiet` / `danger` / `link`; `md`/`lg`/`icon`; loading; `href` → Inertia Link |
-| TextField   | atom   | Labelled input (v-model, `type`), hint + error wired by `aria-describedby`, `#leading` icon, `hideLabel`                               |
-| SelectField | atom   | Labelled pick-one list; the model is the option's own value (`null` for the placeholder); hint + error wired                           |
-| TextArea    | atom   | Labelled box for a few lines; hint + error wired                                                                                       |
-| CheckRow    | atom   | Big tick (role checkbox): a whole row with a label slot, or a 64px square named by `label` (`stretch`: full row height); disabled      |
-| Disclosure  | atom   | Show more in place: one big button (`aria-expanded`/`aria-controls`, chevron) over a `panel` slot shown while open (v-model:open)      |
-| ChoiceChips | atom   | Pick one of a few as pressable chips (`aria-pressed`) — the door's class picker; emits on every tap                                    |
-| Card        | atom   | White tile, 2px edge and a 5px bottom; `as`, `flush` for a card of rows                                                                |
-| Pill        | atom   | Small label: `level` 1–4 in the age-level chart's colours (tint + dot), or `danger` (allergy flag) / status / neutral                  |
-| PageHeader  | atom   | A page's one `h1`, a `sub` line, its own buttons (`#actions`)                                                                          |
-| EmptyState  | atom   | What an empty list says: what to do next, optional title and `#action`                                                                 |
-| BrandMark   | atom   | The NXTGEN logo (SVG), for the app bar                                                                                                 |
-| AppShell    | layout | The Bold frame: amber bar (logo, page name, place), menu as a phone sheet (reka-ui Dialog) or a desktop row, flash                     |
+| Component      | Layer  | Purpose                                                                                                                                                                       |
+| -------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AppButton      | atom   | THE button: `primary` (green, pressable) / `secondary` / `quiet` / `danger` / `link`; `md`/`lg`/`icon`; loading; `href` → Inertia Link, `external` → plain `<a>` (a download) |
+| TextField      | atom   | Labelled input (v-model, `type`), hint + error wired by `aria-describedby`, `#leading` icon, `hideLabel`                                                                      |
+| SelectField    | atom   | Labelled pick-one list; the model is the option's own value (`null` for the placeholder; `placeholderDisabled`: shown, not pickable); hint + error wired                      |
+| TextArea       | atom   | Labelled box for a few lines; hint + error wired                                                                                                                              |
+| CheckRow       | atom   | Big tick (role checkbox): a whole row with a label slot, or a 64px square named by `label` (`stretch`: full row height); disabled                                             |
+| Disclosure     | atom   | Show more in place: one big button (`aria-expanded`/`aria-controls`, chevron) over a `panel` slot shown while open (v-model:open)                                             |
+| ChoiceChips    | atom   | Pick one of a few as pressable chips (a radio group) — door class picker, allergy yes/no; `labelledby`/`label`, `required`, `error` wired; an option's `testid`               |
+| FileButton     | atom   | A file picker that looks and presses like a secondary AppButton (the photo's take / choose); attrs on the hidden input                                                        |
+| Card           | atom   | White tile, 2px edge and a 5px bottom; `as`, `flush` for a card of rows                                                                                                       |
+| Pill           | atom   | Small label: a `level` (Level: number + name) in the age-level chart's colours (tint + dot; says the name by default), or `danger` / status / neutral                         |
+| SectionHeading | atom   | A part of a page's heading: `h2` under the PageHeader, or a smaller `h3` (`level="3"`) inside a card                                                                          |
+| RowList        | atom   | A card of padded rows with a line between them; `href` makes each whole row a link ending in ›, `#after` sits outside it; `plain`                                             |
+| EmailText      | atom   | An email that breaks only after `@` `.` `-` `_` (`<wbr>`), so it never splits mid-word on a phone                                                                             |
+| PageHeader     | atom   | A page's one `h1`, a `sub` line, its own buttons (`#actions`)                                                                                                                 |
+| EmptyState     | atom   | What an empty list says: what to do next, optional title and `#action`                                                                                                        |
+| BrandMark      | atom   | The NXTGEN logo (SVG), for the app bar                                                                                                                                        |
+| AppShell       | layout | The Bold frame: amber bar (logo, page name, place), menu as a phone sheet (reka-ui Dialog) or a desktop row, flash                                                            |
 
 ## Everything else
 
@@ -53,7 +58,8 @@ never pick a colour: they use these atoms, which read the tokens in `app.css`. T
 | PasswordLoginForm       | organism | "Use a password instead" on sign-in: the staff backup, collapsed by default                                                           |
 | ChildPhotoForm          | organism | A child's photo: take (camera) or choose; parent agrees/takes back consent, staff only after consent                                  |
 | ChildAdminControls      | molecule | Staff status (`enums.child_status`) + Level pickers inside a child's card; a refused Level shows on that child                        |
-| ResendLinkButton        | atom     | "Send the confirmation link again" (POST) for an unconfirmed family: family page, lists, door search                                  |
+| ResendLinkButton        | atom     | "Send the confirmation link again" (a secondary AppButton that POSTs) for an unconfirmed family: family page, lists, door search      |
+| CorrectEmailForm        | organism | "Typed the email wrong? Correct it" on the family page (PUT): TextField + "Save email"; cleared once saved                            |
 | Pager                   | molecule | "Page 2 of 3" with Previous / Next for the registration lists; hidden when one page holds all                                         |
 | OtherGuardiansFieldset  | organism | The family's other parents/guardians (no email): add / remove (saved ones reported), via GuardianFieldset                             |
 | PossibleDuplicateCard   | organism | A possible duplicate on a family's page: newer and earlier side by side, "Not the same" / "Same family"                               |

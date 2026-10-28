@@ -131,7 +131,10 @@ function wrapOptionTab(event: KeyboardEvent): void {
                         :key="item.href"
                         :href="item.href"
                         variant="quiet"
-                        :class="item.current ? 'underline decoration-4 underline-offset-8' : null"
+                        :class="[
+                            'px-2.5!',
+                            item.current ? 'underline decoration-4 underline-offset-8' : null,
+                        ]"
                         :aria-current="item.current ? 'page' : undefined"
                         :data-testid="item.testid"
                         >{{ item.label }}</AppButton

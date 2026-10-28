@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import AppButton from '@/components/atoms/AppButton.vue'
+import EmptyState from '@/components/atoms/EmptyState.vue'
+import PageHeader from '@/components/atoms/PageHeader.vue'
+import TextField from '@/components/atoms/TextField.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import FamilySearchResultCard from '@/components/molecules/FamilySearchResultCard.vue'
 import AddChildForm from '@/components/organisms/AddChildForm.vue'
@@ -6,9 +10,14 @@ import RegisterFamilyForm from '@/components/organisms/RegisterFamilyForm.vue'
 import { useChurch } from '@/composables/useChurch'
 import type { FamilySearchResult, SatelliteOption } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
+import { Search } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { route } from 'ziggy-js'
 
+/**
+ * Register a family (staff, plan §6 R1), search first: is the family already here (church-wide, masked — add a child
+ * to it), and only then "Not found — register a new family", which opens the registration form.
+ */
 const props = defineProps<{
     query: string
     results: FamilySearchResult[]
@@ -33,31 +42,30 @@ function search(): void {
 <template>
     <Head title="Register a family" />
     <ChurchShell>
-        <h1 class="text-text text-2xl font-semibold">Register a family</h1>
-        <p class="text-text text-lg">
-            First, check if the family is already registered. Search the parent's name, email or
-            phone, or a child's name.
-        </p>
-        <form class="flex gap-2" @submit.prevent="search">
-            <input
+        <PageHeader
+            title="Register a family"
+            sub="First, check if the family is already registered. Search the parent's name, email or phone, or a child's name."
+        />
+        <form class="flex items-end gap-2" role="search" @submit.prevent="search">
+            <TextField
                 v-model="q"
+                class="flex-1"
                 type="search"
-                class="min-h-touch border-border bg-surface text-text flex-1 rounded-md border px-4 text-lg"
+                label="Search families"
+                hide-label
                 placeholder="Name, email, phone…"
                 data-testid="family-search"
-            />
-            <button
-                type="submit"
-                class="min-h-touch bg-primary text-on-primary rounded-md px-4 text-lg font-semibold"
             >
-                Search
-            </button>
+                <template #leading><Search class="size-6" /></template>
+            </TextField>
+            <AppButton type="submit" variant="secondary" size="lg">Search</AppButton>
         </form>
 
         <section v-if="query" class="flex flex-col gap-3">
-            <p class="text-text">
-                {{ results.length === 0 ? 'No family found.' : `Found ${results.length}:` }}
-            </p>
+            <EmptyState v-if="results.length === 0"
+                >No family found. Register them as a new family below.</EmptyState
+            >
+            <p v-else class="text-text text-lg font-semibold">Found {{ results.length }}:</p>
             <template v-for="result in results" :key="result.id">
                 <FamilySearchResultCard
                     :result="result"
@@ -73,15 +81,15 @@ function search(): void {
         </section>
 
         <section class="flex flex-col gap-3">
-            <button
+            <AppButton
                 v-if="!showNew"
-                type="button"
-                class="min-h-touch border-primary text-primary self-start rounded-md border px-4 text-lg font-semibold"
+                size="lg"
+                class="self-start"
                 data-testid="register-new"
                 @click="showNew = true"
             >
                 Not found — register a new family
-            </button>
+            </AppButton>
             <RegisterFamilyForm
                 v-else
                 :action="route('church.families.store', church.slug)"

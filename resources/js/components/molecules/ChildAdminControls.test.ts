@@ -6,7 +6,7 @@ vi.mock('@inertiajs/vue3', async (original) =>
     (await import('@/tests/enumPage')).withEnums(await original<object>()),
 )
 
-const child = { id: 4, level: 'Level 3', status_label: 'Active' }
+const child = { id: 4, level: { number: 3, name: 'Level 3' }, status_label: 'Active' }
 const levels = [
     { level: 3, name: 'Level 3' },
     { level: 4, name: 'Level 4' },
@@ -78,5 +78,16 @@ describe('ChildAdminControls', () => {
         expect(wrapper.find('[role="alert"]').text()).toBe(
             "Please choose one of the church's Levels.",
         )
+    })
+    it("keeps the child's current Level and status as the first choice, not pickable", () => {
+        const wrapper = mount(ChildAdminControls, {
+            props: { child, canSetStatus: true, canSetLevel: true, levels },
+        })
+
+        for (const id of ['level-4', 'status-4']) {
+            expect(
+                wrapper.find(`[data-testid="${id}"] option`).attributes('disabled'),
+            ).toBeDefined()
+        }
     })
 })

@@ -26,7 +26,7 @@ test('an admin finds a child by Level on the children list and corrects their Le
     const levelPicker = page
         .getByTestId('family-child')
         .filter({ hasText: FAMILIES.dxb.child })
-        .locator('[data-testid^="level-"]')
+        .locator('select[data-testid^="level-"]')
     await expect(levelPicker).toContainText('Level 3')
 
     await levelPicker.selectOption({ label: 'Level 4' })

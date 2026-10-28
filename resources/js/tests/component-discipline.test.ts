@@ -234,8 +234,8 @@ describe('design tokens', () => {
  * the same on every screen and a label is always wired to its control. A file input (the photo picker) and a hidden
  * one are not drawn, so they are allowed.
  *
- * KNOWN_GAPS are the pages and components not on the kit yet (issues 02 and 03 move them). The list may only
- * shrink: a file on it that no longer offends fails here until it is taken off.
+ * KNOWN_GAPS are the pages and components not on the kit yet (issue 03 moves them; issue 02 moved every staff
+ * page). The list may only shrink: a file on it that no longer offends fails here until it is taken off.
  */
 const KIT_ONLY = /<(?:button|select|textarea)\b/g
 /** An `<input …>` tag, reading past a `>` inside a quoted attribute (`@change="(e) => …"`). */
@@ -244,33 +244,9 @@ const RAW_INPUT = /<input\b(?:[^>"']|"[^"]*"|'[^']*')*>/g
 const UNDRAWN_INPUT = /\s(?<![:.\w-])type="(?:file|hidden)"/
 
 const KNOWN_GAPS = [
-    'resources/js/components/molecules/ChildAdminControls.vue',
-    'resources/js/components/molecules/ChildFieldset.vue',
-    'resources/js/components/molecules/FamilyFieldset.vue',
-    'resources/js/components/molecules/FamilySearchResultCard.vue',
-    'resources/js/components/molecules/GuardianFieldset.vue',
-    'resources/js/components/molecules/Pager.vue',
-    'resources/js/components/molecules/RegistrationListFilters.vue',
-    'resources/js/components/molecules/ScheduleCard.vue',
-    'resources/js/components/molecules/StaffMemberCard.vue',
-    'resources/js/components/organisms/AddChildForm.vue',
-    'resources/js/components/organisms/AddStaffForm.vue',
-    'resources/js/components/organisms/ChildPhotoForm.vue',
-    'resources/js/components/organisms/EditChildForm.vue',
-    'resources/js/components/organisms/FamilyDetailsForm.vue',
-    'resources/js/components/organisms/OtherGuardiansFieldset.vue',
     'resources/js/components/organisms/PasswordLoginForm.vue',
-    'resources/js/components/organisms/PossibleDuplicateCard.vue',
-    'resources/js/components/organisms/RegisterFamilyForm.vue',
-    'resources/js/components/organisms/SatelliteSchedules.vue',
-    'resources/js/components/organisms/ScheduleForm.vue',
     'resources/js/pages/Auth/ConfirmLink.vue',
     'resources/js/pages/Auth/Login.vue',
-    'resources/js/pages/Auth/Password.vue',
-    'resources/js/pages/Church/Attendance/Index.vue',
-    'resources/js/pages/Church/Families/Register.vue',
-    'resources/js/pages/Church/Families/Show.vue',
-    'resources/js/pages/Church/Poster.vue',
 ]
 
 /** The raw controls a source file draws outside the kit, as "line → tag". */

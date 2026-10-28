@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AppButton from '@/components/atoms/AppButton.vue'
+import Card from '@/components/atoms/Card.vue'
 import GuardianFieldset from '@/components/molecules/GuardianFieldset.vue'
 import type { OtherGuardianDraft } from '@/types'
 
@@ -33,36 +35,28 @@ function remove(index: number): void {
 </script>
 
 <template>
-    <fieldset
-        v-for="(_, index) in guardians"
-        :key="index"
-        class="border-border flex flex-col gap-4 rounded-lg border p-4"
-        :data-testid="`other-guardian-${index}-row`"
-    >
-        <legend class="text-text px-2 text-xl font-semibold">Another parent or guardian</legend>
-        <GuardianFieldset
-            v-model="guardians[index]!"
-            :errors="errors"
-            :with-email="false"
-            :error-key="`guardians.${index}`"
-            :testid="`other-guardian-${index}`"
-            other
-        />
-        <button
-            type="button"
-            class="text-danger self-start text-lg font-semibold underline"
-            :data-testid="`other-guardian-${index}-remove`"
-            @click="remove(index)"
-        >
-            Remove this parent or guardian
-        </button>
-    </fieldset>
-    <button
-        type="button"
-        class="min-h-touch border-primary text-primary self-start rounded-md border px-4 text-lg font-semibold"
-        data-testid="add-guardian"
-        @click="add"
-    >
+    <Card v-for="(_, index) in guardians" :key="index" :data-testid="`other-guardian-${index}-row`">
+        <fieldset class="flex min-w-0 flex-col gap-4">
+            <legend class="text-text mb-4 text-xl font-bold">Another parent or guardian</legend>
+            <GuardianFieldset
+                v-model="guardians[index]!"
+                :errors="errors"
+                :with-email="false"
+                :error-key="`guardians.${index}`"
+                :testid="`other-guardian-${index}`"
+                other
+            />
+            <AppButton
+                variant="danger"
+                class="self-start"
+                :data-testid="`other-guardian-${index}-remove`"
+                @click="remove(index)"
+            >
+                Remove this parent or guardian
+            </AppButton>
+        </fieldset>
+    </Card>
+    <AppButton variant="secondary" class="self-start" data-testid="add-guardian" @click="add">
         + Add another parent or guardian
-    </button>
+    </AppButton>
 </template>

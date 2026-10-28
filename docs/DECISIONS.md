@@ -23,6 +23,13 @@ describes the design; this records the choices that shaped or changed it.
 
 ## 2026-10-28
 
+- **Staff pages on the kit** (Claude, issue 02, after review, for Roy to confirm): a Level or Squad is always a Pill in
+  its Level's colour. A Level travels in one shape, `LevelData {number, name}`, on every list, card, Squad and door
+  row (replacing a bare number or a bare name); the Families list and search hits send each child as
+  `{nickname, level}` — staff only, on the response allowlist. A list row that opens something is the whole row
+  (bold name, ›, no underline). Emails break only after `@` or in the name. The allergy yes/no is two chips with
+  neither picked (still never read as "no"), named by the question and carrying its error. Excel downloads are plain
+  links (`AppButton external`).
 - **The app's look is "Bold"** (Roy, from three directions: https://claude.ai/artifact/Jr2PHSMmx3VKXZcEmCVXw8): amber
   top bar with the logo, chunky pressable buttons (thick bottom edge), coloured Squad/Level pills in the age-level
   chart's colours (Level 1 blue, 2 yellow, 3 red, 4 green), Lexend (a typeface made for easy reading), big text and

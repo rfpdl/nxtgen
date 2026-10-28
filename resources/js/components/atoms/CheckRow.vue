@@ -24,7 +24,7 @@ const slots = useSlots()
         :disabled="disabled"
         class="rounded-control text-text flex min-h-16 gap-3 text-left disabled:cursor-not-allowed"
         :class="[
-            slots.default ? 'w-full px-3' : 'min-w-16 justify-center',
+            slots.default ? 'w-full pr-3' : 'min-w-16 justify-center',
             stretch ? 'items-start self-stretch pt-[1.0625rem]' : 'items-center',
         ]"
         @click="checked = !checked"

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import AppButton from '@/components/atoms/AppButton.vue'
+import EmptyState from '@/components/atoms/EmptyState.vue'
+import SectionHeading from '@/components/atoms/SectionHeading.vue'
 import ScheduleCard from '@/components/molecules/ScheduleCard.vue'
 import ScheduleForm from '@/components/organisms/ScheduleForm.vue'
 import { useChurch } from '@/composables/useChurch'
@@ -29,8 +32,10 @@ function retire(scheduleId: number): void {
 
 <template>
     <section class="flex flex-col gap-3" :data-testid="`satellite-${satellite.id}`">
-        <h2 class="text-text text-xl font-semibold">{{ satellite.name }}</h2>
-        <p v-if="satellite.schedules.length === 0" class="text-text-muted">No classes yet.</p>
+        <SectionHeading>{{ satellite.name }}</SectionHeading>
+        <EmptyState v-if="satellite.schedules.length === 0"
+            >No classes yet. Add the first one below.</EmptyState
+        >
         <template v-for="schedule in satellite.schedules" :key="schedule.id">
             <div v-if="editing === schedule.id" data-testid="edit-schedule-form">
                 <ScheduleForm
@@ -48,7 +53,7 @@ function retire(scheduleId: number): void {
             />
         </template>
         <div v-if="adding" class="flex flex-col gap-2" data-testid="add-schedule">
-            <h3 class="text-text text-lg font-semibold">Add a class at {{ satellite.name }}</h3>
+            <SectionHeading level="3">Add a class at {{ satellite.name }}</SectionHeading>
             <ScheduleForm
                 :action="route('church.schedules.store', [church.slug])"
                 :satellite-id="satellite.id"
@@ -56,14 +61,13 @@ function retire(scheduleId: number): void {
                 @done="adding = false"
             />
         </div>
-        <button
+        <AppButton
             v-else
-            type="button"
-            class="min-h-touch border-primary text-primary self-start rounded-md border px-4 font-semibold"
+            variant="secondary"
+            class="self-start"
             data-testid="open-add-schedule"
             @click="adding = true"
+            >+ Add a class</AppButton
         >
-            + Add a class
-        </button>
     </section>
 </template>

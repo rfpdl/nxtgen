@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/atoms/AppButton.vue'
 import ChildFieldset from '@/components/molecules/ChildFieldset.vue'
 import type { ChildDraft, ChildPortal } from '@/types'
 import { useForm } from '@inertiajs/vue3'
@@ -45,33 +46,27 @@ function submit(): void {
 </script>
 
 <template>
-    <button
+    <AppButton
         v-if="!open"
-        type="button"
-        class="min-h-touch text-primary self-start text-lg font-semibold underline"
+        variant="secondary"
+        class="self-start"
         data-testid="edit-child"
         @click="open = true"
     >
         Edit {{ child.nickname }}'s details
-    </button>
-    <form v-else class="flex flex-col gap-4" novalidate @submit.prevent="submit">
+    </AppButton>
+    <form
+        v-else
+        class="border-border flex flex-col gap-4 border-t-2 pt-4"
+        novalidate
+        @submit.prevent="submit"
+    >
         <ChildFieldset v-model="form" :index="0" :errors="errors()" :removable="false" />
-        <div class="flex gap-3">
-            <button
-                type="submit"
-                :disabled="form.processing"
-                class="min-h-touch bg-primary text-on-primary rounded-md px-4 text-lg font-semibold"
-                data-testid="edit-child-submit"
-            >
+        <div class="flex flex-wrap gap-3">
+            <AppButton type="submit" :loading="form.processing" data-testid="edit-child-submit">
                 Save
-            </button>
-            <button
-                type="button"
-                class="min-h-touch text-text px-4 text-lg underline"
-                @click="open = false"
-            >
-                Cancel
-            </button>
+            </AppButton>
+            <AppButton variant="secondary" @click="open = false">Cancel</AppButton>
         </div>
     </form>
 </template>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PageHeader from '@/components/atoms/PageHeader.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import SatelliteSchedules from '@/components/organisms/SatelliteSchedules.vue'
 import type { SatelliteSchedules as SatelliteSchedulesProp } from '@/types'
@@ -14,11 +15,10 @@ defineProps<{ satellites: SatelliteSchedulesProp[] }>()
 <template>
     <Head title="Classes" />
     <ChurchShell>
-        <h1 class="text-text text-2xl font-semibold">Classes</h1>
-        <p class="text-text-muted">
-            A class with a day shows at the door only on that day. A class with no set day shows
-            every day.
-        </p>
+        <PageHeader
+            title="Classes"
+            sub="A class with a day shows at the door only on that day. A class with no set day shows every day."
+        />
         <SatelliteSchedules
             v-for="satellite in satellites"
             :key="satellite.id"

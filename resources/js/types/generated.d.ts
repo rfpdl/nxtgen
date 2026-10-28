@@ -21,6 +21,7 @@ declare namespace App {
                 }
                 export type AttendanceSquadData = {
                     name: string
+                    level: App.Foundation.DataObjects.LevelData
                     count: number
                     children: App.Domains.CheckIn.DataObjects.AttendanceChildData[]
                 }
@@ -37,14 +38,14 @@ declare namespace App {
                     id: number
                     nickname: string
                     squad: string
-                    level: number
+                    level: App.Foundation.DataObjects.LevelData
                     checked_in_at: string
                 }
                 export type DoorChildData = {
                     id: number
                     nickname: string
                     full_name: string
-                    level: number | null
+                    level: App.Foundation.DataObjects.LevelData | null
                     squad: string | null
                     status: App.Enums.ChildStatusEnum
                     status_label: string
@@ -115,7 +116,7 @@ declare namespace App {
                     full_name: string
                     age: number
                     date_of_birth: string
-                    level: string | null
+                    level: App.Foundation.DataObjects.LevelData | null
                     status_label: string
                     has_allergies: boolean
                     satellite: string
@@ -134,7 +135,7 @@ declare namespace App {
                     dislikes: string | null
                     fears: string | null
                     guardian_notes: string | null
-                    level: string | null
+                    level: App.Foundation.DataObjects.LevelData | null
                     status_label: string
                     photo_consent: boolean
                     photo_url: string | null
@@ -176,7 +177,7 @@ declare namespace App {
                     email: string
                     email_confirmed: boolean
                     satellite: string
-                    children: string[]
+                    children: App.Domains.Family.DataObjects.ListChildData[]
                     registered_by: string
                     registered_on: string
                     can_resend: boolean
@@ -193,7 +194,7 @@ declare namespace App {
                     masked_email: string
                     email_confirmed: boolean
                     satellite: string
-                    children: string[]
+                    children: App.Domains.Family.DataObjects.ListChildData[]
                     can_open: boolean
                     can_resend: boolean
                 }
@@ -210,6 +211,10 @@ declare namespace App {
                     last_name: string
                     relationship_label: string
                     phone: string | null
+                }
+                export type ListChildData = {
+                    nickname: string
+                    level: App.Foundation.DataObjects.LevelData | null
                 }
                 export type ListFiltersData = {
                     q: string
@@ -297,6 +302,10 @@ declare namespace App {
     }
     namespace Foundation {
         namespace DataObjects {
+            export type LevelData = {
+                number: number
+                name: string
+            }
             export type PaginationData = {
                 page: number
                 last_page: number

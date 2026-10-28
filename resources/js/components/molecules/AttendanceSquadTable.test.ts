@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 
 const girls: AttendanceSquad = {
     name: 'Level 2 Girls',
+    level: { number: 2, name: 'Level 2' },
     count: 2,
     children: [
         {
@@ -30,6 +31,12 @@ describe('AttendanceSquadTable', () => {
 
         expect(wrapper.find('[data-testid="squad-name"]').text()).toBe('Level 2 Girls')
         expect(wrapper.find('[data-testid="squad-count"]').text()).toBe('2 in')
+    })
+
+    it("heads the Squad with a pill in its Level's colour", () => {
+        const wrapper = mount(AttendanceSquadTable, { props: { squad: girls } })
+
+        expect(wrapper.find('[data-testid="squad-pill"]').classes()).toContain('bg-level-2-soft')
     })
 
     it('shows a table from the sm breakpoint up: names, time and who — no Level column', () => {
@@ -60,6 +67,6 @@ describe('AttendanceSquadTable', () => {
             ['Amara', 'Amara Joy Cruz', '13:05 · by Church Admin'],
             ['Zoe', 'Zoe Cruz', '13:02'],
         ])
-        expect(rows[0]?.find('span').classes()).toContain('font-semibold')
+        expect(rows[0]?.find('span').classes()).toContain('font-bold')
     })
 })

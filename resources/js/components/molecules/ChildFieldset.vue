@@ -1,13 +1,19 @@
 <script setup lang="ts">
-import FormField from '@/components/atoms/FormField.vue'
+import AppButton from '@/components/atoms/AppButton.vue'
+import ChoiceChips from '@/components/atoms/ChoiceChips.vue'
+import SelectField from '@/components/atoms/SelectField.vue'
+import TextArea from '@/components/atoms/TextArea.vue'
+import TextField from '@/components/atoms/TextField.vue'
 import { useEnum } from '@/composables/useEnum'
 import type { ChildDraft } from '@/types'
+import { computed } from 'vue'
 
 /**
- * The fields for one child on the registration form. The model is the server's ChildInput as a draft
- * (`has_allergies` stays null until the parent answers: a blank must never be read as "no allergies", review
- * B6). Errors arrive keyed `children.{index}.{field}`, so each child shows only its own. Boy/girl come from
- * the page's `enums.gender`.
+ * The fields for one child on the registration form (on the kit: the Bold look). The model is the server's
+ * ChildInput as a draft (`has_allergies` stays null until the parent answers — Yes/No chips with neither picked: a
+ * blank must never be read as "no allergies", review B6). Errors arrive keyed `children.{index}.{field}`, so each
+ * child shows only its own. Boy/girl come from the page's `enums.gender`. The fieldset draws no card of its own —
+ * the form around it decides.
  */
 const props = defineProps<{
     index: number
@@ -30,136 +36,125 @@ const error = (field: keyof ChildDraft): string | undefined =>
  * found in the browser, pinned by the "autofill" test.
  */
 
-const input = 'min-h-touch rounded-md border border-border bg-surface px-4 text-lg text-text'
+const genderOptions = computed(() => genders.value.map((g) => ({ value: g.value, label: g.label })))
+
+function setGender(value: string | number | null): void {
+    child.value.gender = (value ?? '') as ChildDraft['gender']
+}
+
+const allergyOptions = computed(() => [
+    { value: 'yes', label: 'Yes', testid: `child-${props.index}-has-allergies-yes` },
+    { value: 'no', label: 'No', testid: `child-${props.index}-has-allergies-no` },
+])
+const allergyAnswer = computed(() =>
+    child.value.has_allergies === null ? null : child.value.has_allergies ? 'yes' : 'no',
+)
+
+function setAllergies(value: string | number | null): void {
+    child.value.has_allergies = value === null ? null : value === 'yes'
+}
 </script>
 
 <template>
-    <fieldset class="border-border flex flex-col gap-4 rounded-lg border p-4">
-        <legend class="text-text px-2 text-xl font-semibold">Child {{ index + 1 }}</legend>
+    <fieldset class="flex min-w-0 flex-col gap-4">
+        <legend class="text-text mb-4 text-2xl font-bold">Child {{ index + 1 }}</legend>
 
-        <FormField label="First name" required :error="error('first_name')">
-            <input
-                v-model="child.first_name"
-                :class="input"
-                :data-testid="`child-${index}-first-name`"
-                autocomplete="off"
-            />
-        </FormField>
-        <FormField label="Middle name" :error="error('middle_name')">
-            <input v-model="child.middle_name" :class="input" />
-        </FormField>
-        <FormField label="Last name" required :error="error('last_name')">
-            <input
-                v-model="child.last_name"
-                :class="input"
-                :data-testid="`child-${index}-last-name`"
-            />
-        </FormField>
-        <FormField
+        <TextField
+            v-model="child.first_name"
+            label="First name"
+            required
+            :error="error('first_name')"
+            :data-testid="`child-${index}-first-name`"
+            autocomplete="off"
+        />
+        <TextField v-model="child.middle_name" label="Middle name" :error="error('middle_name')" />
+        <TextField
+            v-model="child.last_name"
+            label="Last name"
+            required
+            :error="error('last_name')"
+            :data-testid="`child-${index}-last-name`"
+        />
+        <TextField
+            v-model="child.nickname"
             label="Nickname"
             hint="What we call your child. It goes big on the ID card."
             required
             :error="error('nickname')"
-        >
-            <input
-                v-model="child.nickname"
-                :class="input"
-                :data-testid="`child-${index}-nickname`"
-            />
-        </FormField>
-        <FormField label="Boy or girl" required :error="error('gender')">
-            <select v-model="child.gender" :class="input" :data-testid="`child-${index}-gender`">
-                <option value="">Choose…</option>
-                <option v-for="g in genders" :key="g.value" :value="g.value">{{ g.label }}</option>
-            </select>
-        </FormField>
-        <FormField label="Birthday" required :error="error('date_of_birth')">
-            <input
-                v-model="child.date_of_birth"
-                type="date"
-                :class="input"
-                :data-testid="`child-${index}-dob`"
-            />
-        </FormField>
-        <div
-            role="radiogroup"
-            :aria-labelledby="`child-${index}-has-allergies-label`"
-            class="flex flex-col gap-2"
-        >
-            <p :id="`child-${index}-has-allergies-label`" class="text-text text-lg font-medium">
+            :data-testid="`child-${index}-nickname`"
+        />
+        <SelectField
+            label="Boy or girl"
+            required
+            placeholder="Choose…"
+            :options="genderOptions"
+            :model-value="child.gender || null"
+            :error="error('gender')"
+            :data-testid="`child-${index}-gender`"
+            @update:model-value="setGender"
+        />
+        <TextField
+            v-model="child.date_of_birth"
+            type="date"
+            label="Birthday"
+            required
+            :error="error('date_of_birth')"
+            :data-testid="`child-${index}-dob`"
+        />
+        <div class="flex flex-col gap-1.5">
+            <p :id="`child-${index}-has-allergies-label`" class="text-text text-lg font-semibold">
                 Does your child have any allergies?<span class="text-danger" aria-hidden="true">
                     *</span
                 >
             </p>
-            <div class="flex gap-6">
-                <label class="min-h-touch text-text flex items-center gap-2 text-lg">
-                    <input
-                        v-model="child.has_allergies"
-                        type="radio"
-                        :name="`child-${index}-has-allergies`"
-                        :value="true"
-                        class="size-6"
-                        :data-testid="`child-${index}-has-allergies-yes`"
-                    />
-                    Yes
-                </label>
-                <label class="min-h-touch text-text flex items-center gap-2 text-lg">
-                    <input
-                        v-model="child.has_allergies"
-                        type="radio"
-                        :name="`child-${index}-has-allergies`"
-                        :value="false"
-                        class="size-6"
-                        :data-testid="`child-${index}-has-allergies-no`"
-                    />
-                    No
-                </label>
-            </div>
-            <span
-                v-if="error('has_allergies')"
-                role="alert"
-                class="text-danger text-base font-semibold"
-                >{{ error('has_allergies') }}</span
-            >
+            <ChoiceChips
+                :labelledby="`child-${index}-has-allergies-label`"
+                required
+                :error="error('has_allergies')"
+                :options="allergyOptions"
+                :model-value="allergyAnswer"
+                @update:model-value="setAllergies"
+            />
         </div>
-        <FormField
+        <TextField
             v-if="child.has_allergies === true"
+            v-model="child.allergies"
             label="What is your child allergic to?"
             hint="Food or anything else."
             required
             :error="error('allergies')"
-        >
-            <input
-                v-model="child.allergies"
-                :class="input"
-                :data-testid="`child-${index}-allergies`"
-            />
-        </FormField>
-        <FormField label="Sickness or illness" :error="error('illnesses')">
-            <input v-model="child.illnesses" :class="input" />
-        </FormField>
-        <FormField label="Things your child dislikes" :error="error('dislikes')">
-            <input v-model="child.dislikes" :class="input" />
-        </FormField>
-        <FormField label="Things your child is afraid of" :error="error('fears')">
-            <input v-model="child.fears" :class="input" />
-        </FormField>
-        <FormField label="Anything else we should know" :error="error('guardian_notes')">
-            <textarea
-                v-model="child.guardian_notes"
-                rows="3"
-                class="border-border bg-surface text-text rounded-md border p-4 text-lg"
-            />
-        </FormField>
+            :data-testid="`child-${index}-allergies`"
+        />
+        <TextField
+            v-model="child.illnesses"
+            label="Sickness or illness"
+            :error="error('illnesses')"
+        />
+        <TextField
+            v-model="child.dislikes"
+            label="Things your child dislikes"
+            :error="error('dislikes')"
+        />
+        <TextField
+            v-model="child.fears"
+            label="Things your child is afraid of"
+            :error="error('fears')"
+        />
+        <TextArea
+            v-model="child.guardian_notes"
+            label="Anything else we should know"
+            :rows="3"
+            :error="error('guardian_notes')"
+        />
 
-        <button
+        <AppButton
             v-if="removable"
-            type="button"
-            class="text-danger self-start text-lg font-semibold underline"
+            variant="danger"
+            class="self-start"
             :data-testid="`child-${index}-remove`"
             @click="$emit('remove')"
         >
             Remove this child
-        </button>
+        </AppButton>
     </fieldset>
 </template>

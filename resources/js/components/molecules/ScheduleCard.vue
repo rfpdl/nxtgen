@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AppButton from '@/components/atoms/AppButton.vue'
+import Card from '@/components/atoms/Card.vue'
 import type { Schedule } from '@/types'
 import { computed, ref } from 'vue'
 
@@ -28,54 +30,39 @@ function retire(): void {
 </script>
 
 <template>
-    <article
-        class="border-border bg-surface flex flex-col gap-2 rounded-lg border p-4"
+    <Card
+        as="article"
+        class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
         data-testid="schedule"
     >
         <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
-            <h3 class="text-text text-lg font-semibold">{{ schedule.name }}</h3>
-            <p class="text-text-muted">{{ when }}</p>
+            <h3 class="text-text text-xl font-bold">{{ schedule.name }}</h3>
+            <p class="text-text-muted text-lg">{{ when }}</p>
         </div>
-        <div v-if="!confirming" class="flex flex-wrap gap-3">
-            <button
-                type="button"
-                class="min-h-touch border-primary text-primary rounded-md border px-4 font-semibold"
-                data-testid="edit-schedule"
-                @click="$emit('edit')"
-            >
+        <div v-if="!confirming" class="flex flex-wrap items-center gap-3">
+            <AppButton variant="secondary" data-testid="edit-schedule" @click="$emit('edit')">
                 Edit
-            </button>
-            <button
-                type="button"
-                class="min-h-touch text-danger px-2 underline"
-                data-testid="retire-schedule"
-                @click="confirming = true"
-            >
+            </AppButton>
+            <AppButton variant="link" data-testid="retire-schedule" @click="confirming = true">
                 Retire
-            </button>
+            </AppButton>
         </div>
-        <div v-else class="flex flex-col gap-2">
-            <p class="text-text">
+        <div v-else class="bg-warning-soft rounded-control flex w-full flex-col gap-3 p-3">
+            <p class="text-text font-semibold">
                 Retire "{{ schedule.name }}"? It will no longer show at the door.
             </p>
             <div class="flex flex-wrap gap-3">
-                <button
-                    type="button"
-                    class="min-h-touch bg-danger text-on-primary rounded-md px-4 font-semibold"
-                    data-testid="confirm-retire"
-                    @click="retire"
-                >
+                <AppButton variant="danger" data-testid="confirm-retire" @click="retire">
                     Yes, retire it
-                </button>
-                <button
-                    type="button"
-                    class="min-h-touch text-text px-2 underline"
+                </AppButton>
+                <AppButton
+                    variant="secondary"
                     data-testid="keep-schedule"
                     @click="confirming = false"
                 >
                     Keep it
-                </button>
+                </AppButton>
             </div>
         </div>
-    </article>
+    </Card>
 </template>

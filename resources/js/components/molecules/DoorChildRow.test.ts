@@ -13,7 +13,7 @@ const amara: DoorChild = {
     id: 1,
     nickname: 'Amara',
     full_name: 'Amara Cruz',
-    level: 2,
+    level: { number: 2, name: 'Level 2' },
     squad: 'Level 2 Girls',
     status: 'active',
     status_label: 'Active',

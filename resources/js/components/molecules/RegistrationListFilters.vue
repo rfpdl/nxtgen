@@ -1,14 +1,20 @@
 <script setup lang="ts">
+import AppButton from '@/components/atoms/AppButton.vue'
+import CheckRow from '@/components/atoms/CheckRow.vue'
+import SelectField from '@/components/atoms/SelectField.vue'
+import TextField from '@/components/atoms/TextField.vue'
 import { useEnum } from '@/composables/useEnum'
 import type { LevelOption, ListFilters, SatelliteOption } from '@/types'
-import { reactive } from 'vue'
+import { Search } from 'lucide-vue-next'
+import { computed, reactive } from 'vue'
 
 /**
  * Search and filters for the registration lists — families and children (plan §6). The two family-only filters
  * (unconfirmed email, possible duplicate) show only with `familyToggles`. Emits `apply` with only the filters in use, shaped as
  * the address parameters the server reads (FamilyListQuery), so a filtered list can be bookmarked and the Excel
  * download matches it. The satellite choice appears only when there is more than one to choose. The statuses
- * come from the page's `enums.child_status`.
+ * come from the page's `enums.child_status`. On the kit (the Bold look): the search with its button first, then the
+ * pick-one lists (each applies at once) and the ticks; phone first, side by side on a wide screen.
  */
 const props = defineProps<{
     familyToggles?: boolean
@@ -40,87 +46,89 @@ function clear(): void {
     emit('apply', {})
 }
 
-const control = 'min-h-touch border-border bg-surface text-text rounded-md border px-3'
+const satelliteOptions = computed(() =>
+    props.options.satellites.map((s) => ({ value: s.id, label: s.name })),
+)
+const statusOptions = computed(() =>
+    statuses.value.map((s) => ({ value: s.value, label: s.label })),
+)
+const levelOptions = computed(() =>
+    props.options.levels.map((l) => ({ value: l.level, label: l.name })),
+)
+
+/** A pick or a tick applies straight away, as the old dropdowns did on change. */
+function set<K extends 'satellite' | 'status' | 'level' | 'unconfirmed' | 'duplicates'>(
+    key: K,
+    value: unknown,
+): void {
+    ;(f as Record<string, unknown>)[key] = value
+    apply()
+}
 </script>
 
 <template>
-    <form class="flex flex-wrap items-end gap-3" @submit.prevent="apply">
-        <input
-            v-model="f.q"
-            type="search"
-            placeholder="Name, email, phone, child…"
-            aria-label="Search families"
-            :class="[control, 'min-w-56 flex-1']"
-            data-testid="filter-q"
-        />
-        <select
-            v-if="options.satellites.length > 1"
-            v-model="f.satellite"
-            aria-label="Satellite"
-            :class="control"
-            data-testid="filter-satellite"
-            @change="apply"
-        >
-            <option :value="null">All satellites</option>
-            <option v-for="s in options.satellites" :key="s.id" :value="s.id">{{ s.name }}</option>
-        </select>
-        <select
-            v-model="f.status"
-            aria-label="Child status"
-            :class="control"
-            data-testid="filter-status"
-            @change="apply"
-        >
-            <option :value="null">Any status</option>
-            <option v-for="s in statuses" :key="s.value" :value="s.value">
-                {{ s.label }}
-            </option>
-        </select>
-        <select
-            v-model="f.level"
-            aria-label="Level"
-            :class="control"
-            data-testid="filter-level"
-            @change="apply"
-        >
-            <option :value="null">Any Level</option>
-            <option v-for="l in options.levels" :key="l.level" :value="l.level">
-                {{ l.name }}
-            </option>
-        </select>
-        <label v-if="familyToggles" class="min-h-touch text-text flex items-center gap-2">
-            <input
-                v-model="f.unconfirmed"
-                type="checkbox"
-                class="size-5"
+    <form class="flex flex-col gap-3" role="search" @submit.prevent="apply">
+        <div class="flex items-end gap-2">
+            <TextField
+                v-model="f.q"
+                class="flex-1"
+                type="search"
+                label="Search"
+                hide-label
+                placeholder="Name, email, phone, child…"
+                data-testid="filter-q"
+            >
+                <template #leading><Search class="size-6" /></template>
+            </TextField>
+            <AppButton type="submit" variant="secondary" size="lg">Search</AppButton>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-3">
+            <SelectField
+                v-if="options.satellites.length > 1"
+                label="Satellite"
+                placeholder="All satellites"
+                :options="satelliteOptions"
+                :model-value="f.satellite"
+                data-testid="filter-satellite"
+                @update:model-value="set('satellite', $event)"
+            />
+            <SelectField
+                label="Child status"
+                placeholder="Any status"
+                :options="statusOptions"
+                :model-value="f.status"
+                data-testid="filter-status"
+                @update:model-value="set('status', $event)"
+            />
+            <SelectField
+                label="Level"
+                placeholder="Any Level"
+                :options="levelOptions"
+                :model-value="f.level"
+                data-testid="filter-level"
+                @update:model-value="set('level', $event)"
+            />
+        </div>
+        <div class="flex flex-wrap items-center gap-x-4">
+            <CheckRow
+                v-if="familyToggles"
+                class="w-auto!"
+                :model-value="f.unconfirmed"
                 data-testid="filter-unconfirmed"
-                @change="apply"
-            />
-            Email not confirmed
-        </label>
-        <label v-if="familyToggles" class="min-h-touch text-text flex items-center gap-2">
-            <input
-                v-model="f.duplicates"
-                type="checkbox"
-                class="size-5"
+                @update:model-value="set('unconfirmed', $event)"
+                >Email not confirmed</CheckRow
+            >
+            <CheckRow
+                v-if="familyToggles"
+                class="w-auto!"
+                :model-value="f.duplicates"
                 data-testid="filter-duplicates"
-                @change="apply"
-            />
-            Possible duplicate
-        </label>
-        <button
-            type="submit"
-            class="min-h-touch bg-primary text-on-primary rounded-md px-4 font-semibold"
-        >
-            Search
-        </button>
-        <button
-            type="button"
-            class="min-h-touch text-text px-2 underline"
-            data-testid="filter-clear"
-            @click="clear"
-        >
-            Clear
-        </button>
+                @update:model-value="set('duplicates', $event)"
+                >Possible duplicate</CheckRow
+            >
+            <AppButton variant="link" class="ml-auto" data-testid="filter-clear" @click="clear">
+                Clear filters
+            </AppButton>
+        </div>
     </form>
 </template>

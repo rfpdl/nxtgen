@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import AppButton from '@/components/atoms/AppButton.vue'
-import Card from '@/components/atoms/Card.vue'
 import EmptyState from '@/components/atoms/EmptyState.vue'
 import Pill from '@/components/atoms/Pill.vue'
+import RowList from '@/components/atoms/RowList.vue'
+import SectionHeading from '@/components/atoms/SectionHeading.vue'
 import type { DoorCheckIn } from '@/types'
 
 /**
@@ -16,32 +17,29 @@ const emit = defineEmits<{ undo: [checkInId: number] }>()
 
 <template>
     <section class="flex flex-col gap-2" data-testid="checked-in-list">
-        <h2 class="text-text text-xl font-bold">Checked in</h2>
+        <SectionHeading>Checked in</SectionHeading>
         <EmptyState v-if="checkIns.length === 0" data-testid="checked-in-empty"
             >No one checked in yet. Search a child's or parent's name to check them in.</EmptyState
         >
-        <Card v-else as="ul" flush class="divide-border flex flex-col divide-y-2">
-            <li
-                v-for="checkIn in checkIns"
-                :key="checkIn.id"
-                class="flex min-h-16 items-center gap-3 px-4 py-2"
-                data-testid="checked-in-row"
-            >
-                <p class="flex min-w-0 flex-1 flex-col items-start gap-1">
-                    <span class="text-text text-lg font-bold" data-testid="checked-in-name">{{
-                        checkIn.nickname
-                    }}</span>
-                    <Pill :level="checkIn.level">{{ checkIn.squad }}</Pill>
-                </p>
-                <span class="text-text-muted tabular-nums">{{ checkIn.checked_in_at }}</span>
-                <AppButton
-                    variant="secondary"
-                    data-testid="checked-in-undo"
-                    @click="emit('undo', checkIn.id)"
-                >
-                    Undo
-                </AppButton>
-            </li>
-        </Card>
+        <RowList v-else :items="checkIns" :item-key="(c) => c.id" row-testid="checked-in-row">
+            <template #default="{ item: checkIn }">
+                <div class="flex items-center gap-3">
+                    <p class="flex min-w-0 flex-1 flex-col items-start gap-1">
+                        <span class="text-text text-lg font-bold" data-testid="checked-in-name">{{
+                            checkIn.nickname
+                        }}</span>
+                        <Pill :level="checkIn.level">{{ checkIn.squad }}</Pill>
+                    </p>
+                    <span class="text-text-muted tabular-nums">{{ checkIn.checked_in_at }}</span>
+                    <AppButton
+                        variant="secondary"
+                        data-testid="checked-in-undo"
+                        @click="emit('undo', checkIn.id)"
+                    >
+                        Undo
+                    </AppButton>
+                </div>
+            </template>
+        </RowList>
     </section>
 </template>

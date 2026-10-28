@@ -16,7 +16,7 @@ const child = (over: Partial<ChildPortal> = {}): ChildPortal => ({
     dislikes: null,
     fears: null,
     guardian_notes: null,
-    level: 'Level 2',
+    level: { number: 2, name: 'Level 2' },
     status_label: 'Active',
     photo_consent: false,
     photo_url: null,
@@ -45,9 +45,20 @@ describe('FamilyChildCard', () => {
         ).toContain('Peanuts')
     })
 
+    it('shows the Level as a pill in its own colour, and the status beside it', () => {
+        const wrapper = mount(FamilyChildCard, { props: { child: child() } })
+        const level = wrapper.find('[data-testid="child-level-pill"]')
+
+        expect(level.classes()).toContain('bg-level-2-soft')
+        expect(level.text()).toBe('Level 2')
+        expect(wrapper.find('[data-testid="child-status-pill"]').text()).toBe('Active')
+    })
+
     it('says when the child has no Level yet', () => {
         expect(
-            mount(FamilyChildCard, { props: { child: child({ level: null }) } }).text(),
+            mount(FamilyChildCard, {
+                props: { child: child({ level: null }) },
+            }).text(),
         ).toContain('No Level yet')
     })
 

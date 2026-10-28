@@ -17,7 +17,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 #[TypeScript]
 final class FamilySearchResultData extends Data
 {
-    /** @param list<string> $children */
+    /** @param list<ListChildData> $children */
     public function __construct(
         public int $id,
         public string $primary_name,
@@ -39,7 +39,7 @@ final class FamilySearchResultData extends Data
             masked_email: EmailMask::mask($family->contactEmail()),
             email_confirmed: $confirmed,
             satellite: $family->homeSatellite->name,
-            children: array_values($family->children->map(fn ($c): string => $c->nickname)->all()),
+            children: array_values($family->children->map(fn ($c): ListChildData => ListChildData::fromModel($c))->all()),
             can_open: $canOpen,
             can_resend: $mayResend && ! $confirmed,
         );

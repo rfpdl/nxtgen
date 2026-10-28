@@ -1,12 +1,18 @@
 <script setup lang="ts">
-import FormField from '@/components/atoms/FormField.vue'
+import AppButton from '@/components/atoms/AppButton.vue'
+import Card from '@/components/atoms/Card.vue'
+import PageHeader from '@/components/atoms/PageHeader.vue'
+import TextField from '@/components/atoms/TextField.vue'
 import FlashBanner from '@/components/molecules/FlashBanner.vue'
 import { useFlashMessages } from '@/composables/useFlashMessages'
 import type { UpdatePasswordInput } from '@/types'
-import { Head, Link, useForm } from '@inertiajs/vue3'
+import { Head, useForm } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
-/** A staff member's backup password (plan D7): for when the email link is slow. The email link keeps working. */
+/**
+ * A staff member's backup password (plan D7): for when the email link is slow. The email link keeps working. On the
+ * kit (the Bold look): one Card, the two fields and the one button.
+ */
 defineProps<{ has_password: boolean }>()
 
 const { message, dismiss } = useFlashMessages()
@@ -21,52 +27,47 @@ function submit(): void {
         onFinish: () => form.reset(),
     })
 }
-
-const input = 'min-h-touch border-border bg-surface text-text rounded-md border px-4 text-lg'
 </script>
 
 <template>
     <Head title="Backup password" />
     <FlashBanner :message="message" @dismiss="dismiss" />
-    <main class="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 p-6">
-        <h1 class="text-text text-3xl font-semibold">Backup password</h1>
-        <p class="text-text text-lg">
-            For a morning when the email link is slow to arrive. You can still sign in with the
-            email link any time.
-            <span v-if="has_password">You already have one; saving replaces it.</span>
-        </p>
-        <form class="flex flex-col gap-4" @submit.prevent="submit">
-            <FormField
-                label="New password"
-                hint="At least 10 characters — a short sentence is easiest."
-                :error="form.errors.password"
-            >
-                <input
-                    v-model="form.password"
-                    type="password"
-                    autocomplete="new-password"
-                    :class="input"
-                    data-testid="new-password"
-                />
-            </FormField>
-            <FormField label="The same password again">
-                <input
-                    v-model="form.password_confirmation"
-                    type="password"
-                    autocomplete="new-password"
-                    :class="input"
-                    data-testid="new-password-confirm"
-                />
-            </FormField>
-            <button
-                type="submit"
-                :disabled="form.processing"
-                class="min-h-touch bg-primary text-on-primary rounded-md px-4 text-lg font-semibold"
-                data-testid="save-password"
-            >
-                Save password
-            </button>
-        </form>
-        <Link :href="route('home')" class="text-text-muted underline">Back</Link>
+    <main class="bg-surface-sunken min-h-dvh">
+        <div class="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 p-4">
+            <PageHeader
+                title="Backup password"
+                :sub="`For a morning when the email link is slow to arrive. You can still sign in with the email link any time.${has_password ? ' You already have one; saving replaces it.' : ''}`"
+            />
+            <Card>
+                <form class="flex flex-col gap-4" @submit.prevent="submit">
+                    <TextField
+                        v-model="form.password"
+                        type="password"
+                        label="New password"
+                        hint="At least 10 characters — a short sentence is easiest."
+                        autocomplete="new-password"
+                        :error="form.errors.password"
+                        data-testid="new-password"
+                    />
+                    <TextField
+                        v-model="form.password_confirmation"
+                        type="password"
+                        label="The same password again"
+                        autocomplete="new-password"
+                        data-testid="new-password-confirm"
+                    />
+                    <AppButton
+                        type="submit"
+                        size="lg"
+                        block
+                        :loading="form.processing"
+                        data-testid="save-password"
+                    >
+                        Save password
+                    </AppButton>
+                </form>
+            </Card>
+            <AppButton :href="route('home')" variant="link" class="self-start">Back</AppButton>
+        </div>
     </main>
 </template>

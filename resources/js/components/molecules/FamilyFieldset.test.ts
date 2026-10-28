@@ -42,7 +42,7 @@ describe('FamilyFieldset', () => {
         expect(wrapper.find('[data-testid="dgroup-area"]').exists()).toBe(false)
         expect(wrapper.find('[data-testid="wants-dgroup"]').exists()).toBe(true)
 
-        await wrapper.find('[data-testid="in-dgroup"]').setValue(true)
+        await wrapper.find('[data-testid="in-dgroup"]').trigger('click')
 
         expect(f.in_dgroup).toBe(true)
         expect(wrapper.find('[data-testid="dgroup-area"]').exists()).toBe(true)

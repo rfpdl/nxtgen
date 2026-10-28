@@ -1,17 +1,23 @@
 <script setup lang="ts">
+import Card from '@/components/atoms/Card.vue'
+import EmailText from '@/components/atoms/EmailText.vue'
+import PageHeader from '@/components/atoms/PageHeader.vue'
+import Pill from '@/components/atoms/Pill.vue'
 import ResendLinkButton from '@/components/atoms/ResendLinkButton.vue'
+import RowList from '@/components/atoms/RowList.vue'
+import SectionHeading from '@/components/atoms/SectionHeading.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import ChildAdminControls from '@/components/molecules/ChildAdminControls.vue'
 import FamilyChildCard from '@/components/molecules/FamilyChildCard.vue'
 import PossibleDuplicateCard from '@/components/organisms/PossibleDuplicateCard.vue'
 import AddChildForm from '@/components/organisms/AddChildForm.vue'
 import ChildPhotoForm from '@/components/organisms/ChildPhotoForm.vue'
+import CorrectEmailForm from '@/components/organisms/CorrectEmailForm.vue'
 import EditChildForm from '@/components/organisms/EditChildForm.vue'
 import FamilyDetailsForm from '@/components/organisms/FamilyDetailsForm.vue'
 import { useChurch } from '@/composables/useChurch'
 import type {
     ChildStatus,
-    CorrectFamilyEmailInput,
     DuplicatePair,
     DuplicateStatus,
     FamilyAdmin,
@@ -24,8 +30,8 @@ import type {
     UpdateChildLevelInput,
     UpdateChildStatusInput,
 } from '@/types'
-import { Head, router, useForm, usePage } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { Head, router, usePage } from '@inertiajs/vue3'
+import { computed, ref } from 'vue'
 import { route } from 'ziggy-js'
 
 const props = defineProps<{
@@ -46,14 +52,12 @@ const props = defineProps<{
 
 const church = useChurch()
 
-const emailForm = useForm<CorrectFamilyEmailInput>({ email: '' })
-
-function correctEmail(): void {
-    emailForm.put(route('church.families.email', [church.value.slug, props.family.id]), {
-        preserveScroll: true,
-        onSuccess: () => emailForm.reset(),
-    })
-}
+/** "CCF DXB · Al Barsha · registered by Lifeshaper" under the name. */
+const sub = computed(() =>
+    [props.family.satellite, props.family.area, `registered by ${props.family.registered_by}`]
+        .filter(Boolean)
+        .join(' · '),
+)
 
 /** A refused Level change comes back as a validation error on the page. */
 const page = usePage<{ errors: Record<string, string | undefined> }>()
@@ -86,49 +90,20 @@ function setStatus(childId: number, status: ChildStatus): void {
 <template>
     <Head :title="family.primary_name" />
     <ChurchShell>
-        <header class="flex flex-col gap-1">
-            <h1 class="text-text text-2xl font-semibold">{{ family.primary_name }}</h1>
-            <p class="text-text">
-                {{ family.email }}
-                <span v-if="!family.email_confirmed" class="text-warning ml-2 font-semibold"
-                    >Email not confirmed</span
-                >
-            </p>
-            <p class="text-text-muted">
-                {{ family.satellite }}<span v-if="family.area"> · {{ family.area }}</span> ·
-                registered by {{ family.registered_by }}
+        <PageHeader :title="family.primary_name" :sub="sub" />
+        <Card class="flex flex-col gap-3">
+            <p class="text-text flex flex-wrap items-center gap-2 text-lg">
+                <EmailText :email="family.email" />
+                <Pill v-if="!family.email_confirmed" variant="warning">Email not confirmed</Pill>
             </p>
             <ResendLinkButton v-if="!family.email_confirmed" :family-id="family.id" />
-            <form
+            <CorrectEmailForm
                 v-if="family.can_edit && !family.email_confirmed"
-                class="flex flex-wrap items-end gap-2"
-                @submit.prevent="correctEmail"
-            >
-                <label class="text-text flex flex-col gap-1">
-                    Typed the email wrong? Correct it:
-                    <input
-                        v-model="emailForm.email"
-                        type="email"
-                        class="min-h-touch border-border bg-surface text-text rounded-md border px-3"
-                        data-testid="correct-email"
-                    />
-                </label>
-                <button
-                    type="submit"
-                    class="min-h-touch border-border bg-surface text-text rounded-md border px-4"
-                >
-                    Save email
-                </button>
-                <span
-                    v-if="emailForm.errors.email"
-                    role="alert"
-                    class="text-danger font-semibold"
-                    >{{ emailForm.errors.email }}</span
-                >
-            </form>
-        </header>
+                :action="route('church.families.email', [church.slug, family.id])"
+            />
+        </Card>
         <section v-if="duplicates.length > 0" class="flex flex-col gap-3">
-            <h2 class="text-text text-xl font-semibold">Possible duplicates</h2>
+            <SectionHeading>Possible duplicates</SectionHeading>
             <PossibleDuplicateCard
                 v-for="pair in duplicates"
                 :key="pair.id"
@@ -136,16 +111,16 @@ function setStatus(childId: number, status: ChildStatus): void {
                 @answer="answerDuplicate"
             />
         </section>
-        <section class="flex flex-col gap-2">
-            <h2 class="text-text text-xl font-semibold">Parents and guardians</h2>
-            <p
-                v-for="g in family.guardians"
-                :key="`${g.first_name}-${g.last_name}`"
-                class="text-text"
-            >
-                {{ g.first_name }} {{ g.last_name }} · {{ g.relationship_label
-                }}<span v-if="g.phone"> · {{ g.phone }}</span>
-            </p>
+        <section class="flex flex-col gap-3">
+            <SectionHeading>Parents and guardians</SectionHeading>
+            <RowList :items="family.guardians" :item-key="(g) => `${g.first_name}-${g.last_name}`">
+                <template #default="{ item: g }">
+                    <p class="text-text text-lg">
+                        {{ g.first_name }} {{ g.last_name }} · {{ g.relationship_label
+                        }}<span v-if="g.phone"> · {{ g.phone }}</span>
+                    </p>
+                </template>
+            </RowList>
             <FamilyDetailsForm
                 v-if="details && primary"
                 :action="route('church.families.update', [church.slug, family.id])"
@@ -156,7 +131,7 @@ function setStatus(childId: number, status: ChildStatus): void {
             />
         </section>
         <section class="flex flex-col gap-3">
-            <h2 class="text-text text-xl font-semibold">Children</h2>
+            <SectionHeading>Children</SectionHeading>
             <FamilyChildCard v-for="child in family.children" :key="child.id" :child="child">
                 <ChildAdminControls
                     :child="child"
@@ -185,14 +160,16 @@ function setStatus(childId: number, status: ChildStatus): void {
                 :action="route('church.families.children.store', [church.slug, family.id])"
             />
         </section>
-        <section v-if="notes.length > 0" class="flex flex-col gap-2" data-testid="history">
-            <h2 class="text-text text-xl font-semibold">History</h2>
-            <ul class="flex flex-col gap-1">
-                <li v-for="note in notes" :key="note.id" class="text-text">
-                    {{ note.body }}
-                    <span class="text-text-muted"> — {{ note.author }}, {{ note.at }}</span>
-                </li>
-            </ul>
+        <section v-if="notes.length > 0" class="flex flex-col gap-3" data-testid="history">
+            <SectionHeading>History</SectionHeading>
+            <RowList :items="notes" :item-key="(note) => note.id">
+                <template #default="{ item: note }">
+                    <p class="text-text">
+                        {{ note.body }}
+                        <span class="text-text-muted"> — {{ note.author }}, {{ note.at }}</span>
+                    </p>
+                </template>
+            </RowList>
         </section>
     </ChurchShell>
 </template>

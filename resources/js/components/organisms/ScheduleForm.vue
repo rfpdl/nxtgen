@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import FormField from '@/components/atoms/FormField.vue'
+import AppButton from '@/components/atoms/AppButton.vue'
+import Card from '@/components/atoms/Card.vue'
+import SelectField from '@/components/atoms/SelectField.vue'
+import TextField from '@/components/atoms/TextField.vue'
 import { useEnum } from '@/composables/useEnum'
 import type { Draft, Schedule, ScheduleInput } from '@/types'
 import { useForm } from '@inertiajs/vue3'
+import { computed } from 'vue'
 
 /**
  * Add or edit a class (GLOSSARY "Schedule"): a name, and a day and start/end time if it has them. Given a
@@ -43,68 +47,64 @@ function submit(): void {
     form.put(props.action, { preserveScroll: true, onSuccess: () => emit('done') })
 }
 
-const input = 'min-h-touch border-input rounded-md border px-3'
+const weekdayOptions = computed(() =>
+    weekdays.value.map((d) => ({ value: d.value, label: d.label })),
+)
+
+function setWeekday(value: string | number | null): void {
+    form.weekday = (value ?? '') as typeof form.weekday
+}
 </script>
 
 <template>
-    <form
-        class="border-border bg-surface flex flex-col gap-4 rounded-lg border p-4"
-        novalidate
-        data-testid="schedule-form"
-        @submit.prevent="submit"
-    >
-        <FormField label="Name" hint="What people call it, e.g. 1PM" :error="form.errors.name">
-            <input
+    <Card>
+        <form
+            class="flex flex-col gap-4"
+            novalidate
+            data-testid="schedule-form"
+            @submit.prevent="submit"
+        >
+            <TextField
                 v-model="form.name"
-                type="text"
+                label="Name"
+                hint="What people call it, e.g. 1PM"
                 autocomplete="off"
-                :class="input"
+                :error="form.errors.name"
                 data-testid="schedule-name"
             />
-        </FormField>
-        <FormField label="Day" :error="form.errors.weekday">
-            <select v-model="form.weekday" :class="input" data-testid="schedule-weekday">
-                <option value="">No set day (shows every day)</option>
-                <option v-for="day in weekdays" :key="day.value" :value="day.value">
-                    {{ day.label }}
-                </option>
-            </select>
-        </FormField>
-        <div class="flex flex-wrap gap-4">
-            <FormField label="Starts" :error="form.errors.starts_at">
-                <input
+            <SelectField
+                label="Day"
+                placeholder="No set day (shows every day)"
+                :options="weekdayOptions"
+                :model-value="form.weekday || null"
+                :error="form.errors.weekday"
+                data-testid="schedule-weekday"
+                @update:model-value="setWeekday"
+            />
+            <div class="grid grid-cols-2 gap-4">
+                <TextField
                     v-model="form.starts_at"
                     type="time"
-                    :class="input"
+                    label="Starts"
+                    :error="form.errors.starts_at"
                     data-testid="schedule-starts-at"
                 />
-            </FormField>
-            <FormField label="Ends" :error="form.errors.ends_at">
-                <input
+                <TextField
                     v-model="form.ends_at"
                     type="time"
-                    :class="input"
+                    label="Ends"
+                    :error="form.errors.ends_at"
                     data-testid="schedule-ends-at"
                 />
-            </FormField>
-        </div>
-        <div class="flex flex-wrap gap-3">
-            <button
-                type="submit"
-                :disabled="form.processing"
-                class="min-h-touch bg-primary text-on-primary rounded-md px-4 text-lg font-semibold"
-                data-testid="schedule-submit"
-            >
-                {{ submitLabel }}
-            </button>
-            <button
-                type="button"
-                class="min-h-touch text-text px-2 underline"
-                data-testid="schedule-cancel"
-                @click="emit('done')"
-            >
-                Cancel
-            </button>
-        </div>
-    </form>
+            </div>
+            <div class="flex flex-wrap gap-3">
+                <AppButton type="submit" :loading="form.processing" data-testid="schedule-submit">
+                    {{ submitLabel }}
+                </AppButton>
+                <AppButton variant="secondary" data-testid="schedule-cancel" @click="emit('done')">
+                    Cancel
+                </AppButton>
+            </div>
+        </form>
+    </Card>
 </template>

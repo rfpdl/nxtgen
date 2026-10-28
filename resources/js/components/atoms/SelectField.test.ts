@@ -50,4 +50,17 @@ describe('SelectField', () => {
             'Pick a Level',
         )
     })
+    it('can show its placeholder without letting it be picked (a current value to change from)', () => {
+        const wrapper = mount(SelectField, {
+            props: {
+                label: 'Level',
+                placeholder: 'Level 3',
+                placeholderDisabled: true,
+                options: [],
+            },
+        })
+
+        expect(wrapper.find('option').attributes('disabled')).toBeDefined()
+        expect(wrapper.find('option').text()).toBe('Level 3')
+    })
 })

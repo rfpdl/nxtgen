@@ -26,7 +26,7 @@ function child(id: number, nickname: string, extra: Partial<DoorChild> = {}): Do
         id,
         nickname,
         full_name: `${nickname} Cruz`,
-        level: 2,
+        level: { number: 2, name: 'Level 2' },
         squad: 'Level 2 Girls',
         status: 'active',
         status_label: 'Active',

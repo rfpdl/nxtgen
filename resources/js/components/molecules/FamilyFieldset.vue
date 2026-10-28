@@ -1,82 +1,102 @@
 <script setup lang="ts">
-import FormField from '@/components/atoms/FormField.vue'
+import CheckRow from '@/components/atoms/CheckRow.vue'
+import SelectField from '@/components/atoms/SelectField.vue'
+import TextField from '@/components/atoms/TextField.vue'
 import type { FamilyFieldsDraft, SatelliteOption } from '@/types'
+import { computed } from 'vue'
 
 /**
  * The family's own fields — today's Google Form plus the home satellite — on registration and on editing.
  * The model is FamilyDetailsInput's family fields as a draft (registration shares its rules); errors arrive by
- * field name. Writes IN PLACE on the shared form object.
+ * field name. Writes IN PLACE on the shared form object. On the kit (the Bold look): the yes/no questions are big
+ * ticks (CheckRow).
  */
-defineProps<{
+const props = defineProps<{
     satellites: SatelliteOption[]
     errors: Record<string, string | undefined>
 }>()
 
 const family = defineModel<FamilyFieldsDraft>({ required: true })
 
-const input = 'min-h-touch rounded-md border border-border bg-surface px-4 text-lg text-text'
-const check = 'min-h-touch text-text flex items-center gap-3 text-lg'
+const satelliteOptions = computed(() =>
+    props.satellites.map((s) => ({ value: s.id, label: s.name })),
+)
+
+function setSatellite(value: string | number | null): void {
+    family.value.home_satellite_id = value === null ? '' : Number(value)
+}
 </script>
 
 <template>
-    <FormField label="Satellite you usually attend" required :error="errors['home_satellite_id']">
-        <select v-model="family.home_satellite_id" :class="input" data-testid="home-satellite">
-            <option value="">Choose…</option>
-            <option v-for="s in satellites" :key="s.id" :value="s.id">{{ s.name }}</option>
-        </select>
-    </FormField>
-    <FormField
+    <SelectField
+        label="Satellite you usually attend"
+        required
+        placeholder="Choose…"
+        :options="satelliteOptions"
+        :model-value="family.home_satellite_id === '' ? null : family.home_satellite_id"
+        :error="errors['home_satellite_id']"
+        data-testid="home-satellite"
+        @update:model-value="setSatellite"
+    />
+    <TextField
+        v-model="family.area_text"
         label="Area where you live"
         hint="For example: Al Barsha"
         :error="errors['area_text']"
-    >
-        <input v-model="family.area_text" :class="input" data-testid="area" />
-    </FormField>
-    <FormField
+        data-testid="area"
+    />
+    <TextField
+        v-model="family.fb_account"
         label="Facebook account"
         hint="To add you to the parents' group"
         :error="errors['fb_account']"
+    />
+    <CheckRow
+        :model-value="family.wants_fb_group === true"
+        class="text-lg"
+        @update:model-value="family.wants_fb_group = $event"
+        >Add me to the parents' FB group / chat</CheckRow
     >
-        <input v-model="family.fb_account" :class="input" />
-    </FormField>
-    <label :class="check"
-        ><input v-model="family.wants_fb_group" type="checkbox" class="size-6" /> Add me to the
-        parents' FB group / chat</label
-    >
-    <label :class="check"
-        ><input v-model="family.in_dgroup" type="checkbox" class="size-6" data-testid="in-dgroup" />
-        I am in a DGroup</label
+    <CheckRow
+        :model-value="family.in_dgroup === true"
+        class="text-lg"
+        data-testid="in-dgroup"
+        @update:model-value="family.in_dgroup = $event"
+        >I am in a DGroup</CheckRow
     >
     <template v-if="family.in_dgroup">
-        <FormField label="DGroup area" :error="errors['dgroup_area_text']">
-            <input v-model="family.dgroup_area_text" :class="input" data-testid="dgroup-area" />
-        </FormField>
-        <FormField label="DGroup leader's name" :error="errors['dgroup_leader_name']">
-            <input v-model="family.dgroup_leader_name" :class="input" />
-        </FormField>
-        <FormField label="DGroup leader's phone" :error="errors['dgroup_leader_phone']">
-            <input
-                v-model="family.dgroup_leader_phone"
-                type="tel"
-                :class="input"
-                data-testid="dgroup-leader-phone"
-            />
-        </FormField>
-    </template>
-    <label v-else :class="check"
-        ><input
-            v-model="family.wants_dgroup"
-            type="checkbox"
-            class="size-6"
-            data-testid="wants-dgroup"
+        <TextField
+            v-model="family.dgroup_area_text"
+            label="DGroup area"
+            :error="errors['dgroup_area_text']"
+            data-testid="dgroup-area"
         />
-        I would like to join a DGroup</label
+        <TextField
+            v-model="family.dgroup_leader_name"
+            label="DGroup leader's name"
+            :error="errors['dgroup_leader_name']"
+        />
+        <TextField
+            v-model="family.dgroup_leader_phone"
+            type="tel"
+            label="DGroup leader's phone"
+            :error="errors['dgroup_leader_phone']"
+            data-testid="dgroup-leader-phone"
+        />
+    </template>
+    <CheckRow
+        v-else
+        :model-value="family.wants_dgroup === true"
+        class="text-lg"
+        data-testid="wants-dgroup"
+        @update:model-value="family.wants_dgroup = $event"
+        >I would like to join a DGroup</CheckRow
     >
-    <FormField
+    <TextField
+        v-model="family.lifestage"
         label="Your lifestage"
         hint="For example: single, married, married with kids"
         :error="errors['lifestage']"
-    >
-        <input v-model="family.lifestage" :class="input" data-testid="lifestage" />
-    </FormField>
+        data-testid="lifestage"
+    />
 </template>

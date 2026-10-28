@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import AppButton from '@/components/atoms/AppButton.vue'
 import { useChurch } from '@/composables/useChurch'
-import { Link } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
 /**
- * "Send the confirmation link again" for a family whose email is unconfirmed — on the family page and on the
- * families and children lists. The server decides who may (AccessScope::canResendLink) and flashes the answer.
+ * "Send the confirmation link again" for a family whose email is unconfirmed — on the family page, the families list
+ * and the door search. A secondary AppButton that POSTs, keeping the scroll. The server decides who may
+ * (AccessScope::canResendLink) and flashes the answer.
  */
 defineProps<{ familyId: number }>()
 
@@ -13,13 +14,13 @@ const church = useChurch()
 </script>
 
 <template>
-    <Link
+    <AppButton
+        variant="secondary"
         :href="route('church.families.resend', [church.slug, familyId])"
         method="post"
-        as="button"
         :preserve-scroll="true"
-        class="min-h-touch border-primary text-primary self-start rounded-md border px-4 text-lg font-semibold"
+        class="self-start"
         data-testid="resend"
-        >Send the confirmation link again</Link
+        >Send the confirmation link again</AppButton
     >
 </template>

@@ -4,8 +4,20 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
 const checkIns: DoorCheckIn[] = [
-    { id: 22, nickname: 'Bea', squad: 'Level 3 Girls', level: 3, checked_in_at: '12:55' },
-    { id: 21, nickname: 'Amara', squad: 'Level 2 Girls', level: 2, checked_in_at: '12:40' },
+    {
+        id: 22,
+        nickname: 'Bea',
+        squad: 'Level 3 Girls',
+        level: { number: 3, name: 'Level 3' },
+        checked_in_at: '12:55',
+    },
+    {
+        id: 21,
+        nickname: 'Amara',
+        squad: 'Level 2 Girls',
+        level: { number: 2, name: 'Level 2' },
+        checked_in_at: '12:40',
+    },
 ]
 
 describe('DoorCheckedInList', () => {

@@ -6,8 +6,9 @@ import { computed } from 'vue'
 /**
  * THE button (the Bold look, DECISIONS 2026-10-28). `primary` is the green pressable one — it sits on a thick edge of
  * its own colour and drops onto it when pressed; `secondary` is white on a grey edge; `quiet` (in the colour of what
- * it sits on) and `link` are flat. With `href` it is an Inertia Link (a non-GET one renders as a button); a disabled
- * or loading link does not navigate and says so (`aria-disabled`). `type` is for a plain button only.
+ * it sits on) and `link` are flat. With `href` it is an Inertia Link (a non-GET one renders as a button), or with
+ * `external` a plain `<a>` (a file download); a disabled or loading link does not navigate and says so
+ * (`aria-disabled`). `type` is for a plain button only.
  */
 type Variant = 'primary' | 'secondary' | 'quiet' | 'danger' | 'link'
 
@@ -21,13 +22,13 @@ const props = withDefaults(
         href?: string
         method?: 'get' | 'post' | 'put' | 'delete'
         block?: boolean
+        external?: boolean
     }>(),
     { variant: 'primary', size: 'md', type: 'button', href: undefined, method: 'get' },
 )
 
-if (props.href && props.type === 'submit') {
+if (props.href && props.type === 'submit')
     console.warn('AppButton: a link cannot submit a form — drop `href` or `type="submit"`.')
-}
 
 const PRESS = 'not-disabled:active:translate-y-[5px] not-disabled:active:shadow-none'
 const VARIANTS: Record<Variant, string> = {
@@ -56,8 +57,9 @@ const classes = computed(() => [
 </script>
 
 <template>
+    <a v-if="href && external && !inactive" :href="href" :class="classes"><slot /></a>
     <Link
-        v-if="href && !inactive"
+        v-else-if="href && !inactive"
         :href="href"
         :method="method"
         :as="method === 'get' ? 'a' : 'button'"

@@ -6,6 +6,7 @@ namespace App\Domains\CheckIn\DataObjects;
 
 use App\Data\Models\Child;
 use App\Enums\ChildStatusEnum;
+use App\Foundation\DataObjects\LevelData;
 use App\Foundation\Support\LevelChart;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -23,7 +24,7 @@ final class DoorChildData extends Data
         public int $id,
         public string $nickname,
         public string $full_name,
-        public ?int $level,
+        public ?LevelData $level,
         public ?string $squad,
         public ChildStatusEnum $status,
         public string $status_label,
@@ -41,7 +42,7 @@ final class DoorChildData extends Data
             id: $child->id,
             nickname: $child->displayName(),
             full_name: $child->fullName(),
-            level: $level,
+            level: LevelData::fromNumber($level),
             squad: $level === null ? null : LevelChart::squadName($level, LevelChart::squadGender($level, $child->gender)),
             status: $child->status,
             status_label: $child->status->label(),

@@ -41,10 +41,9 @@ describe('RegistrationListFilters', () => {
         expect(
             (wrapper.find('[data-testid="filter-satellite"]').element as HTMLSelectElement).value,
         ).toBe('8')
-        expect(
-            (wrapper.find('[data-testid="filter-unconfirmed"]').element as HTMLInputElement)
-                .checked,
-        ).toBe(true)
+        expect(wrapper.find('[data-testid="filter-unconfirmed"]').attributes('aria-checked')).toBe(
+            'true',
+        )
     })
 
     it("offers the child statuses the page's enums carry", () => {
@@ -74,7 +73,7 @@ describe('RegistrationListFilters', () => {
         await wrapper.find('[data-testid="filter-q"]').setValue('Ramos')
         await wrapper.find('[data-testid="filter-status"]').setValue('inactive')
         await wrapper.find('[data-testid="filter-level"]').setValue('2')
-        await wrapper.find('[data-testid="filter-duplicates"]').setValue(true)
+        await wrapper.find('[data-testid="filter-duplicates"]').trigger('click')
         await wrapper.find('form').trigger('submit')
 
         expect(wrapper.emitted('apply')?.at(-1)).toEqual([

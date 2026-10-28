@@ -64,6 +64,17 @@ describe('AppShell', () => {
         wrapper.unmount()
     })
 
+    it('keeps the desktop items compact, so Sign out shares their row and wraps only when narrow', () => {
+        const wrapper = shell()
+        const row = wrapper.find('[data-testid="menu-row"]')
+
+        expect(row.classes()).toContain('flex-wrap')
+        const items = row.findAll('a').filter((a) => ['Check in', 'Families'].includes(a.text()))
+        expect(items).toHaveLength(2)
+        expect(items.every((a) => a.classes().includes('px-2.5!'))).toBe(true)
+        wrapper.unmount()
+    })
+
     it('opens the menu as a sheet of big buttons, with Switch and Sign out', async () => {
         const wrapper = shell()
         await openSheet(wrapper)

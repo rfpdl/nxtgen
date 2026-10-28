@@ -1,15 +1,17 @@
 <script setup lang="ts">
+import type { Level } from '@/types'
 import { computed } from 'vue'
 
 /**
- * A small rounded label (the Bold look). Give it a `level` (1–4) and it takes that Level's colour from the
- * age-level chart — 1 blue, 2 yellow, 3 red, 4 green — as a soft tint with dark text and a dot of the chart colour;
+ * A small rounded label (the Bold look). Give it a `level` (a Level: number 1–4 and name) and it takes that Level's
+ * colour from the age-level chart — 1 blue, 2 yellow, 3 red, 4 green — as a soft tint with dark text and a dot of the
+ * chart colour, saying the Level's name unless given words of its own (a Squad's name);
  * otherwise a `variant`: `danger` for a warning flag (allergies), a status, or `neutral`. Every pair is ≥7:1.
  * The colour never carries the meaning alone: the words are in the pill.
  */
 type Variant = 'neutral' | 'success' | 'warning' | 'info' | 'danger'
 
-const props = withDefaults(defineProps<{ variant?: Variant; level?: number | null }>(), {
+const props = withDefaults(defineProps<{ variant?: Variant; level?: Level | null }>(), {
     variant: 'neutral',
     level: null,
 })
@@ -29,7 +31,7 @@ const LEVELS: Record<number, { pill: string; dot: string }> = {
     4: { pill: 'bg-level-4-soft text-on-level-4', dot: 'bg-level-4' },
 }
 
-const level = computed(() => (props.level === null ? null : (LEVELS[props.level] ?? null)))
+const level = computed(() => (props.level === null ? null : (LEVELS[props.level.number] ?? null)))
 </script>
 
 <template>
@@ -44,6 +46,6 @@ const level = computed(() => (props.level === null ? null : (LEVELS[props.level]
             aria-hidden="true"
             data-testid="level-dot"
         />
-        <slot />
+        <slot>{{ props.level?.name }}</slot>
     </span>
 </template>

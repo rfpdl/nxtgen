@@ -68,7 +68,7 @@ describe('RegisterFamilyForm', () => {
         const wrapper = mount(RegisterFamilyForm, { props })
         expect(wrapper.find('[data-testid="dgroup-area"]').exists()).toBe(false)
 
-        await wrapper.find('[data-testid="in-dgroup"]').setValue(true)
+        await wrapper.find('[data-testid="in-dgroup"]').trigger('click')
 
         expect(wrapper.find('[data-testid="dgroup-area"]').exists()).toBe(true)
         expect(wrapper.find('[data-testid="dgroup-leader-phone"]').exists()).toBe(true)

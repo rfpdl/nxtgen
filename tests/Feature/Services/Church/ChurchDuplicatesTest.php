@@ -66,7 +66,7 @@ it('shows a family\'s open possible duplicates on its page, both sides in the li
             ->where('duplicates.0.subject.primary_name', 'Mary Santos')
             ->where('duplicates.0.subject.masked_email', 'ma•••@new.com')
             ->where('duplicates.0.candidate.primary_name', 'Maria Santos')
-            ->where('duplicates.0.candidate.children.0', "Maria's kid"));
+            ->where('duplicates.0.candidate.children.0.nickname', "Maria's kid"));
     }
 });
 

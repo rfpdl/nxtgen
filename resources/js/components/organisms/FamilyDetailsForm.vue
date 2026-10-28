@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AppButton from '@/components/atoms/AppButton.vue'
+import Card from '@/components/atoms/Card.vue'
 import FamilyFieldset from '@/components/molecules/FamilyFieldset.vue'
 import GuardianFieldset from '@/components/molecules/GuardianFieldset.vue'
 import OtherGuardiansFieldset from '@/components/organisms/OtherGuardiansFieldset.vue'
@@ -77,39 +79,33 @@ function submit(): void {
 </script>
 
 <template>
-    <button
+    <AppButton
         v-if="!open"
-        type="button"
-        class="min-h-touch border-primary text-primary self-start rounded-md border px-4 text-lg font-semibold"
+        variant="secondary"
+        class="self-start"
         data-testid="edit-family"
         @click="open = true"
     >
         Edit family details
-    </button>
+    </AppButton>
     <form v-else class="flex flex-col gap-4" novalidate @submit.prevent="submit">
-        <GuardianFieldset v-model="form.guardian" :errors="errors()" :with-email="false" />
+        <Card class="flex flex-col gap-4">
+            <h3 class="text-text text-xl font-bold">Edit family details</h3>
+            <GuardianFieldset v-model="form.guardian" :errors="errors()" :with-email="false" />
+        </Card>
         <OtherGuardiansFieldset
             v-model="form.guardians"
             :errors="errors()"
             @removed="(id) => form.removed_guardian_ids.push(id)"
         />
-        <FamilyFieldset v-model="form" :satellites="satellites" :errors="errors()" />
-        <div class="flex gap-3">
-            <button
-                type="submit"
-                :disabled="form.processing"
-                class="min-h-touch bg-primary text-on-primary rounded-md px-4 text-lg font-semibold"
-                data-testid="edit-family-submit"
-            >
+        <Card class="flex flex-col gap-4">
+            <FamilyFieldset v-model="form" :satellites="satellites" :errors="errors()" />
+        </Card>
+        <div class="flex flex-wrap gap-3">
+            <AppButton type="submit" :loading="form.processing" data-testid="edit-family-submit">
                 Save
-            </button>
-            <button
-                type="button"
-                class="min-h-touch text-text px-4 text-lg underline"
-                @click="open = false"
-            >
-                Cancel
-            </button>
+            </AppButton>
+            <AppButton variant="secondary" @click="open = false">Cancel</AppButton>
         </div>
     </form>
 </template>

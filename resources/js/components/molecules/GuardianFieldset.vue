@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import FormField from '@/components/atoms/FormField.vue'
+import SelectField from '@/components/atoms/SelectField.vue'
+import TextField from '@/components/atoms/TextField.vue'
 import { useEnum } from '@/composables/useEnum'
 import type { GuardianDraft } from '@/types'
 import { computed } from 'vue'
@@ -10,6 +11,7 @@ import { computed } from 'vue'
  * errors arrive keyed `{errorKey}.{field}` (`guardian` — or `guardians.1` for one of the family's OTHER guardians,
  * which `other` words as someone else and which never has an email). Test ids start with `testid`. Writes IN PLACE
  * on the shared object (see ChildFieldset: autofill). The relationships come from the page's `enums.relationship`.
+ * On the kit (the Bold look): TextField and SelectField.
  */
 const props = withDefaults(
     defineProps<{
@@ -52,62 +54,61 @@ const ministry = computed({
     },
 })
 
-const input = 'min-h-touch rounded-md border border-border bg-surface px-4 text-lg text-text'
+const relationshipOptions = computed(() =>
+    relationships.value.map((r) => ({ value: r.value, label: r.label })),
+)
 </script>
 
 <template>
-    <FormField :label="label.first" required :error="error('first_name')">
-        <input
-            v-model="guardian.first_name"
-            :class="input"
-            :autocomplete="other ? 'off' : 'given-name'"
-            :data-testid="`${testid}-first-name`"
-        />
-    </FormField>
-    <FormField :label="label.last" required :error="error('last_name')">
-        <input
-            v-model="guardian.last_name"
-            :class="input"
-            :autocomplete="other ? 'off' : 'family-name'"
-            :data-testid="`${testid}-last-name`"
-        />
-    </FormField>
-    <FormField :label="label.relationship" required :error="error('relationship')">
-        <select
-            v-model="guardian.relationship"
-            :class="input"
-            :data-testid="`${testid}-relationship`"
-        >
-            <option v-for="r in relationships" :key="r.value" :value="r.value">
-                {{ r.label }}
-            </option>
-        </select>
-    </FormField>
-    <FormField label="Mobile number" required :error="error('phone')">
-        <input
-            v-model="guardian.phone"
-            type="tel"
-            :class="input"
-            :autocomplete="other ? 'off' : 'tel'"
-            :data-testid="`${testid}-phone`"
-        />
-    </FormField>
-    <FormField
+    <TextField
+        v-model="guardian.first_name"
+        :label="label.first"
+        required
+        :error="error('first_name')"
+        :autocomplete="other ? 'off' : 'given-name'"
+        :data-testid="`${testid}-first-name`"
+    />
+    <TextField
+        v-model="guardian.last_name"
+        :label="label.last"
+        required
+        :error="error('last_name')"
+        :autocomplete="other ? 'off' : 'family-name'"
+        :data-testid="`${testid}-last-name`"
+    />
+    <SelectField
+        v-model="guardian.relationship"
+        :label="label.relationship"
+        required
+        :options="relationshipOptions"
+        :error="error('relationship')"
+        :data-testid="`${testid}-relationship`"
+    />
+    <TextField
+        v-model="guardian.phone"
+        type="tel"
+        label="Mobile number"
+        required
+        :error="error('phone')"
+        :autocomplete="other ? 'off' : 'tel'"
+        :data-testid="`${testid}-phone`"
+    />
+    <TextField
         v-if="withEmail"
+        v-model="guardian.email"
+        type="email"
         label="Email"
         required
         hint="We send a link here so you can sign in. No password needed."
         :error="error('email')"
-    >
-        <input
-            v-model="guardian.email"
-            type="email"
-            :class="input"
-            autocomplete="email"
-            :data-testid="`${testid}-email`"
-        />
-    </FormField>
-    <FormField :label="label.ministry" hint="Leave empty if none" :error="error('ministries')">
-        <input v-model="ministry" :class="input" :data-testid="`${testid}-ministry`" />
-    </FormField>
+        autocomplete="email"
+        :data-testid="`${testid}-email`"
+    />
+    <TextField
+        v-model="ministry"
+        :label="label.ministry"
+        hint="Leave empty if none"
+        :error="error('ministries')"
+        :data-testid="`${testid}-ministry`"
+    />
 </template>

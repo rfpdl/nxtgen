@@ -17,7 +17,7 @@ const side = (over: Partial<FamilySearchResult>): FamilySearchResult => ({
     masked_email: 'ja•••@example.com',
     email_confirmed: true,
     satellite: 'CCF DXB',
-    children: ['Amara'],
+    children: [{ nickname: 'Amara', level: { number: 2, name: 'Level 2' } }],
     can_open: true,
     can_resend: false,
     ...over,

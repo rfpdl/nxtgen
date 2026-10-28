@@ -65,6 +65,10 @@ export type Note = App.Domains.Family.DataObjects.NoteData
 export type DuplicatePair = App.Domains.Family.DataObjects.DuplicatePairData
 export type ChildListRow = App.Domains.Family.DataObjects.ChildListRowData
 export type LevelOption = App.Domains.Level.DataObjects.LevelOptionData
+/** THE Level shape on every list, card and Squad: its number picks the pill's colour, its name is read. */
+export type Level = App.Foundation.DataObjects.LevelData
+/** A child on a family's list row or search hit: nickname and Level. */
+export type ListChild = App.Domains.Family.DataObjects.ListChildData
 /** A class (GLOSSARY "Schedule") on the Classes page, and a satellite with its classes. */
 export type Schedule = App.Domains.Schedule.DataObjects.ScheduleData
 export type SatelliteSchedules = App.Domains.Schedule.DataObjects.SatelliteSchedulesData

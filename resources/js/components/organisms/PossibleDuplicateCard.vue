@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AppButton from '@/components/atoms/AppButton.vue'
+import Card from '@/components/atoms/Card.vue'
 import FamilySearchResultCard from '@/components/molecules/FamilySearchResultCard.vue'
 import { useChurch } from '@/composables/useChurch'
 import type { DuplicatePair, DuplicateStatus } from '@/types'
@@ -20,22 +22,19 @@ const familyHref = (id: number): string => route('church.families.show', [church
 </script>
 
 <template>
-    <article
-        class="border-border bg-surface flex flex-col gap-3 rounded-lg border p-4"
-        data-testid="duplicate-pair"
-    >
-        <p class="text-text font-semibold">Possible duplicate: {{ pair.reason_label }}</p>
+    <Card as="article" class="flex flex-col gap-3" data-testid="duplicate-pair">
+        <p class="text-text text-lg font-bold">Possible duplicate: {{ pair.reason_label }}</p>
         <div class="grid gap-3 md:grid-cols-2">
-            <div class="flex flex-col gap-1">
-                <p class="text-text-muted">Added more recently</p>
+            <div class="flex min-w-0 flex-col gap-1">
+                <p class="text-text font-semibold">Added more recently</p>
                 <FamilySearchResultCard
                     :result="pair.subject"
                     :href="familyHref(pair.subject.id)"
                     :can-add-child="false"
                 />
             </div>
-            <div class="flex flex-col gap-1">
-                <p class="text-text-muted">Registered earlier</p>
+            <div class="flex min-w-0 flex-col gap-1">
+                <p class="text-text font-semibold">Registered earlier</p>
                 <FamilySearchResultCard
                     :result="pair.candidate"
                     :href="familyHref(pair.candidate.id)"
@@ -44,22 +43,19 @@ const familyHref = (id: number): string => route('church.families.show', [church
             </div>
         </div>
         <div class="flex flex-wrap gap-3">
-            <button
-                type="button"
-                class="min-h-touch border-border bg-surface text-text rounded-md border px-4 text-lg"
+            <AppButton
+                variant="secondary"
                 data-testid="dismiss-duplicate"
                 @click="emit('answer', pair.id, 'dismissed')"
             >
                 Not the same family
-            </button>
-            <button
-                type="button"
-                class="min-h-touch bg-primary text-on-primary rounded-md px-4 text-lg font-semibold"
+            </AppButton>
+            <AppButton
                 data-testid="confirm-duplicate"
                 @click="emit('answer', pair.id, 'confirmed')"
             >
                 Same family — flag for merging
-            </button>
+            </AppButton>
         </div>
-    </article>
+    </Card>
 </template>

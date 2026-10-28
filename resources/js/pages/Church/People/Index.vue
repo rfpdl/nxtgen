@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PageHeader from '@/components/atoms/PageHeader.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import StaffMemberCard from '@/components/molecules/StaffMemberCard.vue'
 import AddStaffForm from '@/components/organisms/AddStaffForm.vue'
@@ -7,6 +8,7 @@ import type { GrantOption, StaffMember } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
+/** People who serve (plan §6): add someone (one role from what this viewer may give), and each person with their roles. */
 defineProps<{
     people: StaffMember[]
     grant_options: GrantOption[]
@@ -24,12 +26,12 @@ function remove(roleId: number): void {
 <template>
     <Head title="People" />
     <ChurchShell>
-        <h1 class="text-text text-2xl font-semibold">People who serve ({{ people.length }})</h1>
+        <PageHeader :title="`People who serve (${people.length})`" />
         <AddStaffForm
             :action="route('church.people.store', church.slug)"
             :options="grant_options"
         />
-        <div class="flex flex-col gap-2">
+        <div class="grid gap-3 md:grid-cols-2">
             <StaffMemberCard
                 v-for="person in people"
                 :key="person.id"
