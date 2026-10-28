@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Data\Models\CheckIn;
 use App\Data\Models\User;
 use App\Domains\CheckIn\Jobs\UpdateCheckInAsUndoneJob;
 use Carbon\CarbonImmutable;
@@ -37,4 +38,17 @@ it('clears the child\'s present mark (roll call)', function (): void {
     (new UpdateCheckInAsUndoneJob(checkIn: $in, by: $staff))->handle();
 
     expect([$in->fresh()?->isPresent(), $in->fresh()?->present_by])->toBe([false, null]);
+});
+
+it('never leaves a present mark that landed between loading the Check-in and undoing it (Astra)', function (): void {
+    $satellite = satelliteOf(church());
+    $staff = User::factory()->create();
+    $in = checkedIn(sessionOf(scheduleAt($satellite)), childOf(familyAt($satellite), ['level' => 1]));
+    // The Undo has loaded the row (unmarked); a Squad leader's tap marks it present before the Undo saves.
+    CheckIn::query()->whereKey($in->id)->update(['present_at' => now(), 'present_by' => $staff->id]);
+
+    (new UpdateCheckInAsUndoneJob(checkIn: $in, by: $staff))->handle();
+
+    $row = $in->fresh();
+    expect([$row?->isIn(), $row?->present_at, $row?->present_by])->toBe([false, null, null]);
 });

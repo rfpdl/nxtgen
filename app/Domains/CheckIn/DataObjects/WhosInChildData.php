@@ -19,6 +19,8 @@ final class WhosInChildData extends Data
     public function __construct(
         /** The Check-in's id — the row's key and what a tap marks present. */
         public int $id,
+        /** The Check-in's revision — sent back with a tap, so a tap never marks a Check-in revived since (roll call 05). */
+        public int $revision,
         public string $nickname,
         /** "Amara Reyes" — no middle name — small under the nickname, so two Amaras in a Squad differ (issue 04). */
         public string $short_name,
@@ -30,6 +32,7 @@ final class WhosInChildData extends Data
     {
         return new self(
             id: $checkIn->id,
+            revision: $checkIn->revision,
             nickname: $checkIn->child->displayName(),
             short_name: $checkIn->child->shortName(),
             has_allergies: $checkIn->child->hasAllergies(),

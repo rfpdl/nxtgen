@@ -65,7 +65,7 @@ it('says the child is already in on a second press, and makes no second Check-in
         ->and($first->fresh()?->checked_in_by)->toBe($staff->id);
 });
 
-it('checks the child in again after an Undo, on the same row', function (): void {
+it('checks the child in again after an Undo, on the same row, as a new revision', function (): void {
     ['session' => $session, 'child' => $child, 'squad' => $squad, 'staff' => $staff] = doorOf();
     $undone = checkedIn($session, $child, ['undone_at' => now()->subMinute(), 'undone_by' => $staff->id]);
     $again = User::factory()->create();
@@ -75,7 +75,7 @@ it('checks the child in again after an Undo, on the same row', function (): void
     $row = $undone->fresh();
     expect($result)->toBe(CheckInResultEnum::CheckedIn)
         ->and(CheckIn::query()->count())->toBe(1)
-        ->and([$row?->isIn(), $row?->undone_by, $row?->checked_in_by])->toBe([true, null, $again->id]);
+        ->and([$row?->isIn(), $row?->undone_by, $row?->checked_in_by, $row?->revision])->toBe([true, null, $again->id, $undone->revision + 1]);
 });
 
 it('starts a child checked in again after an Undo unmarked — not present (roll call)', function (): void {

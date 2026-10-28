@@ -77,10 +77,11 @@ export function useRollCall(slug: () => string) {
         return true
     }
 
-    function mark(checkInId: number, present: boolean): void {
+    /** `revision`: the Check-in's as shown — the server refuses a tap on a Check-in revived since (roll call 05). */
+    function mark(checkInId: number, present: boolean, revision: number): void {
         pending[checkInId] = present
         waiting.set(checkInId, (waiting.get(checkInId) ?? 0) + 1)
-        enqueue(route('church.door.present', [slug(), checkInId]), { present }, () => {
+        enqueue(route('church.door.present', [slug(), checkInId]), { present, revision }, () => {
             if (answered(waiting, checkInId)) delete pending[checkInId]
         })
     }

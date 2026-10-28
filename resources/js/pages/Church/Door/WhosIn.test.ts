@@ -32,6 +32,7 @@ const girls: WhosInSquad = {
     children: [
         {
             id: 31,
+            revision: 0,
             nickname: 'Amara',
             short_name: 'Amara Reyes',
             has_allergies: false,

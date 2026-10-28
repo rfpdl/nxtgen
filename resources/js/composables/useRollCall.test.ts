@@ -70,11 +70,11 @@ describe('useRollCall', () => {
     it('shows a tap at once, sends it, and lets the server answer once it is done', async () => {
         const { api } = host()
 
-        api.mark(31, true)
+        api.mark(31, true, 0)
         expect(api.pending[31]).toBe(true)
         await flush()
         expect(puts.map((p) => [p.url, p.data])).toEqual([
-            ['church.door.present:["ccf",31]', { present: true }],
+            ['church.door.present:["ccf",31]', { present: true, revision: 0 }],
         ])
 
         puts[0]?.options.onFinish()
@@ -84,9 +84,9 @@ describe('useRollCall', () => {
     it('sends taps one after another, in the order made', async () => {
         const { api } = host()
 
-        api.mark(31, true)
-        api.mark(32, true)
-        api.mark(31, false)
+        api.mark(31, true, 0)
+        api.mark(32, true, 0)
+        api.mark(31, false, 0)
         await flush()
         expect(puts).toHaveLength(1)
 
@@ -108,7 +108,7 @@ describe('useRollCall', () => {
         expect(refresh.onBefore()).toBe(true)
         refresh.onCancelToken({ cancel })
 
-        api.mark(31, true)
+        api.mark(31, true, 0)
         expect(cancel).toHaveBeenCalledOnce()
         expect(pollOptions().onBefore()).toBe(false)
 
@@ -120,8 +120,8 @@ describe('useRollCall', () => {
     it('drops the taps not yet sent when the page is left', async () => {
         const { wrapper, api } = host()
 
-        api.mark(31, true)
-        api.mark(32, true)
+        api.mark(31, true, 0)
+        api.mark(32, true, 0)
         await flush()
         wrapper.unmount()
         puts[0]?.options.onFinish()
@@ -133,8 +133,8 @@ describe('useRollCall', () => {
     it('drops the taps not yet sent on stop (a chip moving to another class or Squad)', async () => {
         const { api } = host()
 
-        api.mark(31, true)
-        api.mark(32, true)
+        api.mark(31, true, 0)
+        api.mark(32, true, 0)
         await flush()
         api.stop()
         expect(api.pending).toEqual({})
@@ -148,7 +148,7 @@ describe('useRollCall', () => {
     it('confirms a head count after the taps before it, showing "Confirming…" until answered', async () => {
         const { api } = host()
 
-        api.mark(31, true)
+        api.mark(31, true, 0)
         api.confirm(1, 5, 4)
         expect(api.confirming[5]).toBe(true)
         expect(pollOptions().onBefore()).toBe(false)
@@ -180,7 +180,7 @@ describe('useRollCall', () => {
     it('drops a head count not yet sent on stop', async () => {
         const { api } = host()
 
-        api.mark(31, true)
+        api.mark(31, true, 0)
         api.confirm(1, 5, 4)
         await flush()
         api.stop()
@@ -204,5 +204,14 @@ describe('useRollCall', () => {
         await flush()
         puts[1]?.options.onFinish()
         expect(api.confirming[5]).toBeUndefined()
+    })
+
+    it('sends the revision of the Check-in it showed, so a tap never marks one revived since', async () => {
+        const { api } = host()
+
+        api.mark(31, true, 3)
+        await flush()
+
+        expect(puts[0]?.data).toEqual({ present: true, revision: 3 })
     })
 })

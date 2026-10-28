@@ -24,7 +24,11 @@ final class UpdateCheckInAsUndoneJob extends BaseJob
 
     public function handle(): CheckIn
     {
-        $this->checkIn->forceFill(['undone_at' => now(), 'undone_by' => $this->by->id, 'present_at' => null, 'present_by' => null])->save();
+        $undone = ['undone_at' => now(), 'undone_by' => $this->by->id, 'present_at' => null, 'present_by' => null];
+        // One UPDATE that always writes all four: saving the loaded model would skip present_at/by when they were
+        // null when loaded, and keep a mark another request made in between (Astra, roll call 05).
+        CheckIn::query()->where('church_id', $this->checkIn->church_id)->whereKey($this->checkIn->id)->update($undone);
+        $this->checkIn->forceFill($undone)->syncOriginal();
 
         return $this->checkIn;
     }

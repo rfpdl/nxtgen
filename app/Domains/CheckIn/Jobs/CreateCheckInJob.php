@@ -19,7 +19,8 @@ use Illuminate\Database\UniqueConstraintViolationException;
  *
  * - the first press inserts the row → CheckedIn;
  * - a press on a child who is in (another phone got there first, even at the same moment) → AlreadyIn, row untouched;
- * - a press after an Undo revives the same row with the new who, when and Squad, not marked present → CheckedIn.
+ * - a press after an Undo revives the same row with the new who, when and Squad, not marked present, as a new
+ *   revision → CheckedIn.
  *
  * When the insert meets the key, the row is read with a LOCKING read: inside the caller's transaction (MySQL
  * REPEATABLE READ) a plain read sees only its own snapshot, which cannot hold the other phone's new row. The locking
@@ -53,7 +54,8 @@ final class CreateCheckInJob extends BaseJob
         if ($checkIn->isIn()) {
             return CheckInResultEnum::AlreadyIn;
         }
-        $checkIn->forceFill($in + ['undone_at' => null, 'undone_by' => null, 'present_at' => null, 'present_by' => null])->save();
+        // A new revision: a tap made on the undone Check-in must not mark this one (Astra, roll call 05).
+        $checkIn->forceFill($in + ['undone_at' => null, 'undone_by' => null, 'present_at' => null, 'present_by' => null, 'revision' => $checkIn->revision + 1])->save();
 
         return CheckInResultEnum::CheckedIn;
     }

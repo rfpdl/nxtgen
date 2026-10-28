@@ -92,17 +92,17 @@ describe('the Who\'s in page', function (): void {
             ->where('squad_id', null)
             ->where('squads', [
                 ['id' => $kai->squad_id, 'name' => 'Level 1', 'level' => ['number' => 1, 'name' => 'Level 1'], 'present' => 1, 'count' => 1, 'children' => [
-                    ['id' => $kai->id, 'nickname' => 'Kai', 'short_name' => 'Kai Cruz', 'has_allergies' => false, 'present' => true],
+                    ['id' => $kai->id, 'nickname' => 'Kai', 'revision' => 0, 'short_name' => 'Kai Cruz', 'has_allergies' => false, 'present' => true],
                 ], 'head_count' => null],
                 ['id' => $ben->squad_id, 'name' => 'Level 2 Boys', 'level' => ['number' => 2, 'name' => 'Level 2'], 'present' => 0, 'count' => 1, 'children' => [
-                    ['id' => $ben->id, 'nickname' => 'Ben', 'short_name' => 'Benjamin Cruz', 'has_allergies' => false, 'present' => false],
+                    ['id' => $ben->id, 'nickname' => 'Ben', 'revision' => 0, 'short_name' => 'Benjamin Cruz', 'has_allergies' => false, 'present' => false],
                 ], 'head_count' => null],
                 ['id' => $amara->squad_id, 'name' => 'Level 2 Girls', 'level' => ['number' => 2, 'name' => 'Level 2'], 'present' => 1, 'count' => 2, 'children' => [
-                    ['id' => $amara->id, 'nickname' => 'Amara', 'short_name' => 'Amara Cruz', 'has_allergies' => true, 'present' => false],
-                    ['id' => $sofia->id, 'nickname' => 'Sofia', 'short_name' => 'Sofia Cruz', 'has_allergies' => false, 'present' => true],
+                    ['id' => $amara->id, 'nickname' => 'Amara', 'revision' => 0, 'short_name' => 'Amara Cruz', 'has_allergies' => true, 'present' => false],
+                    ['id' => $sofia->id, 'nickname' => 'Sofia', 'revision' => 0, 'short_name' => 'Sofia Cruz', 'has_allergies' => false, 'present' => true],
                 ], 'head_count' => ['count' => 3, 'counted_at' => '08:50', 'counted_by' => 'Joy']],
                 ['id' => $bea->squad_id, 'name' => 'Level 3 Girls', 'level' => ['number' => 3, 'name' => 'Level 3'], 'present' => 0, 'count' => 1, 'children' => [
-                    ['id' => $bea->id, 'nickname' => 'Bea', 'short_name' => 'Bea Cruz', 'has_allergies' => false, 'present' => false],
+                    ['id' => $bea->id, 'nickname' => 'Bea', 'revision' => 0, 'short_name' => 'Bea Cruz', 'has_allergies' => false, 'present' => false],
                 ], 'head_count' => null],
             ]));
     });
@@ -189,12 +189,12 @@ describe('marking a child present', function (): void {
         $w = whosInChurch();
         $in = checkedIn(sessionOf($w['onePm']), $w['amara']);
 
-        actingAs($w['lifeshaper'])->put("/ccf/check-ins/{$in->id}/present", ['present' => true])
+        actingAs($w['lifeshaper'])->put("/ccf/check-ins/{$in->id}/present", ['present' => true, 'revision' => 0])
             ->assertRedirect()->assertSessionMissing('success')->assertSessionMissing('error');
         expect([$in->fresh()?->isPresent(), $in->fresh()?->present_by, $in->fresh()?->present_at?->toDateTimeString()])
             ->toBe([true, $w['lifeshaper']->id, '2026-10-31 05:00:00']);
 
-        actingAs($w['lifeshaper'])->put("/ccf/check-ins/{$in->id}/present", ['present' => false])
+        actingAs($w['lifeshaper'])->put("/ccf/check-ins/{$in->id}/present", ['present' => false, 'revision' => 0])
             ->assertRedirect()->assertSessionMissing('success');
         expect([$in->fresh()?->isPresent(), $in->fresh()?->present_by])->toBe([false, null]);
     });
@@ -202,7 +202,7 @@ describe('marking a child present', function (): void {
     it('drops the mark when the door undoes the Check-in, and a re-check-in starts unmarked @story#119', function (): void {
         $w = whosInChurch();
         $in = checkedIn(sessionOf($w['onePm']), $w['amara']);
-        actingAs($w['lifeshaper'])->put("/ccf/check-ins/{$in->id}/present", ['present' => true]);
+        actingAs($w['lifeshaper'])->put("/ccf/check-ins/{$in->id}/present", ['present' => true, 'revision' => 0]);
 
         actingAs($w['lifeshaper'])->put("/ccf/check-ins/{$in->id}/undo");
         actingAs($w['lifeshaper'])->get('/ccf/door/whos-in')->assertInertia(fn (AssertableInertia $page) => $page->where('squads', []));
@@ -216,9 +216,24 @@ describe('marking a child present', function (): void {
         $w = whosInChurch();
         $in = checkedIn(sessionOf($w['onePm']), $w['amara'], ['undone_at' => now()]);
 
-        actingAs($w['lifeshaper'])->put("/ccf/check-ins/{$in->id}/present", ['present' => true])
+        actingAs($w['lifeshaper'])->put("/ccf/check-ins/{$in->id}/present", ['present' => true, 'revision' => 0])
             ->assertRedirect()->assertSessionHas('error', 'Amara is not checked in any more.');
         expect($in->fresh()?->isPresent())->toBeFalse();
+    });
+
+    it('refuses a tap made before an Undo and a re-check-in — the child was checked in again, so tap again — and marks nothing @story#120', function (): void {
+        $w = whosInChurch();
+        $in = checkedIn(sessionOf($w['onePm']), $w['amara']);
+        actingAs($w['lifeshaper'])->put("/ccf/check-ins/{$in->id}/undo");
+        actingAs($w['lifeshaper'])->post("/ccf/classes/{$w['onePm']->id}/check-ins", ['children' => [['child_id' => $w['amara']->id, 'level' => null, 'make_active' => false]]]);
+
+        actingAs($w['lifeshaper'])->put("/ccf/check-ins/{$in->id}/present", ['present' => true, 'revision' => 0])
+            ->assertRedirect()->assertSessionHas('error', 'Amara was checked in again — please tap again.');
+        expect([$in->fresh()?->isIn(), $in->fresh()?->isPresent(), $in->fresh()?->revision])->toBe([true, false, 1]);
+
+        actingAs($w['lifeshaper'])->get('/ccf/door/whos-in')->assertInertia(fn (AssertableInertia $page) => $page->where('squads.0.children.0.revision', 1));
+        actingAs($w['lifeshaper'])->put("/ccf/check-ins/{$in->id}/present", ['present' => true, 'revision' => 1])->assertSessionMissing('error');
+        expect($in->fresh()?->isPresent())->toBeTrue();
     });
 
     it('marks only at a satellite the Role covers, only today, in this church, and needs a yes or no @story#120', function (): void {
@@ -227,10 +242,10 @@ describe('marking a child present', function (): void {
         $lastWeek = checkedIn(sessionOf($w['onePm'], '2026-10-24'), $w['amara']);
         $today = checkedIn(sessionOf($w['onePm']), $w['sofia']);
 
-        actingAs($w['lifeshaper'])->put("/ccf/check-ins/{$atHouse->id}/present", ['present' => true])->assertNotFound();
-        actingAs($w['lifeshaper'])->put("/ccf/check-ins/{$lastWeek->id}/present", ['present' => true])->assertNotFound();
-        actingAs(staffMember(RoleEnum::Admin, atChurch(church(['slug' => 'other']))))->put("/other/check-ins/{$today->id}/present", ['present' => true])->assertNotFound();
-        actingAs($w['lifeshaper'])->put("/ccf/check-ins/{$today->id}/present", [])->assertSessionHasErrors('present');
+        actingAs($w['lifeshaper'])->put("/ccf/check-ins/{$atHouse->id}/present", ['present' => true, 'revision' => 0])->assertNotFound();
+        actingAs($w['lifeshaper'])->put("/ccf/check-ins/{$lastWeek->id}/present", ['present' => true, 'revision' => 0])->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atChurch(church(['slug' => 'other']))))->put("/other/check-ins/{$today->id}/present", ['present' => true, 'revision' => 0])->assertNotFound();
+        actingAs($w['lifeshaper'])->put("/ccf/check-ins/{$today->id}/present", [])->assertSessionHasErrors(['present', 'revision']);
 
         expect(CheckIn::query()->whereNotNull('present_at')->count())->toBe(0);
     });
@@ -266,7 +281,7 @@ describe('confirming a head count', function (): void {
         actingAs($w['lifeshaper'])->get('/ccf/door/whos-in')->assertInertia(fn (AssertableInertia $page) => $page
             ->where('squads.0.count', 1)
             ->where('squads.0.head_count.count', 2)
-            ->where('squads.0.children', [['id' => $amara->id, 'nickname' => 'Amara', 'short_name' => 'Amara Cruz', 'has_allergies' => true, 'present' => true]]));
+            ->where('squads.0.children', [['id' => $amara->id, 'nickname' => 'Amara', 'revision' => 0, 'short_name' => 'Amara Cruz', 'has_allergies' => true, 'present' => true]]));
     });
 
     it('keeps ONE head count when two leaders confirm the same Squad at the same moment, through the whole request — first count or a later one @story#121', function (bool $counted): void {

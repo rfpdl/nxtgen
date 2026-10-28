@@ -18,7 +18,8 @@ use Illuminate\Http\RedirectResponse;
  * A tap on Who's in (roll call, DECISIONS 2026-10-28): mark a checked-in child present in their Squad, or unmark
  * them — latest wins, with who and when. The same people and the same day as Undo: today's Check-ins, at a satellite
  * the viewer's Role covers. A child undone at the door meanwhile (the list refreshes only every ~20 s) is refused
- * with the reason, not marked. Marking says nothing: the tick is the answer.
+ * with the reason, not marked; so is a tap on a Check-in undone and revived since (its revision moved on — roll call
+ * 05). Marking says nothing: the tick is the answer.
  *
  * @extends BaseChurchFeature<RedirectResponse>
  */
@@ -40,8 +41,13 @@ final class MarkPresentFeature extends BaseChurchFeature
         abort_unless($this->scope()->canCheckInAt($checkIn->session->satellite), 404);
         abort_unless($checkIn->session->date->isSameDay($this->run(new GetChurchTodayJob(church: $church))), 404);
 
-        if (! $this->run(new UpdateCheckInPresenceJob(checkIn: $checkIn, present: $input->present, by: $this->staff()))) {
-            return back()->with('error', "{$checkIn->child->displayName()} is not checked in any more.");
+        if (! $this->run(new UpdateCheckInPresenceJob(checkIn: $checkIn, revision: $input->revision, present: $input->present, by: $this->staff()))) {
+            $name = $checkIn->child->displayName();
+
+            // In, but not the Check-in that was tapped: undone and checked in again since the page last showed it.
+            return back()->with('error', $checkIn->isIn() && $checkIn->revision !== $input->revision
+                ? "{$name} was checked in again — please tap again."
+                : "{$name} is not checked in any more.");
         }
 
         // No success message: the tick says it, and a band appearing at the top would push the list under the next tap.

@@ -179,7 +179,7 @@ function requestFor(string $route, AccessWorld $w): array
         'church.door.check-in' => ['POST', "/ccf/classes/{$w->schedule->id}/check-ins", ['children' => [['child_id' => $w->visitor->id, 'level' => 1, 'make_active' => false]]]],
         'church.door.undo' => ['PUT', "/ccf/check-ins/{$w->checkIn->id}/undo", []],
         'church.door.whos-in' => ['GET', '/ccf/door/whos-in', []],
-        'church.door.present' => ['PUT', "/ccf/check-ins/{$w->checkIn->id}/present", ['present' => true]],
+        'church.door.present' => ['PUT', "/ccf/check-ins/{$w->checkIn->id}/present", ['present' => true, 'revision' => $w->checkIn->revision]],
         'church.door.head-count' => ['PUT', "/ccf/classes/{$w->schedule->id}/squads/{$w->checkIn->squad_id}/head-count", ['count' => 3]],
         'church.attendance.show' => ['GET', "/ccf/attendance?class={$w->schedule->id}&date=2026-10-31", []],
         'church.attendance.export' => ['GET', "/ccf/attendance/export?class={$w->schedule->id}&date=2026-10-31", []],

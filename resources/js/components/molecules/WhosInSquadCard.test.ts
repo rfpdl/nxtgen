@@ -13,6 +13,7 @@ const squad: WhosInSquad = {
     children: [
         {
             id: 31,
+            revision: 0,
             nickname: 'Amara',
             short_name: 'Amara Reyes',
             has_allergies: true,
@@ -20,6 +21,7 @@ const squad: WhosInSquad = {
         },
         {
             id: 32,
+            revision: 0,
             nickname: 'Isabel',
             short_name: 'Isabel Reyes',
             has_allergies: false,
@@ -27,6 +29,7 @@ const squad: WhosInSquad = {
         },
         {
             id: 33,
+            revision: 0,
             nickname: 'Sofia',
             short_name: 'Sofia Reyes',
             has_allergies: false,
@@ -68,9 +71,10 @@ describe('WhosInSquadCard', () => {
         await ticks[0]?.trigger('click')
         await ticks[2]?.trigger('click')
 
+        // With the revision the card showed, sent back with the tap.
         expect(wrapper.emitted('present')).toEqual([
-            [31, true],
-            [33, false],
+            [31, true, 0],
+            [33, false, 0],
         ])
     })
 
@@ -90,6 +94,7 @@ describe('WhosInSquadCard', () => {
             children: [
                 {
                     id: 41,
+                    revision: 0,
                     nickname: 'Amara',
                     short_name: 'Amara Reyes',
                     has_allergies: false,
@@ -97,6 +102,7 @@ describe('WhosInSquadCard', () => {
                 },
                 {
                     id: 42,
+                    revision: 0,
                     nickname: 'Amara',
                     short_name: 'Amara Santos',
                     has_allergies: false,

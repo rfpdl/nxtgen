@@ -88,6 +88,7 @@ declare namespace App {
                 }
                 export type WhosInChildData = {
                     id: number
+                    revision: number
                     nickname: string
                     short_name: string
                     has_allergies: boolean
@@ -476,6 +477,7 @@ declare namespace App {
                 }
                 export type MarkPresentInput = {
                     present: boolean
+                    revision: number
                 }
                 export type ResolveDuplicateInput = {
                     status: App.Enums.DuplicateStatusEnum

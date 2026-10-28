@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $session_id
  * @property int $child_id
  * @property int $squad_id
+ * @property int $revision
  * @property CarbonImmutable $checked_in_at
  * @property int|null $checked_in_by
  * @property CarbonImmutable|null $present_at
@@ -44,6 +45,7 @@ final class CheckIn extends Model
     protected function casts(): array
     {
         return [
+            'revision' => 'integer',
             'checked_in_at' => 'immutable_datetime',
             'present_at' => 'immutable_datetime',
             'undone_at' => 'immutable_datetime',

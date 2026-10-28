@@ -24,6 +24,7 @@ final class CheckInFactory extends Factory
             'church_id' => fn (array $attributes): mixed => Session::query()->whereKey(self::id($attributes['session_id']))->value('church_id'),
             'child_id' => Child::factory(),
             'squad_id' => Squad::factory(),
+            'revision' => 0,
             'checked_in_at' => now(),
             'checked_in_by' => null,
             'present_at' => null,
