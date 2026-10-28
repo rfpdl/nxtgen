@@ -360,6 +360,30 @@ describe('the door', function (): void {
     })->with(actors(Actor::HomeLifeshaper, Actor::AwayLifeshaper));
 });
 
+/**
+ * A child on Who's in (WhosInChildData): nickname, an allergy yes/no and the present mark — no photo, phone or health
+ * detail (DECISIONS 2026-10-28).
+ */
+const WHOS_IN_CHILD = ['has_allergies', 'id', 'nickname', 'present'];
+
+describe('Who\'s in', function (): void {
+    it('shows any staff today\'s classes and who is in by Squad, with an allergy flag and the present mark only — no photo, phone or health detail @story#117 @story#118', function (Actor $actor): void {
+        travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
+        // A Role covering Home opens Home's 1PM, which Amara is in; Away's staff see their 7PM, with no one in yet.
+        $home = in_array($actor, Actor::coveringHome(), true);
+        $props = propsOf($actor, fn (AccessWorld $w): string => $home ? "/ccf/door/whos-in?class={$w->schedule->id}" : '/ccf/door/whos-in');
+        $squads = $home ? prefixed('squads.*', ['count', 'id', 'level.name', 'level.number', 'name', 'present', ...prefixed('children.*', WHOS_IN_CHILD)]) : ['squads'];
+
+        expect(keyPaths($props))->toBe(allowlist(
+            STAFF_FRAME,
+            $squads,
+            ['class_id', 'classes.*.id', 'classes.*.name', 'classes.*.satellite', 'classes.*.times', 'squad_id', 'today'],
+        ))
+            ->and(forbiddenOnLists($props))->toBe([])
+            ->and(data_get($props, 'squads.0.children.0.nickname'))->toBe($home ? 'Amara' : null);
+    })->with(actors(...Actor::staff()));
+});
+
 /** A child on the Attendance page (AttendanceChildData) — the Excel's columns: no health detail, phone or photo. */
 const ATTENDANCE_CHILD = ['checked_in_at', 'checked_in_by', 'full_name', 'id', 'nickname'];
 

@@ -70,3 +70,6 @@ every staff, parent and public page is on the kit (issues 02 and 03 of `.plannin
 | ChildHealthPanel        | molecule | A child's health details inside their opened door row; allergies first and loud, or "Allergies: none"                                 |
 | DoorFamilyCard          | organism | A family found at the door: its children (DoorChildRow), "Check in N children" into the chosen class (POST), Undo (PUT)               |
 | DoorCheckedInList       | molecule | Who is in the chosen class today at the door, newest first: nickname, Squad, time, Undo; empty state says how to start                |
+| DoorTabs                | molecule | The door's two tabs, Check in · Who's in, on both pages; each keeps the class (`?class=`); the current one marked                     |
+| WhosInSquadCard         | molecule | One Squad on Who's in: Level Pill, "N of M present"; each child a whole-row tick (CheckRow) with the allergy flag; emits present      |
+| DoorClassPicker         | molecule | The top of both door tabs: "CCF DXB · Sat 31 Oct" and today's classes as chips (satellite named when several), or no-class note       |

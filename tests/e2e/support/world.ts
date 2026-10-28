@@ -69,3 +69,16 @@ export const DOOR = {
 } as const
 
 export type DoorProject = keyof typeof DOOR.guardians
+
+/**
+ * Who's in (roll call): each browser project's Reyes family at CCF DXB (E2ESeeder::ROLL_CALL_GIRLS) — two Level 2
+ * girls named apart, because the three browsers share today's 1PM Session and its Level 2 Girls Squad.
+ */
+export const ROLL_CALL = {
+    girls: {
+        'mobile-webkit': ['Sofia', 'Isabel'],
+        'mobile-chromium': ['Mia', 'Elena'],
+        'desktop-chromium': ['Ruth', 'Hope'],
+    },
+    squad: 'Level 2 Girls',
+} as const

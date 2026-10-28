@@ -59,6 +59,13 @@ it('seeds exactly what the browser journeys expect', function (): void {
             ->toBe(['Peanuts', 'inactive', null, 'graduated', 1]);
         $villa = Family::query()->with(['children', 'homeSatellite'])->whereHas('primaryGuardian', fn ($g) => $g->where('first_name', $first)->where('last_name', 'Villa'))->sole();
         expect([$villa->homeSatellite->name, $villa->children->sole()->nickname])->toBe(['House Church', 'Pia']);
+
+        // Who's in: the browser's own Reyes girls, both in Level 2 Girls at CCF DXB.
+        $girls = E2ESeeder::ROLL_CALL_GIRLS[$project];
+        expect($world)->toContain("'{$project}': ['{$girls[0]}', '{$girls[1]}']");
+        $reyes = Family::query()->with(['children', 'homeSatellite'])->whereHas('primaryGuardian', fn ($g) => $g->where('first_name', $first)->where('last_name', 'Reyes'))->sole();
+        expect([$reyes->homeSatellite->name, $reyes->children->map(fn (Child $c): array => [$c->nickname, $c->level, $c->gender->value])->all()])
+            ->toBe(['CCF DXB', [[$girls[0], 2, 'girl'], [$girls[1], 2, 'girl']]]);
     }
     foreach (["allergic: 'Amara'", "active: 'Ben'", "inactive: 'Noah'", "noLevel: 'Lola'", "graduated: 'Gabe'", "allergy: 'Peanuts'", "suggestedLevel: 'Level 1'"] as $line) {
         expect($world)->toContain($line);

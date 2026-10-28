@@ -26,6 +26,8 @@ final class CheckInFactory extends Factory
             'squad_id' => Squad::factory(),
             'checked_in_at' => now(),
             'checked_in_by' => null,
+            'present_at' => null,
+            'present_by' => null,
             'undone_at' => null,
             'undone_by' => null,
         ];

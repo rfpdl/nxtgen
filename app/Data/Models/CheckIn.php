@@ -20,6 +20,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $squad_id
  * @property CarbonImmutable $checked_in_at
  * @property int|null $checked_in_by
+ * @property CarbonImmutable|null $present_at
+ * @property int|null $present_by
  * @property CarbonImmutable|null $undone_at
  * @property int|null $undone_by
  * @property-read Session $session
@@ -43,6 +45,7 @@ final class CheckIn extends Model
     {
         return [
             'checked_in_at' => 'immutable_datetime',
+            'present_at' => 'immutable_datetime',
             'undone_at' => 'immutable_datetime',
         ];
     }
@@ -51,6 +54,12 @@ final class CheckIn extends Model
     public function isIn(): bool
     {
         return $this->undone_at === null;
+    }
+
+    /** Marked present in their Squad at the roll call (GLOSSARY "Roll call"); an Undo clears it. */
+    public function isPresent(): bool
+    {
+        return $this->present_at !== null;
     }
 
     /** @return BelongsTo<Session, $this> */

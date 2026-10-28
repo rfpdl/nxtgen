@@ -67,6 +67,20 @@ declare namespace App {
                     children: App.Domains.CheckIn.DataObjects.DoorChildData[]
                     can_open: boolean
                 }
+                export type WhosInChildData = {
+                    id: number
+                    nickname: string
+                    has_allergies: boolean
+                    present: boolean
+                }
+                export type WhosInSquadData = {
+                    id: number
+                    name: string
+                    level: App.Foundation.DataObjects.LevelData
+                    present: number
+                    count: number
+                    children: App.Domains.CheckIn.DataObjects.WhosInChildData[]
+                }
             }
         }
         namespace Church {
@@ -431,6 +445,13 @@ declare namespace App {
                 }
                 export type CorrectFamilyEmailInput = {
                     email: string
+                }
+                export type DoorQueryInput = {
+                    class: number | null
+                    squad: number | null
+                }
+                export type MarkPresentInput = {
+                    present: boolean
                 }
                 export type ResolveDuplicateInput = {
                     status: App.Enums.DuplicateStatusEnum

@@ -10,7 +10,7 @@ use App\Enums\GenderEnum;
 use App\Foundation\Jobs\BaseJob;
 
 /**
- * The children checked in to a Session (undone ones left out), for the Attendance report and its Excel: each
+ * The children checked in to a Session (undone ones left out), for the Attendance report, its Excel and Who's in: each
  * Check-in with its child, Squad and who checked them in — by Squad (Level, then the mixed Squad, boys, girls), then
  * nickname.
  *

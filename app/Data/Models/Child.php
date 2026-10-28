@@ -81,6 +81,12 @@ final class Child extends Model
         return $this->nickname !== '' ? $this->nickname : $this->first_name;
     }
 
+    /** Something is written under allergies — the ⚠ flag on the door's and Who's in's lists (never the detail). */
+    public function hasAllergies(): bool
+    {
+        return $this->allergies !== null && trim($this->allergies) !== '';
+    }
+
     /** "Amara Joy Cruz": first, middle and last name, spaces collapsed — the one way lists and Excel write it. */
     public function fullName(): string
     {

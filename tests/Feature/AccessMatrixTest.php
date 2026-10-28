@@ -93,6 +93,9 @@ function matrix(): array
         'church.door.show' => [AccessRowEnum::CheckIn, Actor::staff()],
         'church.door.check-in' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
         'church.door.undo' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
+        // Who's in (DECISIONS 2026-10-28): the door's people; marking a Home child present, as Undo.
+        'church.door.whos-in' => [AccessRowEnum::CheckIn, Actor::staff()],
+        'church.door.present' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
         // Attendance (DECISIONS 2026-10-26: reports are admins only): Home's class, only for an admin over Home.
         'church.attendance.show' => [AccessRowEnum::Attendance, [Actor::ChurchAdmin, Actor::HomeAdmin]],
         'church.attendance.export' => [AccessRowEnum::Attendance, [Actor::ChurchAdmin, Actor::HomeAdmin]],
@@ -173,6 +176,8 @@ function requestFor(string $route, AccessWorld $w): array
         'church.door.show' => ['GET', '/ccf/door?q=Amara', []],
         'church.door.check-in' => ['POST', "/ccf/classes/{$w->schedule->id}/check-ins", ['children' => [['child_id' => $w->visitor->id, 'level' => 1, 'make_active' => false]]]],
         'church.door.undo' => ['PUT', "/ccf/check-ins/{$w->checkIn->id}/undo", []],
+        'church.door.whos-in' => ['GET', '/ccf/door/whos-in', []],
+        'church.door.present' => ['PUT', "/ccf/check-ins/{$w->checkIn->id}/present", ['present' => true]],
         'church.attendance.show' => ['GET', "/ccf/attendance?class={$w->schedule->id}&date=2026-10-31", []],
         'church.attendance.export' => ['GET', "/ccf/attendance/export?class={$w->schedule->id}&date=2026-10-31", []],
         'family.show' => ['GET', '/ccf/family', []],
@@ -188,11 +193,26 @@ function requestFor(string $route, AccessWorld $w): array
 }
 
 /**
- * What a response says, in the matrix's words.
+ * The changes that say nothing when they work, and what proves each one happened instead. A tap on Who's in marks a
+ * child present with no message (DECISIONS 2026-10-28): a band appearing at the top would push the list down under
+ * the next tap.
+ *
+ * @return array<string, Closure(AccessWorld): bool>
+ */
+function quietChanges(): array
+{
+    return [
+        'church.door.present' => fn (AccessWorld $w): bool => $w->checkIn->fresh()?->isPresent() === true,
+    ];
+}
+
+/**
+ * What a response says, in the matrix's words. `$worked` is a quiet change's proof (quietChanges()): when given, it
+ * alone decides whether a redirect worked.
  *
  * @param  TestResponse<Response>  $response
  */
-function outcomeOf(TestResponse $response, string $method): string
+function outcomeOf(TestResponse $response, string $method, ?bool $worked = null): string
 {
     $status = $response->getStatusCode();
     $path = rtrim((string) parse_url((string) $response->headers->get('Location'), PHP_URL_PATH), '/');
@@ -207,9 +227,11 @@ function outcomeOf(TestResponse $response, string $method): string
         return 'ok';
     }
 
-    // A redirect is `ok` only without errors — and, for a change, only when it says it worked.
+    // A redirect is `ok` only without errors — and, for a change, only when it says it worked; for a quiet change,
+    // only when its proof holds, whatever it says.
     $failed = session()->has('errors') || session()->has('error');
-    if ($status === 302 && ! $failed && ($method === 'GET' || session()->has('success'))) {
+    $saidSo = $worked ?? ($method === 'GET' || session()->has('success'));
+    if ($status === 302 && ! $failed && $saidSo) {
         return 'ok';
     }
 
@@ -240,7 +262,9 @@ function expectCell(string $route, Actor $actor, string $expected): void
         actingAs($user);
     }
 
-    expect(outcomeOf(call($method, $uri, $payload), $method))->toBe($expected, "{$actor->value} on {$route}");
+    $response = call($method, $uri, $payload);
+    $proof = quietChanges()[$route] ?? null;
+    expect(outcomeOf($response, $method, $proof === null ? null : $proof($world)))->toBe($expected, "{$actor->value} on {$route}");
 }
 
 /** @return list<Route> the staff and parent routes: served by the Church and Family services */
@@ -369,6 +393,10 @@ describe('the door, for staff', function (): void {
         ->with(cells('church.door.check-in'));
     it('lets a Check-in at Home be undone only by staff whose Role covers Home @story#110 @story#111', cellTest())
         ->with(cells('church.door.undo'));
+    it('opens Who\'s in for any staff, with their own satellites\' classes @story#117 @story#118', cellTest())
+        ->with(cells('church.door.whos-in'));
+    it('lets a child at Home\'s class be marked present only by staff whose Role covers Home @story#119 @story#120', cellTest())
+        ->with(cells('church.door.present'));
 });
 
 describe('Attendance, for admins', function (): void {
@@ -408,8 +436,8 @@ function routesNamingAnId(): array
     }));
 }
 
-// Every refusal is a 404 and changes nothing, so one world serves all twenty guesses.
-it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in their OWN church\'s address @story#29 @story#49 @story#51 @story#100 @story#102 @story#109 @story#111', function (): void {
+// Every refusal is a 404 and changes nothing, so one world serves all twenty-one guesses.
+it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in their OWN church\'s address @story#29 @story#49 @story#51 @story#100 @story#102 @story#109 @story#111 @story#120', function (): void {
     Notification::fake();
     Storage::fake('photos');
     travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
@@ -427,6 +455,6 @@ it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in 
         $answers["{$method} {$guessed}"] = outcomeOf(call($method, $guessed, $payload), $method);
     }
 
-    expect($answers)->toHaveCount(20)
+    expect($answers)->toHaveCount(21)
         ->and(array_unique(array_values($answers)))->toBe(['404'], (string) json_encode($answers, JSON_PRETTY_PRINT));
 });

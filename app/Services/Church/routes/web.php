@@ -55,6 +55,9 @@ Route::put('/classes/{schedule}/retire', [ScheduleController::class, 'retire'])-
 Route::get('/door', [DoorController::class, 'show'])->name('church.door.show');
 Route::post('/classes/{schedule}/check-ins', [DoorController::class, 'checkIn'])->whereNumber('schedule')->name('church.door.check-in');
 Route::put('/check-ins/{checkIn}/undo', [DoorController::class, 'undo'])->whereNumber('checkIn')->name('church.door.undo');
+// Its Who's in tab (DECISIONS 2026-10-28 — roll call): today's class by Squad; tap a child present.
+Route::get('/door/whos-in', [DoorController::class, 'whosIn'])->name('church.door.whos-in');
+Route::put('/check-ins/{checkIn}/present', [DoorController::class, 'present'])->whereNumber('checkIn')->name('church.door.present');
 
 // Attendance (DECISIONS 2026-10-26: reports are admins only): ?satellite=&class=&date= picks the Session.
 Route::get('/attendance', [AttendanceController::class, 'show'])->name('church.attendance.show');

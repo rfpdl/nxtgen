@@ -78,6 +78,9 @@ export type DoorFamily = App.Domains.CheckIn.DataObjects.DoorFamilyData
 export type DoorChild = App.Domains.CheckIn.DataObjects.DoorChildData
 export type DoorCheckIn = App.Domains.CheckIn.DataObjects.DoorCheckInData
 export type ChildHealth = App.Domains.CheckIn.DataObjects.ChildHealthData
+/** Who's in, the door's second tab (DECISIONS 2026-10-28 — roll call): a Squad of today's class, one child in it. */
+export type WhosInSquad = App.Domains.CheckIn.DataObjects.WhosInSquadData
+export type WhosInChild = App.Domains.CheckIn.DataObjects.WhosInChildData
 /** Attendance (DECISIONS 2026-10-26): a Squad of a Session, one child checked in to it, a satellite in the picker. */
 export type AttendanceSquad = App.Domains.CheckIn.DataObjects.AttendanceSquadData
 export type AttendanceChild = App.Domains.CheckIn.DataObjects.AttendanceChildData

@@ -29,7 +29,8 @@ use Illuminate\Database\Seeder;
  * The door journeys run on three browsers against one database, so each browser has its OWN families to check in
  * (DOOR_GUARDIANS): a Cruz family at CCF DXB — Amara (allergic), Ben, Noah (inactive), Lola (no Level), Gabe
  * (Graduated) — and a visiting Villa family at House Church (Pia). Birthdays differ per browser, so no two are
- * "possible duplicates".
+ * "possible duplicates". For Who's in (roll call), a Reyes family at CCF DXB with two Level 2 girls whose names are
+ * the browser's own (ROLL_CALL_GIRLS): the browsers share one 1PM Session and its Squads, so each ticks its own.
  */
 final class E2ESeeder extends Seeder
 {
@@ -37,6 +38,9 @@ final class E2ESeeder extends Seeder
 
     /** Browser project => the first name of its door families' parent. */
     public const array DOOR_GUARDIANS = ['mobile-webkit' => 'Ana', 'mobile-chromium' => 'Bela', 'desktop-chromium' => 'Carla'];
+
+    /** Browser project => its Reyes family's two Level 2 girls, named apart so no browser ticks another's. */
+    public const array ROLL_CALL_GIRLS = ['mobile-webkit' => ['Sofia', 'Isabel'], 'mobile-chromium' => ['Mia', 'Elena'], 'desktop-chromium' => ['Ruth', 'Hope']];
 
     public function run(): void
     {
@@ -57,9 +61,10 @@ final class E2ESeeder extends Seeder
         $this->family($ccf, $house, 'Grace', 'Santos', 'santos@nxtgen.test', '+971502000002', 'Bea', 'Bea', GenderEnum::Girl, '2018-07-02');
 
         $day = 0;
-        foreach (self::DOOR_GUARDIANS as $first) {
+        foreach (self::DOOR_GUARDIANS as $project => $first) {
             $day++;
             $this->doorFamilies($ccf, $dxb, $house, $first, $day);
+            $this->rollCallFamily($ccf, $dxb, $first, $day, self::ROLL_CALL_GIRLS[$project]);
         }
     }
 
@@ -85,6 +90,16 @@ final class E2ESeeder extends Seeder
         $cruz('Noah')->update(['status' => ChildStatusEnum::Inactive]);
         $cruz('Lola')->update(['level' => null]);
         $cruz('Gabe')->update(['status' => ChildStatusEnum::Graduated, 'level' => 4]);
+    }
+
+    /** @param list<string> $girls */
+    private function rollCallFamily(Church $church, Satellite $dxb, string $first, int $day, array $girls): void
+    {
+        $this->register($church, $dxb, new GuardianDetailsData(firstName: $first, lastName: 'Reyes', relationship: RelationshipEnum::Mother, phone: "+97150500000{$day}", email: 'reyes-'.mb_strtolower($first).'@nxtgen.test'), array_map(
+            fn (string $name, int $month): ChildDetailsData => new ChildDetailsData(firstName: $name, middleName: null, lastName: 'Reyes', nickname: $name, gender: GenderEnum::Girl, dateOfBirth: "2019-0{$month}-0{$day}", allergies: null),
+            $girls,
+            [4, 8],
+        ));
     }
 
     /** @param list<ChildDetailsData> $children */

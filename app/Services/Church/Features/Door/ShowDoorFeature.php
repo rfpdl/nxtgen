@@ -19,10 +19,12 @@ use App\Domains\Family\Jobs\GetChurchChildJob;
 use App\Domains\Family\Jobs\SearchFamiliesJob;
 use App\Domains\Level\Jobs\GetLevelsJob;
 use App\Domains\Level\Jobs\GetSuggestedLevelJob;
+use App\Domains\Schedule\Jobs\GetChosenScheduleJob;
 use App\Domains\Schedule\Jobs\GetTodaysSchedulesJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
+use App\Services\Church\Data\DoorQueryInput;
 use App\Services\Church\Features\BaseChurchFeature;
 use Illuminate\Database\Eloquent\Collection;
 use Inertia\Inertia;
@@ -30,7 +32,7 @@ use Inertia\Response;
 
 /**
  * The door (DECISIONS 2026-10-26), phone first: today's date in the church's timezone; today's classes at the
- * satellites the viewer's Role covers (`?class=` picks one — the first by default); who is checked in to it, newest
+ * satellites the viewer's Role covers (`?class=` picks one — the first by default, GetChosenScheduleJob); who is checked in to it, newest
  * first (DECISIONS 2026-10-27 — the page is never empty before a search; its length is the count); and the
  * church-wide family search (SearchFamiliesJob, the same one as registering — Q8) with each child's Level, Squad, an
  * allergy flag and whether they are in, and whether the viewer may open each family (`can_open`). No photo, no phone; a child's health details only when their row is opened
@@ -51,12 +53,12 @@ use Inertia\Response;
 #[AccessRow(AccessRowEnum::CheckIn)]
 final class ShowDoorFeature extends BaseChurchFeature
 {
-    public function handle(): Response
+    public function handle(DoorQueryInput $address): Response
     {
         $church = $this->church();
         $today = $this->run(new GetChurchTodayJob(church: $church));
         $classes = $this->run(new GetTodaysSchedulesJob(church: $church, satelliteIds: $this->scope()->doorSatelliteIds(), today: $today));
-        $class = $this->chosen($classes);
+        $class = $this->run(new GetChosenScheduleJob(classes: $classes, id: $address->class));
 
         $session = $class === null ? null : $this->run(new GetSessionJob(schedule: $class, date: $today));
         $checkIns = $session === null ? [] : $this->run(new GetCheckedInChildrenJob(session: $session));
@@ -81,27 +83,6 @@ final class ShowDoorFeature extends BaseChurchFeature
                 ? null
                 : ChildHealthData::fromModel($this->run(new GetChurchChildJob(church: $church, id: request()->integer('health'))))),
         ]);
-    }
-
-    /**
-     * The class `?class=` names, which must be one of today's offered to this viewer (a 404 otherwise); else the first.
-     *
-     * @param  list<Schedule>  $classes
-     */
-    private function chosen(array $classes): ?Schedule
-    {
-        if (! request()->filled('class')) {
-            return $classes[0] ?? null;
-        }
-
-        $id = request()->integer('class');
-        foreach ($classes as $class) {
-            if ($class->id === $id) {
-                return $class;
-            }
-        }
-
-        abort(404);
     }
 
     /**

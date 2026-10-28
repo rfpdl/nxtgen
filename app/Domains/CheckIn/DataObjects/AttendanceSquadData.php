@@ -6,6 +6,7 @@ namespace App\Domains\CheckIn\DataObjects;
 
 use App\Data\Models\CheckIn;
 use App\Foundation\DataObjects\LevelData;
+use App\Foundation\Support\CheckInGroups;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -30,16 +31,11 @@ final class AttendanceSquadData extends Data
      */
     public static function groupsOf(array $checkIns, string $timezone): array
     {
-        $groups = [];
-        foreach ($checkIns as $checkIn) {
-            $groups[$checkIn->squad_id]['name'] = $checkIn->squad->name();
-            $groups[$checkIn->squad_id]['level'] = LevelData::of($checkIn->squad->level);
-            $groups[$checkIn->squad_id]['children'][] = AttendanceChildData::fromCheckIn($checkIn, $timezone);
-        }
-
-        return array_values(array_map(
-            fn (array $g): self => new self(name: $g['name'], level: $g['level'], count: count($g['children']), children: $g['children']),
-            $groups,
-        ));
+        return array_map(fn (array $squad): self => new self(
+            name: $squad[0]->squad->name(),
+            level: LevelData::of($squad[0]->squad->level),
+            count: count($squad),
+            children: array_map(fn (CheckIn $c): AttendanceChildData => AttendanceChildData::fromCheckIn($c, $timezone), $squad),
+        ), CheckInGroups::bySquad($checkIns));
     }
 }

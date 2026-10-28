@@ -46,7 +46,7 @@ final class DoorChildData extends Data
             squad: $level === null ? null : LevelChart::squadName($level, LevelChart::squadGender($level, $child->gender)),
             status: $child->status,
             status_label: $child->status->label(),
-            has_allergies: $child->allergies !== null && trim($child->allergies) !== '',
+            has_allergies: $child->hasAllergies(),
             check_in_id: $checkInId,
             suggested_level: $level === null ? $suggestedLevel : null,
         );

@@ -4,6 +4,24 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-10-28 (roll call — slice 2 grilling; Roy)
+
+- **"Who's in" is a second tab on the door page** (Check in · Who's in), same class and date; switching keeps the
+  class. Same people as the door may use it (Lifeshapers and admins with a Role at that satellite).
+- **Roll call is both**: tap each child present, or confirm a Squad's head count — either or both. When the count
+  doesn't match the children checked in, a warning says so and names the ones not marked.
+- **Latest wins**: marks and counts can be redone (start of class, after a break); only the latest is kept, with
+  when and who. No history of earlier rounds. Undo at the door clears a child's mark.
+- **Admins see it in Attendance**: present ✓ / not marked per child, the Squad's head count, also in the Excel.
+- Claude, low-stakes: Who's in refreshes about every 20 seconds so new door check-ins appear; head count 0–200.
+- Claude, low-stakes (issue 01, for Roy to confirm): **a tap on Who's in says nothing** — no green band; the tick
+  is the answer, and a band appearing at the top would push the list down under the next tap (an error still shows).
+  A child undone at the door before the list refreshes is refused with "Amara is not checked in any more.", not
+  marked. `?squad=` naming a Squad with no one in now shows All (never a 404, so a refresh cannot break the page).
+  The Squad chips are "All Squads" then each Squad's name, scrolling sideways like the class chips. Taps go to the
+  server one after another and show at once. A row is the nickname and the allergy flag only — no "not marked"
+  words; the empty box says it. Which class is picked has one rule for both tabs (GetChosenScheduleJob).
+
 ## 2026-10-28 (later — ui-theme 03, parent and public pages on the kit; Claude, for Roy to confirm)
 
 - **Parents get their own frame, FamilyShell** (AppShell, `narrow`: one column of max 2xl on a wide screen, the

@@ -78,6 +78,16 @@ it('checks the child in again after an Undo, on the same row', function (): void
         ->and([$row?->isIn(), $row?->undone_by, $row?->checked_in_by])->toBe([true, null, $again->id]);
 });
 
+it('starts a child checked in again after an Undo unmarked — not present (roll call)', function (): void {
+    ['session' => $session, 'child' => $child, 'squad' => $squad, 'staff' => $staff] = doorOf();
+    // As if the Undo had missed the mark: the revive itself clears it.
+    $undone = checkedIn($session, $child, ['undone_at' => now()->subMinute(), 'undone_by' => $staff->id, 'present_at' => now()->subMinutes(5), 'present_by' => $staff->id]);
+
+    (new CreateCheckInJob(session: $session, child: $child, squad: $squad, by: $staff))->handle();
+
+    expect([$undone->fresh()?->isIn(), $undone->fresh()?->isPresent(), $undone->fresh()?->present_by])->toBe([true, false, null]);
+});
+
 it('makes ONE Check-in when two phones check the same child in at the same moment', function (): void {
     ['session' => $session, 'child' => $child, 'squad' => $squad, 'staff' => $staff] = doorOf();
     $other = User::factory()->create();
