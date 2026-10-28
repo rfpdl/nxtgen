@@ -8,10 +8,10 @@
 |---|---|
 | **What** | NxtGen — kids-church app for CCF (first church), satellite "CCF Dxb". Generic, multi-church; may grow into a whole-church app (names stay ministry-neutral) |
 | **Release 1 — Registration** | **Built and committed** on `release-1`. Ships when plan §12's exit criteria pass: only TODO **#21** (staging dry run) remains — #18 (access-matrix grid + response allowlists) done in refactor 09 |
-| **Release 2 — Check-in** | **Slice 1 built and pushed** (`a54324d`): Classes, check-in at the door, Attendance report + Excel — `tasks/2026-10-26-check-in/`. Slice 2 (who's in by Squad, roll call) and slice 3 (barcode, child history, follow-up) wait for Roy's look at slice 1 |
-| **Next step** | Slice 2 (roll call) built and pushed — `tasks/2026-10-28-roll-call/` 01–04. Roy tries Who's in + head count + Attendance; confirms the Claude calls in DECISIONS 2026-10-28 (roll call). Then slice 3 (barcode, child history, follow-up) |
+| **Release 2 — Check-in** | Slice 1 (classes, door, Attendance), slice 2 (roll call: Who's in, head count, Attendance roll call, multi-word search) and slice 3 (child history, name-card scan) built, reviewed (two-axis + test review + Astra, which approves) and pushed — `tasks/2026-10-26-check-in/`, `tasks/2026-10-28-roll-call/`, `tasks/2026-10-28-slice-3/` |
+| **Next step** | Roy tries roll call (Who's in, head count, Attendance), child history and name-card scanning (`php artisan migrate`, real card on a real phone over HTTPS). Then confirms the Claude calls in DECISIONS 2026-10-28 (roll call, slice 3). Open: follow-up list (skipped for now), TODO #29 merge, #27 Moving-Up |
 | **Waiting on Roy** | Laravel Cloud + mail provider + Registry CSV (TODO #23); "No group" filter yes/no (plan §13 q5); a real-iPhone photo try (TODO #16) |
-| **Gate** | `make check` green — 1313 Pest + 171 arch (450 access-matrix cells, 64 open-route cells, 48 allowlist cases), 114 Vitest, PHPStan L10 · `make e2e` green — 43 runs (iPhone Safari, Android Chrome, desktop Chrome) |
+| **Gate** | `make check` green — 1886 Pest + 173 arch, 416 Vitest, PHPStan L10 · `make e2e` green — 94 runs (iPhone Safari, Android Chrome, desktop Chrome), 1 skip |
 
 ## Where to look
 
