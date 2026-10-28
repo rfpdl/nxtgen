@@ -7,6 +7,7 @@ use App\Data\Models\Family;
 use App\Data\Models\Satellite;
 use App\Data\Models\Schedule;
 use App\Data\Models\Session;
+use App\Data\Models\SquadHeadCount;
 use App\Data\Models\User;
 use App\Enums\GenderEnum;
 use App\Enums\RoleEnum;
@@ -44,7 +45,7 @@ beforeEach(function (): void {
     travelTo(CarbonImmutable::parse('2026-10-31 15:00:00', 'Asia/Dubai'));
 });
 
-/** @return array{church: Church, dxb: Satellite, house: Satellite, onePm: Schedule, sevenPm: Schedule, houseClass: Schedule, admin: User, lifeshaper: User} */
+/** @return array{church: Church, dxb: Satellite, house: Satellite, onePm: Schedule, sevenPm: Schedule, houseClass: Schedule, admin: User, lifeshaper: User, noahsSquad: int} */
 function attendanceChurch(): array
 {
     $church = church(['slug' => 'ccf', 'name' => 'CCF', 'timezone' => 'Asia/Dubai']);
@@ -60,14 +61,19 @@ function attendanceChurch(): array
     $session = sessionOf($onePm);
     $by = ['checked_in_by' => $lifeshaper->id];
     checkedIn($session, childOf($cruz, ['nickname' => 'Zoe', 'first_name' => 'Zoe', 'middle_name' => null, 'last_name' => 'Cruz', 'level' => 2, 'gender' => GenderEnum::Girl]), $by + ['checked_in_at' => '2026-10-31 09:02:00']);
-    checkedIn($session, childOf($cruz, ['nickname' => 'Amara', 'first_name' => 'Amara', 'middle_name' => 'Joy', 'last_name' => 'Cruz', 'level' => 2, 'gender' => GenderEnum::Girl]), $by + ['checked_in_at' => '2026-10-31 09:05:00']);
+    // Roll call: Amara is marked present, Zoe not; Level 2 Girls was counted 3 (2 are in); Level 1 was not counted.
+    $amara = checkedIn($session, childOf($cruz, ['nickname' => 'Amara', 'first_name' => 'Amara', 'middle_name' => 'Joy', 'last_name' => 'Cruz', 'level' => 2, 'gender' => GenderEnum::Girl]), $by + ['checked_in_at' => '2026-10-31 09:05:00', 'present_at' => '2026-10-31 09:15:00', 'present_by' => $lifeshaper->id]);
+    SquadHeadCount::factory()->create(['session_id' => $session->id, 'squad_id' => $amara->squad_id, 'head_count' => 3, 'counted_at' => '2026-10-31 09:20:00', 'counted_by' => $lifeshaper->id]);
     checkedIn($session, childOf($cruz, ['nickname' => 'Ben', 'first_name' => 'Benjamin', 'middle_name' => null, 'last_name' => 'Cruz', 'level' => 1, 'gender' => GenderEnum::Boy]), $by + ['checked_in_at' => '2026-10-31 08:58:00']);
-    checkedIn($session, childOf($cruz, ['nickname' => 'Noah', 'level' => 3, 'gender' => GenderEnum::Boy]), $by + ['undone_at' => now()]);
+    // Noah was marked present, then undone at the door: he is not listed, and his mark never counts.
+    $noah = checkedIn($session, childOf($cruz, ['nickname' => 'Noah', 'level' => 3, 'gender' => GenderEnum::Boy]), $by + ['undone_at' => now(), 'present_at' => now()]);
     checkedIn(sessionOf($sevenPm, '2026-10-24'), childOf($cruz, ['nickname' => 'Lola', 'level' => 1]));
+    // Another Session's head count (1PM two weeks before): never on this 1PM's page, not even as a Squad of its own.
+    SquadHeadCount::factory()->create(['session_id' => sessionOf($onePm, '2026-10-17')->id, 'squad_id' => $noah->squad_id, 'head_count' => 9]);
 
     return [
         'church' => $church, 'dxb' => $dxb, 'house' => $house, 'onePm' => $onePm, 'sevenPm' => $sevenPm, 'houseClass' => $houseClass,
-        'admin' => staffMember(RoleEnum::Admin, atChurch($church)), 'lifeshaper' => $lifeshaper,
+        'admin' => staffMember(RoleEnum::Admin, atChurch($church)), 'lifeshaper' => $lifeshaper, 'noahsSquad' => $noah->squad_id,
     ];
 }
 
@@ -99,6 +105,35 @@ describe('the Attendance page', function (): void {
             ->where('squads.1.children.0.full_name', 'Amara Joy Cruz')
             ->where('squads.1.children.0.checked_in_at', '13:05')
             ->where('squads.1.children.1.nickname', 'Zoe'));
+    });
+
+    it('shows the roll call: each child present or not marked, each Squad\'s head count with when and who, or none — an undone child never, marked or not @story#124', function (): void {
+        ['onePm' => $onePm, 'admin' => $admin] = attendanceChurch();
+
+        actingAs($admin)->get("/ccf/attendance?class={$onePm->id}&date=2026-10-31")->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('total', 3)
+            ->where('squads.0.name', 'Level 1')
+            ->where('squads.0.children.0.present', false)
+            ->where('squads.0.head_count', null)
+            ->where('squads.1.name', 'Level 2 Girls')
+            ->where('squads.1.children.0.nickname', 'Amara')
+            ->where('squads.1.children.0.present', true)
+            ->where('squads.1.children.1.nickname', 'Zoe')
+            ->where('squads.1.children.1.present', false)
+            ->where('squads.1.head_count', ['count' => 3, 'counted_at' => '13:20', 'counted_by' => 'Liza'])
+            ->has('squads', 2));
+    });
+
+    it('keeps a counted Squad whose children were all undone since — "0 in", its head count, in its place @story#124', function (): void {
+        ['onePm' => $onePm, 'admin' => $admin, 'lifeshaper' => $lifeshaper, 'noahsSquad' => $squad] = attendanceChurch();
+        SquadHeadCount::factory()->create(['session_id' => Session::query()->where('schedule_id', $onePm->id)->where('date', '2026-10-31')->sole()->id, 'squad_id' => $squad, 'head_count' => 2, 'counted_at' => '2026-10-31 09:30:00', 'counted_by' => $lifeshaper->id]);
+
+        actingAs($admin)->get("/ccf/attendance?class={$onePm->id}&date=2026-10-31")->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('total', 3)
+            ->has('squads', 3)
+            ->where('squads.2', ['name' => 'Level 3 Boys', 'level' => ['number' => 3, 'name' => 'Level 3'], 'count' => 0, 'children' => [], 'head_count' => ['count' => 2, 'counted_at' => '13:30', 'counted_by' => 'Liza']]));
+
+        expect(exportedRows(actingAs($admin)->get("/ccf/attendance/export?class={$onePm->id}&date=2026-10-31")))->toContain('Level 3 Boys||||||2');
     });
 
     it('opens on the latest Session at the first satellite when none is today @story#112', function (): void {
@@ -155,7 +190,7 @@ describe('the Attendance page', function (): void {
         $few = $count();
 
         $family = Family::query()->firstOrFail();
-        $session = Session::query()->where('schedule_id', $onePm->id)->sole();
+        $session = Session::query()->where('schedule_id', $onePm->id)->where('date', '2026-10-31')->sole();
         foreach (['Ana', 'Bo', 'Cy', 'Di', 'Ed', 'Flo'] as $i => $nickname) {
             checkedIn($session, childOf($family, ['nickname' => $nickname, 'level' => 1 + $i % 4, 'gender' => $i % 2 === 0 ? GenderEnum::Boy : GenderEnum::Girl]), ['checked_in_by' => User::factory()->create()->id]);
         }
@@ -189,17 +224,17 @@ describe('the Attendance page', function (): void {
 });
 
 describe('the Attendance Excel', function (): void {
-    it('downloads the same rows as the page, named for the satellite, class and date @story#114', function (): void {
+    it('downloads the same rows as the page, named for the satellite, class and date — with Present and the Squad\'s head count @story#114 @story#125', function (): void {
         ['dxb' => $dxb, 'onePm' => $onePm, 'admin' => $admin] = attendanceChurch();
 
         $response = actingAs($admin)->get("/ccf/attendance/export?satellite={$dxb->id}&class={$onePm->id}&date=2026-10-31")->assertOk();
 
         expect($response->headers->get('Content-Disposition'))->toContain('nxtgen-attendance-ccf-dxb-1pm-2026-10-31.xlsx')
             ->and(exportedRows($response))->toBe([
-                'Squad|Child nickname|Child full name|Checked in at|Checked in by',
-                'Level 1|Ben|Benjamin Cruz|12:58|Liza Reyes',
-                'Level 2 Girls|Amara|Amara Joy Cruz|13:05|Liza Reyes',
-                'Level 2 Girls|Zoe|Zoe Cruz|13:02|Liza Reyes',
+                'Squad|Child nickname|Child full name|Checked in at|Checked in by|Present|Squad head count',
+                'Level 1|Ben|Benjamin Cruz|12:58|Liza Reyes||',
+                'Level 2 Girls|Amara|Amara Joy Cruz|13:05|Liza Reyes|Yes|3',
+                'Level 2 Girls|Zoe|Zoe Cruz|13:02|Liza Reyes||3',
             ]);
     });
 
@@ -207,7 +242,7 @@ describe('the Attendance Excel', function (): void {
         ['sevenPm' => $sevenPm, 'admin' => $admin] = attendanceChurch();
 
         expect(exportedRows(actingAs($admin)->get("/ccf/attendance/export?class={$sevenPm->id}&date=2026-10-31")))
-            ->toBe(['Squad|Child nickname|Child full name|Checked in at|Checked in by']);
+            ->toBe(['Squad|Child nickname|Child full name|Checked in at|Checked in by|Present|Squad head count']);
     });
 
     it('refuses another satellite\'s class to a satellite admin, another church\'s class, and a Lifeshaper @story#115', function (): void {

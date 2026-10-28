@@ -46,10 +46,11 @@ describe('HeadCountForm', () => {
         expect((input(wrapper).element as HTMLInputElement).value).toBe('2')
     })
 
-    it('goes back to following the server once a confirm is answered — the confirmed number', async () => {
+    it('goes back to following the server once a count is sent — the confirmed number, then any later one', async () => {
         const wrapper = mount(HeadCountForm, { props: { squad: girls() } })
 
         await input(wrapper).setValue('2')
+        await wrapper.find('form').trigger('submit')
         await wrapper.setProps({ confirming: true })
         await wrapper.setProps({
             confirming: false,
@@ -64,10 +65,45 @@ describe('HeadCountForm', () => {
         expect((input(wrapper).element as HTMLInputElement).value).toBe('4')
     })
 
+    it('never overwrites a number typed while the last confirm was still on its way', async () => {
+        const wrapper = mount(HeadCountForm, { props: { squad: girls() } })
+
+        await input(wrapper).setValue('2')
+        await wrapper.find('form').trigger('submit')
+        await wrapper.setProps({
+            confirming: true,
+            squad: girls({ head_count: { count: 2, counted_at: '13:20', counted_by: 'Joy' } }),
+        })
+        await input(wrapper).setValue('3')
+        await wrapper.setProps({ confirming: false })
+
+        expect((input(wrapper).element as HTMLInputElement).value).toBe('3')
+    })
+
+    it('shows what was typed again when it is refused, even after the server sent a new number meanwhile', async () => {
+        const wrapper = mount(HeadCountForm, { props: { squad: girls() } })
+
+        await input(wrapper).setValue('250')
+        await wrapper.find('form').trigger('submit')
+        await input(wrapper).setValue('2')
+        await wrapper.find('form').trigger('submit')
+        // Sent; before the answer, a refresh brings another leader's count…
+        await wrapper.setProps({
+            confirming: true,
+            squad: girls({ head_count: { count: 4, counted_at: '13:30', counted_by: 'Ben' } }),
+        })
+        expect((input(wrapper).element as HTMLInputElement).value).toBe('4')
+        // …then this count is refused: the field shows what the leader sent, to fix.
+        await wrapper.setProps({ confirming: false, error: 'Please type a number from 0 to 200.' })
+
+        expect((input(wrapper).element as HTMLInputElement).value).toBe('2')
+    })
+
     it('keeps what the leader typed when the server refuses it', async () => {
         const wrapper = mount(HeadCountForm, { props: { squad: girls() } })
 
         await input(wrapper).setValue('2')
+        await wrapper.find('form').trigger('submit')
         await wrapper.setProps({ confirming: true })
         await wrapper.setProps({ confirming: false, error: 'Please type a number from 0 to 200.' })
         await wrapper.setProps({ squad: girls({ count: 5 }) })

@@ -9,7 +9,8 @@ use App\Data\Models\SquadHeadCount;
 use App\Foundation\Jobs\BaseJob;
 
 /**
- * Each Squad's confirmed head count at a Session, by Squad id, with who confirmed it — one query however many Squads.
+ * Each Squad's confirmed head count at a Session, by Squad id, with its Squad and who confirmed it — the same few
+ * queries however many Squads.
  *
  * @extends BaseJob<array<int, SquadHeadCount>>
  */
@@ -24,7 +25,7 @@ final class GetSessionHeadCountsJob extends BaseJob
         foreach (SquadHeadCount::query()
             ->where('church_id', $this->session->church_id)
             ->where('session_id', $this->session->id)
-            ->with('countedBy')
+            ->with(['squad', 'countedBy'])
             ->get() as $count) {
             $counts[$count->squad_id] = $count;
         }

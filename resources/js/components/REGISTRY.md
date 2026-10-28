@@ -24,6 +24,7 @@ every staff, parent and public page is on the kit (issues 02 and 03 of `.plannin
 | ChoiceChips    | atom   | Pick one of a few as pressable chips (a radio group) — door class picker, allergy yes/no; `labelledby`/`label`, `required`, `error` wired; an option's `testid`                |
 | FileButton     | atom   | A file picker that looks and presses like a secondary AppButton (the photo's take / choose); attrs on the hidden input                                                         |
 | Card           | atom   | White tile, 2px edge and a 5px bottom; `as`, `flush` for a card of rows                                                                                                        |
+| RollCallMark   | atom   | A child's roll call on Attendance: "Present ✓" (a success Pill) or "Not marked" in quiet words — one piece for phone rows and table                                            |
 | Pill           | atom   | Small label: a `level` (Level: number + name) in the age-level chart's colours (tint + dot; says the name by default), or `danger` / status / neutral                          |
 | SectionHeading | atom   | A part of a page's heading: `h2` under the PageHeader, or a smaller `h3` (`level="3"`) inside a card                                                                           |
 | RowList        | atom   | A card of padded rows with a line between them; `href` makes each whole row a link ending in ›, `#after` sits outside it; `plain`                                              |
@@ -63,7 +64,7 @@ every staff, parent and public page is on the kit (issues 02 and 03 of `.plannin
 | OtherGuardiansFieldset  | organism | The family's other parents/guardians (no email): add / remove (saved ones reported), via GuardianFieldset                                 |
 | PossibleDuplicateCard   | organism | A possible duplicate on a family's page: newer and earlier side by side, "Not the same" / "Same family"                                   |
 | ScheduleCard            | molecule | One class (Schedule) on the Classes page: name, day and times; Edit, and Retire after a second tap                                        |
-| AttendanceSquadTable    | molecule | One Squad of a Session on Attendance: name, count; a table (sm+) or stacked rows (phone) of names, time, who                              |
+| AttendanceSquadTable    | molecule | One Squad of a Session on Attendance: name, count, head count + warning; table (sm+) or stacked rows (phone): names, time, who, present   |
 | ScheduleForm            | organism | Add (POST, with `satelliteId`) or edit (PUT, from a saved `schedule`) a class: name, day, times; `done` on save or cancel                 |
 | SatelliteSchedules      | organism | One satellite on the Classes page: its classes, one edited in place at a time, "+ Add a class" opening the add form                       |
 | DoorChildRow            | molecule | A door child: full-height tick zone; the rest opens (Disclosure) health, status, Level, family link; ✓ + Undo; make active; Level         |

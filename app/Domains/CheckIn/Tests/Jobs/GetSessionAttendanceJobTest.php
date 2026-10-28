@@ -68,3 +68,15 @@ it('puts a Level\'s mixed Squad first, then boys, then girls — whatever order 
 
     expect(attendanceLines($session))->toBe(['Level 3: Max by ', 'Level 3 Boys: Bo by ', 'Level 3 Girls: Gia by ']);
 });
+
+it('carries each child\'s present mark, and never an undone child\'s — marked or not', function (): void {
+    $satellite = satelliteOf(church());
+    $family = familyAt($satellite);
+    $session = sessionOf(scheduleAt($satellite));
+    checkedIn($session, childOf($family, ['nickname' => 'Amara', 'level' => 2, 'gender' => GenderEnum::Girl]), ['present_at' => now()]);
+    checkedIn($session, childOf($family, ['nickname' => 'Isabel', 'level' => 2, 'gender' => GenderEnum::Girl]));
+    checkedIn($session, childOf($family, ['nickname' => 'Noah', 'level' => 2, 'gender' => GenderEnum::Girl]), ['present_at' => now(), 'undone_at' => now()]);
+
+    expect(array_map(fn (CheckIn $c): array => [$c->child->nickname, $c->isPresent()], (new GetSessionAttendanceJob(session: $session))->handle()))
+        ->toBe([['Amara', true], ['Isabel', false]]);
+});

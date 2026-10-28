@@ -384,18 +384,18 @@ describe('Who\'s in', function (): void {
     })->with(actors(...Actor::staff()));
 });
 
-/** A child on the Attendance page (AttendanceChildData) — the Excel's columns: no health detail, phone or photo. */
-const ATTENDANCE_CHILD = ['checked_in_at', 'checked_in_by', 'full_name', 'id', 'nickname'];
+/** A child on the Attendance page (AttendanceChildData) — the Excel's columns, and the roll call's present mark: no health detail, phone or photo. */
+const ATTENDANCE_CHILD = ['checked_in_at', 'checked_in_by', 'full_name', 'id', 'nickname', 'present'];
 
 describe('Attendance', function (): void {
-    it('shows an admin over Home the Session by Squad — names, time and who checked in; no health detail, phone or photo @story#112', function (Actor $actor): void {
+    it('shows an admin over Home the Session by Squad — names, time, who checked in and the roll call; no health detail, phone or photo @story#112 @story#124', function (Actor $actor): void {
         $props = propsOf($actor, fn (AccessWorld $w): string => "/ccf/attendance?class={$w->schedule->id}&date=2026-10-31");
 
         expect(keyPaths($props))->toBe(allowlist(
             STAFF_FRAME,
             ['class_id', 'date', 'date_label', 'satellite_id', 'satellites.*.id', 'satellites.*.name', 'total'],
             prefixed('satellites.*.classes.*', ['id', 'name', 'retired']),
-            prefixed('squads.*', ['count', 'level.name', 'level.number', 'name', ...prefixed('children.*', ATTENDANCE_CHILD)]),
+            prefixed('squads.*', ['count', 'level.name', 'level.number', 'name', ...prefixed('children.*', ATTENDANCE_CHILD), ...prefixed('head_count', ['count', 'counted_at', 'counted_by'])]),
         ))
             ->and(forbiddenOnLists($props))->toBe([])
             ->and(data_get($props, 'squads.0.children.0.nickname'))->toBe('Amara')
@@ -409,7 +409,7 @@ describe('Attendance', function (): void {
         $rows = exportedRows(actingAs($world->user(Actor::ChurchAdmin) ?? throw new \LogicException('An admin signs in.'))
             ->get("/ccf/attendance/export?class={$world->schedule->id}&date=2026-10-31"));
 
-        expect($rows[0])->toBe('Squad|Child nickname|Child full name|Checked in at|Checked in by')
+        expect($rows[0])->toBe('Squad|Child nickname|Child full name|Checked in at|Checked in by|Present|Squad head count')
             ->and($rows)->toHaveCount(2)
             ->and(preg_match('/Peanuts|Asthma|0501112222|photo/', implode("\n", $rows)))->toBe(0);
     });

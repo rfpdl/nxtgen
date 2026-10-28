@@ -58,6 +58,21 @@ final class Squad extends Model
         return LevelChart::squadName($this->level, $this->gender);
     }
 
+    /**
+     * Where the Squad comes in a Session's list (Attendance, Who's in): by Level, then the mixed Squad, boys, girls —
+     * named, not left to the enum's spelling.
+     *
+     * @return array{int, int}
+     */
+    public function rank(): array
+    {
+        return [$this->level, match ($this->gender) {
+            null => 0,
+            GenderEnum::Boy => 1,
+            GenderEnum::Girl => 2,
+        }];
+    }
+
     /** @return BelongsTo<Church, $this> */
     public function church(): BelongsTo
     {

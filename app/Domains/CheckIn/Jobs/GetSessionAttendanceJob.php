@@ -6,7 +6,6 @@ namespace App\Domains\CheckIn\Jobs;
 
 use App\Data\Models\CheckIn;
 use App\Data\Models\Session;
-use App\Enums\GenderEnum;
 use App\Foundation\Jobs\BaseJob;
 
 /**
@@ -30,21 +29,10 @@ final class GetSessionAttendanceJob extends BaseJob
             ->with(['child', 'squad', 'checkedInBy'])
             ->get()
             ->sortBy([
-                fn (CheckIn $a, CheckIn $b): int => $a->squad->level <=> $b->squad->level,
-                fn (CheckIn $a, CheckIn $b): int => self::genderRank($a) <=> self::genderRank($b),
+                fn (CheckIn $a, CheckIn $b): int => $a->squad->rank() <=> $b->squad->rank(),
                 fn (CheckIn $a, CheckIn $b): int => mb_strtolower($a->child->nickname) <=> mb_strtolower($b->child->nickname),
                 fn (CheckIn $a, CheckIn $b): int => $a->id <=> $b->id,
             ])
             ->all());
-    }
-
-    /** Within a Level: the mixed Squad, then boys, then girls — named, not left to the enum's spelling. */
-    private static function genderRank(CheckIn $checkIn): int
-    {
-        return match ($checkIn->squad->gender) {
-            null => 0,
-            GenderEnum::Boy => 1,
-            GenderEnum::Girl => 2,
-        };
     }
 }

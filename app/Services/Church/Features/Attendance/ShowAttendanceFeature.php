@@ -24,7 +24,10 @@ use Inertia\Response;
 #[UserStory(
     title: 'See a Session\'s attendance',
     persona: 'church admin or satellite admin',
-    happyPaths: ['story#112' => 'An Admin picks a satellite, class and date (today\'s class or the latest Session first; a retired class that met too) and sees the children checked in by Squad, with who checked them in, a count per Squad and a total'],
+    happyPaths: [
+        'story#112' => 'An Admin picks a satellite, class and date (today\'s class or the latest Session first; a retired class that met too) and sees the children checked in by Squad, with who checked them in, a count per Squad and a total',
+        'story#124' => 'An Admin sees the roll call: each child present or not marked, each Squad\'s head count with when and who (or none), and a warning when it does not match the children checked in',
+    ],
     unhappyPaths: ['story#113' => 'Not there for a Lifeshaper; another satellite\'s (for a satellite admin) or another church\'s class, a retired class that never met, or a date that is not one, is a 404'],
 )]
 #[AccessRow(AccessRowEnum::Attendance)]

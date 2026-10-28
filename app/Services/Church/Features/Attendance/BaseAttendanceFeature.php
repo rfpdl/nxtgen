@@ -10,6 +10,7 @@ use App\Domains\CheckIn\DataObjects\AttendanceSquadData;
 use App\Domains\CheckIn\Jobs\GetAttendanceSelectionJob;
 use App\Domains\CheckIn\Jobs\GetReportableSchedulesJob;
 use App\Domains\CheckIn\Jobs\GetSessionAttendanceJob;
+use App\Domains\CheckIn\Jobs\GetSessionHeadCountsJob;
 use App\Domains\CheckIn\Jobs\GetSessionJob;
 use App\Domains\Church\DataObjects\SatelliteOptionData;
 use App\Domains\Church\Jobs\GetChurchTodayJob;
@@ -20,7 +21,7 @@ use App\Services\Church\Features\BaseChurchFeature;
  * What the Attendance page and its Excel share (DECISIONS 2026-10-26: reports are admins only): the satellites this
  * admin sees (a church admin every one, a satellite admin their own) with the classes that can be reported on, the
  * Session `?satellite=`, `?class=` and `?date=` pick (GetAttendanceSelectionJob — a 404 for anything not offered), and
- * its children by Squad.
+ * its children by Squad with the roll call (each child's present mark, each Squad's head count).
  *
  * @template-covariant TResult
  *
@@ -61,13 +62,16 @@ abstract class BaseAttendanceFeature extends BaseChurchFeature
         ));
 
         $session = $selection->schedule === null ? null : $this->run(new GetSessionJob(schedule: $selection->schedule, date: $selection->date));
-        $checkIns = $session === null ? [] : $this->run(new GetSessionAttendanceJob(session: $session));
 
         return [
             'satellites' => $satellites,
             'schedules' => $schedules,
             'selection' => $selection,
-            'squads' => AttendanceSquadData::groupsOf($checkIns, $church->timezone),
+            'squads' => $session === null ? [] : AttendanceSquadData::groupsOf(
+                $this->run(new GetSessionAttendanceJob(session: $session)),
+                $this->run(new GetSessionHeadCountsJob(session: $session)),
+                $church->timezone,
+            ),
         ];
     }
 }

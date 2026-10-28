@@ -14,7 +14,7 @@ use function Tests\Support\sessionOf;
 
 /* Each Squad's confirmed head count at one Session, by Squad id, with who confirmed it. */
 
-it('gives each counted Squad\'s head count at this Session only, by Squad id', function (): void {
+it('gives each counted Squad\'s head count at this Session only, by Squad id, with its Squad and who', function (): void {
     $dxb = Satellite::factory()->for(church())->withSquads()->create();
     $session = sessionOf(scheduleAt($dxb));
     [$girls, $boys] = Squad::query()->where('satellite_id', $dxb->id)->where('level', 2)->orderBy('gender')->get()->all();
@@ -25,5 +25,6 @@ it('gives each counted Squad\'s head count at this Session only, by Squad id', f
     $counts = (new GetSessionHeadCountsJob(session: $session))->handle();
 
     expect(array_keys($counts))->toBe([$girls->id])
-        ->and([$counts[$girls->id]->head_count, $counts[$girls->id]->countedBy?->name])->toBe([4, 'Joy Santos']);
+        ->and([$counts[$girls->id]->head_count, $counts[$girls->id]->countedBy?->name, $counts[$girls->id]->squad->name()])->toBe([4, 'Joy Santos', $girls->name()])
+        ->and($counts[$girls->id]->relationLoaded('squad'))->toBeTrue();
 });

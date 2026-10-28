@@ -8,6 +8,7 @@ declare namespace App {
                     full_name: string
                     checked_in_at: string
                     checked_in_by: string
+                    present: boolean
                 }
                 export type AttendanceClassData = {
                     id: number
@@ -24,6 +25,7 @@ declare namespace App {
                     level: App.Foundation.DataObjects.LevelData
                     count: number
                     children: App.Domains.CheckIn.DataObjects.AttendanceChildData[]
+                    head_count: App.Domains.CheckIn.DataObjects.SquadHeadCountData | null
                 }
                 export type ChildHealthData = {
                     id: number

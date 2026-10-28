@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $head_count
  * @property CarbonImmutable $counted_at
  * @property int|null $counted_by
+ * @property-read Squad $squad
  * @property-read User|null $countedBy
  */
 final class SquadHeadCount extends Model
@@ -40,6 +41,12 @@ final class SquadHeadCount extends Model
             'head_count' => 'integer',
             'counted_at' => 'immutable_datetime',
         ];
+    }
+
+    /** @return BelongsTo<Squad, $this> */
+    public function squad(): BelongsTo
+    {
+        return $this->belongsTo(Squad::class);
     }
 
     /**

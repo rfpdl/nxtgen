@@ -22,7 +22,10 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 #[UserStory(
     title: 'Download a Session\'s attendance',
     persona: 'church admin or satellite admin',
-    happyPaths: ['story#114' => 'An Admin downloads the Session\'s children as Excel — the rows the page shows, named for the satellite, class and date'],
+    happyPaths: [
+        'story#114' => 'An Admin downloads the Session\'s children as Excel — the rows the page shows, named for the satellite, class and date',
+        'story#125' => 'The Excel carries the roll call: Present ("Yes" or empty) and the Squad\'s head count on each of its rows',
+    ],
     unhappyPaths: ['story#115' => 'Not for a Lifeshaper; another satellite\'s (for a satellite admin) or another church\'s class is a 404'],
 )]
 #[AccessRow(AccessRowEnum::Attendance)]

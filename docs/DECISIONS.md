@@ -28,6 +28,12 @@ describes the design; this records the choices that shaped or changed it.
   tap, a Check-in or an Undo shows at once); "Not marked" only once some child is marked. A count is refused with
   "Please type a number from 0 to 200." (on the phone too, before it is sent). On a phone the field and the button
   are stacked full width; from the sm breakpoint up, one row. Two leaders at once: one row, the later write kept.
+- Claude, low-stakes (issue 03, for Roy to confirm): **Attendance shows the roll call** as a "Roll call" column
+  ("Present ✓" / "Not marked") in the table and the last line of each phone row; under each Squad's heading, "Head
+  count 4 · 13:20 by Joy" or "No head count", and the same warning as Who's in — one rule for both (`headCountWarning`,
+  `resources/js/lib/rollCall.ts`). Only children still in are listed, so an undone child's old mark never shows. The
+  head count field on Who's in follows the server again from the moment a count is SENT (a number typed while it is
+  on its way is kept) — found by the e2e. The Excel's head count repeats on each row of its Squad.
 
 ## 2026-10-28 (later — ui-theme 03, parent and public pages on the kit; Claude, for Roy to confirm)
 

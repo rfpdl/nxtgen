@@ -71,14 +71,15 @@ export const DOOR = {
 export type DoorProject = keyof typeof DOOR.guardians
 
 /**
- * Who's in (roll call): each browser project's Reyes family at CCF DXB (E2ESeeder::ROLL_CALL_GIRLS) — two Level 2
- * girls named apart, because the three browsers share today's 1PM Session and its Level 2 Girls Squad.
+ * Who's in (roll call): each browser project's Reyes family at CCF DXB (E2ESeeder::ROLL_CALL_GIRLS) — Level 2 girls
+ * named apart, because the three browsers share today's 1PM Session and its Level 2 Girls Squad. The first two are the
+ * Who's in journey's; the last two, the Attendance journey's (one ticked present, one not).
  */
 export const ROLL_CALL = {
     girls: {
-        'mobile-webkit': ['Sofia', 'Isabel'],
-        'mobile-chromium': ['Mia', 'Elena'],
-        'desktop-chromium': ['Ruth', 'Hope'],
+        'mobile-webkit': ['Sofia', 'Isabel', 'Lia', 'Gia'],
+        'mobile-chromium': ['Mia', 'Elena', 'Nina', 'Ivy'],
+        'desktop-chromium': ['Ruth', 'Hope', 'Tala', 'Faith'],
     },
     squad: 'Level 2 Girls',
 } as const
