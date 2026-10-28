@@ -133,3 +133,16 @@ it('never overwrites the keys of a name edited between the backfill reading a ro
     expect($wrote)->toBeFalse()
         ->and([$stored->name_key, $stored->name_key_first])->toBe(['MARIAREYES', 'MARIA']);
 });
+
+it('compares the names it read letter for letter, not by the database\'s loose matching (Astra)', function (): void {
+    // "ǅenana" and "Dženana" count as equal to MySQL's default collation, but spell different keys.
+    $child = childOf(familyAt(satelliteOf(church())), ['first_name' => 'ǅenana', 'middle_name' => null, 'last_name' => 'Hodžić']);
+    $read = DB::table('children')->select(['id', 'church_id', 'first_name', 'middle_name', 'last_name'])->where('id', $child->id)->first();
+    expect(DB::table('children')->where('id', $child->id)->where('first_name', 'Dženana')->exists())->toBeTrue();
+    Child::query()->findOrFail($child->id)->forceFill(['first_name' => 'Dženana'])->save();
+
+    $wrote = NameKey::fillInRow($read ?? throw new LogicException('read'));
+
+    expect($wrote)->toBeFalse()
+        ->and(Child::query()->findOrFail($child->id)->name_key_first)->toBe('DZENANA');
+});

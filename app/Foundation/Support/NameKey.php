@@ -79,9 +79,11 @@ final class NameKey
         return DB::table('children')
             ->where('id', $child->id ?? 0)
             ->where('church_id', $child->church_id ?? 0)
-            ->where('first_name', $first)
-            ->whereRaw('middle_name <=> ?', [$middle])
-            ->where('last_name', $last)
+            // Byte for byte: the column's collation calls "ǅenana" and "Dženana" (or "Jose" and "José") equal, but they
+            // can spell different keys (Astra).
+            ->whereRaw('BINARY first_name = BINARY ?', [$first])
+            ->whereRaw('BINARY middle_name <=> BINARY ?', [$middle])
+            ->whereRaw('BINARY last_name = BINARY ?', [$last])
             ->update(self::keysFor($first, $middle, $last)) > 0;
     }
 

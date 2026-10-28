@@ -46,3 +46,11 @@ changed and already has its own keys — left alone. Test: read the row, rename 
 row's step → nothing written, the keys spell the new name (MARIAREYES). Revert-checked: the id-only write fails it.
 Gates: `make check` green (Pest 1885 + arch 173, Vitest 416, PHPStan L10); `make e2e` green (94 passed, 1 skipped).
 
+**2026-10-29 — Astra's last re-check (agent).** `fillInRow`'s name checks used the column's collation
+(utf8mb4_0900_ai_ci), which calls "ǅenana" and "Dženana" equal although they spell different keys (ENANA / DZENANA),
+so a stale row could still pass. The checks are now byte for byte (`BINARY first_name = BINARY ?`, `BINARY
+middle_name <=> BINARY ?` — still null-safe — `BINARY last_name = BINARY ?`). Test on MySQL: the pair is shown equal
+to the database first, then a rename between the read and the write is left alone and keeps DZENANA. Revert-checked:
+the collation compare fails it. Gates: `make check` green (Pest 1886 + arch 173, Vitest 416, PHPStan L10); `make e2e`
+green (94 passed, 1 skipped).
+
