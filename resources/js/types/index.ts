@@ -78,6 +78,8 @@ export type DoorFamily = App.Domains.CheckIn.DataObjects.DoorFamilyData
 export type DoorChild = App.Domains.CheckIn.DataObjects.DoorChildData
 export type DoorCheckIn = App.Domains.CheckIn.DataObjects.DoorCheckInData
 export type ChildHealth = App.Domains.CheckIn.DataObjects.ChildHealthData
+/** A name card at the door (slice 3): the code it spells and the children it names. */
+export type DoorScan = App.Domains.CheckIn.DataObjects.DoorScanData
 /** Who's in, the door's second tab (DECISIONS 2026-10-28 — roll call): a Squad of today's class, one child in it. */
 export type WhosInSquad = App.Domains.CheckIn.DataObjects.WhosInSquadData
 export type WhosInChild = App.Domains.CheckIn.DataObjects.WhosInChildData

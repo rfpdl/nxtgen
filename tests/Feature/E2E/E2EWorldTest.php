@@ -65,7 +65,13 @@ it('seeds exactly what the browser journeys expect', function (): void {
         expect($world)->toContain("'{$project}': ['".implode("', '", $girls)."']");
         $reyes = Family::query()->with(['children', 'homeSatellite'])->whereHas('primaryGuardian', fn ($g) => $g->where('first_name', $first)->where('last_name', 'Reyes'))->sole();
         expect([$reyes->homeSatellite->name, $reyes->children->map(fn (Child $c): array => [$c->nickname, $c->level, $c->gender->value])->all()])
-            ->toBe(['CCF DXB', array_map(fn (string $girl): array => [$girl, 2, 'girl'], $girls)]);
+            ->toBe(['CCF DXB', [...array_map(fn (string $girl): array => [$girl, 2, 'girl'], $girls), ['Amara', 2, 'girl']]]);
+
+        // The scan journey: this browser's Reyes Amara, whose name card it types — her key is the browser's own.
+        $middle = E2ESeeder::SCAN_MIDDLE_NAMES[$project];
+        $key = 'AMARA'.mb_strtoupper($middle).'REYES';
+        expect($world)->toContain("'{$project}': '{$key}'")
+            ->and(Child::query()->where('name_key', $key)->sole()->family_id)->toBe($reyes->id);
     }
     foreach (["allergic: 'Amara'", "active: 'Ben'", "inactive: 'Noah'", "noLevel: 'Lola'", "graduated: 'Gabe'", "allergy: 'Peanuts'", "suggestedLevel: 'Level 1'"] as $line) {
         expect($world)->toContain($line);

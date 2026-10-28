@@ -83,3 +83,16 @@ export const ROLL_CALL = {
     },
     squad: 'Level 2 Girls',
 } as const
+
+/**
+ * Scan a name card (slice 3): each browser's Reyes family has an Amara with its own middle name
+ * (E2ESeeder::SCAN_MIDDLE_NAMES), so the code its card spells finds only that child. She is never checked in.
+ */
+export const SCAN = {
+    codes: {
+        'mobile-webkit': 'AMARAJOYREYES',
+        'mobile-chromium': 'AMARAKAYREYES',
+        'desktop-chromium': 'AMARALEEREYES',
+    },
+    child: 'Amara',
+} as const

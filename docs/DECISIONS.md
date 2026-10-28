@@ -20,7 +20,23 @@ describes the design; this records the choices that shaped or changed it.
   Check-in; a parent's own page never carries it (tested). Past lines show the class's, satellite's and Squad's names
   as they are TODAY — renaming a class rewrites its history lines (no copy is kept per Check-in). Every line is sent
   and 12 shown; if a child's history grows large, "Show all" can fetch the rest when tapped instead.
-
+- Claude, low-stakes (issue 02, for Roy to confirm; tightened after review): **scanning a name card**. The key is stored
+  on each child (`name_key`, plus the first and last name as keys) and the Child model sets it on every save
+  (`NameKey::keysFor`) — registration, edits by a parent or staff, the registry import, seeders — with a test that
+  nothing writes children around the model; the migration fills in existing children. **If the NameKey rule ever
+  changes, re-key every child with a migration.** Matching, safest first: **one child whose full name the card spells
+  is ticked**; several such children → their families, nobody ticked ("tick the right one"); otherwise, for a code of
+  six letters or more, a **close match** — the middle name missing on ONE side only (the card has none and the child
+  has one, or the child has none and the card has one) — is shown, never ticked ("check this is the right child");
+  never two different middle names, never fuzzier; a child whose first or last name has no letters matches nothing. A
+  search is read as a card when it is one word of letters (two or more) or came from the camera (`?card=1`). A camera
+  read no child matches says so in red and shows nothing else; a typed word that is no child's card is an ordinary
+  search — just the families, no card note — and says "No child matches this card" (red) only when no family is found
+  either (coordinator, after review).
+  The card's child is pre-ticked only when active and not in yet. "Scan card" is a full-width button under the
+  search on a phone; its sheet slides up from the bottom with a big Cancel. The decoder is `@zxing/browser` 0.2.1 +
+  `@zxing/library` 0.23.0 (pinned), loaded only when a scan starts (its own chunk, ~120 kB gzipped); the native
+  BarcodeDetector fast path was left out — one decoder, the same on every phone.
 
 ## 2026-10-28 (roll call — slice 2 grilling; Roy)
 

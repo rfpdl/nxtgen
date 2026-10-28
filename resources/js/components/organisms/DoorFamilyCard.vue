@@ -16,20 +16,40 @@ import { route } from 'ziggy-js'
  * row (DECISIONS 2026-10-28): the health details the page has fetched (`healths`, by child id — asked for up the
  * first time, `health`), and the family page's link when the viewer may open it (`can_open`).
  */
-const props = defineProps<{
-    family: DoorFamily
-    levels: LevelOption[]
-    classId: number | null
-    healths: Record<number, ChildHealth | null>
-}>()
+const props = withDefaults(
+    defineProps<{
+        family: DoorFamily
+        levels: LevelOption[]
+        classId: number | null
+        healths: Record<number, ChildHealth | null>
+        /** The child ONE name card named exactly (slice 3): ticked to start with, so "Check in 1 child" is one tap. */
+        preTicked?: number[]
+    }>(),
+    { preTicked: () => [] },
+)
 const emit = defineEmits<{ health: [childId: number] }>()
 
 const church = useChurch()
 
 type Pick = { ticked: boolean; level: number | null; makeActive: boolean }
+/**
+ * A scanned child starts ticked only when nothing needs asking: active and not in yet (an inactive child is shown but
+ * left for staff — "Make active again?" is theirs to answer; a Graduated one cannot be checked in). With no Level, the
+ * age suggestion is picked.
+ */
+function startTicked(c: DoorFamily['children'][number]): boolean {
+    return props.preTicked.includes(c.id) && c.check_in_id === null && c.status === 'active'
+}
 const picks = reactive<Record<number, Pick>>(
     Object.fromEntries(
-        props.family.children.map((c) => [c.id, { ticked: false, level: null, makeActive: false }]),
+        props.family.children.map((c) => [
+            c.id,
+            {
+                ticked: startTicked(c),
+                level: startTicked(c) && c.level === null ? c.suggested_level : null,
+                makeActive: false,
+            },
+        ]),
     ),
 )
 const sending = ref(false)

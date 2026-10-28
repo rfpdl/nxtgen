@@ -8,6 +8,7 @@ use App\Enums\ChildStatusEnum;
 use App\Enums\GenderEnum;
 use App\Enums\RegistrationSourceEnum;
 use App\Foundation\Support\LevelChart;
+use App\Foundation\Support\NameKey;
 use Carbon\CarbonImmutable;
 use Database\Factories\ChildFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -27,6 +28,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property GenderEnum $gender
  * @property CarbonImmutable $date_of_birth
  * @property string|null $allergies
+ * @property string $name_key
+ * @property string $name_key_first
+ * @property string $name_key_last
  * @property string|null $illnesses
  * @property string|null $dislikes
  * @property string|null $fears
@@ -74,6 +78,17 @@ final class Child extends Model
     public function family(): BelongsTo
     {
         return $this->belongsTo(Family::class);
+    }
+
+    /**
+     * The name-card keys (slice 3, NameKey) follow the names on EVERY save — registration, edits by a parent or staff,
+     * the registry import, seeders — so the door's card scan always matches the names as they are now.
+     */
+    protected static function booted(): void
+    {
+        self::saving(function (Child $child): void {
+            $child->forceFill(NameKey::keysFor($child->first_name, $child->middle_name, $child->last_name));
+        });
     }
 
     public function displayName(): string

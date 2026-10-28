@@ -1,5 +1,13 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { CHURCH, CLASSES, DOOR, SATELLITES, sessionFile, type DoorProject } from '../support/world'
+import {
+    CHURCH,
+    CLASSES,
+    DOOR,
+    SATELLITES,
+    SCAN,
+    sessionFile,
+    type DoorProject,
+} from '../support/world'
 
 /*
  * Journey — a Lifeshaper at the door, on their phone (DECISIONS 2026-10-26): pick today's 1PM, search the church,
@@ -129,6 +137,80 @@ test('narrows the search with more words — every word on the same family @stor
         await expect(families).toHaveCount(1)
         await expect(families.first()).toContainText(`${parent} Reyes`)
     }
+})
+
+test('a name card typed in by a desk scanner shows the child ticked — one tap from checking in @story#128', async ({
+    page,
+}, info) => {
+    await openDoor(page)
+    const project = info.project.name as DoorProject
+    // The family is on screen already (a surname search, nobody ticked); the card must still tick her.
+    await page.getByTestId('door-search').fill('Reyes')
+    await page.getByTestId('door-search').press('Enter')
+    await expect(
+        page.getByTestId('door-family').filter({ hasText: `${guardian(project)} Reyes` }),
+    ).toBeVisible()
+
+    await page.getByTestId('door-search').fill(SCAN.codes[project])
+    await page.getByTestId('door-search').press('Enter')
+
+    const card = page.getByTestId('door-family')
+    await expect(card).toHaveCount(1)
+    await expect(card).toContainText(`${guardian(project)} Reyes`)
+    await expectInsideCard(card)
+    const ticks = card.getByTestId('tick-child')
+    const amara = child(card, SCAN.child)
+    await expect(amara.getByTestId('tick-child')).toHaveAttribute('aria-checked', 'true')
+    expect(
+        await ticks.evaluateAll(
+            (all) => all.filter((t) => t.getAttribute('aria-checked') === 'true').length,
+        ),
+    ).toBe(1)
+    await expect(card.getByTestId('check-in')).toHaveText('Check in 1 child')
+    await expect(card.getByTestId('check-in')).toBeEnabled()
+})
+
+test('"Scan card" opens the camera sheet; a refused camera says to type the name, and Cancel closes it @story#128', async ({
+    page,
+}) => {
+    // No camera here: answer as a phone does when the camera is not allowed.
+    await page.addInitScript(() => {
+        const refuse = (): Promise<MediaStream> =>
+            Promise.reject(new DOMException('Permission denied', 'NotAllowedError'))
+        Object.defineProperty(navigator, 'mediaDevices', {
+            value: { getUserMedia: refuse, enumerateDevices: () => Promise.resolve([]) },
+            configurable: true,
+        })
+    })
+    await openDoor(page)
+
+    await page.getByTestId('scan-card').click()
+    const sheet = page.getByTestId('scan-sheet')
+    await expect(sheet).toBeVisible()
+    await expect(sheet.getByTestId('scan-message')).toHaveText(
+        'The camera is not allowed. Type the name instead.',
+        { timeout: 10_000 },
+    )
+    await sheet.getByTestId('scan-cancel').click()
+    await expect(sheet).toHaveCount(0)
+    await expect(page.getByTestId('scan-card')).toBeFocused()
+})
+
+test('says when the camera read a card no child matches, and shows no family @story#129', async ({
+    page,
+}) => {
+    await openDoor(page)
+    const url = new URL(page.url())
+    url.searchParams.set('card', '1')
+    url.searchParams.set('q', 'NOBODYHEREATALL')
+
+    await page.goto(url.toString())
+
+    await expect(page.getByTestId('scan-note')).toHaveText(
+        'No child matches this card: NOBODYHEREATALL',
+    )
+    await expect(page.getByTestId('scan-note')).toHaveAttribute('role', 'alert')
+    await expect(page.getByTestId('door-family')).toHaveCount(0)
 })
 
 test('shows who is in before any search @story#116', async ({ page }) => {

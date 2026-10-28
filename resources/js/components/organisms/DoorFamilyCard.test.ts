@@ -104,6 +104,57 @@ describe('DoorFamilyCard', () => {
         )
     })
 
+    it('starts with the children a scanned card named ticked — "Check in 1 child" is one tap — and the others not', async () => {
+        const wrapper = mount(DoorFamilyCard, {
+            props: { family: cruz, levels, classId: 5, healths: {}, preTicked: [1] },
+        })
+
+        const ticks = wrapper.findAll('[data-testid="tick-child"]')
+        expect(ticks.map((t) => t.attributes('aria-checked'))).toEqual(['true', 'false', 'false'])
+        const button = wrapper.find('[data-testid="check-in"]')
+        expect(button.text()).toBe('Check in 1 child')
+        await button.trigger('click')
+
+        expect(routerPost).toHaveBeenCalledWith(
+            'church.door.check-in:["ccf",5]',
+            { children: [{ child_id: 1, level: null, make_active: false }] },
+            expect.objectContaining({ preserveScroll: true }),
+        )
+    })
+
+    it('never pre-ticks a scanned child who is already in, and gives one with no Level the age suggestion', () => {
+        const wrapper = mount(DoorFamilyCard, {
+            props: { family: cruz, levels, classId: 5, healths: {}, preTicked: [2, 4] },
+        })
+
+        expect(wrapper.find('[data-testid="check-in"]').text()).toBe('Check in 1 child')
+        expect(
+            wrapper
+                .findAll('[data-testid="pick-level"]')
+                .map((s) => (s.element as HTMLSelectElement).value),
+        ).toEqual(['3'])
+    })
+
+    it('never pre-ticks a scanned child who is Graduated or inactive — they are shown for staff to decide', () => {
+        const family: DoorFamily = {
+            ...cruz,
+            children: [
+                ...cruz.children,
+                child(5, 'Gabe', { status: 'graduated', status_label: 'Graduated' }),
+            ],
+        }
+        const wrapper = mount(DoorFamilyCard, {
+            props: { family, levels, classId: 5, healths: {}, preTicked: [3, 5] },
+        })
+
+        expect(wrapper.find('[data-testid="check-in"]').text()).toBe('Tick to check in')
+        expect(
+            wrapper
+                .findAll('[data-testid="tick-child"]')
+                .filter((t) => t.attributes('aria-checked') === 'true'),
+        ).toHaveLength(0)
+    })
+
     it('waits for "Make active again?" before checking in an inactive child, then sends the yes', async () => {
         const wrapper = card()
         await tick(wrapper, 0)

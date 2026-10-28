@@ -6,13 +6,16 @@ namespace App\Services\Church\Features\Door;
 
 use App\Data\Models\CheckIn;
 use App\Data\Models\Child;
+use App\Data\Models\Church;
 use App\Data\Models\Family;
 use App\Data\Models\Schedule;
 use App\Domains\CheckIn\DataObjects\ChildHealthData;
 use App\Domains\CheckIn\DataObjects\DoorCheckInData;
 use App\Domains\CheckIn\DataObjects\DoorClassData;
 use App\Domains\CheckIn\DataObjects\DoorFamilyData;
+use App\Domains\CheckIn\DataObjects\DoorScanData;
 use App\Domains\CheckIn\Jobs\GetCheckedInChildrenJob;
+use App\Domains\CheckIn\Jobs\GetDoorCardJob;
 use App\Domains\CheckIn\Jobs\GetSessionJob;
 use App\Domains\Church\Jobs\GetChurchTodayJob;
 use App\Domains\Family\Jobs\GetChurchChildJob;
@@ -47,8 +50,12 @@ use Inertia\Response;
         'story#103' => 'Staff see today\'s classes at the satellites their Role covers, how many are checked in, and find any family of the church with each child\'s Level, Squad, allergy flag and whether they are in',
         'story#105' => 'Opening a child\'s row shows their health details, status and Level, and the family page link when the viewer may open the family',
         'story#116' => 'Before and below any search, staff see who is checked in to the chosen class today, newest first — nickname, Squad and time — and can undo one from there',
+        'story#128' => 'A name card\'s code — read by the camera or typed by a desk scanner — finds the child\'s family with the child ticked when ONE child matches exactly; several, or a close match, show the families with nobody ticked and a note',
     ],
-    unhappyPaths: ['story#104' => 'Only today\'s classes at satellites their Role covers — another satellite\'s, another church\'s or another day\'s class is a 404; the search never carries a photo, a phone number or a health detail'],
+    unhappyPaths: [
+        'story#104' => 'Only today\'s classes at satellites their Role covers — another satellite\'s, another church\'s or another day\'s class is a 404; the search never carries a photo, a phone number or a health detail',
+        'story#129' => 'A card no child matches says so (a typed word is an ordinary search, saying so only when nothing is found); only this church\'s children; never two different middle names, never fuzzier',
+    ],
 )]
 #[AccessRow(AccessRowEnum::CheckIn)]
 final class ShowDoorFeature extends BaseChurchFeature
@@ -68,7 +75,7 @@ final class ShowDoorFeature extends BaseChurchFeature
         }
 
         $query = trim(request()->string('q')->value());
-        $families = $this->run(new SearchFamiliesJob(church: $church, query: $query));
+        [$families, $scan] = $this->search($church, $query, $address->card);
         $suggested = $this->suggestedLevels($families);
 
         return Inertia::render('Church/Door/Index', [
@@ -77,12 +84,34 @@ final class ShowDoorFeature extends BaseChurchFeature
             'class_id' => $class?->id,
             'checked_in' => array_map(fn (CheckIn $c): DoorCheckInData => DoorCheckInData::fromCheckIn($c, $church->timezone), $checkIns),
             'query' => $query,
+            'scan' => $scan,
             'families' => array_values($families->map(fn (Family $f): DoorFamilyData => DoorFamilyData::fromModel($f, $checkedIn, $suggested, canOpen: $this->scope()->canSeeFamily($f)))->all()),
             'levels' => $this->run(new GetLevelsJob),
             'health' => Inertia::optional(fn (): ?ChildHealthData => $class === null || ! request()->filled('health')
                 ? null
                 : ChildHealthData::fromModel($this->run(new GetChurchChildJob(church: $church, id: request()->integer('health'))))),
         ]);
+    }
+
+    /**
+     * The families to show, and the name card the search was (slice 3, GetDoorCardJob): a card's families, or the
+     * church-wide family search — for a typed word that matched no child's card too, which then says "No child matches
+     * this card" only when no family is found either.
+     *
+     * @return array{0: Collection<int, Family>, 1: DoorScanData|null}
+     */
+    private function search(Church $church, string $query, bool $card): array
+    {
+        $read = $this->run(new GetDoorCardJob(church: $church, query: $query, card: $card));
+        if ($read !== null && ! $read->searchToo) {
+            return [$read->families, $read->scan];
+        }
+
+        $families = $this->run(new SearchFamiliesJob(church: $church, query: $query));
+
+        // A typed word that is no child's card: just the families, as any search — the card's "no match" only when
+        // nothing at all is found.
+        return [$families, $read !== null && $families->isEmpty() ? $read->scan : null];
     }
 
     /**

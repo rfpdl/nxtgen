@@ -254,6 +254,77 @@ describe('the door page', function (): void {
     });
 });
 
+describe('a name card at the door', function (): void {
+    it('ticks the one child a card names exactly — typed by a desk scanner or read by the camera — on their family card @story#128', function (string $query): void {
+        ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'amara' => $amara] = doorChurch();
+        $amara->forceFill(['middle_name' => 'Joy'])->save();
+
+        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&{$query}")->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('families', 1)
+            ->where('families.0.primary_name', 'Maria Cruz')
+            ->has('families.0.children', 4)
+            ->where('scan', ['code' => 'AMARAJOYCRUZ', 'match' => 'exact', 'child_ids' => [$amara->id], 'note' => null]));
+    })->with([
+        'a desk scanner types it' => ['q=AMARAJOYCRUZ'],
+        'in lower case' => ['q=amarajoycruz'],
+        'the camera read it' => ['q=AMARAJOYCRUZ&card=1'],
+    ]);
+
+    it('shows both families when two children share the key, ticking nobody, and says to tick the right one @story#128', function (): void {
+        ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'dxb' => $dxb, 'amara' => $amara] = doorChurch();
+        $amara->forceFill(['middle_name' => 'Joy'])->save();
+        childOf(familyAt($dxb), ['first_name' => 'Amara', 'middle_name' => 'Joy', 'last_name' => 'Cruz', 'level' => 2]);
+
+        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=AMARAJOYCRUZ")->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('families', 2)
+            ->where('scan.match', 'several')
+            ->where('scan.child_ids', [])
+            ->where('scan.note', 'More than one child matches this card — tick the right one.'));
+    });
+
+    it('shows a close match — a middle name on one side only — with nobody ticked and a note to check @story#128', function (): void {
+        ['onePm' => $onePm, 'lifeshaper' => $lifeshaper] = doorChurch();
+
+        // Amara Cruz has no middle name in the app; her card has one.
+        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=AMARAJOYCRUZ&card=1")->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('families', 1)
+            ->where('scan.match', 'close')
+            ->where('scan.child_ids', [])
+            ->where('scan.note', 'Check this is the right child — the name on the card is not an exact match.'));
+    });
+
+    it('says when no child matches a card — a camera read finds nothing else; a typed word is an ordinary search, saying so only when nothing is found @story#129', function (): void {
+        ['onePm' => $onePm, 'lifeshaper' => $lifeshaper] = doorChurch();
+
+        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=NOBODYHEREATALL&card=1")->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('families', [])
+            ->where('scan', ['code' => 'NOBODYHEREATALL', 'match' => 'none', 'child_ids' => [], 'note' => 'No child matches this card: NOBODYHEREATALL']));
+        // Typed in capitals, it is a surname: the families, and no card note.
+        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=SANTOS")->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('families', 1)
+            ->where('families.0.primary_name', 'Grace Santos')
+            ->where('scan', null));
+        // Typed, matching no card and no family: then it says so.
+        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=NOBODYHEREATALL")->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('families', [])
+            ->where('scan.note', 'No child matches this card: NOBODYHEREATALL'));
+        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=Maria Cruz")->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('families', 1)
+            ->where('scan', null));
+        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=&card=1")->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('scan', null));
+    });
+
+    it('matches only this church\'s children by a card @story#129', function (): void {
+        ['onePm' => $onePm, 'lifeshaper' => $lifeshaper] = doorChurch();
+        childOf(familyAt(Satellite::factory()->for(church(['slug' => 'other']))->create()), ['first_name' => 'Zed', 'middle_name' => null, 'last_name' => 'Elsewhere', 'level' => 1]);
+
+        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=ZEDELSEWHERE&card=1")->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('families', [])
+            ->where('scan.match', 'none'));
+    });
+});
+
 describe('checking children in', function (): void {
     it('checks a family\'s children in to today\'s class, making the Session, each in this satellite\'s Squad @story#106', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'amara' => $amara, 'ben' => $ben] = doorChurch();

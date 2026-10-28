@@ -81,6 +81,12 @@ declare namespace App {
                     children: App.Domains.CheckIn.DataObjects.DoorChildData[]
                     can_open: boolean
                 }
+                export type DoorScanData = {
+                    code: string
+                    match: App.Enums.CardMatchEnum
+                    child_ids: number[]
+                    note: string | null
+                }
                 export type SquadHeadCountData = {
                     count: number
                     counted_at: string
@@ -315,6 +321,7 @@ declare namespace App {
             | 'manage_classes'
             | 'check_in'
             | 'attendance'
+        export type CardMatchEnum = 'exact' | 'several' | 'close' | 'none'
         export type CheckInResultEnum =
             'checked_in' | 'already_in' | 'graduated' | 'inactive' | 'needs_level'
         export type ChildStatusEnum = 'active' | 'inactive' | 'graduated'
@@ -471,6 +478,7 @@ declare namespace App {
                 export type DoorQueryInput = {
                     class: number | null
                     squad: number | null
+                    card: boolean
                 }
                 export type HeadCountInput = {
                     count: number

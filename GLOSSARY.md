@@ -50,6 +50,11 @@ _Avoid_: Event, occurrence, service
 Recording that a Child is at a Session, made by Staff at the door. A Check-in can be undone.
 _Avoid_: Attendance (for the act), sign-in, registration
 
+**Name card**:
+The printed NXTGEN card a Child carries, with their name and a barcode (Code 39) of their full name in capitals with no
+spaces, e.g. ADAMMATTHIASABERGOS. "Scan card" at the door reads it — or a desk scanner types it into the search.
+_Avoid_: ID card, badge, tag
+
 **Attendance**:
 The admins' report of a Session: the Children checked in, by Squad, with counts — on screen and as Excel.
 _Avoid_: Session report, register (and "attendance" for the act of checking in — that is a Check-in)

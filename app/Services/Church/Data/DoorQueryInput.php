@@ -9,7 +9,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
  * The door's address, on both tabs: `?class=` (one of today's classes — none = the first) and, on Who's in, `?squad=`
- * (one Squad — none = All).
+ * (one Squad — none = All); on Check in, `?card=1` when the search came from the camera (slice 3).
  */
 #[TypeScript]
 final class DoorQueryInput extends Data
@@ -17,5 +17,7 @@ final class DoorQueryInput extends Data
     public function __construct(
         public ?int $class = null,
         public ?int $squad = null,
+        /** The search is a name card the camera read (`?card=1`): a card search only, and "No child matches" if none. */
+        public bool $card = false,
     ) {}
 }

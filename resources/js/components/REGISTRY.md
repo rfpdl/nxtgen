@@ -25,6 +25,7 @@ every staff, parent and public page is on the kit (issues 02 and 03 of `.plannin
 | FileButton     | atom   | A file picker that looks and presses like a secondary AppButton (the photo's take / choose); attrs on the hidden input                                                         |
 | Card           | atom   | White tile, 2px edge and a 5px bottom; `as`, `flush` for a card of rows                                                                                                        |
 | RollCallMark   | atom   | A child's roll call on Attendance: "Present ✓" (a success Pill) or "Not marked" in quiet words — one piece for phone rows and table                                            |
+| Notice         | atom   | A short message in the page: `danger` (an alert), `warning` (check this) or `info`, bold on a soft tint — e.g. a name card that matched no one                                 |
 | Pill           | atom   | Small label: a `level` (Level: number + name) in the age-level chart's colours (tint + dot; says the name by default), or `danger` / status / neutral                          |
 | SectionHeading | atom   | A part of a page's heading: `h2` under the PageHeader, or a smaller `h3` (`level="3"`) inside a card                                                                           |
 | RowList        | atom   | A card of padded rows with a line between them; `href` makes each whole row a link ending in ›, `#after` sits outside it; `plain`                                              |
@@ -69,10 +70,11 @@ every staff, parent and public page is on the kit (issues 02 and 03 of `.plannin
 | SatelliteSchedules      | organism | One satellite on the Classes page: its classes, one edited in place at a time, "+ Add a class" opening the add form                         |
 | DoorChildRow            | molecule | A door child: full-height tick zone; the rest opens (Disclosure) health, status, Level, family link; ✓ + Undo; make active; Level           |
 | ChildHealthPanel        | molecule | A child's health details inside their opened door row; allergies first and loud, or "Allergies: none"                                       |
-| DoorFamilyCard          | organism | A family found at the door: its children (DoorChildRow), "Check in N children" into the chosen class (POST), Undo (PUT)                     |
+| DoorFamilyCard          | organism | A family found at the door: its children (DoorChildRow), "Check in N children" (POST), Undo (PUT); a scanned card's child pre-ticked        |
 | DoorCheckedInList       | molecule | Who is in the chosen class today at the door, newest first: nickname, Squad, time, Undo; empty state says how to start                      |
 | DoorTabs                | molecule | The door's two tabs, Check in · Who's in, on both pages; each keeps the class (`?class=`); the current one marked                           |
 | WhosInSquadCard         | molecule | One Squad on Who's in: Level Pill, "N of M present"; each child a whole-row tick: nickname, allergy flag, first + last name; its head count |
 | DoorClassPicker         | molecule | The top of both door tabs: "CCF DXB · Sat 31 Oct" and today's classes as chips (satellite named when several), or no-class note             |
 | HeadCountForm           | molecule | A Squad's head count on Who's in: number (the count checked in at first) + Confirm; "✓ Confirmed 13:20 by Joy (4)"; mismatch + Not marked   |
 | ChildAttendanceList     | molecule | A child's attendance on the staff family page, newest first: date · class · satellite · Squad, present or not; last 12, "Show all"          |
+| ScanCardSheet           | organism | "Scan card" at the door: a bottom sheet (reka-ui Dialog) with the back camera reading a name card's Code 39; refused → type instead         |

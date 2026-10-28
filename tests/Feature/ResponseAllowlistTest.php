@@ -335,12 +335,22 @@ describe('the door', function (): void {
         expect(keyPaths($props))->toBe(allowlist(
             STAFF_FRAME,
             $checkedIn,
-            ['class_id', 'classes.*.id', 'classes.*.name', 'classes.*.satellite', 'classes.*.times', 'levels.*.level', 'levels.*.name', 'query', 'today'],
+            // "Amara" is also tried as a name card; no child's full name is just that, and families are found, so no card.
+            ['class_id', 'classes.*.id', 'classes.*.name', 'classes.*.satellite', 'classes.*.times', 'levels.*.level', 'levels.*.name', 'query', 'scan', 'today'],
             prefixed('families.*', ['can_open', 'id', 'name', 'primary_name', 'satellite', ...prefixed('children.*', DOOR_CHILD)]),
         ))
             ->and(forbiddenOnLists($props))->toBe([])
             ->and(data_get($props, 'families.0.children.0.nickname'))->toBe('Amara');
     })->with(actors(...Actor::staff()));
+
+    it('sends a scanned name card as its code and the children it names — no more than any search @story#128', function (): void {
+        travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
+        $props = propsOf(Actor::HomeLifeshaper, fn (AccessWorld $w): string => "/ccf/door?class={$w->schedule->id}&card=1&q={$w->child->name_key}");
+
+        expect(array_values(array_filter(keyPaths($props), fn (string $p): bool => str_starts_with($p, 'scan'))))->toBe(['scan.child_ids.*', 'scan.code', 'scan.match', 'scan.note'])
+            ->and(forbiddenOnLists($props))->toBe([])
+            ->and(data_get($props, 'families.0.children.0.nickname'))->toBe('Amara');
+    });
 
     it('sends a child\'s health details only on the tap, and nothing else with them @story#105', function (Actor $actor): void {
         travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
