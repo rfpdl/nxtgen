@@ -4,6 +4,24 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-10-28 (later — ui-theme 03, parent and public pages on the kit; Claude, for Roy to confirm)
+
+- **Parents get their own frame, FamilyShell** (AppShell, `narrow`: one column of max 2xl on a wide screen, the
+  bar lined up with it): "My family" and the church in the amber bar; the menu is My family, Switch (only when
+  they also serve) and Sign out — on a phone in the Menu sheet, like staff. The family page puts the children first
+  (cards with Level pills, photo, Edit), then parents and guardians (a RowList) with "Edit family details".
+- **Public and "nowhere else to go" pages get the bar with no menu** (AppShell without `items`): welcome, register,
+  thanks, sign in, the emailed-link page, choose, nothing yet and the backup password. Each has one big primary
+  button.
+- **The welcome page links to registration**: "Register your family" (primary) and "Sign in". It has no church in
+  its address, so the server sends `register_url` for the church this install serves (`nxtgen.church.slug`, the one
+  ChurchSeeder creates; GetChurchBySlugJob, read lowercase) — the only new data in this issue. When that church is
+  not in the database (or the setting is empty) it is null and only "Sign in" shows; the front door never fails.
+- **The family page's heading is the family** ("The Reyes family", from the signed-in parent's last name; satellite
+  and area under it): the bar already says "My family".
+- **The kit gate has no known gaps left**; the "only shrinks" honesty check stays as `expectOnlyKnownGaps()` for the
+  next guard (the JS twin of `tests/Architecture/KnownGaps.php`). FormField (now unused) is gone.
+
 ## 2026-10-26 (later still — check-in 03, Attendance built; Claude, for Roy to confirm)
 
 - **The report is called "Attendance"** (menu item for admins only, `church_nav.can_see_attendance`); church admins

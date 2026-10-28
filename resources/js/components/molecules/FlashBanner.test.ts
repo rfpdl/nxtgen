@@ -100,4 +100,11 @@ describe('FlashBanner', () => {
                 .attributes('aria-label'),
         ).toBe('Dismiss this message')
     })
+
+    it('lines up with a narrow page when asked', () => {
+        expect(banner({ message: message() }).html()).toContain('max-w-5xl')
+        expect(
+            mount(FlashBanner, { props: { message: message(), narrow: true } }).html(),
+        ).toContain('max-w-2xl')
+    })
 })

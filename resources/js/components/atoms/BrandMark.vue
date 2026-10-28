@@ -1,12 +1,20 @@
 <script setup lang="ts">
 /**
  * The NXTGEN logo as drawn (Roy, from the shirt): an amber disc, a white box with an orange rule, and NXT GEN in
- * cyan with an orange X. The `brand-*` colours are for this mark only — never text or a button (app.css).
+ * cyan with an orange X. The `brand-*` colours are for this mark only — never text or a button (app.css). `large`
+ * is the welcome page's big one; the bar's is small.
  */
+defineProps<{ large?: boolean }>()
 </script>
 
 <template>
-    <svg viewBox="0 0 48 48" role="img" aria-label="NxtGen" class="size-10 shrink-0">
+    <svg
+        viewBox="0 0 48 48"
+        role="img"
+        aria-label="NxtGen"
+        :class="large ? 'size-28' : 'size-10'"
+        class="shrink-0"
+    >
         <circle cx="24" cy="24" r="24" class="fill-brand-amber" />
         <rect
             x="8"

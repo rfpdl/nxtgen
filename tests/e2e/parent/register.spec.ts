@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { fillChild, fillFamily } from '../support/forms'
 import { mailCount } from '../support/mailbox'
+import { signOutFromMenu } from '../support/menu'
 import { openEmailedLink, signInByEmail } from '../support/sign-in'
 import { CHURCH, SATELLITES, uniqueEmail } from '../support/world'
 
@@ -44,7 +45,8 @@ test('a parent registers, confirms their email and sees their family @story#4 @s
     // The confirmation email → Continue → their family page.
     await openEmailedLink(page, email, before)
     await expect(page).toHaveURL(new RegExp(`/${CHURCH}/family`))
-    await expect(page.getByRole('heading', { name: 'My family' })).toBeVisible()
+    await expect(page.getByTestId('page-name')).toHaveText('My family')
+    await expect(page.getByRole('heading', { name: 'The Reyes family' })).toBeVisible()
     await expect(page.getByTestId('guardian')).toHaveText([
         /Joy Reyes · Mother/,
         /Ramon Reyes · Father · 0501234568/,
@@ -68,8 +70,10 @@ test('a parent registers, confirms their email and sees their family @story#4 @s
     await expect(page.getByTestId('family-child').filter({ hasText: 'Luke' })).toBeVisible()
 
     // A shared family phone: sign out, and the family page is closed again.
-    await page.getByTestId('sign-out').click()
-    await expect(page.getByRole('heading', { name: 'NxtGen' })).toBeVisible()
+    await signOutFromMenu(page)
+    await expect(
+        page.getByRole('heading', { name: 'Welcome to NxtGen', exact: true }),
+    ).toBeVisible()
     await page.goto(`/${CHURCH}/family`)
     await expect(page).toHaveURL(/\/login/)
 })

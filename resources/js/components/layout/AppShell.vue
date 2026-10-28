@@ -17,7 +17,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from 'reka-ui'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 /**
  * The Bold frame for every signed-in page (DECISIONS 2026-10-28): an amber bar with the logo, the page's name and
@@ -25,8 +25,17 @@ import { ref } from 'vue'
  * buttons behind the Menu button (a reka-ui Dialog: focus stays inside, Esc closes and gives focus back); from 768px
  * it is a row in the bar. Which one shows is CSS alone (`md:`), so the first paint is already right. The flash
  * message sits under the bar; the page is the slot.
+ *
+ * Without `items` there is no menu at all — the public pages (welcome, register, sign in) and the few signed-in
+ * pages with nowhere else to go (choose, nothing yet) get just the bar and the logo. `narrow` keeps the page to a
+ * phone-like column on a wide screen, for the parent's and the public pages: one form, one column, easy to read.
  */
-defineProps<{ title: string; place?: string; items: ShellItem[] }>()
+const props = withDefaults(
+    defineProps<{ title: string; place?: string; items?: ShellItem[]; narrow?: boolean }>(),
+    { place: undefined, items: undefined },
+)
+
+const width = computed(() => (props.narrow ? 'max-w-2xl' : 'max-w-5xl'))
 
 const { message, dismiss } = useFlashMessages()
 const open = ref(false)
@@ -55,7 +64,7 @@ function wrapOptionTab(event: KeyboardEvent): void {
 <template>
     <div class="bg-surface min-h-dvh">
         <header class="bg-bar text-on-bar focus-on-bar">
-            <div class="mx-auto flex max-w-5xl flex-col gap-1 px-4 py-2">
+            <div class="mx-auto flex flex-col gap-1 px-4 py-2" :class="width">
                 <div class="flex min-h-14 items-center gap-3">
                     <BrandMark />
                     <p class="flex min-w-0 flex-1 flex-col leading-tight">
@@ -64,7 +73,7 @@ function wrapOptionTab(event: KeyboardEvent): void {
                         }}</span>
                         <span v-if="place" class="truncate text-base font-medium">{{ place }}</span>
                     </p>
-                    <DialogRoot v-model:open="open">
+                    <DialogRoot v-if="items" v-model:open="open">
                         <DialogTrigger as-child>
                             <AppButton
                                 variant="quiet"
@@ -122,6 +131,7 @@ function wrapOptionTab(event: KeyboardEvent): void {
                     </DialogRoot>
                 </div>
                 <nav
+                    v-if="items"
                     class="hidden flex-wrap items-center gap-1 pb-1 md:flex"
                     aria-label="Menu"
                     data-testid="menu-row"
@@ -146,8 +156,8 @@ function wrapOptionTab(event: KeyboardEvent): void {
                 </nav>
             </div>
         </header>
-        <FlashBanner :message="message" @dismiss="dismiss" />
-        <main class="mx-auto flex max-w-5xl flex-col gap-6 p-4">
+        <FlashBanner :message="message" :narrow="narrow" @dismiss="dismiss" />
+        <main class="mx-auto flex flex-col gap-6 p-4" :class="width">
             <slot />
         </main>
     </div>

@@ -1,30 +1,45 @@
 <script setup lang="ts">
-import type { LandingOption } from '@/types'
+import AppButton from '@/components/atoms/AppButton.vue'
+import PageHeader from '@/components/atoms/PageHeader.vue'
 import SignOutButton from '@/components/atoms/SignOutButton.vue'
-import { Head, Link } from '@inertiajs/vue3'
+import AppShell from '@/components/layout/AppShell.vue'
+import type { LandingOption } from '@/types'
+import { Head, router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
-/** One login, more than one place: pick one. The pick is remembered on this device (POST /home/choice). */
+/**
+ * One login, more than one place: pick one. The pick is remembered on this device (POST /home/choice). On the kit
+ * (the Bold look): each place is one big button, its church under its name.
+ */
 defineProps<{ options: LandingOption[] }>()
+
+function choose(option: LandingOption): void {
+    router.post(route('home.choice'), { url: option.url })
+}
 </script>
 
 <template>
     <Head title="Where to?" />
-    <main class="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-4 p-6">
-        <h1 class="text-text text-3xl font-semibold">Where would you like to go?</h1>
-        <Link
-            v-for="option in options"
-            :key="option.url"
-            :href="route('home.choice')"
-            method="post"
-            as="button"
-            :data="{ url: option.url }"
-            data-testid="landing-option"
-            class="min-h-touch border-border bg-surface flex flex-col justify-center rounded-md border px-4 py-3"
-        >
-            <span class="text-text text-lg font-semibold">{{ option.label }}</span>
-            <span class="text-text-muted">{{ option.church_name }}</span>
-        </Link>
+    <AppShell title="Where to?" narrow>
+        <PageHeader
+            title="Where would you like to go?"
+            sub="We will remember your choice on this phone or computer."
+        />
+        <nav class="flex flex-col gap-3" aria-label="Places">
+            <AppButton
+                v-for="option in options"
+                :key="option.url"
+                variant="secondary"
+                size="lg"
+                block
+                class="flex-col py-3"
+                data-testid="landing-option"
+                @click="choose(option)"
+            >
+                <span class="text-xl font-bold">{{ option.label }}</span>
+                <span class="text-text-muted text-base font-medium">{{ option.church_name }}</span>
+            </AppButton>
+        </nav>
         <SignOutButton class="self-start" />
-    </main>
+    </AppShell>
 </template>

@@ -1,12 +1,18 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3'
-import FlashBanner from '@/components/molecules/FlashBanner.vue'
+import AppButton from '@/components/atoms/AppButton.vue'
+import Card from '@/components/atoms/Card.vue'
+import PageHeader from '@/components/atoms/PageHeader.vue'
+import TextField from '@/components/atoms/TextField.vue'
+import AppShell from '@/components/layout/AppShell.vue'
 import PasswordLoginForm from '@/components/organisms/PasswordLoginForm.vue'
-import { useFlashMessages } from '@/composables/useFlashMessages'
 import type { RequestMagicLinkInput } from '@/types'
+import { Head, useForm } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
-const { message, dismiss } = useFlashMessages()
+/**
+ * Sign in for everyone (the Bold look): type the email, get a link — one field, one big button. The volunteers'
+ * backup password waits below, closed.
+ */
 const form = useForm<RequestMagicLinkInput>({ email: '' })
 
 function submit(): void {
@@ -16,36 +22,33 @@ function submit(): void {
 
 <template>
     <Head title="Sign in" />
-    <FlashBanner :message="message" @dismiss="dismiss" />
-    <main class="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 p-6">
-        <h1 class="text-text text-3xl font-semibold">Sign in</h1>
-        <p class="text-text text-lg">
-            Enter your email and we will send you a link. No password needed.
-        </p>
-        <form class="flex flex-col gap-4" @submit.prevent="submit">
-            <label class="text-text flex flex-col gap-2 text-lg">
-                Email
-                <input
+    <AppShell title="Sign in" narrow>
+        <PageHeader
+            title="Sign in"
+            sub="Enter your email and we will send you a link. No password needed."
+        />
+        <Card>
+            <form class="flex flex-col gap-4" @submit.prevent="submit">
+                <TextField
                     v-model="form.email"
                     type="email"
+                    label="Email"
                     autocomplete="email"
                     required
+                    :error="form.errors.email"
                     data-testid="login-email"
-                    class="min-h-touch border-border bg-surface text-text rounded-md border px-4 text-lg"
                 />
-            </label>
-            <p v-if="form.errors.email" class="text-danger" data-testid="login-email-error">
-                {{ form.errors.email }}
-            </p>
-            <button
-                type="submit"
-                :disabled="form.processing"
-                data-testid="login-submit"
-                class="min-h-touch bg-primary text-on-primary rounded-md px-4 text-lg font-semibold"
-            >
-                Email me a link
-            </button>
-        </form>
+                <AppButton
+                    type="submit"
+                    size="lg"
+                    block
+                    :loading="form.processing"
+                    data-testid="login-submit"
+                >
+                    Email me a link
+                </AppButton>
+            </form>
+        </Card>
         <PasswordLoginForm :action="route('auth.password.login')" />
-    </main>
+    </AppShell>
 </template>

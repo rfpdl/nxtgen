@@ -144,4 +144,24 @@ describe('AppShell', () => {
         expect(sheet()).toBeNull()
         wrapper.unmount()
     })
+    it('without items it is just the bar and the logo: no Menu button, no menu row, no Sign out', () => {
+        const wrapper = mount(AppShell, {
+            props: { title: 'Sign in' },
+            slots: { default: '<p>the page</p>' },
+        })
+
+        expect(wrapper.find('svg[aria-label="NxtGen"]').exists()).toBe(true)
+        expect(wrapper.find('[data-testid="page-name"]').text()).toBe('Sign in')
+        expect(wrapper.find('[data-testid="menu-open"]').exists()).toBe(false)
+        expect(wrapper.find('[data-testid="menu-row"]').exists()).toBe(false)
+        expect(wrapper.find('[data-testid="sign-out"]').exists()).toBe(false)
+    })
+
+    it('keeps a narrow page to one easy column on a wide screen, the bar lined up with it', () => {
+        const wrapper = mount(AppShell, { props: { title: 'My family', items, narrow: true } })
+
+        expect(wrapper.find('main').classes()).toContain('max-w-2xl')
+        expect(wrapper.find('header > div').classes()).toContain('max-w-2xl')
+        expect(shell().find('main').classes()).toContain('max-w-5xl')
+    })
 })

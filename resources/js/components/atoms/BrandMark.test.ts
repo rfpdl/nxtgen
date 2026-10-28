@@ -12,4 +12,13 @@ describe('BrandMark', () => {
         // No space inside NXT: a formatter splitting the orange X onto its own line would draw "N X T".
         expect(svg.findAll('text').map((t) => t.text())).toEqual(['NXT', 'GEN'])
     })
+
+    it('is small for the bar, big when asked (the welcome page)', () => {
+        expect(mount(BrandMark).find('svg').classes()).toContain('size-10')
+        expect(
+            mount(BrandMark, { props: { large: true } })
+                .find('svg')
+                .classes(),
+        ).toContain('size-28')
+    })
 })

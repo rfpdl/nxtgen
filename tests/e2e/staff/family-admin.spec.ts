@@ -186,7 +186,14 @@ test('downloads the families list as Excel — what the filters show @story#45',
     expect(bytes.subarray(0, 2).toString()).toBe('PK')
 })
 
-test('the welcome page is there @story#1', async ({ page }) => {
+test('the welcome page is there, and "Register your family" opens the form @story#1', async ({
+    page,
+}) => {
     await page.goto('/')
-    await expect(page.getByRole('heading', { name: 'NxtGen' })).toBeVisible()
+    await expect(
+        page.getByRole('heading', { name: 'Welcome to NxtGen', exact: true }),
+    ).toBeVisible()
+    await page.getByTestId('welcome-register').click()
+    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/register$`))
+    await expect(page.getByRole('heading', { name: 'Register your family' })).toBeVisible()
 })

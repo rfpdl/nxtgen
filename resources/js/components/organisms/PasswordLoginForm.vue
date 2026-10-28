@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import FormField from '@/components/atoms/FormField.vue'
+import AppButton from '@/components/atoms/AppButton.vue'
+import Card from '@/components/atoms/Card.vue'
+import SectionHeading from '@/components/atoms/SectionHeading.vue'
+import TextField from '@/components/atoms/TextField.vue'
 import type { PasswordLoginInput } from '@/types'
 import { useForm } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
 /**
  * "Use a password instead" — the staff backup (plan D7) for a morning the email is slow. Collapsed by default:
- * the email link is how everyone signs in; parents have no password at all.
+ * the email link is how everyone signs in; parents have no password at all. On the kit (the Bold look): a Card with
+ * two TextFields and one big button.
  */
 const props = defineProps<{ action: string }>()
 
@@ -16,47 +20,45 @@ const form = useForm<PasswordLoginInput>({ email: '', password: '' })
 function submit(): void {
     form.post(props.action, { preserveScroll: true, onFinish: () => form.reset('password') })
 }
-
-const input = 'min-h-touch border-border bg-surface text-text rounded-md border px-4 text-lg'
 </script>
 
 <template>
-    <button
+    <AppButton
         v-if="!open"
-        type="button"
-        class="min-h-touch text-text-muted self-start underline"
+        variant="link"
+        class="self-start"
         data-testid="use-password"
         @click="open = true"
     >
         Volunteer with a password? Use it instead
-    </button>
-    <form v-else class="border-border flex flex-col gap-4 border-t pt-6" @submit.prevent="submit">
-        <h2 class="text-text text-xl font-semibold">Volunteer password</h2>
-        <FormField label="Email" :error="form.errors.email">
-            <input
+    </AppButton>
+    <Card v-else>
+        <form class="flex flex-col gap-4" @submit.prevent="submit">
+            <SectionHeading>Volunteer password</SectionHeading>
+            <TextField
                 v-model="form.email"
                 type="email"
+                label="Email"
                 autocomplete="username"
-                :class="input"
+                :error="form.errors.email"
                 data-testid="password-email"
             />
-        </FormField>
-        <FormField label="Password">
-            <input
+            <TextField
                 v-model="form.password"
                 type="password"
+                label="Password"
                 autocomplete="current-password"
-                :class="input"
                 data-testid="password-password"
             />
-        </FormField>
-        <button
-            type="submit"
-            :disabled="form.processing"
-            class="min-h-touch bg-primary text-on-primary rounded-md px-4 text-lg font-semibold"
-            data-testid="password-submit"
-        >
-            Sign in
-        </button>
-    </form>
+            <AppButton
+                type="submit"
+                size="lg"
+                block
+                :loading="form.processing"
+                data-testid="password-submit"
+            >
+                Sign in
+            </AppButton>
+        </form>
+    </Card>
 </template>

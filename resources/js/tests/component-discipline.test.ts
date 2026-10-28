@@ -75,6 +75,19 @@ function codeLines(file: string): { line: string; number: number }[] {
         })
 }
 
+/**
+ * The honesty check for a guard that lands before every file meets it (the JS twin of
+ * `tests/Architecture/KnownGaps.php`): `knownGaps` lists the files still offending, and it may only shrink. It fails
+ * on an offender not listed (new debt) AND on a listed file that no longer offends (paid-off debt left on the list,
+ * which would quietly exempt the next regression). Today every guard passes `[]`.
+ */
+function expectOnlyKnownGaps(offending: string[], knownGaps: readonly string[], why: string): void {
+    const unlisted = offending.filter((file) => !knownGaps.includes(file))
+    const paidOff = knownGaps.filter((file) => !offending.includes(file))
+
+    expect({ unlisted, paidOff }, why).toEqual({ unlisted: [], paidOff: [] })
+}
+
 describe('size limits', () => {
     const LIMITS: Record<string, number> = {
         atoms: 100,
@@ -232,22 +245,14 @@ describe('design tokens', () => {
  * Only the kit — `components/atoms` — may draw a raw `<button>`, `<input>`, `<select>` or `<textarea>`. Everything
  * else asks for AppButton, TextField, SelectField, TextArea, CheckRow or ChoiceChips, so a button looks and presses
  * the same on every screen and a label is always wired to its control. A file input (the photo picker) and a hidden
- * one are not drawn, so they are allowed.
- *
- * KNOWN_GAPS are the pages and components not on the kit yet (issue 03 moves them; issue 02 moved every staff
- * page). The list may only shrink: a file on it that no longer offends fails here until it is taken off.
+ * one are not drawn, so they are allowed. Every page and component is on the kit (ui-theme issues 02 and 03), so
+ * there are no known gaps.
  */
 const KIT_ONLY = /<(?:button|select|textarea)\b/g
 /** An `<input …>` tag, reading past a `>` inside a quoted attribute (`@change="(e) => …"`). */
 const RAW_INPUT = /<input\b(?:[^>"']|"[^"]*"|'[^']*')*>/g
 /** Only a STATIC `type="file"` / `type="hidden"` is allowed — a bound `:type` could be anything. */
 const UNDRAWN_INPUT = /\s(?<![:.\w-])type="(?:file|hidden)"/
-
-const KNOWN_GAPS = [
-    'resources/js/components/organisms/PasswordLoginForm.vue',
-    'resources/js/pages/Auth/ConfirmLink.vue',
-    'resources/js/pages/Auth/Login.vue',
-]
 
 /** The raw controls a source file draws outside the kit, as "line → tag". */
 function rawControls(source: string): string[] {
@@ -298,27 +303,15 @@ describe('the UI kit', () => {
     })
 
     it('no page or component outside the kit draws a raw button, input, select or textarea', () => {
-        const bad = outsideKit()
-            .filter(({ file, raw }) => raw.length > 0 && !KNOWN_GAPS.includes(file))
-            .flatMap(({ file, raw }) => raw.map((r) => `${file}:${r}`))
+        const offending = outsideKit().filter(({ raw }) => raw.length > 0)
 
-        expect(
-            bad,
-            'Use AppButton, TextField, SelectField, TextArea, CheckRow or ChoiceChips (components/atoms)',
-        ).toEqual([])
-    })
-
-    it('the known gaps only shrink: a file on the kit comes off the list', () => {
-        const offending = new Set(
-            outsideKit()
-                .filter(({ raw }) => raw.length > 0)
-                .map(({ file }) => file),
+        expectOnlyKnownGaps(
+            offending.map(({ file }) => file),
+            [],
+            `Use AppButton, TextField, SelectField, TextArea, CheckRow or ChoiceChips (components/atoms):\n${offending
+                .flatMap(({ file, raw }) => raw.map((r) => `${file}:${r}`))
+                .join('\n')}`,
         )
-
-        expect(
-            KNOWN_GAPS.filter((file) => !offending.has(file)),
-            'These are on the kit now (or gone) — take them off KNOWN_GAPS',
-        ).toEqual([])
     })
 })
 

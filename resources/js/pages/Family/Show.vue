@@ -1,19 +1,25 @@
 <script setup lang="ts">
-import SignOutButton from '@/components/atoms/SignOutButton.vue'
-import SwitchLink from '@/components/atoms/SwitchLink.vue'
-import { Head } from '@inertiajs/vue3'
-import FlashBanner from '@/components/molecules/FlashBanner.vue'
+import PageHeader from '@/components/atoms/PageHeader.vue'
+import RowList from '@/components/atoms/RowList.vue'
+import SectionHeading from '@/components/atoms/SectionHeading.vue'
+import FamilyShell from '@/components/layout/FamilyShell.vue'
 import FamilyChildCard from '@/components/molecules/FamilyChildCard.vue'
 import AddChildForm from '@/components/organisms/AddChildForm.vue'
 import ChildPhotoForm from '@/components/organisms/ChildPhotoForm.vue'
 import EditChildForm from '@/components/organisms/EditChildForm.vue'
 import FamilyDetailsForm from '@/components/organisms/FamilyDetailsForm.vue'
 import { useChurch } from '@/composables/useChurch'
-import { useFlashMessages } from '@/composables/useFlashMessages'
 import type { FamilyDetails, FamilyPortal, GuardianEdit, SatelliteOption } from '@/types'
+import { Head } from '@inertiajs/vue3'
+import { computed } from 'vue'
 import { route } from 'ziggy-js'
 
-defineProps<{
+/**
+ * The parent's own family page (the Bold look, phone-first): the children first — each a card with the Level
+ * pill, the photo and Edit — then the parents and guardians with "Edit family details". The menu (FamilyShell)
+ * holds Switch and Sign out.
+ */
+const props = defineProps<{
     family: FamilyPortal
     details: FamilyDetails
     me: GuardianEdit
@@ -23,47 +29,23 @@ defineProps<{
 
 const church = useChurch()
 
-const { message, dismiss } = useFlashMessages()
+/** "The Reyes family", with "CCF DXB · Lives in Al Barsha" under it — the bar already says "My family". */
+const title = computed(() => `The ${props.me.last_name} family`)
+
+const sub = computed(() =>
+    [props.family.home_satellite, props.family.area ? `Lives in ${props.family.area}` : null]
+        .filter(Boolean)
+        .join(' · '),
+)
 </script>
 
 <template>
     <Head title="My family" />
-    <FlashBanner :message="message" @dismiss="dismiss" />
-    <main class="mx-auto flex max-w-xl flex-col gap-6 p-6">
-        <header class="flex flex-col gap-1">
-            <div class="flex items-center justify-between gap-4">
-                <h1 class="text-text text-3xl font-semibold">My family</h1>
-                <div class="flex items-center gap-4">
-                    <SwitchLink />
-                    <SignOutButton />
-                </div>
-            </div>
-            <p class="text-text text-lg">{{ church.name }} · {{ family.home_satellite }}</p>
-            <p v-if="family.area" class="text-text-muted">Lives in {{ family.area }}</p>
-        </header>
-
-        <section class="flex flex-col gap-2">
-            <h2 class="text-text text-2xl font-semibold">Parents and guardians</h2>
-            <p
-                v-for="g in family.guardians"
-                :key="`${g.first_name}-${g.last_name}`"
-                class="text-text text-lg"
-                data-testid="guardian"
-            >
-                {{ g.first_name }} {{ g.last_name }} · {{ g.relationship_label
-                }}<span v-if="g.phone"> · {{ g.phone }}</span>
-            </p>
-            <FamilyDetailsForm
-                :action="route('family.update', church.slug)"
-                :details="details"
-                :guardian="me"
-                :others="other_guardians"
-                :satellites="satellites"
-            />
-        </section>
+    <FamilyShell>
+        <PageHeader :title="title" :sub="sub" />
 
         <section class="flex flex-col gap-3">
-            <h2 class="text-text text-2xl font-semibold">Children</h2>
+            <SectionHeading>Children</SectionHeading>
             <FamilyChildCard v-for="child in family.children" :key="child.id" :child="child">
                 <ChildPhotoForm
                     :child="child"
@@ -83,5 +65,24 @@ const { message, dismiss } = useFlashMessages()
             </FamilyChildCard>
             <AddChildForm :action="route('family.children.store', church.slug)" />
         </section>
-    </main>
+
+        <section class="flex flex-col gap-3">
+            <SectionHeading>Parents and guardians</SectionHeading>
+            <RowList :items="family.guardians" :item-key="(g) => `${g.first_name}-${g.last_name}`">
+                <template #default="{ item: g }">
+                    <p class="text-text text-lg" data-testid="guardian">
+                        <span class="font-bold">{{ g.first_name }} {{ g.last_name }}</span> ·
+                        {{ g.relationship_label }}<span v-if="g.phone"> · {{ g.phone }}</span>
+                    </p>
+                </template>
+            </RowList>
+            <FamilyDetailsForm
+                :action="route('family.update', church.slug)"
+                :details="details"
+                :guardian="me"
+                :others="other_guardians"
+                :satellites="satellites"
+            />
+        </section>
+    </FamilyShell>
 </template>

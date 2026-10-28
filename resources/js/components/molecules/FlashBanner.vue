@@ -22,9 +22,12 @@ import { AlertTriangle, Check, X } from 'lucide-vue-next'
  * The Bold look (DECISIONS 2026-10-28): a solid band — green for done, red for not done — in bold type.
  *
  * Dismissible because it covers the heading while it is up, and a staff member who has read it should be
- * able to put it away rather than scroll around it.
+ * able to put it away rather than scroll around it. `narrow` lines it up with a narrow page (AppShell `narrow`).
  */
-const { message } = defineProps<{ message: FlashMessage | null }>()
+const { message, narrow = false } = defineProps<{
+    message: FlashMessage | null
+    narrow?: boolean
+}>()
 
 defineEmits<{ dismiss: [] }>()
 </script>
@@ -48,7 +51,10 @@ defineEmits<{ dismiss: [] }>()
         :aria-live="message.tone === 'error' ? undefined : 'polite'"
         :data-testid="`flash-${message.tone}`"
     >
-        <div class="mx-auto flex w-full max-w-5xl items-center gap-3">
+        <div
+            class="mx-auto flex w-full items-center gap-3"
+            :class="narrow ? 'max-w-2xl' : 'max-w-5xl'"
+        >
             <component
                 :is="message.tone === 'error' ? AlertTriangle : Check"
                 class="size-6 shrink-0"
