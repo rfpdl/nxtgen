@@ -1,5 +1,5 @@
 import DoorFamilyCard from '@/components/organisms/DoorFamilyCard.vue'
-import type { DoorChild, DoorFamily, LevelOption } from '@/types'
+import type { ChildHealth, DoorChild, DoorFamily, LevelOption } from '@/types'
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -8,6 +8,7 @@ const routerPut = vi.fn()
 
 vi.mock('@inertiajs/vue3', () => ({
     usePage: () => ({ props: { church: { name: 'CCF', slug: 'ccf' } } }),
+    Link: { props: ['href'], template: '<a :href="href"><slot /></a>' },
     router: {
         post: (...args: unknown[]) => routerPost(...args),
         put: (...args: unknown[]) => routerPut(...args),
@@ -47,10 +48,21 @@ const cruz: DoorFamily = {
         child(3, 'Noah', { status: 'inactive', status_label: 'Inactive' }),
         child(4, 'Lola', { level: null, squad: null, suggested_level: 3 }),
     ],
+    can_open: false,
 }
 
-function card(classId: number | null = 5) {
-    return mount(DoorFamilyCard, { props: { family: cruz, levels, classId } })
+const amaraHealth: ChildHealth = {
+    id: 1,
+    nickname: 'Amara',
+    allergies: 'Peanuts',
+    illnesses: null,
+    dislikes: null,
+    fears: null,
+    guardian_notes: null,
+}
+
+function card(classId: number | null = 5, family: DoorFamily = cruz) {
+    return mount(DoorFamilyCard, { props: { family, levels, classId, healths: {} } })
 }
 
 function tick(wrapper: ReturnType<typeof card>, index: number) {
@@ -133,11 +145,26 @@ describe('DoorFamilyCard', () => {
         )
     })
 
-    it('passes a tapped Health up for its health details', async () => {
+    it("asks up for a child's health details on their first open, and shows them once given", async () => {
         const wrapper = card()
 
-        await wrapper.find('[data-testid="child-health-open"]').trigger('click')
+        await wrapper.find('[data-testid="child-expand"]').trigger('click')
         expect(wrapper.emitted('health')).toEqual([[1]])
+
+        await wrapper.setProps({ healths: { 1: amaraHealth } })
+        expect(wrapper.find('[data-testid="health-allergies"]').text()).toContain('Peanuts')
+    })
+
+    it('links each child to the family page only when the viewer may open it', async () => {
+        const may = card(5, { ...cruz, can_open: true })
+        await may.find('[data-testid="child-expand"]').trigger('click')
+        expect(may.find('[data-testid="open-family"]').attributes('href')).toBe(
+            'church.families.show:["ccf",7]',
+        )
+
+        const mayNot = card()
+        await mayNot.find('[data-testid="child-expand"]').trigger('click')
+        expect(mayNot.find('[data-testid="open-family"]').exists()).toBe(false)
     })
 
     it('checks nobody in when no class is chosen', () => {

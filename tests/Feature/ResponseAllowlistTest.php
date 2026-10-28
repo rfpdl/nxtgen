@@ -325,7 +325,7 @@ describe('the door', function (): void {
             STAFF_FRAME,
             $checkedIn,
             ['class_id', 'classes.*.id', 'classes.*.name', 'classes.*.satellite', 'classes.*.times', 'levels.*.level', 'levels.*.name', 'query', 'today'],
-            prefixed('families.*', ['id', 'name', 'primary_name', 'satellite', ...prefixed('children.*', DOOR_CHILD)]),
+            prefixed('families.*', ['can_open', 'id', 'name', 'primary_name', 'satellite', ...prefixed('children.*', DOOR_CHILD)]),
         ))
             ->and(forbiddenOnLists($props))->toBe([])
             ->and(data_get($props, 'families.0.children.0.nickname'))->toBe('Amara');

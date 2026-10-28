@@ -33,7 +33,7 @@ use Inertia\Response;
  * satellites the viewer's Role covers (`?class=` picks one — the first by default); who is checked in to it, newest
  * first (DECISIONS 2026-10-27 — the page is never empty before a search; its length is the count); and the
  * church-wide family search (SearchFamiliesJob, the same one as registering — Q8) with each child's Level, Squad, an
- * allergy flag and whether they are in. No photo, no phone; a child's health details only when their name is tapped
+ * allergy flag and whether they are in, and whether the viewer may open each family (`can_open`). No photo, no phone; a child's health details only when their row is opened
  * (`?health=`, a partial reload of `health`).
  *
  * @extends BaseChurchFeature<Response>
@@ -43,7 +43,7 @@ use Inertia\Response;
     persona: 'Lifeshaper (any staff)',
     happyPaths: [
         'story#103' => 'Staff see today\'s classes at the satellites their Role covers, how many are checked in, and find any family of the church with each child\'s Level, Squad, allergy flag and whether they are in',
-        'story#105' => 'Tapping a child\'s name shows their health details',
+        'story#105' => 'Opening a child\'s row shows their health details, status and Level, and the family page link when the viewer may open the family',
         'story#116' => 'Before and below any search, staff see who is checked in to the chosen class today, newest first — nickname, Squad and time — and can undo one from there',
     ],
     unhappyPaths: ['story#104' => 'Only today\'s classes at satellites their Role covers — another satellite\'s, another church\'s or another day\'s class is a 404; the search never carries a photo, a phone number or a health detail'],
@@ -75,7 +75,7 @@ final class ShowDoorFeature extends BaseChurchFeature
             'class_id' => $class?->id,
             'checked_in' => array_map(fn (CheckIn $c): DoorCheckInData => DoorCheckInData::fromCheckIn($c, $church->timezone), $checkIns),
             'query' => $query,
-            'families' => array_values($families->map(fn (Family $f): DoorFamilyData => DoorFamilyData::fromModel($f, $checkedIn, $suggested))->all()),
+            'families' => array_values($families->map(fn (Family $f): DoorFamilyData => DoorFamilyData::fromModel($f, $checkedIn, $suggested, canOpen: $this->scope()->canSeeFamily($f)))->all()),
             'levels' => $this->run(new GetLevelsJob),
             'health' => Inertia::optional(fn (): ?ChildHealthData => $class === null || ! request()->filled('health')
                 ? null

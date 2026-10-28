@@ -12,7 +12,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
  * A child on a family card at the door — church-wide, so the lite view (plan §3.3): no photo, no phone, and of the
- * health details only an allergy yes/no (`has_allergies`, the ⚠); the details come only when the name is tapped
+ * health details only an allergy yes/no (`has_allergies`, the ⚠); the details come only when the row is opened
  * (ChildHealthData). `squad` is THIS satellite's Squad for the child's Level and gender — the name follows from the
  * chart, so it is the same at every satellite. `check_in_id` is set while the child is in the chosen class today.
  */

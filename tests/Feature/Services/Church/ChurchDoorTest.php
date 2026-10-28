@@ -187,7 +187,20 @@ describe('the door page', function (): void {
             ->where('families.0.children.0.squad', 'Level 3 Girls'));
     });
 
-    it('shows a child\'s health details only when their name is tapped @story#105', function (): void {
+    it('says which found families the viewer may open — their own satellite\'s, not a visitor\'s @story#103', function (): void {
+        ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'church' => $church] = doorChurch();
+
+        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=Cruz")->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('families.0.name', 'Cruz family')
+            ->where('families.0.can_open', true));
+        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=Santos")->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('families.0.satellite', 'House Church')
+            ->where('families.0.can_open', false));
+        actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get("/ccf/door?class={$onePm->id}&q=Santos")
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('families.0.can_open', true));
+    });
+
+    it('shows a child\'s health details only when their row is opened @story#105', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'amara' => $amara] = doorChurch();
 
         actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=Maria")

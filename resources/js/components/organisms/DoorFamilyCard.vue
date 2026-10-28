@@ -3,7 +3,7 @@ import AppButton from '@/components/atoms/AppButton.vue'
 import Card from '@/components/atoms/Card.vue'
 import DoorChildRow from '@/components/molecules/DoorChildRow.vue'
 import { useChurch } from '@/composables/useChurch'
-import type { CheckInInput, DoorFamily, LevelOption } from '@/types'
+import type { CheckInInput, ChildHealth, DoorFamily, LevelOption } from '@/types'
 import { router } from '@inertiajs/vue3'
 import { computed, reactive, ref } from 'vue'
 import { route } from 'ziggy-js'
@@ -12,9 +12,16 @@ import { route } from 'ziggy-js'
  * A family found at the door (DECISIONS 2026-10-26): "Cruz family", the parent and their satellite, each child
  * (DoorChildRow) — tick, then "Check in N children" into the chosen class. Each ticked child's questions (make active
  * again? which Level?) are answered on the card before the button works; the server still checks every child.
- * Undo puts a child back out. With no class chosen there is nothing to check in to.
+ * Undo puts a child back out. With no class chosen there is nothing to check in to. A child's details open in their
+ * row (DECISIONS 2026-10-28): the health details the page has fetched (`healths`, by child id — asked for up the
+ * first time, `health`), and the family page's link when the viewer may open it (`can_open`).
  */
-const props = defineProps<{ family: DoorFamily; levels: LevelOption[]; classId: number | null }>()
+const props = defineProps<{
+    family: DoorFamily
+    levels: LevelOption[]
+    classId: number | null
+    healths: Record<number, ChildHealth | null>
+}>()
 const emit = defineEmits<{ health: [childId: number] }>()
 
 const church = useChurch()
@@ -26,6 +33,11 @@ const picks = reactive<Record<number, Pick>>(
     ),
 )
 const sending = ref(false)
+const familyHref = computed(() =>
+    props.family.can_open
+        ? route('church.families.show', [church.value.slug, props.family.id])
+        : null,
+)
 
 const ticked = computed(() => props.family.children.filter((c) => picks[c.id]?.ticked === true))
 const ready = computed(
@@ -93,6 +105,8 @@ function undo(checkInId: number): void {
                     :child="child"
                     :levels="levels"
                     :can-check-in="classId !== null"
+                    :health="healths[child.id]"
+                    :family-href="familyHref"
                     @undo="undo"
                     @health="emit('health', $event)"
                 />

@@ -65,7 +65,7 @@ decided by `AccessScope` against the access-matrix row the Feature declares (`#[
   Level gets one picked at the door (their age's suggestion first) — both saved and noted on the child's history. The
   door never changes a Level a child has.
 - Undo keeps the row (who and when it was undone); checking the child in again revives it. Only today's Check-ins.
-- The search shows no photo or phone and only an allergy yes/no; health details only when a name is tapped.
+- The search shows no photo or phone and only an allergy yes/no; health details only when a child's row is opened.
 
 ## Attendance
 - Admins only (a church admin every Satellite, a Satellite admin their own): pick a Satellite, class and date and see

@@ -19,7 +19,8 @@ never pick a colour: they use these atoms, which read the tokens in `app.css`. T
 | TextField   | atom   | Labelled input (v-model, `type`), hint + error wired by `aria-describedby`, `#leading` icon, `hideLabel`                               |
 | SelectField | atom   | Labelled pick-one list; the model is the option's own value (`null` for the placeholder); hint + error wired                           |
 | TextArea    | atom   | Labelled box for a few lines; hint + error wired                                                                                       |
-| CheckRow    | atom   | Big tick (role checkbox): a whole row with a label slot, or a 64px square named by `label`; disabled                                   |
+| CheckRow    | atom   | Big tick (role checkbox): a whole row with a label slot, or a 64px square named by `label` (`stretch`: full row height); disabled      |
+| Disclosure  | atom   | Show more in place: one big button (`aria-expanded`/`aria-controls`, chevron) over a `panel` slot shown while open (v-model:open)      |
 | ChoiceChips | atom   | Pick one of a few as pressable chips (`aria-pressed`) — the door's class picker; emits on every tap                                    |
 | Card        | atom   | White tile, 2px edge and a 5px bottom; `as`, `flush` for a card of rows                                                                |
 | Pill        | atom   | Small label: `level` 1–4 in the age-level chart's colours (tint + dot), or `danger` (allergy flag) / status / neutral                  |
@@ -60,7 +61,7 @@ never pick a colour: they use these atoms, which read the tokens in `app.css`. T
 | AttendanceSquadTable    | molecule | One Squad of a Session on Attendance: name, count; a table (sm+) or stacked rows (phone) of names, time, who                          |
 | ScheduleForm            | organism | Add (POST, with `satelliteId`) or edit (PUT, from a saved `schedule`) a class: name, day, times; `done` on save or cancel             |
 | SatelliteSchedules      | organism | One satellite on the Classes page: its classes, one edited in place at a time, "+ Add a class" opening the add form                   |
-| DoorChildRow            | molecule | A child on a door family card: tick, nickname (tap → health), Squad, ⚠ flag; ✓ in + Undo; "Make active again?"; pick a Level          |
-| ChildHealthPanel        | molecule | A child's health details at the door, only after their name is tapped; allergies first and loud; Close                                |
+| DoorChildRow            | molecule | A door child: full-height tick zone; the rest opens (Disclosure) health, status, Level, family link; ✓ + Undo; make active; Level     |
+| ChildHealthPanel        | molecule | A child's health details inside their opened door row; allergies first and loud, or "Allergies: none"                                 |
 | DoorFamilyCard          | organism | A family found at the door: its children (DoorChildRow), "Check in N children" into the chosen class (POST), Undo (PUT)               |
 | DoorCheckedInList       | molecule | Who is in the chosen class today at the door, newest first: nickname, Squad, time, Undo; empty state says how to start                |

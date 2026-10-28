@@ -11,8 +11,9 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
  * A family found by the door's church-wide search: "Cruz family", the parent's name and home satellite, and its
- * children (DoorChildData — no photo, no phone, an allergy flag only). Needs primaryGuardian, homeSatellite and
- * children loaded (SearchFamiliesJob does).
+ * children (DoorChildData — no photo, no phone, an allergy flag only), and whether the viewer may open the family's
+ * page (`can_open`, AccessScope::canSeeFamily — the "Open family page" link in a child's details, DECISIONS 2026-10-28).
+ * Needs primaryGuardian, homeSatellite and children loaded (SearchFamiliesJob does).
  */
 #[TypeScript]
 final class DoorFamilyData extends Data
@@ -24,13 +25,14 @@ final class DoorFamilyData extends Data
         public string $primary_name,
         public string $satellite,
         public array $children,
+        public bool $can_open,
     ) {}
 
     /**
      * @param  array<int, int>  $checkedIn  child id => check-in id, for the chosen class today
      * @param  array<int, int|null>  $suggestedLevels  child id => the Level their age points to (children with none)
      */
-    public static function fromModel(Family $family, array $checkedIn, array $suggestedLevels): self
+    public static function fromModel(Family $family, array $checkedIn, array $suggestedLevels, bool $canOpen): self
     {
         $surname = $family->primaryGuardian?->last_name;
 
@@ -44,6 +46,7 @@ final class DoorFamilyData extends Data
                 $checkedIn[$c->id] ?? null,
                 $suggestedLevels[$c->id] ?? null,
             ))->all()),
+            can_open: $canOpen,
         );
     }
 }

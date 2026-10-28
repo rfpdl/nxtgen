@@ -64,6 +64,7 @@ declare namespace App {
                     primary_name: string
                     satellite: string
                     children: App.Domains.CheckIn.DataObjects.DoorChildData[]
+                    can_open: boolean
                 }
             }
         }

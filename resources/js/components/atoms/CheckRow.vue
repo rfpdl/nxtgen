@@ -5,9 +5,12 @@ import { useSlots } from 'vue'
 /**
  * A big tick (the Bold look): a 30px box in a row at least 64px tall, ticked = green with a white check. A real
  * checkbox to a screen reader (`role="checkbox"`, `aria-checked`). With a default slot the whole row is the tick
- * and the slot is its label; without one it is a 64px square, named by `label`, beside content of its own.
+ * and the slot is its label; without one it is a 64px square, named by `label`, beside content of its own —
+ * `stretch` makes that square a 64px-wide zone the full height of its row, the box at the top (the door's child row).
  */
-withDefaults(defineProps<{ disabled?: boolean; label?: string }>(), { label: undefined })
+withDefaults(defineProps<{ disabled?: boolean; label?: string; stretch?: boolean }>(), {
+    label: undefined,
+})
 const checked = defineModel<boolean>({ default: false })
 const slots = useSlots()
 </script>
@@ -19,8 +22,11 @@ const slots = useSlots()
         :aria-checked="checked ? 'true' : 'false'"
         :aria-label="label"
         :disabled="disabled"
-        class="rounded-control text-text flex min-h-16 items-center gap-3 text-left disabled:cursor-not-allowed"
-        :class="slots.default ? 'w-full px-3' : 'min-w-16 justify-center'"
+        class="rounded-control text-text flex min-h-16 gap-3 text-left disabled:cursor-not-allowed"
+        :class="[
+            slots.default ? 'w-full px-3' : 'min-w-16 justify-center',
+            stretch ? 'items-start self-stretch pt-[1.0625rem]' : 'items-center',
+        ]"
         @click="checked = !checked"
     >
         <span

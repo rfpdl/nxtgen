@@ -166,16 +166,39 @@ test('checks in a child visiting from House Church, in a CCF DXB Squad @story#10
     await expect(pia).toContainText('Level 2 Girls')
 })
 
-test("shows a child's health details only when their Health is tapped @story#105", async ({
+test("opens a child's row for their health details, status and Level — the family page only where the Lifeshaper may @story#105", async ({
     page,
 }, info) => {
     await openDoor(page)
     const card = await findFamily(page, 'Cruz', `${guardian(info.project.name)} Cruz`)
-    await expect(page.getByTestId('child-health')).toHaveCount(0)
+    const amara = child(card, DOOR.cruz.allergic)
+    const expand = amara.getByTestId('child-expand')
+    await expect(expand).toHaveAttribute('aria-expanded', 'false')
+    await expect(card.getByTestId('child-health')).toHaveCount(0)
 
-    await child(card, DOOR.cruz.allergic).getByTestId('child-health-open').click()
+    await expand.click()
+    await expect(expand).toHaveAttribute('aria-expanded', 'true')
+    await expect(amara.getByTestId('health-allergies')).toContainText(DOOR.allergy)
+    await expect(amara.getByTestId('child-status')).toHaveText('Active')
+    await expect(amara.getByTestId('child-level')).toHaveText('Level 2')
+    await expect(amara.getByTestId('open-family')).toBeVisible()
+    await expectInsideCard(card)
 
-    await expect(page.getByTestId('health-allergies')).toContainText(DOOR.allergy)
-    await page.getByTestId('close-health').click()
-    await expect(page.getByTestId('child-health')).toHaveCount(0)
+    await expand.click()
+    await expect(expand).toHaveAttribute('aria-expanded', 'false')
+    await expect(card.getByTestId('child-health')).toHaveCount(0)
+
+    // Opening a row never ticks it: the tick is its own zone. (Noah is out again after the first journey's Undo.)
+    const noah = child(card, DOOR.cruz.inactive)
+    await noah.getByTestId('child-expand').click()
+    await expect(noah.getByTestId('health-allergies')).toHaveText('Allergies: none')
+    await expect(noah.getByTestId('tick-child')).not.toBeChecked()
+    await expect(card.getByTestId('check-in')).toHaveText('Tick to check in')
+
+    // A visiting family from a satellite the Lifeshaper's Role does not cover: health yes, family page no.
+    const villa = await findFamily(page, 'Villa', `${guardian(info.project.name)} Villa`)
+    const pia = child(villa, DOOR.visitor)
+    await pia.getByTestId('child-expand').click()
+    await expect(pia.getByTestId('health-allergies')).toHaveText('Allergies: none')
+    await expect(pia.getByTestId('open-family')).toHaveCount(0)
 })

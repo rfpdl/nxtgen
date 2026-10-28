@@ -31,6 +31,18 @@ describe('CheckRow', () => {
         expect(box.find('svg').exists()).toBe(true)
     })
 
+    it('stretches to the full height of its row, the box at the top, when asked', () => {
+        const tall = mount(CheckRow, { props: { label: 'Tick Amara', stretch: true } }).find(
+            'button',
+        )
+        const plain = mount(CheckRow, { props: { label: 'Tick Amara' } }).find('button')
+
+        expect(tall.classes()).toEqual(expect.arrayContaining(['self-stretch', 'items-start']))
+        expect(tall.classes()).not.toContain('items-center')
+        expect(plain.classes()).toContain('items-center')
+        expect(plain.classes()).not.toContain('self-stretch')
+    })
+
     it('cannot be ticked while disabled', async () => {
         const wrapper = mount(CheckRow, { props: { disabled: true } })
 

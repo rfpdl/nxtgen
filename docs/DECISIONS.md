@@ -32,9 +32,15 @@ describes the design; this records the choices that shaped or changed it.
   chart green itself is 3.5:1); Level pills are a soft tint with dark text plus a dot of the chart colour (each pair
   ≥7.7:1). Text on a colour is always `on-<colour>` (`on-danger`, `on-level-N`); the focus ring is dark (`focus`)
   and, on a coloured band, the band's own `on-` colour. The door's checked-in list also sends each Squad's `level`.
-- **Health at the door is a "Health" button beside the name** (review of issue 01, replacing "tap the name"; the
-  name is plain bold text). The tick is a big box beside the name, not the whole row as in option C, because the row
-  also holds Health — **pending Roy's OK**.
+- **A door child's row is two zones** (Roy, replacing the "Health" button beside the name and the "tick beside the
+  name, pending Roy" note): on the left a tick zone, about 64px wide and the full height of the row (the checkbox,
+  disabled for a Graduated child); the rest of the row is one button (a Disclosure: `aria-expanded`,
+  `aria-controls`, a chevron) that opens the child's details in place — the health details (the same `health`
+  partial reload and access rule as before, SECURITY #21; fetched on the first open only, then kept by child id),
+  status and Level, and "Open family page" only when the viewer may open that family. The door's family now says so
+  (`can_open`, AccessScope::canSeeFamily — the same rule as the registration search; on the response allowlist).
+  Undo sits under the button, never inside it. "Make active again?", the Level picker and "Check in N children" are
+  unchanged.
 
 ## 2026-10-27
 

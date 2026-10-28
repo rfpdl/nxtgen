@@ -1,7 +1,11 @@
 import DoorChildRow from '@/components/molecules/DoorChildRow.vue'
-import type { DoorChild, LevelOption } from '@/types'
+import type { ChildHealth, DoorChild, LevelOption } from '@/types'
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+vi.mock('@inertiajs/vue3', () => ({
+    Link: { props: ['href'], template: '<a :href="href"><slot /></a>' },
+}))
 
 const levels: LevelOption[] = [1, 2, 3, 4].map((level) => ({ level, name: `Level ${level}` }))
 
@@ -16,6 +20,16 @@ const amara: DoorChild = {
     has_allergies: true,
     check_in_id: null,
     suggested_level: null,
+}
+
+const health: ChildHealth = {
+    id: 1,
+    nickname: 'Amara',
+    allergies: 'Peanuts',
+    illnesses: null,
+    dislikes: null,
+    fears: 'Fear of the dark',
+    guardian_notes: null,
 }
 
 function row(child: Partial<DoorChild> = {}, props: Record<string, unknown> = {}) {
@@ -53,19 +67,85 @@ describe('DoorChildRow', () => {
         expect(wrapper.emitted('update:ticked')).toEqual([[true]])
     })
 
-    it('shows the name as plain bold text, and asks for the health details from its Health button', async () => {
+    it('makes the rest of the row one collapsed button holding the name — no Health button', () => {
         const wrapper = row()
+        const expand = wrapper.find('[data-testid="child-expand"]')
         const name = wrapper.find('[data-testid="child-name"]')
 
+        expect(expand.element.tagName).toBe('BUTTON')
+        expect(expand.attributes('aria-expanded')).toBe('false')
+        expect(expand.attributes('aria-controls')).toBeDefined()
+        expect(expand.find('[data-testid="child-name"]').exists()).toBe(true)
+        expect(expand.find('[data-testid="allergy-flag"]').exists()).toBe(true)
         expect(name.element.tagName).toBe('SPAN')
         expect(name.text()).toBe('Amara')
-        expect(name.classes()).not.toContain('underline')
+        expect(wrapper.find('[data-testid="child-health-open"]').exists()).toBe(false)
+        expect(wrapper.text()).not.toContain('Health')
+    })
 
-        const health = wrapper.find('[data-testid="child-health-open"]')
-        expect(health.text()).toBe('Health')
-        expect(health.attributes('aria-label')).toBe('Health details for Amara')
-        await health.trigger('click')
+    it('keeps the tick and the details apart: a tick never opens, an open never ticks', async () => {
+        const wrapper = row()
+
+        await wrapper.find('[data-testid="tick-child"]').trigger('click')
+        expect(wrapper.find('[data-testid="child-expand"]').attributes('aria-expanded')).toBe(
+            'false',
+        )
+        await wrapper.find('[data-testid="child-expand"]').trigger('click')
+        expect(wrapper.emitted('update:ticked')).toEqual([[true]])
+        expect(wrapper.find('[data-testid="child-expand"]').attributes('aria-expanded')).toBe(
+            'true',
+        )
+    })
+
+    it('asks for the health details on the first open only, saying they are on the way', async () => {
+        const wrapper = row()
+        const expand = wrapper.find('[data-testid="child-expand"]')
+
+        await expand.trigger('click')
         expect(wrapper.emitted('health')).toEqual([[1]])
+        expect(wrapper.find('[data-testid="health-loading"]').exists()).toBe(true)
+
+        await expand.trigger('click')
+        await wrapper.setProps({ health })
+        await expand.trigger('click')
+        expect(wrapper.emitted('health')).toEqual([[1]])
+        expect(wrapper.find('[data-testid="health-allergies"]').text()).toContain('Peanuts')
+    })
+
+    it('shows the health details, status and Level when open — and closes again', async () => {
+        const wrapper = row({}, { health })
+
+        await wrapper.find('[data-testid="child-expand"]').trigger('click')
+        expect(wrapper.emitted('health')).toBeUndefined()
+        const details = wrapper.find('[data-testid="child-details"]')
+        expect(details.find('[data-testid="health-allergies"]').text()).toBe('⚠ Allergies: Peanuts')
+        expect(details.text()).toContain('Fear of the dark')
+        expect(details.find('[data-testid="child-status"]').text()).toBe('Active')
+        expect(details.find('[data-testid="child-level"]').text()).toBe('Level 2')
+
+        await wrapper.find('[data-testid="child-expand"]').trigger('click')
+        expect(wrapper.find('[data-testid="child-details"]').exists()).toBe(false)
+    })
+
+    it('says so when there are no health details to show', async () => {
+        const wrapper = row({ level: null, squad: null }, { health: null })
+
+        await wrapper.find('[data-testid="child-expand"]').trigger('click')
+        expect(wrapper.emitted('health')).toBeUndefined()
+        expect(wrapper.find('[data-testid="health-none"]').exists()).toBe(true)
+        expect(wrapper.find('[data-testid="child-level"]').text()).toBe('No Level yet')
+    })
+
+    it('links to the family page only for staff who may open it', async () => {
+        const may = row({}, { health, familyHref: '/ccf/families/7' })
+        await may.find('[data-testid="child-expand"]').trigger('click')
+        const link = may.find('[data-testid="open-family"]')
+        expect(link.text()).toBe('Open family page')
+        expect(link.attributes('href')).toBe('/ccf/families/7')
+
+        const mayNot = row({}, { health })
+        await mayNot.find('[data-testid="child-expand"]').trigger('click')
+        expect(mayNot.find('[data-testid="open-family"]').exists()).toBe(false)
     })
 
     it('shows a child who is in with a tick mark and Undo, and no box to tick', async () => {
@@ -73,6 +153,9 @@ describe('DoorChildRow', () => {
 
         expect(wrapper.find('[data-testid="checked-in"]').text()).toBe('✓ Checked in')
         expect(wrapper.find('[data-testid="tick-child"]').exists()).toBe(false)
+        expect(wrapper.find('[data-testid="child-expand"] [data-testid="undo"]').exists()).toBe(
+            false,
+        )
         await wrapper.find('[data-testid="undo"]').trigger('click')
         expect(wrapper.emitted('undo')).toEqual([[9]])
     })
