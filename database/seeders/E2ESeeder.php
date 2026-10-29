@@ -30,7 +30,8 @@ use Illuminate\Database\Seeder;
  * (DOOR_GUARDIANS): a Cruz family at CCF DXB — Amara (allergic), Ben, Noah (inactive), Lola (no Level), Gabe
  * (Graduated) — and a visiting Villa family at House Church (Pia). Birthdays differ per browser, so no two are
  * "possible duplicates". For Who's in (roll call), a Reyes family at CCF DXB with four Level 2 girls whose names are
- * the browser's own (ROLL_CALL_GIRLS): the browsers share one 1PM Session and its Squads, so each ticks its own.
+ * the browser's own (ROLL_CALL_GIRLS): the browsers share one 1PM Session and its Squads, so each ticks its own. For
+ * name cards, an Ocampo family of three boys with no Card request (CARD_CHILDREN).
  */
 final class E2ESeeder extends Seeder
 {
@@ -50,6 +51,13 @@ final class E2ESeeder extends Seeder
      * (AMARAJOYREYES …): one key per browser, so each finds only its own child. She is never checked in.
      */
     public const array SCAN_MIDDLE_NAMES = ['mobile-webkit' => 'Joy', 'mobile-chromium' => 'Kay', 'desktop-chromium' => 'Lee'];
+
+    /**
+     * Each browser's Ocampo family at CCF DXB (name cards): imported, so no Card request — the card journey asks for a new
+     * card for the first of them still without one. Three, so a retried journey (CI retries once) finds a fresh child
+     * without a reseed, and the door's families stay untouched.
+     */
+    public const array CARD_CHILDREN = ['Jon', 'Kit', 'Ned'];
 
     public function run(): void
     {
@@ -74,6 +82,7 @@ final class E2ESeeder extends Seeder
             $day++;
             $this->doorFamilies($ccf, $dxb, $house, $first, $day);
             $this->rollCallFamily($ccf, $dxb, $first, $day, self::ROLL_CALL_GIRLS[$project], self::SCAN_MIDDLE_NAMES[$project]);
+            $this->cardFamily($ccf, $dxb, $first, $day);
         }
     }
 
@@ -112,6 +121,15 @@ final class E2ESeeder extends Seeder
             ),
             new ChildDetailsData(firstName: 'Amara', middleName: $scanMiddle, lastName: 'Reyes', nickname: 'Amara', gender: GenderEnum::Girl, dateOfBirth: "2019-05-0{$day}", allergies: null),
         ]);
+    }
+
+    private function cardFamily(Church $church, Satellite $dxb, string $first, int $day): void
+    {
+        $this->register($church, $dxb, new GuardianDetailsData(firstName: $first, lastName: 'Ocampo', relationship: RelationshipEnum::Mother, phone: "+97150600000{$day}", email: 'ocampo-'.mb_strtolower($first).'@nxtgen.test'), array_map(
+            fn (string $name, int $month): ChildDetailsData => new ChildDetailsData(firstName: $name, middleName: null, lastName: 'Ocampo', nickname: $name, gender: GenderEnum::Boy, dateOfBirth: "2020-0{$month}-0{$day}", allergies: null),
+            self::CARD_CHILDREN,
+            [2, 3, 4],
+        ));
     }
 
     /** @param list<ChildDetailsData> $children */

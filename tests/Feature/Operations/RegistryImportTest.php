@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Data\Models\CardRequest;
 use App\Data\Models\Child;
 use App\Data\Models\Church;
 use App\Data\Models\Family;
@@ -93,7 +94,9 @@ it('loads the approved families without emailing anyone @story#82', function ():
         ->and(Child::query()->count())->toBe(4)
         ->and(Child::query()->where('first_name', 'Ysabella')->sole()->status)->toBe(ChildStatusEnum::Graduated)
         ->and(Family::query()->first()?->registration_source)->toBe(RegistrationSourceEnum::Import)
-        ->and(MagicLink::query()->count())->toBe(0);
+        ->and(MagicLink::query()->count())->toBe(0)
+        // Imported children already carry the printed name cards: no first card is asked for (name cards 02).
+        ->and(CardRequest::query()->count())->toBe(0);
 
     Notification::assertNothingSent();
     expect($church->id)->toBeInt();

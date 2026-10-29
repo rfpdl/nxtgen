@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Data\Models\CardRequest;
 use App\Data\Models\Child;
 use App\Data\Models\Church;
 use App\Data\Models\DuplicateCandidate;
@@ -16,6 +17,8 @@ use App\Domains\Family\DataObjects\FamilyRegistrationData;
 use App\Domains\Family\DataObjects\GuardianDetailsData;
 use App\Domains\Family\DataObjects\GuardianEditData;
 use App\Domains\Family\DataObjects\RegistrationResultData;
+use App\Enums\CardReasonEnum;
+use App\Enums\CardStepEnum;
 use App\Enums\ChildStatusEnum;
 use App\Enums\FamilyClaimStatusEnum;
 use App\Enums\GenderEnum;
@@ -228,4 +231,51 @@ it('puts the already-registered explanation in the email itself', function (): v
     $lines = array_map(fn (mixed $l): string => is_scalar($l) ? (string) $l : '', $mail->introLines);
 
     expect(implode(' ', $lines))->toContain('your family is already registered');
+});
+
+describe('a first name card (name cards 02)', function (): void {
+    it('asks for a free first card for each new child, made by the app — whoever registered', function (RegistrationSourceEnum $source): void {
+        [$church, $satellite] = registrationChurch();
+        $twins = [
+            new ChildDetailsData(firstName: 'Alexis', middleName: null, lastName: 'Ramos', nickname: 'Amara', gender: GenderEnum::Girl, dateOfBirth: '2019-05-10', allergies: null),
+            new ChildDetailsData(firstName: 'Benjamin', middleName: null, lastName: 'Ramos', nickname: 'Ben', gender: GenderEnum::Boy, dateOfBirth: '2019-05-10', allergies: null),
+        ];
+
+        register(registration($church, $satellite, children: $twins, source: $source));
+
+        $requests = CardRequest::query()->orderBy('id')->get();
+        expect($requests->pluck('child_id')->all())->toBe(Child::query()->orderBy('id')->pluck('id')->all())
+            ->and($requests->map(fn (CardRequest $r): array => [$r->church_id, $r->reason, $r->step, $r->fee_minor, $r->created_by])->unique()->values()->all())
+            ->toBe([[$church->id, CardReasonEnum::FirstCard, CardStepEnum::Asked, 0, null]]);
+    })->with([RegistrationSourceEnum::Self, RegistrationSourceEnum::Staff]);
+
+    it('asks for none for an imported family — its children already have cards', function (): void {
+        [$church, $satellite] = registrationChurch();
+
+        register(registration($church, $satellite, source: RegistrationSourceEnum::Import));
+
+        expect(Child::query()->count())->toBe(1)
+            ->and(CardRequest::query()->count())->toBe(0);
+    });
+
+    it('asks for none when nothing is registered — the email\'s family already exists', function (): void {
+        [$church, $satellite] = registrationChurch();
+        register(registration($church, $satellite));
+        $before = CardRequest::query()->count();
+
+        $again = register(registration($church, $satellite));
+
+        expect($again->outcome)->toBe(RegistrationOutcomeEnum::AlreadyRegistered)
+            ->and(CardRequest::query()->count())->toBe($before);
+    });
+});
+
+it('creates nothing when the first card cannot be asked for — the child, family and login go with it (name cards 02)', function (): void {
+    [$church, $satellite] = registrationChurch();
+    CardRequest::creating(fn (): never => throw new RuntimeException('The card request was refused.'));
+
+    expect(fn () => register(registration($church, $satellite)))->toThrow(RuntimeException::class, 'The card request was refused.')
+        ->and([Family::query()->count(), Child::query()->count(), User::query()->count(), CardRequest::query()->count()])->toBe([0, 0, 0, 0]);
+
+    CardRequest::flushEventListeners();
 });

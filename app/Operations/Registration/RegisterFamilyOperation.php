@@ -9,6 +9,7 @@ use App\Data\Models\User;
 use App\Domains\Auth\DataObjects\IssuedMagicLinkData;
 use App\Domains\Auth\Jobs\CreateMagicLinkJob;
 use App\Domains\Auth\Jobs\SendMagicLinkJob;
+use App\Domains\Card\Jobs\CreateFirstCardRequestJob;
 use App\Domains\Family\DataObjects\FamilyRegistrationData;
 use App\Domains\Family\DataObjects\RegistrationResultData;
 use App\Domains\Family\Jobs\CreateChildJob;
@@ -37,7 +38,8 @@ use Lucid\Units\Operation;
  *   email belongs to a user with no family here     → family + UNLINKED primary guardian + claim → ClaimSent
  *   unknown email                                    → user (unverified) + family + LINKED primary → Registered
  *
- * A new family also gets its other guardians — never a login (one login per family, DECISIONS 2026-10-17).
+ * A new family also gets its other guardians — never a login (one login per family, DECISIONS 2026-10-17) — and each
+ * new child a free first name card request (name cards 02), unless imported.
  *
  * Serialised per (church, email) by a lock, and backed by the database's unique keys, so two submissions
  * of the same form cannot create two families. Emails go out only after the transaction commits — and not at
@@ -124,7 +126,8 @@ final class RegisterFamilyOperation extends Operation
         foreach ($this->registration->children as $child) {
             $level = $this->run(new GetSuggestedLevelJob(church: $this->registration->church, dateOfBirth: $child->dateOfBirth));
 
-            $this->run(new CreateChildJob(family: $family, details: $child, level: $level, source: $this->registration->source));
+            $created = $this->run(new CreateChildJob(family: $family, details: $child, level: $level, source: $this->registration->source));
+            $this->run(new CreateFirstCardRequestJob(child: $created, source: $this->registration->source));
         }
     }
 

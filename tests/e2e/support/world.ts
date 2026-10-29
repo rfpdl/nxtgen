@@ -96,3 +96,13 @@ export const SCAN = {
     },
     child: 'Amara',
 } as const
+
+/**
+ * Name cards: each browser project's Ocampo family at CCF DXB (E2ESeeder::CARD_CHILDREN), parent DOOR.guardians' name —
+ * imported, so none has a Card request. The card journey takes the first still offering "New card…", so a retry uses
+ * the next child without a reseed.
+ */
+export const CARDS = {
+    surname: 'Ocampo',
+    children: ['Jon', 'Kit', 'Ned'],
+} as const

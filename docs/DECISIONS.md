@@ -28,6 +28,12 @@ describes the design; this records the choices that shaped or changed it.
   `CardStepEnum::isOpen()` for every step. Each step keeps its own
   when/who columns (approved, printed, given, refused + reason, paid) for issues 02–03. Who may file: the new
   `card_request` access row, the same people as a child's photo (staff who can see the family).
+- Claude, low-stakes (issue 02, for Roy to confirm): **the first card is asked for by the app**, not a person
+  (`created_by` empty), in the same transaction as the child — on registering a family (parent or staff) and on adding
+  a child (parent or staff). The registry import, and so the demo and e2e seeders, make none
+  (`RegistrationSourceEnum::getsFirstCard()`); no backfill. So a newly registered child shows "Card: Asked · free" on
+  the staff family page at once, and "New card…" appears only once that first card is Given or Refused — a child who
+  loses the first card before it is printed simply keeps the one request.
 
 ## 2026-10-28 (night — slice 3 decisions; Roy)
 

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Data\Models\CardRequest;
 use App\Data\Models\Child;
 use App\Data\Models\DuplicateCandidate;
 use App\Data\Models\Family;
@@ -72,7 +73,14 @@ it('seeds exactly what the browser journeys expect', function (): void {
         $key = 'AMARA'.mb_strtoupper($middle).'REYES';
         expect($world)->toContain("'{$project}': '{$key}'")
             ->and(Child::query()->where('name_key', $key)->sole()->family_id)->toBe($reyes->id);
+
+        // Name cards: the browser's Ocampo family — imported, so no Card request for any of them.
+        $lim = Family::query()->with(['children', 'homeSatellite'])->whereHas('primaryGuardian', fn ($g) => $g->where('first_name', $first)->where('last_name', 'Ocampo'))->sole();
+        expect([$lim->homeSatellite->name, $lim->children->pluck('nickname')->all()])->toBe(['CCF DXB', E2ESeeder::CARD_CHILDREN])
+            ->and(CardRequest::query()->whereIn('child_id', $lim->children->pluck('id'))->count())->toBe(0);
     }
+    expect($world)->toContain("children: ['".implode("', '", E2ESeeder::CARD_CHILDREN)."']")
+        ->and($world)->toContain("surname: 'Ocampo'");
     foreach (["allergic: 'Amara'", "active: 'Ben'", "inactive: 'Noah'", "noLevel: 'Lola'", "graduated: 'Gabe'", "allergy: 'Peanuts'", "suggestedLevel: 'Level 1'"] as $line) {
         expect($world)->toContain($line);
     }

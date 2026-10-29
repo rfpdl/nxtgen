@@ -31,4 +31,13 @@ enum RegistrationSourceEnum: string implements HasEnumMetadata
     {
         return 'muted';
     }
+
+    /**
+     * Whether a child registered this way gets a free first name card asked for (name cards 02, DECISIONS 2026-10-29):
+     * yes when a parent or staff register them; no for the registry import — those children already have cards.
+     */
+    public function getsFirstCard(): bool
+    {
+        return $this !== self::Import;
+    }
 }
