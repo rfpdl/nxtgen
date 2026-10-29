@@ -36,6 +36,10 @@ export const enums: Required<EnumProps> = {
         { value: 'saturday', label: 'Saturday', color: 'muted' },
         { value: 'sunday', label: 'Sunday', color: 'muted' },
     ],
+    card_reason: [
+        { value: 'lost', label: 'Lost', color: 'muted' },
+        { value: 'damaged', label: 'Damaged', color: 'muted' },
+    ],
 }
 
 /** Inertia as the real module, except that its page carries `enums`. */

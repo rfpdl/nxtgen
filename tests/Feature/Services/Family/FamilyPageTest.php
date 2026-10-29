@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Data\Models\CardRequest;
 use App\Data\Models\Child;
 use App\Data\Models\Church;
 use App\Data\Models\Family;
@@ -67,6 +68,19 @@ it('never shows a parent their child\'s attendance — that is for staff @story#
     actingAs($parent)->get('/ccf/family')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
         ->missing('attendance')
         ->where('family.children', fn (Collection $children): bool => $children->every(fn (array $c): bool => ! array_key_exists('check_ins', $c) && ! array_key_exists('attendance', $c))));
+});
+
+it('never shows a parent a Card request for their child — staff file it and follow it @story#133', function (): void {
+    [, $family, $parent] = familyWithGuardian();
+    $child = childOf($family, ['nickname' => 'Amara']);
+    CardRequest::factory()->for($child)->create();
+
+    actingAs($parent)->get('/ccf/family')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        ->missing('card_requests')
+        ->missing('enums.card_reason')
+        // Nor any card field on a child (the parent's ChildPortalData has none) — whatever it might be called.
+        ->where('family.children', fn (Collection $children): bool => $children->count() === 1
+            && $children->every(fn (array $c): bool => preg_grep('/card/i', array_keys($c)) === [])));
 });
 
 it('404s for someone signed in without a family in this church @story#29', function (): void {

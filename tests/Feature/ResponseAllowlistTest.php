@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\ResponseAllowlist;
 
+use App\Data\Models\CardRequest;
 use App\Http\Middleware\HandleInertiaRequests;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Storage;
@@ -59,7 +60,7 @@ const LITE_FAMILY = ['can_open', 'can_resend', ...LIST_CHILD, 'email_confirmed',
 
 /** A family opened by staff, minus what only an editor gets (Church/Families/Show). */
 const FAMILY_VIEW = [
-    'can_set_level', 'enums.child_status', 'enums.gender', 'enums.relationship',
+    'can_set_level', 'enums.card_reason', 'enums.child_status', 'enums.gender', 'enums.relationship',
     'family.area', 'family.can_edit', 'family.email', 'family.email_confirmed', 'family.id', 'family.primary_name',
     'family.registered_by', 'family.satellite',
     'family.children.*.allergies', 'family.children.*.date_of_birth', 'family.children.*.dislikes', 'family.children.*.fears',
@@ -71,7 +72,17 @@ const FAMILY_VIEW = [
     // Each child's attendance (slice 3) — staff only: when, where, which Squad, present. No health detail or photo.
     'attendance.*.child_id', 'attendance.*.check_ins.*.class', 'attendance.*.check_ins.*.date', 'attendance.*.check_ins.*.id',
     'attendance.*.check_ins.*.present', 'attendance.*.check_ins.*.satellite', 'attendance.*.check_ins.*.squad',
+    // Each child's open Card request (name cards) — staff only: its step and whether it is paid. No note or reason.
+    'card_requests.*.child_id', 'card_requests.*.fee', 'card_requests.*.id', 'card_requests.*.step', 'card_requests.*.summary',
 ];
+
+/** The staff family page, with a Card request open for the child (so its fields are listed, not just an empty key). */
+function familyPageWithCardRequest(AccessWorld $w): string
+{
+    CardRequest::factory()->for($w->child)->create(['note' => 'Lost at the park']);
+
+    return "/ccf/families/{$w->family->id}";
+}
 
 /** The family's other guardians (no login) as the edit form lists them — for whoever may edit the family. */
 const OTHER_GUARDIANS = [
@@ -213,7 +224,7 @@ describe('the door search — the church-wide lite view', function (): void {
 
 describe('a family opened by staff', function (): void {
     it('gives an admin who may edit it the edit details, and the Level list only to a church admin @story#50 @story#52', function (Actor $actor, bool $setsLevels): void {
-        $props = propsOf($actor, fn (AccessWorld $w): string => "/ccf/families/{$w->family->id}");
+        $props = propsOf($actor, familyPageWithCardRequest(...));
 
         expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, FAMILY_VIEW, FAMILY_EDIT_DETAILS, POSSIBLE_DUPLICATES, $setsLevels ? ['levels.*.level', 'levels.*.name'] : ['levels']))
             ->and(data_get($props, 'family.email'))->toBe('janice@example.com');
@@ -223,7 +234,7 @@ describe('a family opened by staff', function (): void {
     ]);
 
     it('gives a Lifeshaper the family and its children, but no edit details and a masked email @story#50 @story#53', function (Actor $actor): void {
-        $props = propsOf($actor, fn (AccessWorld $w): string => "/ccf/families/{$w->family->id}");
+        $props = propsOf($actor, familyPageWithCardRequest(...));
 
         expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, FAMILY_VIEW, ['details', 'primary', 'other_guardians', 'satellites', 'levels', 'duplicates']))
             ->and([data_get($props, 'details'), data_get($props, 'primary'), data_get($props, 'satellites')])->toBe([null, null, []])

@@ -76,6 +76,8 @@ function matrix(): array
         'church.children.level' => [AccessRowEnum::SetChildLevel, [Actor::ChurchAdmin]],
         'church.children.photo-consent' => [AccessRowEnum::ChildPhoto, Actor::seeingFamily()],
         'church.children.photo' => [AccessRowEnum::ChildPhoto, Actor::seeingFamily()],
+        // Name cards (DECISIONS 2026-10-29): staff who may open the family file a new card; parents tell a Lifeshaper.
+        'church.card-requests.store' => [AccessRowEnum::CardRequest, Actor::seeingFamily()],
         // Answered from either family's page (there is no Duplicates page — DECISIONS 2026-10-17, after first look);
         // answering needs the new family.
         'church.duplicates.resolve' => [AccessRowEnum::ReviewDuplicates, Actor::editingFamily()],
@@ -167,6 +169,7 @@ function requestFor(string $route, AccessWorld $w): array
         'church.children.level' => ['PUT', "/ccf/children/{$c}/level", ['level' => 3]],
         'church.children.photo-consent' => ['PUT', "/ccf/children/{$c}/photo-consent", []],
         'church.children.photo' => ['POST', "/ccf/children/{$c}/photo", ['photo' => $photo()]],
+        'church.card-requests.store' => ['POST', "/ccf/children/{$c}/card-requests", ['reason' => 'lost', 'note' => 'Lost at the park']],
         'church.duplicates.resolve' => ['PUT', "/ccf/duplicates/{$w->pair->id}", ['status' => 'dismissed']],
         'church.people.index' => ['GET', '/ccf/people', []],
         'church.people.store' => ['POST', '/ccf/people', ['name' => 'Leo Lifeshaper', 'email' => 'leo@example.com', 'role' => 'lifeshaper', 'scope_type' => 'satellite', 'scope_id' => $w->home->id]],
@@ -366,6 +369,8 @@ describe('a child, for staff', function (): void {
         ->with(cells('church.children.photo-consent'));
     it('has its photo taken by staff who can see the family @story#68 @story#69', cellTest())
         ->with(cells('church.children.photo'));
+    it('has a new name card asked for by staff who can see the family, never by a parent @story#130 @story#131', cellTest())
+        ->with(cells('church.card-requests.store'));
 });
 
 describe('duplicates and People, for admins', function (): void {
@@ -442,8 +447,8 @@ function routesNamingAnId(): array
     }));
 }
 
-// Every refusal is a 404 and changes nothing, so one world serves all twenty-two guesses.
-it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in their OWN church\'s address @story#29 @story#49 @story#51 @story#100 @story#102 @story#109 @story#111 @story#120 @story#123', function (): void {
+// Every refusal is a 404 and changes nothing, so one world serves all twenty-three guesses.
+it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in their OWN church\'s address @story#29 @story#49 @story#51 @story#100 @story#102 @story#109 @story#111 @story#120 @story#123 @story#131', function (): void {
     Notification::fake();
     Storage::fake('photos');
     travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
@@ -461,6 +466,6 @@ it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in 
         $answers["{$method} {$guessed}"] = outcomeOf(call($method, $guessed, $payload), $method);
     }
 
-    expect($answers)->toHaveCount(22)
+    expect($answers)->toHaveCount(23)
         ->and(array_unique(array_values($answers)))->toBe(['404'], (string) json_encode($answers, JSON_PRETTY_PRINT));
 });

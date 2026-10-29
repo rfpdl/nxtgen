@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Services\Church\Features\Family;
 
 use App\Data\Models\DuplicateCandidate;
+use App\Domains\Card\DataObjects\CardRequestData;
+use App\Domains\Card\Jobs\GetFamilyOpenCardRequestsJob;
 use App\Domains\CheckIn\DataObjects\ChildAttendanceData;
 use App\Domains\CheckIn\Jobs\GetFamilyCheckInsJob;
 use App\Domains\Church\Jobs\GetChurchTodayJob;
@@ -17,6 +19,7 @@ use App\Domains\Family\Jobs\GetFamilyNotesJob;
 use App\Domains\Family\Jobs\GetFamilyOpenDuplicatesJob;
 use App\Domains\Level\Jobs\GetLevelsJob;
 use App\Enums\AccessRowEnum;
+use App\Enums\CardReasonEnum;
 use App\Enums\ChildStatusEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
@@ -30,7 +33,8 @@ use Inertia\Response;
  * who may edit the family — a Lifeshaper sees the family, not the forms. Its open possible duplicates are listed for
  * someone who may answer them (an admin who may edit the newer family), now that there is no Duplicates tab
  * (DECISIONS 2026-10-17, after first look); each side in the church-wide lite view. Each child's attendance, newest
- * first (slice 3) — for staff only.
+ * first (slice 3) — for staff only. Each child's open Card request, and the reasons staff may pick for a new
+ * card (name cards issue 01) — staff only too.
  *
  * @extends BaseChurchFeature<Response>
  */
@@ -41,11 +45,13 @@ use Inertia\Response;
         'story#50' => 'Staff open a Family they can see, with its notes, newest first',
         'story#92' => 'An Admin who may answer sees the Family\'s open possible duplicates, either side, to answer there',
         'story#126' => 'Staff see each child\'s attendance, newest first — date, class, satellite, Squad and present or not marked — never an undone Check-in',
+        'story#132' => 'Staff see each child\'s open Card request — its step and whether it is paid — or may ask for a new card',
     ],
     unhappyPaths: [
         'story#51' => 'A Family they cannot see is not found',
         'story#93' => 'Nobody sees a possible duplicate they may not answer, nor an answered one',
         'story#127' => 'A child\'s attendance is for staff who can see the family: a parent\'s own family page never carries it',
+        'story#133' => 'A Card request is for staff: a parent\'s own family page never carries one',
     ],
 )]
 #[AccessRow(AccessRowEnum::ViewFamily)]
@@ -69,6 +75,8 @@ final class ShowFamilyFeature extends BaseChurchFeature
                 $this->run(new GetFamilyCheckInsJob(family: $family)),
                 $this->run(new GetChurchTodayJob(church: $church))->year,
             ),
+            // Each child's open Card request (name cards): staff only, as attendance.
+            'card_requests' => array_map(CardRequestData::fromModel(...), $this->run(new GetFamilyOpenCardRequestsJob(family: $family))),
             'notes' => $this->run(new GetFamilyNotesJob(family: $family)),
             'duplicates' => $scope->canReviewDuplicates() ? array_values($this->run(new GetFamilyOpenDuplicatesJob(family: $family))
                 ->filter(fn (DuplicateCandidate $p): bool => $scope->canEditFamily(DuplicateCandidate::familyOf($p->subject)))
@@ -83,7 +91,7 @@ final class ShowFamilyFeature extends BaseChurchFeature
             'satellites' => $canEdit ? $this->run(new GetSatellitesJob(church: $church)) : [],
             'can_set_level' => $scope->canSetLevel(),
             'levels' => $scope->canSetLevel() ? $this->run(new GetLevelsJob) : [],
-            'enums' => [...FamilyFormEnums::toFrontend(), 'child_status' => ChildStatusEnum::toFrontend()],
+            'enums' => [...FamilyFormEnums::toFrontend(), 'child_status' => ChildStatusEnum::toFrontend(), 'card_reason' => CardReasonEnum::toFrontend(CardReasonEnum::staffChoices())],
         ]);
     }
 }

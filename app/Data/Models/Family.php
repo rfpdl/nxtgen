@@ -90,6 +90,17 @@ final class Family extends Model
         return $this->hasMany(Child::class);
     }
 
+    /**
+     * This family's children's ids, as a sub-query — for a query on their rows: `->whereIn('child_id',
+     * $family->childIds())` (their Check-ins, their Card requests).
+     *
+     * @return HasMany<Child, $this>
+     */
+    public function childIds(): HasMany
+    {
+        return $this->children()->select('children.id');
+    }
+
     /** @return BelongsTo<Guardian, $this> */
     public function primaryGuardian(): BelongsTo
     {

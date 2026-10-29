@@ -24,7 +24,7 @@ final class GetFamilyCheckInsJob extends BaseJob
     {
         return array_values(CheckIn::query()
             ->where('church_id', $this->family->church_id)
-            ->whereHas('child', fn ($c) => $c->where('family_id', $this->family->id))
+            ->whereIn('child_id', $this->family->childIds())
             ->whereNull('undone_at')
             ->with(['session.schedule', 'session.satellite', 'squad'])
             ->get()

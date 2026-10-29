@@ -12,12 +12,14 @@ import ChildAttendanceList from '@/components/molecules/ChildAttendanceList.vue'
 import FamilyChildCard from '@/components/molecules/FamilyChildCard.vue'
 import PossibleDuplicateCard from '@/components/organisms/PossibleDuplicateCard.vue'
 import AddChildForm from '@/components/organisms/AddChildForm.vue'
+import ChildCardRequest from '@/components/organisms/ChildCardRequest.vue'
 import ChildPhotoForm from '@/components/organisms/ChildPhotoForm.vue'
 import CorrectEmailForm from '@/components/organisms/CorrectEmailForm.vue'
 import EditChildForm from '@/components/organisms/EditChildForm.vue'
 import FamilyDetailsForm from '@/components/organisms/FamilyDetailsForm.vue'
 import { useChurch } from '@/composables/useChurch'
 import type {
+    CardRequest,
     ChildAttendance,
     ChildCheckIn,
     ChildStatus,
@@ -41,6 +43,8 @@ const props = defineProps<{
     family: FamilyAdmin
     /** Each child's attendance, newest first (slice 3). Staff only. */
     attendance: ChildAttendance[]
+    /** Each child's open Card request (name cards), at most one per child. Staff only. */
+    card_requests: CardRequest[]
     /** What staff changed on this family and its children (system notes), newest first. Staff only. */
     notes: Note[]
     /** Open possible duplicates this family is on, for an admin who may answer them (empty for everyone else). */
@@ -60,6 +64,11 @@ const church = useChurch()
 /** A child's Check-ins, newest first ([] = not checked in yet). */
 function checkInsOf(childId: number): ChildCheckIn[] {
     return props.attendance.find((a) => a.child_id === childId)?.check_ins ?? []
+}
+
+/** A child's open Card request, or null (then "New card…"). */
+function cardRequestOf(childId: number): CardRequest | null {
+    return props.card_requests.find((r) => r.child_id === childId) ?? null
 }
 
 /** "CCF DXB · Al Barsha · registered by Lifeshaper" under the name. */
@@ -144,6 +153,10 @@ function setStatus(childId: number, status: ChildStatus): void {
             <SectionHeading>Children</SectionHeading>
             <FamilyChildCard v-for="child in family.children" :key="child.id" :child="child">
                 <ChildAttendanceList :check-ins="checkInsOf(child.id)" />
+                <ChildCardRequest
+                    :request="cardRequestOf(child.id)"
+                    :action="route('church.card-requests.store', [church.slug, child.id])"
+                />
                 <ChildAdminControls
                     :child="child"
                     :can-set-status="family.can_edit"

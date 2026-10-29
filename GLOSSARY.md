@@ -55,6 +55,12 @@ The printed NXTGEN card a Child carries, with their name and a barcode (Code 39)
 spaces, e.g. ADAMMATTHIASABERGOS. "Scan card" at the door reads it — or a desk scanner types it into the search.
 _Avoid_: ID card, badge, tag
 
+**Card request**:
+One ask for a new Name card for one Child, moving Asked → Approved → Printed → Given (or Refused). Reason: Lost,
+Damaged, or First card (free; a lost or damaged card is AED 10, marked paid at the desk). A Child has at most one open
+request. Staff file it; parents tell a Lifeshaper.
+_Avoid_: ID request, ticket, order
+
 **Attendance**:
 The admins' report of a Session: the Children checked in, by Squad, with counts — on screen and as Excel.
 _Avoid_: Session report, register (and "attendance" for the act of checking in — that is a Check-in)

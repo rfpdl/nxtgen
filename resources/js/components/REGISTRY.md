@@ -78,3 +78,4 @@ every staff, parent and public page is on the kit (issues 02 and 03 of `.plannin
 | HeadCountForm           | molecule | A Squad's head count on Who's in: number (the count checked in at first) + Confirm; "✓ Confirmed 13:20 by Joy (4)"; mismatch + Not marked   |
 | ChildAttendanceList     | molecule | A child's attendance on the staff family page, newest first: date · class · satellite · Squad, present or not; last 12, "Show all"          |
 | ScanCardSheet           | organism | "Scan card" at the door: a bottom sheet (reka-ui Dialog) with the back camera reading a name card's Code 39; refused → type instead         |
+| ChildCardRequest        | organism | A child's name card on the staff family page: "Card: Asked · not paid" (Pill) for an open request, else "New card…" → Lost/Damaged + note   |

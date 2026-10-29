@@ -1,5 +1,16 @@
 declare namespace App {
     namespace Domains {
+        namespace Card {
+            namespace DataObjects {
+                export type CardRequestData = {
+                    id: number
+                    child_id: number
+                    step: App.Enums.CardStepEnum
+                    fee: App.Enums.CardFeeEnum
+                    summary: string
+                }
+            }
+        }
         namespace CheckIn {
             namespace DataObjects {
                 export type AttendanceChildData = {
@@ -321,7 +332,11 @@ declare namespace App {
             | 'manage_classes'
             | 'check_in'
             | 'attendance'
+            | 'card_request'
+        export type CardFeeEnum = 'free' | 'paid' | 'not_paid'
         export type CardMatchEnum = 'exact' | 'several' | 'close' | 'none'
+        export type CardReasonEnum = 'lost' | 'damaged' | 'first_card'
+        export type CardStepEnum = 'asked' | 'approved' | 'printed' | 'given' | 'refused'
         export type CheckInResultEnum =
             'checked_in' | 'already_in' | 'graduated' | 'inactive' | 'needs_level'
         export type ChildStatusEnum = 'active' | 'inactive' | 'graduated'
@@ -463,6 +478,10 @@ declare namespace App {
                     role: App.Enums.RoleEnum
                     scope_type: App.Enums.ScopeTypeEnum
                     scope_id: number
+                }
+                export type CardRequestInput = {
+                    reason: App.Enums.CardReasonEnum
+                    note: string | null
                 }
                 export type CheckInChildInput = {
                     child_id: number

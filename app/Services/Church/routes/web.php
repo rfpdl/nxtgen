@@ -13,6 +13,7 @@ declare(strict_types=1);
 */
 
 use App\Services\Church\Http\Controllers\Attendance\Controller as AttendanceController;
+use App\Services\Church\Http\Controllers\CardRequest\Controller as CardRequestController;
 use App\Services\Church\Http\Controllers\Child\Controller as ChildController;
 use App\Services\Church\Http\Controllers\Door\Controller as DoorController;
 use App\Services\Church\Http\Controllers\Duplicate\Controller as DuplicateController;
@@ -40,6 +41,8 @@ Route::put('/children/{child}', [ChildController::class, 'update'])->whereNumber
 Route::put('/children/{child}/photo-consent', [ChildController::class, 'recordPhotoConsent'])->whereNumber('child')->name('church.children.photo-consent');
 Route::post('/children/{child}/photo', [ChildController::class, 'addPhoto'])->whereNumber('child')->name('church.children.photo');
 Route::put('/children/{child}/status', [ChildController::class, 'updateStatus'])->whereNumber('child')->name('church.children.status');
+// Name cards (DECISIONS 2026-10-29): staff who may open the family ask for a new card for a child (lost or damaged).
+Route::post('/children/{child}/card-requests', [CardRequestController::class, 'store'])->whereNumber('child')->name('church.card-requests.store');
 
 Route::get('/people', [PeopleController::class, 'index'])->name('church.people.index');
 Route::post('/people', [PeopleController::class, 'store'])->middleware('throttle:per-device')->name('church.people.store');

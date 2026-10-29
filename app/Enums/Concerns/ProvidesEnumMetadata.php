@@ -15,8 +15,13 @@ trait ProvidesEnumMetadata
 
     abstract public function color(): string;
 
-    /** @return list<array{value: string, label: string, color: string}> */
-    public static function toFrontend(): array
+    /**
+     * Every case — or only `$cases`, in their order, when a page offers a few of them (e.g. the reasons staff may pick).
+     *
+     * @param  list<self>|null  $cases
+     * @return list<array{value: string, label: string, color: string}>
+     */
+    public static function toFrontend(?array $cases = null): array
     {
         return array_map(
             fn (self $case): array => [
@@ -24,7 +29,7 @@ trait ProvidesEnumMetadata
                 'label' => $case->label(),
                 'color' => $case->color(),
             ],
-            self::cases(),
+            $cases ?? self::cases(),
         );
     }
 }

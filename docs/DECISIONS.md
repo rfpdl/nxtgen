@@ -4,6 +4,31 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-10-29 (name cards — lost cards, new cards, printing; Roy)
+
+- **Only staff file a Card request** (Lost or Damaged); a parent tells a Lifeshaper. Parents see nothing yet.
+- **The AED 10 fee is marked paid / not paid** by staff (cash at the desk); the first card is free; no online payment.
+- **Cards are printed from an Excel print list** shaped like the sheet's Barcode tab, so today's printing keeps working.
+- **An admin approves before printing**: Asked → Approved → Printed → Given (or Refused).
+- Claude, low-stakes (for Roy to confirm): every newly registered Child gets a free "First card" request
+  automatically (imported children already have cards — none made); one open request per Child; Approve needs paid
+  or free; marking Given is for any staff who may open the family (it happens at the desk).
+  Spec: `.planning/tasks/2026-10-29-name-cards/`.
+- Claude, low-stakes (issue 01, for Roy to confirm): **"New card…" sits in each child's card on the staff family
+  page**, under Attendance: tap it, pick Lost or Damaged (chips), an optional note (200 letters max), "Ask for a new
+  card". The card then shows a Pill "Card: Asked · not paid" (its colour from the fee alone — amber while not paid,
+  blue when paid or free; the step is plain words; the server sends the words once, for the Pill and messages) in
+  place of the button, until the request is Given or Refused. Filing again while one is open makes nothing and says
+  "Amara already has a new card on the way: Asked · not paid." A child of any status may get one. **The AED 10 is a
+  constant** (`CardReasonEnum::REPLACEMENT_FEE_MINOR`, in fils) until a church setting is needed. **One open request
+  per Child is a database rule**: `open_child_id` is a column MySQL works out from the step (the child while Asked,
+  Approved or Printed, else empty) with a unique key — closing a request frees the child with nothing for the app to
+  clear, and two staff filing at the same moment make one (tested with two real processes, each in a transaction).
+  The migration names the open steps itself (a run migration never changes); a schema test pins it to
+  `CardStepEnum::isOpen()` for every step. Each step keeps its own
+  when/who columns (approved, printed, given, refused + reason, paid) for issues 02–03. Who may file: the new
+  `card_request` access row, the same people as a child's photo (staff who can see the family).
+
 ## 2026-10-28 (night — slice 3 decisions; Roy)
 
 - **Child history: staff only, on the staff child page** (date, class, satellite, Squad, present). Parents don't see it yet.
