@@ -12,7 +12,7 @@
 | **Name cards** | Built, reviewed (two-axis + test review + Astra, which approves) and pushed: staff report a lost/damaged card, a free first card for every new child, the admin Cards page (paid, approve, refuse, printed, given), print lists with an Excel download — `tasks/2026-10-29-name-cards/` |
 | **Next step** | Roy tries roll call, child history, name-card scanning and the name cards module (`php artisan migrate`; Cards is in the admin menu). Then confirms the Claude calls in DECISIONS 2026-10-28 and 2026-10-29. Open: follow-up list (skipped for now), TODO #29 merge, #27 Moving-Up (before Feb), offline check-in |
 | **Waiting on Roy** | Laravel Cloud + mail provider + Registry CSV (TODO #23); "No group" filter yes/no (plan §13 q5); a real-iPhone photo try (TODO #16) |
-| **Gate** | `make check` green — 2240 Pest + 173 arch, 445 Vitest (447), PHPStan L10 · `make e2e` green — 377 runs on 8 breakpoint projects (phone 360/390 + Safari, tablet 720/768/1024, phone landscape, desktop), 2 skips |
+| **Gate** | `make check` green — 2240 Pest + 173 arch, 447 Vitest, PHPStan L10 · `make e2e` green — 377 runs on 8 breakpoint projects (phone 360/390 + Safari, tablet 720/768/1024, phone landscape, desktop), 2 skips |
 
 ## Where to look
 
