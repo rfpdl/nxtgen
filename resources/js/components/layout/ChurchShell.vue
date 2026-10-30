@@ -8,7 +8,7 @@ import { route } from 'ziggy-js'
 
 /**
  * The church staff frame (AppShell, the Bold look): Check in (the door, for every staff member), the Release 1
- * tools, People, Classes and Attendance (admins), Password, Switch and Sign out.
+ * tools, People, Classes, Attendance and Cards (admins), Password, Switch and Sign out.
  * Registering starts from the Families list's button, and possible duplicates from its "duplicates" filter
  * (DECISIONS 2026-10-17, after first look) — neither has a tab.
  * The bar names the page: `title` if given, else the menu item whose address the page is under, else the church.
@@ -38,6 +38,10 @@ const items = computed<ShellItem[]>(() => {
         nav?.can_see_attendance === true && {
             label: 'Attendance',
             href: route('church.attendance.show', slug),
+        },
+        nav?.can_manage_cards === true && {
+            label: 'Cards',
+            href: route('church.card-requests.index', slug),
         },
         { label: 'Password', href: route('account.password'), testid: 'backup-password' },
     ]

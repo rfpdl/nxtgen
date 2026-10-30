@@ -18,6 +18,15 @@ const form = reactive({
 vi.mock('@inertiajs/vue3', async (original) => ({
     ...(await import('@/tests/enumPage')).withEnums(await original<object>()),
     useForm: () => form,
+    Link: {
+        props: ['href', 'method', 'preserveScroll'],
+        template:
+            '<a :href="href" :data-method="method" :data-preserve-scroll="String(preserveScroll)"><slot /></a>',
+    },
+}))
+
+vi.mock('ziggy-js', () => ({
+    route: (name: string, params: unknown[]) => `/#${name}/${params.join('/')}`,
 }))
 
 const action = '/ccf/children/4/card-requests'
@@ -101,7 +110,10 @@ describe('ChildCardRequest', () => {
     it("shows an open request in the server's words instead of the button, amber only while not paid", () => {
         const mountWith = (fee: CardFee, summary: string) =>
             mount(ChildCardRequest, {
-                props: { request: { id: 9, child_id: 4, step: 'asked', fee, summary }, action },
+                props: {
+                    request: { id: 9, child_id: 4, step: 'asked', fee, summary, moves: [] },
+                    action,
+                },
             })
 
         const notPaid = mountWith('not_paid', 'Asked · not paid')
@@ -116,5 +128,41 @@ describe('ChildCardRequest', () => {
                     .classes(),
             ).toContain('bg-info-soft')
         }
+    })
+
+    it('offers "Given" when the server allows it — a PUT for this request, keeping the scroll', () => {
+        const printed = mount(ChildCardRequest, {
+            props: {
+                request: {
+                    id: 9,
+                    child_id: 4,
+                    step: 'printed',
+                    fee: 'paid',
+                    summary: 'Printed · paid',
+                    moves: ['give'],
+                },
+                action,
+            },
+        }).find('[data-testid="card-given"]')
+
+        expect(printed.text()).toBe('Given')
+        expect(printed.attributes('href')).toBe('/#church.card-requests.give/ccf/9')
+        expect(printed.attributes('data-method')).toBe('put')
+        expect(printed.attributes('data-preserve-scroll')).toBe('true')
+
+        const asked = mount(ChildCardRequest, {
+            props: {
+                request: {
+                    id: 9,
+                    child_id: 4,
+                    step: 'approved',
+                    fee: 'paid',
+                    summary: 'Approved · paid',
+                    moves: [],
+                },
+                action,
+            },
+        })
+        expect(asked.find('[data-testid="card-given"]').exists()).toBe(false)
     })
 })

@@ -31,7 +31,7 @@ use Illuminate\Database\Seeder;
  * (Graduated) — and a visiting Villa family at House Church (Pia). Birthdays differ per browser, so no two are
  * "possible duplicates". For Who's in (roll call), a Reyes family at CCF DXB with four Level 2 girls whose names are
  * the browser's own (ROLL_CALL_GIRLS): the browsers share one 1PM Session and its Squads, so each ticks its own. For
- * name cards, an Ocampo family of three boys with no Card request (CARD_CHILDREN).
+ * name cards, an Ocampo family of nine boys with no Card request (CARD_CHILDREN).
  */
 final class E2ESeeder extends Seeder
 {
@@ -53,11 +53,11 @@ final class E2ESeeder extends Seeder
     public const array SCAN_MIDDLE_NAMES = ['mobile-webkit' => 'Joy', 'mobile-chromium' => 'Kay', 'desktop-chromium' => 'Lee'];
 
     /**
-     * Each browser's Ocampo family at CCF DXB (name cards): imported, so no Card request — the card journey asks for a new
-     * card for the first of them still without one. Three, so a retried journey (CI retries once) finds a fresh child
-     * without a reseed, and the door's families stay untouched.
+     * Each browser's Ocampo family at CCF DXB (name cards): imported, so no Card request — each card journey asks for a
+     * new card for the first of them still without one. Nine, so the two card journeys (four children a run) and a
+     * retry (CI retries once) find fresh children without a reseed, and the door's families stay untouched.
      */
-    public const array CARD_CHILDREN = ['Jon', 'Kit', 'Ned'];
+    public const array CARD_CHILDREN = ['Jon', 'Kit', 'Ned', 'Rex', 'Sam', 'Tom', 'Ugo', 'Vic', 'Wes'];
 
     public function run(): void
     {
@@ -128,7 +128,7 @@ final class E2ESeeder extends Seeder
         $this->register($church, $dxb, new GuardianDetailsData(firstName: $first, lastName: 'Ocampo', relationship: RelationshipEnum::Mother, phone: "+97150600000{$day}", email: 'ocampo-'.mb_strtolower($first).'@nxtgen.test'), array_map(
             fn (string $name, int $month): ChildDetailsData => new ChildDetailsData(firstName: $name, middleName: null, lastName: 'Ocampo', nickname: $name, gender: GenderEnum::Boy, dateOfBirth: "2020-0{$month}-0{$day}", allergies: null),
             self::CARD_CHILDREN,
-            [2, 3, 4],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9],
         ));
     }
 

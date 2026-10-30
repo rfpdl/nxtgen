@@ -8,6 +8,22 @@ declare namespace App {
                     step: App.Enums.CardStepEnum
                     fee: App.Enums.CardFeeEnum
                     summary: string
+                    moves: App.Enums.CardMoveEnum[]
+                }
+                export type CardRequestRowData = {
+                    id: number
+                    child_name: string
+                    family_id: number
+                    family_name: string
+                    satellite: string
+                    reason_label: string
+                    note: string | null
+                    step: App.Enums.CardStepEnum
+                    step_label: string
+                    fee: App.Enums.CardFeeEnum
+                    fee_label: string
+                    refused_reason: string | null
+                    moves: App.Enums.CardMoveEnum[]
                 }
             }
         }
@@ -132,6 +148,7 @@ declare namespace App {
                     can_manage_people: boolean
                     can_manage_classes: boolean
                     can_see_attendance: boolean
+                    can_manage_cards: boolean
                 }
                 export type GrantOptionData = {
                     label: string
@@ -333,8 +350,11 @@ declare namespace App {
             | 'check_in'
             | 'attendance'
             | 'card_request'
+            | 'cards'
         export type CardFeeEnum = 'free' | 'paid' | 'not_paid'
+        export type CardListTabEnum = 'asked' | 'approved' | 'printed' | 'closed'
         export type CardMatchEnum = 'exact' | 'several' | 'close' | 'none'
+        export type CardMoveEnum = 'mark_paid' | 'approve' | 'refuse' | 'mark_printed' | 'give'
         export type CardReasonEnum = 'lost' | 'damaged' | 'first_card'
         export type CardStepEnum = 'asked' | 'approved' | 'printed' | 'given' | 'refused'
         export type CheckInResultEnum =
@@ -505,6 +525,9 @@ declare namespace App {
                 export type MarkPresentInput = {
                     present: boolean
                     revision: number
+                }
+                export type RefuseCardRequestInput = {
+                    reason: string
                 }
                 export type ResolveDuplicateInput = {
                     status: App.Enums.DuplicateStatusEnum

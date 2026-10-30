@@ -11,7 +11,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 /**
  * The rows of the access matrix (plan §3.2) that Release 1 serves. Each staff or parent Feature declares one
  * with #[AccessRow] (AccessRowTest); AccessScope enforces it; Feature tests prove it. Release 2 adds the
- * class (ManageClasses), check-in and report (Attendance) rows; name cards add CardRequest.
+ * class (ManageClasses), check-in and report (Attendance) rows; name cards add CardRequest and Cards.
  */
 #[TypeScript]
 enum AccessRowEnum: string implements HasEnumMetadata
@@ -38,6 +38,7 @@ enum AccessRowEnum: string implements HasEnumMetadata
     case CheckIn = 'check_in';
     case Attendance = 'attendance';
     case CardRequest = 'card_request';
+    case Cards = 'cards';
 
     /** The rule, in the matrix's words: who may. */
     public function label(): string
@@ -61,7 +62,8 @@ enum AccessRowEnum: string implements HasEnumMetadata
             self::ManageClasses => 'Classes (Schedules): see, add, edit and retire — church admin at any satellite; satellite admin at their own',
             self::CheckIn => 'Check children in at the door, and undo: anyone with a Role at that satellite (church-wide roles: any satellite); any child of the church',
             self::Attendance => 'Attendance (a Session\'s children by Squad) + Excel: church admin at any satellite; satellite admin at their own',
-            self::CardRequest => 'File a Card request (a lost or damaged name card) for a child: staff who can see the family',
+            self::CardRequest => 'File a Card request (a lost or damaged name card) for a child, and mark a printed card given at the desk: staff who can see the family',
+            self::Cards => 'Cards (name card requests): the page — admins, their satellites\' families (church admin: all); mark paid, approve, refuse, mark printed — church admin; admin of the family\'s home satellite',
             self::OwnFamily => 'The parent\'s own family: view, edit details, add/edit children (not status/Level)',
         };
     }

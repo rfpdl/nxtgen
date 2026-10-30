@@ -189,6 +189,26 @@ final readonly class AccessScope
         return $this->isChurchAdmin ? null : $this->adminSatelliteIds;
     }
 
+    /**
+     * The Cards page (name cards, DECISIONS 2026-10-29): church admins and satellite admins. WHICH requests each may
+     * see is cardSatelliteIds; which each may move (pay, approve, refuse, print) is canEditFamily on the child's family.
+     */
+    public function canManageCards(): bool
+    {
+        return $this->isAnyAdmin();
+    }
+
+    /**
+     * The satellites whose families' Card requests this person sees on Cards: null = every satellite (church admin);
+     * a satellite admin's own; nobody else's.
+     *
+     * @return list<int>|null
+     */
+    public function cardSatelliteIds(): ?array
+    {
+        return $this->isChurchAdmin ? null : $this->adminSatelliteIds;
+    }
+
     private function isAnyAdmin(): bool
     {
         return $this->isChurchAdmin || $this->adminSatelliteIds !== [];

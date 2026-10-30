@@ -43,6 +43,14 @@ Route::post('/children/{child}/photo', [ChildController::class, 'addPhoto'])->wh
 Route::put('/children/{child}/status', [ChildController::class, 'updateStatus'])->whereNumber('child')->name('church.children.status');
 // Name cards (DECISIONS 2026-10-29): staff who may open the family ask for a new card for a child (lost or damaged).
 Route::post('/children/{child}/card-requests', [CardRequestController::class, 'store'])->whereNumber('child')->name('church.card-requests.store');
+// Cards (name cards 03): admins see and move the requests by step; anyone who may open the family gives a printed one.
+Route::get('/card-requests', [CardRequestController::class, 'index'])->name('church.card-requests.index');
+Route::put('/card-requests/mark-all-printed', [CardRequestController::class, 'markAllPrinted'])->name('church.card-requests.mark-all-printed');
+Route::put('/card-requests/{cardRequest}/mark-paid', [CardRequestController::class, 'markPaid'])->whereNumber('cardRequest')->name('church.card-requests.mark-paid');
+Route::put('/card-requests/{cardRequest}/approve', [CardRequestController::class, 'approve'])->whereNumber('cardRequest')->name('church.card-requests.approve');
+Route::put('/card-requests/{cardRequest}/refuse', [CardRequestController::class, 'refuse'])->whereNumber('cardRequest')->name('church.card-requests.refuse');
+Route::put('/card-requests/{cardRequest}/mark-printed', [CardRequestController::class, 'markPrinted'])->whereNumber('cardRequest')->name('church.card-requests.mark-printed');
+Route::put('/card-requests/{cardRequest}/give', [CardRequestController::class, 'give'])->whereNumber('cardRequest')->name('church.card-requests.give');
 
 Route::get('/people', [PeopleController::class, 'index'])->name('church.people.index');
 Route::post('/people', [PeopleController::class, 'store'])->middleware('throttle:per-device')->name('church.people.store');

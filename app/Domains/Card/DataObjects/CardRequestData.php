@@ -6,6 +6,7 @@ namespace App\Domains\Card\DataObjects;
 
 use App\Data\Models\CardRequest;
 use App\Enums\CardFeeEnum;
+use App\Enums\CardMoveEnum;
 use App\Enums\CardStepEnum;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -18,12 +19,17 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 #[TypeScript]
 final class CardRequestData extends Data
 {
+    /** The moves made from a child's card on the family page — by any staff who may open it, at the desk. */
+    private const array DESK_MOVES = [CardMoveEnum::Give];
+
     public function __construct(
         public int $id,
         public int $child_id,
         public CardStepEnum $step,
         public CardFeeEnum $fee,
         public string $summary,
+        /** @var list<CardMoveEnum> the moves offered at the desk now: Give, once printed (the rest are on Cards) */
+        public array $moves,
     ) {}
 
     public static function fromModel(CardRequest $request): self
@@ -36,6 +42,7 @@ final class CardRequestData extends Data
             step: $request->step,
             fee: $fee,
             summary: "{$request->step->label()} · {$fee->label()}",
+            moves: array_values(array_filter($request->moves(), fn (CardMoveEnum $m): bool => in_array($m, self::DESK_MOVES, true))),
         );
     }
 }

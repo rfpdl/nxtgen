@@ -28,6 +28,7 @@ every staff, parent and public page is on the kit (issues 02 and 03 of `.plannin
 | Notice         | atom   | A short message in the page: `danger` (an alert), `warning` (check this) or `info`, bold on a soft tint — e.g. a name card that matched no one                                 |
 | Pill           | atom   | Small label: a `level` (Level: number + name) in the age-level chart's colours (tint + dot; says the name by default), or `danger` / status / neutral                          |
 | SectionHeading | atom   | A part of a page's heading: `h2` under the PageHeader, or a smaller `h3` (`level="3"`) inside a card                                                                           |
+| LinkTabs       | atom   | Tabs that are pages: a named `nav` of links, the current one marked and pressed in; two a row on a phone, one row of equal tabs wider — door, Cards                            |
 | RowList        | atom   | A card of padded rows with a line between them; `href` makes each whole row a link ending in ›, `#after` sits outside it; `plain`                                              |
 | EmailText      | atom   | An email that breaks only after `@` `.` `-` `_` (`<wbr>`), so it never splits mid-word on a phone                                                                              |
 | PageHeader     | atom   | A page's one `h1`, a `sub` line, its own buttons (`#actions`)                                                                                                                  |
@@ -38,44 +39,45 @@ every staff, parent and public page is on the kit (issues 02 and 03 of `.plannin
 
 ## Everything else
 
-| Component               | Layer    | Purpose                                                                                                                                     |
-| ----------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| FlashBanner             | molecule | The server's success/error message, sticky at the top; errors loud, successes quiet                                                         |
-| ChildFieldset           | molecule | The fields for one child (a `ChildInput` draft); boy/girl from the page's `enums.gender` (`useEnum`)                                        |
-| RegisterFamilyForm      | organism | The registration form (parents and staff): parent, other parents/guardians, family, children, consent                                       |
-| FamilyChildCard         | molecule | One of the parent's own children on the family page; nickname first, allergy warning                                                        |
-| AddChildForm            | organism | "Add a child" on the family page, reusing ChildFieldset                                                                                     |
-| ChurchShell             | layout   | Church staff frame on AppShell: Check in, Families, Children, QR poster, People/Classes/Attendance (admins), Password; names the page       |
-| FamilySearchResultCard  | molecule | A church-wide "already registered?" hit (and each side of a possible duplicate): masked email, add-a-child                                  |
-| StaffMemberCard         | molecule | One person who serves, with their roles; Remove only where the viewer may                                                                   |
-| AddStaffForm            | organism | "Add someone": name, email, one role from the server's allowed choices                                                                      |
-| SignOutButton           | atom     | "Sign out" (POST /logout) for every signed-in page: staff menu, family page, landing pages                                                  |
-| GuardianFieldset        | molecule | A parent's own fields (+ email on registration only), one ministry; `other` words it for another guardian                                   |
-| FamilyFieldset          | molecule | The family's fields (satellite, area, FB, DGroup, lifestage); shared by registration and editing                                            |
-| FamilyDetailsForm       | organism | "Edit family details": GuardianFieldset (no email) + OtherGuardiansFieldset + FamilyFieldset, PUT                                           |
-| EditChildForm           | organism | "Edit {child}'s details": ChildFieldset from what is saved, PUT to the given action; never status/Level                                     |
-| RegistrationListFilters | molecule | Families + children lists: search, satellite/status/Level (+ unconfirmed/duplicates with familyToggles); emits address params               |
-| SwitchLink              | atom     | "Switch" between My family / Serve (or churches): only when there is more than one place to go                                              |
-| PasswordLoginForm       | organism | "Use a password instead" on sign-in: the staff backup, collapsed by default (a link), then a Card of TextFields + Sign in                   |
-| ChildPhotoForm          | organism | A child's photo: take (camera) or choose; parent agrees/takes back consent, staff only after consent                                        |
-| ChildAdminControls      | molecule | Staff status (`enums.child_status`) + Level pickers inside a child's card; a refused Level shows on that child                              |
-| ResendLinkButton        | atom     | "Send the confirmation link again" (a secondary AppButton that POSTs) for an unconfirmed family: family page, lists, door search            |
-| CorrectEmailForm        | organism | "Typed the email wrong? Correct it" on the family page (PUT): TextField + "Save email"; cleared once saved                                  |
-| Pager                   | molecule | "Page 2 of 3" with Previous / Next for the registration lists; hidden when one page holds all                                               |
-| OtherGuardiansFieldset  | organism | The family's other parents/guardians (no email): add / remove (saved ones reported), via GuardianFieldset                                   |
-| PossibleDuplicateCard   | organism | A possible duplicate on a family's page: newer and earlier side by side, "Not the same" / "Same family"                                     |
-| ScheduleCard            | molecule | One class (Schedule) on the Classes page: name, day and times; Edit, and Retire after a second tap                                          |
-| AttendanceSquadTable    | molecule | One Squad of a Session on Attendance: name, count, head count + warning; table (sm+) or stacked rows (phone): names, time, who, present     |
-| ScheduleForm            | organism | Add (POST, with `satelliteId`) or edit (PUT, from a saved `schedule`) a class: name, day, times; `done` on save or cancel                   |
-| SatelliteSchedules      | organism | One satellite on the Classes page: its classes, one edited in place at a time, "+ Add a class" opening the add form                         |
-| DoorChildRow            | molecule | A door child: full-height tick zone; the rest opens (Disclosure) health, status, Level, family link; ✓ + Undo; make active; Level           |
-| ChildHealthPanel        | molecule | A child's health details inside their opened door row; allergies first and loud, or "Allergies: none"                                       |
-| DoorFamilyCard          | organism | A family found at the door: its children (DoorChildRow), "Check in N children" (POST), Undo (PUT); a scanned card's child pre-ticked        |
-| DoorCheckedInList       | molecule | Who is in the chosen class today at the door, newest first: nickname, Squad, time, Undo; empty state says how to start                      |
-| DoorTabs                | molecule | The door's two tabs, Check in · Who's in, on both pages; each keeps the class (`?class=`); the current one marked                           |
-| WhosInSquadCard         | molecule | One Squad on Who's in: Level Pill, "N of M present"; each child a whole-row tick: nickname, allergy flag, first + last name; its head count |
-| DoorClassPicker         | molecule | The top of both door tabs: "CCF DXB · Sat 31 Oct" and today's classes as chips (satellite named when several), or no-class note             |
-| HeadCountForm           | molecule | A Squad's head count on Who's in: number (the count checked in at first) + Confirm; "✓ Confirmed 13:20 by Joy (4)"; mismatch + Not marked   |
-| ChildAttendanceList     | molecule | A child's attendance on the staff family page, newest first: date · class · satellite · Squad, present or not; last 12, "Show all"          |
-| ScanCardSheet           | organism | "Scan card" at the door: a bottom sheet (reka-ui Dialog) with the back camera reading a name card's Code 39; refused → type instead         |
-| ChildCardRequest        | organism | A child's name card on the staff family page: "Card: Asked · not paid" (Pill) for an open request, else "New card…" → Lost/Damaged + note   |
+| Component               | Layer    | Purpose                                                                                                                                              |
+| ----------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FlashBanner             | molecule | The server's success/error message, sticky at the top; errors loud, successes quiet                                                                  |
+| ChildFieldset           | molecule | The fields for one child (a `ChildInput` draft); boy/girl from the page's `enums.gender` (`useEnum`)                                                 |
+| RegisterFamilyForm      | organism | The registration form (parents and staff): parent, other parents/guardians, family, children, consent                                                |
+| FamilyChildCard         | molecule | One of the parent's own children on the family page; nickname first, allergy warning                                                                 |
+| AddChildForm            | organism | "Add a child" on the family page, reusing ChildFieldset                                                                                              |
+| ChurchShell             | layout   | Church staff frame on AppShell: Check in, Families, Children, QR poster, People/Classes/Attendance (admins), Password; names the page                |
+| FamilySearchResultCard  | molecule | A church-wide "already registered?" hit (and each side of a possible duplicate): masked email, add-a-child                                           |
+| StaffMemberCard         | molecule | One person who serves, with their roles; Remove only where the viewer may                                                                            |
+| AddStaffForm            | organism | "Add someone": name, email, one role from the server's allowed choices                                                                               |
+| SignOutButton           | atom     | "Sign out" (POST /logout) for every signed-in page: staff menu, family page, landing pages                                                           |
+| GuardianFieldset        | molecule | A parent's own fields (+ email on registration only), one ministry; `other` words it for another guardian                                            |
+| FamilyFieldset          | molecule | The family's fields (satellite, area, FB, DGroup, lifestage); shared by registration and editing                                                     |
+| FamilyDetailsForm       | organism | "Edit family details": GuardianFieldset (no email) + OtherGuardiansFieldset + FamilyFieldset, PUT                                                    |
+| EditChildForm           | organism | "Edit {child}'s details": ChildFieldset from what is saved, PUT to the given action; never status/Level                                              |
+| RegistrationListFilters | molecule | Families + children lists: search, satellite/status/Level (+ unconfirmed/duplicates with familyToggles); emits address params                        |
+| SwitchLink              | atom     | "Switch" between My family / Serve (or churches): only when there is more than one place to go                                                       |
+| PasswordLoginForm       | organism | "Use a password instead" on sign-in: the staff backup, collapsed by default (a link), then a Card of TextFields + Sign in                            |
+| ChildPhotoForm          | organism | A child's photo: take (camera) or choose; parent agrees/takes back consent, staff only after consent                                                 |
+| ChildAdminControls      | molecule | Staff status (`enums.child_status`) + Level pickers inside a child's card; a refused Level shows on that child                                       |
+| ResendLinkButton        | atom     | "Send the confirmation link again" (a secondary AppButton that POSTs) for an unconfirmed family: family page, lists, door search                     |
+| CorrectEmailForm        | organism | "Typed the email wrong? Correct it" on the family page (PUT): TextField + "Save email"; cleared once saved                                           |
+| Pager                   | molecule | "Page 2 of 3" with Previous / Next for the registration lists; hidden when one page holds all                                                        |
+| OtherGuardiansFieldset  | organism | The family's other parents/guardians (no email): add / remove (saved ones reported), via GuardianFieldset                                            |
+| PossibleDuplicateCard   | organism | A possible duplicate on a family's page: newer and earlier side by side, "Not the same" / "Same family"                                              |
+| ScheduleCard            | molecule | One class (Schedule) on the Classes page: name, day and times; Edit, and Retire after a second tap                                                   |
+| AttendanceSquadTable    | molecule | One Squad of a Session on Attendance: name, count, head count + warning; table (sm+) or stacked rows (phone): names, time, who, present              |
+| ScheduleForm            | organism | Add (POST, with `satelliteId`) or edit (PUT, from a saved `schedule`) a class: name, day, times; `done` on save or cancel                            |
+| SatelliteSchedules      | organism | One satellite on the Classes page: its classes, one edited in place at a time, "+ Add a class" opening the add form                                  |
+| DoorChildRow            | molecule | A door child: full-height tick zone; the rest opens (Disclosure) health, status, Level, family link; ✓ + Undo; make active; Level                    |
+| ChildHealthPanel        | molecule | A child's health details inside their opened door row; allergies first and loud, or "Allergies: none"                                                |
+| DoorFamilyCard          | organism | A family found at the door: its children (DoorChildRow), "Check in N children" (POST), Undo (PUT); a scanned card's child pre-ticked                 |
+| DoorCheckedInList       | molecule | Who is in the chosen class today at the door, newest first: nickname, Squad, time, Undo; empty state says how to start                               |
+| DoorTabs                | molecule | The door's two tabs, Check in · Who's in, on both pages; each keeps the class (`?class=`); the current one marked                                    |
+| WhosInSquadCard         | molecule | One Squad on Who's in: Level Pill, "N of M present"; each child a whole-row tick: nickname, allergy flag, first + last name; its head count          |
+| DoorClassPicker         | molecule | The top of both door tabs: "CCF DXB · Sat 31 Oct" and today's classes as chips (satellite named when several), or no-class note                      |
+| HeadCountForm           | molecule | A Squad's head count on Who's in: number (the count checked in at first) + Confirm; "✓ Confirmed 13:20 by Joy (4)"; mismatch + Not marked            |
+| ChildAttendanceList     | molecule | A child's attendance on the staff family page, newest first: date · class · satellite · Squad, present or not; last 12, "Show all"                   |
+| ScanCardSheet           | organism | "Scan card" at the door: a bottom sheet (reka-ui Dialog) with the back camera reading a name card's Code 39; refused → type instead                  |
+| ChildCardRequest        | organism | A child's name card on the staff family page: "Card: Asked · not paid" (Pill) for an open request, else "New card…" → Lost/Damaged + note            |
+| CardRequestRow          | organism | One Card request on Cards: child's full name, family (link) · satellite, reason — note, fee Pill; the moves the server sends (PUT), Refuse… asks why |

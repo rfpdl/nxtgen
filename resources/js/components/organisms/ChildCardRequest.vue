@@ -3,16 +3,19 @@ import AppButton from '@/components/atoms/AppButton.vue'
 import ChoiceChips from '@/components/atoms/ChoiceChips.vue'
 import Pill from '@/components/atoms/Pill.vue'
 import TextArea from '@/components/atoms/TextArea.vue'
+import { useChurch } from '@/composables/useChurch'
 import { useEnum } from '@/composables/useEnum'
 import type { CardFee, CardRequest, CardRequestInput, Draft } from '@/types'
 import { useForm } from '@inertiajs/vue3'
 import { computed, ref, useId } from 'vue'
+import { route } from 'ziggy-js'
 
 /**
  * A child's name card on the staff family page (name cards issue 01, DECISIONS 2026-10-29). With an open Card request
  * it says where it is in the server's words — "Card: Asked · not paid"; otherwise "New card…" opens a picker: Lost or Damaged (the page's
  * `enums.card_reason`) and an optional note, posted to `action`. Saved, the page comes back with the request and the
- * picker closes. Staff only: a parent's page never has it.
+ * picker closes. When the server offers it (`moves`: once printed), "Given" beside the Pill (at the desk, name cards 03) closes it. Staff only:
+ * a parent's page never has it.
  */
 const props = defineProps<{ request: CardRequest | null; action: string }>()
 
@@ -23,6 +26,7 @@ const FEE_VARIANTS: Record<CardFee, 'warning' | 'info'> = {
     free: 'info',
 }
 
+const church = useChurch()
 const { options: reasons } = useEnum('card_reason')
 const chips = computed(() =>
     reasons.value.map((r) => ({
@@ -49,9 +53,17 @@ function submit(): void {
 
 <template>
     <div class="border-border flex flex-col gap-3 border-b-2 pb-3" data-testid="child-card-request">
-        <p v-if="request">
+        <p v-if="request" class="flex flex-wrap items-center gap-3">
             <Pill :variant="FEE_VARIANTS[request.fee]" data-testid="card-request-step"
                 >Card: {{ request.summary }}</Pill
+            >
+            <AppButton
+                v-if="request.moves.includes('give')"
+                :href="route('church.card-requests.give', [church.slug, request.id])"
+                method="put"
+                :preserve-scroll="true"
+                data-testid="card-given"
+                >Given</AppButton
             >
         </p>
         <AppButton

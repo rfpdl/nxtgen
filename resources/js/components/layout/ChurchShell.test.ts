@@ -12,6 +12,7 @@ const page = {
             can_manage_people: false,
             can_manage_classes: false,
             can_see_attendance: false,
+            can_manage_cards: false,
         },
     },
 }
@@ -28,6 +29,7 @@ const PATHS: Record<string, string> = {
     'church.poster': 'poster',
     'church.people.index': 'people',
     'church.schedules.index': 'classes',
+    'church.card-requests.index': 'cards',
     'church.attendance.show': 'attendance',
 }
 
@@ -109,6 +111,15 @@ describe('ChurchShell', () => {
 
         page.props.church_nav.can_see_attendance = true
         expect(mount(ChurchShell).text()).toContain('Attendance')
+    })
+
+    it('shows Cards only to someone who may manage cards — admins', () => {
+        page.props.church_nav.can_manage_cards = false
+        expect(mount(ChurchShell).text()).not.toContain('Cards')
+
+        page.props.church_nav.can_manage_cards = true
+        expect(mount(ChurchShell).text()).toContain('Cards')
+        page.props.church_nav.can_manage_cards = false
     })
 
     it('puts the menu behind a Menu button on a phone, as a sheet of big buttons', async () => {

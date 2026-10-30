@@ -34,6 +34,25 @@ describes the design; this records the choices that shaped or changed it.
   (`RegistrationSourceEnum::getsFirstCard()`); no backfill. So a newly registered child shows "Card: Asked · free" on
   the staff family page at once, and "New card…" appears only once that first card is Given or Refused — a child who
   loses the first card before it is printed simply keeps the one request.
+- Claude, low-stakes (issue 03, for Roy to confirm): **Cards is in the staff menu for every admin**: a church admin
+  sees every satellite's requests, a satellite admin their own satellite's families' (Lifeshapers have no page). Tabs
+  Asked · Approved · Printed · Given or refused; oldest first while there is something to do (first asked, first
+  done), the closed tab newest filed first; 50 a page. Each row: the child's full name (as the card spells it), the
+  family (its page a tap away) · satellite, reason — note, and the fee ("AED 10 · not paid" amber, "AED 10 · paid",
+  "Free"). Moves: **Mark paid** while open and not paid; **Approve** only once paid or free (the button shows only
+  then; an unpaid one is refused with "mark the AED 10 paid first"); **Refuse…** asks why (required), and only before
+  printing; **Mark printed** one, or **Mark all printed** — every approved card the admin sees (none: said plainly);
+  **Given** on the Printed tab, and beside the Pill on the child's card for any staff who may open the family. Each
+  move is one conditional UPDATE (id, church, the step it starts from): a stale or second move changes nothing and
+  says "Amara's card has already moved on: Approved · paid." Moving a request needs an admin over the family's home
+  satellite (as editing it).
+- Claude, low-stakes (issue 03 review, for Roy to confirm): **Cards has a "Find a child" search** — every word on
+  the child's names (as the Families and Children lists read a search), on the tab chosen, kept when switching tabs or
+  pages (`?tab=`, `?q=`). **Which move is allowed at which step lives in one place** (`CardMoveEnum`): the move Jobs'
+  conditions and the buttons both come from it — the server sends each row's moves. A free first card answers "Mark
+  paid" with "Amara's first card is free — nothing to pay." Money reads "AED 10", "AED 10.50" (fils never dropped).
+  Cards' address is `/card-requests`; its moves are `…/mark-paid`, `approve`, `refuse`, `mark-printed`, `give`, and
+  `mark-all-printed`.
 
 ## 2026-10-28 (night — slice 3 decisions; Roy)
 

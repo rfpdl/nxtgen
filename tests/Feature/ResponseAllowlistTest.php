@@ -33,7 +33,7 @@ const SHARED = ['auth.can_switch', 'auth.user.id', 'auth.user.name', 'church.nam
 const FRAME = [...SHARED, 'church_nav'];
 
 /** A staff page: the staff menu's switches (People, Classes, Attendance). Duplicates has no tab (DECISIONS 2026-10-17, after first look). */
-const STAFF_FRAME = [...SHARED, 'church_nav.can_manage_classes', 'church_nav.can_manage_people', 'church_nav.can_see_attendance'];
+const STAFF_FRAME = [...SHARED, 'church_nav.can_manage_cards', 'church_nav.can_manage_classes', 'church_nav.can_manage_people', 'church_nav.can_see_attendance'];
 
 /** Health, photo and contact fields: never on a list or search page, whoever asks — only the allergy yes/no. */
 const NEVER_ON_LISTS = '/photo|allerg|illness|fear|dislike|guardian_notes|phone|notes|ministries/';
@@ -73,7 +73,7 @@ const FAMILY_VIEW = [
     'attendance.*.child_id', 'attendance.*.check_ins.*.class', 'attendance.*.check_ins.*.date', 'attendance.*.check_ins.*.id',
     'attendance.*.check_ins.*.present', 'attendance.*.check_ins.*.satellite', 'attendance.*.check_ins.*.squad',
     // Each child's open Card request (name cards) — staff only: its step and whether it is paid. No note or reason.
-    'card_requests.*.child_id', 'card_requests.*.fee', 'card_requests.*.id', 'card_requests.*.step', 'card_requests.*.summary',
+    'card_requests.*.child_id', 'card_requests.*.fee', 'card_requests.*.id', 'card_requests.*.moves', 'card_requests.*.step', 'card_requests.*.summary',
 ];
 
 /** The staff family page, with a Card request open for the child (so its fields are listed, not just an empty key). */
@@ -240,6 +240,20 @@ describe('a family opened by staff', function (): void {
             ->and([data_get($props, 'details'), data_get($props, 'primary'), data_get($props, 'satellites')])->toBe([null, null, []])
             ->and(data_get($props, 'family.email'))->toBe('ja•••@example.com');
     })->with(actors(Actor::ChurchLifeshaper, Actor::HomeLifeshaper, Actor::BothHats, Actor::HomeParentLifeshaper));
+});
+
+describe('Cards, for admins', function (): void {
+    it('gives an admin each request\'s child, family, satellite, reason, note, step and fee — never a health field or contact @story#134', function (Actor $actor): void {
+        $props = propsOf($actor, function (AccessWorld $w): string {
+            CardRequest::factory()->for($w->child)->create(['note' => 'Lost at the park']);
+
+            return '/ccf/card-requests';
+        });
+
+        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, ['enums.card_move', 'enums.card_tab', 'q', 'tab', 'pagination.last_page', 'pagination.page', 'pagination.per_page', 'pagination.total'], prefixed('requests.*', [
+            'child_name', 'family_id', 'family_name', 'fee', 'fee_label', 'id', 'moves.*', 'note', 'reason_label', 'refused_reason', 'satellite', 'step', 'step_label',
+        ])))->and(forbiddenOnLists($props))->toBe([]);
+    })->with(actors(Actor::ChurchAdmin, Actor::HomeAdmin));
 });
 
 describe('the registration lists', function (): void {

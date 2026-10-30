@@ -99,10 +99,10 @@ export const SCAN = {
 
 /**
  * Name cards: each browser project's Ocampo family at CCF DXB (E2ESeeder::CARD_CHILDREN), parent DOOR.guardians' name —
- * imported, so none has a Card request. The card journey takes the first still offering "New card…", so a retry uses
- * the next child without a reseed.
+ * imported, so none has a Card request. Each card journey takes the first still offering "New card…" (support/cards.ts),
+ * so a retry uses the next child without a reseed.
  */
 export const CARDS = {
     surname: 'Ocampo',
-    children: ['Jon', 'Kit', 'Ned'],
+    children: ['Jon', 'Kit', 'Ned', 'Rex', 'Sam', 'Tom', 'Ugo', 'Vic', 'Wes'],
 } as const

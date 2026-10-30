@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Data\Models;
 
 use App\Enums\CardFeeEnum;
+use App\Enums\CardMoveEnum;
 use App\Enums\CardReasonEnum;
 use App\Enums\CardStepEnum;
 use Carbon\CarbonImmutable;
 use Database\Factories\CardRequestFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -75,9 +77,27 @@ final class CardRequest extends Model
         return $this->belongsTo(Child::class);
     }
 
+    /**
+     * Only requests whose child's family lives at one of `$satelliteIds` — null = every satellite (a church admin):
+     * the requests an admin sees on Cards, and marks printed all at once.
+     *
+     * @param  Builder<self>  $query
+     * @param  list<int>|null  $satelliteIds
+     */
+    public function scopeOfFamiliesAt(Builder $query, ?array $satelliteIds): void
+    {
+        $query->when($satelliteIds !== null, fn (Builder $q) => $q->whereHas('child.family', fn (Builder $f) => $f->whereIn('home_satellite_id', $satelliteIds ?? [])));
+    }
+
     /** Where the fee stands: free (a first card), paid, or not paid. */
     public function fee(): CardFeeEnum
     {
         return CardFeeEnum::of($this->fee_minor, $this->paid_at);
+    }
+
+    /** @return list<CardMoveEnum> the moves it may make now (CardMoveEnum is their one rule) */
+    public function moves(): array
+    {
+        return CardMoveEnum::allowedFor($this->step, $this->fee());
     }
 }

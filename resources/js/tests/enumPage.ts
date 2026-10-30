@@ -40,11 +40,29 @@ export const enums: Required<EnumProps> = {
         { value: 'lost', label: 'Lost', color: 'muted' },
         { value: 'damaged', label: 'Damaged', color: 'muted' },
     ],
+    card_tab: [
+        { value: 'asked', label: 'Asked', color: 'muted' },
+        { value: 'approved', label: 'Approved', color: 'muted' },
+        { value: 'printed', label: 'Printed', color: 'muted' },
+        { value: 'closed', label: 'Given or refused', color: 'muted' },
+    ],
+    card_move: [
+        { value: 'mark_paid', label: 'Mark paid', color: 'muted' },
+        { value: 'approve', label: 'Approve', color: 'muted' },
+        { value: 'refuse', label: 'Refuse…', color: 'muted' },
+        { value: 'mark_printed', label: 'Mark printed', color: 'muted' },
+        { value: 'give', label: 'Given', color: 'muted' },
+    ],
 }
 
-/** Inertia as the real module, except that its page carries `enums`. */
+/** The page's church, for a component that builds a route with `useChurch()`. */
+export const church = { name: 'CCF', slug: 'ccf' }
+
+/** Inertia as the real module, except that its page carries `enums` (and the church). */
 export function withEnums<T extends object>(
     inertia: T,
-): T & { usePage: () => { props: { enums: Required<EnumProps> } } } {
-    return { ...inertia, usePage: () => ({ props: { enums } }) }
+): T & {
+    usePage: () => { props: { enums: Required<EnumProps>; church: typeof church } }
+} {
+    return { ...inertia, usePage: () => ({ props: { enums, church } }) }
 }

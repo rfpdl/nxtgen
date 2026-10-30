@@ -244,6 +244,24 @@ it('shows Attendance to admins — a church admin every satellite, a satellite a
         ->and([$lifeshaper->canSeeAttendance(), $lifeshaper->attendanceSatelliteIds()])->toBe([false, []]);
 });
 
+it('opens Cards to admins — a church admin every satellite\'s requests, a satellite admin their own — and never to a Lifeshaper', function (): void {
+    ['church' => $church, 'htc' => $htc] = fx();
+    $scopeOf = function (RoleEnum $role, bool $churchWide) use ($church, $htc) {
+        $user = User::factory()->create();
+        grantRole($user, $role, $churchWide ? atChurch($church) : atSatellite($htc));
+
+        return (new GetAccessScopeJob(user: $user, church: $church))->handle();
+    };
+
+    $all = $scopeOf(RoleEnum::Admin, true);
+    $own = $scopeOf(RoleEnum::Admin, false);
+    $lifeshaper = $scopeOf(RoleEnum::Lifeshaper, true);
+
+    expect([$all->canManageCards(), $all->cardSatelliteIds()])->toBe([true, null])
+        ->and([$own->canManageCards(), $own->cardSatelliteIds()])->toBe([true, [$htc->id]])
+        ->and([$lifeshaper->canManageCards(), $lifeshaper->cardSatelliteIds()])->toBe([false, []]);
+});
+
 it('lets anyone with a Role at a satellite check children in there; a church-wide Role anywhere', function (RoleEnum $role, string $where, bool $atHtc, bool $atHouse): void {
     ['church' => $church, 'htc' => $htc, 'house' => $house] = fx();
     $user = User::factory()->create();

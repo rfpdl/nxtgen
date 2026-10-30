@@ -1,14 +1,7 @@
 import { expect, test } from '@playwright/test'
+import { askForNewCard, freshCardChild, openCardFamily } from '../support/cards'
 import { registerAndConfirm } from '../support/forms'
-import {
-    CARDS,
-    CHURCH,
-    DOOR,
-    SATELLITES,
-    sessionFile,
-    uniqueSurname,
-    type DoorProject,
-} from '../support/world'
+import { CHURCH, SATELLITES, sessionFile, uniqueSurname } from '../support/world'
 
 /*
  * Name cards (DECISIONS 2026-10-29). Issue 02: a parent registers Amara, and her family page shows staff her free first
@@ -50,31 +43,12 @@ test('a newly registered child has a free first card asked for; staff ask for a 
         await expect(amara.getByTestId('card-request-step')).toHaveText('Card: Asked · free')
         await expect(amara.getByTestId('new-card')).toHaveCount(0)
 
-        // Issue 01: an Ocampo child lost his card — the first of this browser's Ocampo boys still without a request, so a
-        // retried run (no reseed) takes the next one.
-        const guardian = DOOR.guardians[info.project.name as DoorProject]
-        await desk.goto(`/${CHURCH}/families?q=${guardian} ${CARDS.surname}`)
-        await desk
-            .getByTestId('family-row')
-            .filter({ hasText: `${guardian} ${CARDS.surname}` })
-            .getByRole('link')
-            .click()
-        const fresh = desk
-            .getByTestId('family-child')
-            .filter({ has: desk.getByTestId('new-card') })
-            .first()
-        const name =
-            (await fresh.getByRole('heading', { level: 3 }).first().textContent())?.trim() ?? ''
-        expect(CARDS.children).toContain(name)
+        // Issue 01: an Ocampo boy lost his card — the first still without a request (support/cards.ts).
+        await openCardFamily(desk, info.project.name)
+        const name = await freshCardChild(desk)
         const kid = desk.getByTestId('family-child').filter({ hasText: name })
-        await kid.getByTestId('new-card').click()
-        await kid.getByTestId('card-reason-lost').click()
-        await kid.getByTestId('card-note').fill('Lost at the park')
-        await kid.getByTestId('card-request-submit').click()
+        await askForNewCard(desk, name, 'lost', 'Lost at the park')
 
-        await expect(desk.getByTestId('flash-success')).toContainText(
-            `A new card for ${name} is asked for.`,
-        )
         await expect(kid.getByTestId('card-request-step')).toHaveText('Card: Asked · not paid')
         await expect(kid.getByTestId('new-card')).toHaveCount(0)
 

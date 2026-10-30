@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * A typed search, read as words (issue 04: "Reyes" is common, so "Ana Reyes" must narrow it). The ONE reading behind
- * the door, the Families and Children lists and staff registration:
+ * the door, the Families and Children lists, Cards and staff registration:
  *
  * - words are split on any Unicode space (a pasted non-breaking one too); a word under two characters says too little
  *   and is skipped; only the first five are read, so a long paste cannot make a query of dozens of joins;
