@@ -1,6 +1,6 @@
 # Name cards — lost cards, new cards, printing
 
-Status: ready-for-agent
+Status: resolved
 Decided: Roy 2026-10-29: staff only file a request (parents tell a Lifeshaper); the AED 10 fee is marked paid / not
 paid (cash at the desk, first card free, no online payment); cards are printed from an Excel print list shaped like
 the sheet's Barcode tab; an admin approves before printing: Asked → Approved → Printed → Given.
