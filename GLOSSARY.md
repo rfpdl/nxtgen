@@ -61,6 +61,12 @@ Damaged, or First card (free; a lost or damaged card is AED 10, marked paid at t
 request. Staff file it; parents tell a Lifeshaper.
 _Avoid_: ID request, ticket, order
 
+**Print list**:
+The approved Card requests an admin put on one list to print — exactly those, kept as they were when the list was made
+(nothing approved later joins it). Downloaded as Excel in the shape of the sheet's Barcode tab, and marked printed
+together. In code: `PrintList`.
+_Avoid_: batch, print run, export
+
 **Attendance**:
 The admins' report of a Session: the Children checked in, by Squad, with counts — on screen and as Excel.
 _Avoid_: Session report, register (and "attendance" for the act of checking in — that is a Check-in)

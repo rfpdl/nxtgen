@@ -1,9 +1,10 @@
 import Index from '@/pages/Church/Cards/Index.vue'
-import type { CardListTab, CardRequestRow } from '@/types'
+import type { CardListTab, CardRequestRow, PrintList } from '@/types'
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const gets: { url: string; data: unknown }[] = []
+const posts: { url: string; data: unknown; options: unknown }[] = []
 
 vi.mock('@inertiajs/vue3', async (original) => ({
     ...(await import('@/tests/enumPage')).withEnums(await original<object>()),
@@ -12,7 +13,10 @@ vi.mock('@inertiajs/vue3', async (original) => ({
         props: ['href', 'method'],
         template: '<a :href="href" :data-method="method"><slot /></a>',
     },
-    router: { get: (url: string, data: unknown) => gets.push({ url, data }) },
+    router: {
+        get: (url: string, data: unknown) => gets.push({ url, data }),
+        post: (url: string, data: unknown, options: unknown) => posts.push({ url, data, options }),
+    },
 }))
 
 vi.mock('ziggy-js', () => ({
@@ -21,18 +25,28 @@ vi.mock('ziggy-js', () => ({
 
 const row = { id: 9 } as CardRequestRow
 
-function page(tab: CardListTab, requests: CardRequestRow[], q: string | null = null, lastPage = 1) {
+const list: PrintList = { id: 7, made: 'Sat 31 Oct 10:31', made_by: 'Grace', cards: 2, to_print: 2 }
+
+function page(
+    tab: CardListTab,
+    requests: CardRequestRow[],
+    q: string | null = null,
+    lastPage = 1,
+    printLists: PrintList[] = [],
+) {
     return mount(Index, {
         props: {
             requests,
             tab,
             q,
+            print_lists: printLists,
             pagination: { page: 1, last_page: lastPage, total: requests.length, per_page: 50 },
         },
         global: {
             stubs: {
                 ChurchShell: { template: '<div><slot /></div>' },
                 CardRequestRow: { props: ['request'], template: '<li data-testid="row" />' },
+                PrintListCard: { props: ['list'], template: '<li data-testid="print-list" />' },
             },
         },
     })
@@ -40,20 +54,50 @@ function page(tab: CardListTab, requests: CardRequestRow[], q: string | null = n
 
 beforeEach(() => {
     gets.length = 0
+    posts.length = 0
 })
 
 describe('Cards', () => {
-    it('offers "Mark all printed" only on Approved, and only with cards to print', () => {
-        expect(page('approved', [row]).find('[data-testid="cards-printed-all"]').exists()).toBe(
+    it('offers "Make print list" only on Approved, and only with cards to put on it', () => {
+        expect(page('approved', [row]).find('[data-testid="cards-make-print-list"]').exists()).toBe(
             true,
         )
-        expect(page('approved', []).find('[data-testid="cards-printed-all"]').exists()).toBe(false)
-        expect(page('asked', [row]).find('[data-testid="cards-printed-all"]').exists()).toBe(false)
+        expect(page('approved', []).find('[data-testid="cards-make-print-list"]').exists()).toBe(
+            false,
+        )
+        expect(page('asked', [row]).find('[data-testid="cards-make-print-list"]').exists()).toBe(
+            false,
+        )
+    })
+
+    it('makes a print list of what the tab shows — its search — keeping the scroll', async () => {
+        await page('approved', [row], 'jon')
+            .find('[data-testid="cards-make-print-list"]')
+            .trigger('click')
+
+        expect(posts).toEqual([
+            {
+                url: 'church.card-requests.print-lists.store:"ccf"',
+                data: { q: 'jon' },
+                options: expect.objectContaining({ preserveScroll: true }),
+            },
+        ])
+    })
+
+    it('keeps "Make print list" beside the print lists, under the tabs', () => {
+        const section = page('approved', [row], null, 1, [list]).find('[data-testid="print-lists"]')
+
+        expect(section.find('[data-testid="cards-make-print-list"]').exists()).toBe(true)
+        expect(section.findAll('[data-testid="print-list"]')).toHaveLength(1)
+    })
+
+    it('shows the print lists still to print — even when no card is left to put on a new one', () => {
         expect(
-            page('approved', [row])
-                .find('[data-testid="cards-printed-all"]')
-                .attributes('data-method'),
-        ).toBe('put')
+            page('approved', [], null, 1, [list, { ...list, id: 8 }]).findAll(
+                '[data-testid="print-list"]',
+            ),
+        ).toHaveLength(2)
+        expect(page('approved', [row]).findAll('[data-testid="print-list"]')).toHaveLength(0)
     })
 
     it('links every tab, marking the one it is on, keeping the search', () => {

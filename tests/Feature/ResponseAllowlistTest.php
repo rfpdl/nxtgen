@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature\ResponseAllowlist;
 
 use App\Data\Models\CardRequest;
+use App\Data\Models\PrintList;
+use App\Enums\CardStepEnum;
 use App\Http\Middleware\HandleInertiaRequests;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Storage;
@@ -250,9 +252,21 @@ describe('Cards, for admins', function (): void {
             return '/ccf/card-requests';
         });
 
-        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, ['enums.card_move', 'enums.card_tab', 'q', 'tab', 'pagination.last_page', 'pagination.page', 'pagination.per_page', 'pagination.total'], prefixed('requests.*', [
+        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, ['enums.card_move', 'enums.card_tab', 'print_lists', 'q', 'tab', 'pagination.last_page', 'pagination.page', 'pagination.per_page', 'pagination.total'], prefixed('requests.*', [
             'child_name', 'family_id', 'family_name', 'fee', 'fee_label', 'id', 'moves.*', 'note', 'reason_label', 'refused_reason', 'satellite', 'step', 'step_label',
         ])))->and(forbiddenOnLists($props))->toBe([]);
+    })->with(actors(Actor::ChurchAdmin, Actor::HomeAdmin));
+
+    it('gives an admin on Approved each open print list\'s time, maker and counts — no names or cards @story#150', function (Actor $actor): void {
+        $props = propsOf($actor, function (AccessWorld $w): string {
+            $card = CardRequest::factory()->for($w->child)->create(['step' => CardStepEnum::Approved]);
+            PrintList::factory()->for($w->church)->create()->cards()->attach([$card->id]);
+
+            return '/ccf/card-requests?tab=approved';
+        });
+
+        expect(array_values(array_filter(keyPaths($props), fn (string $p): bool => str_starts_with($p, 'print_lists'))))
+            ->toBe(['print_lists.*.cards', 'print_lists.*.id', 'print_lists.*.made', 'print_lists.*.made_by', 'print_lists.*.to_print']);
     })->with(actors(Actor::ChurchAdmin, Actor::HomeAdmin));
 });
 

@@ -5,19 +5,25 @@ declare(strict_types=1);
 use App\Data\Models\CardRequest;
 use App\Data\Models\Child;
 use App\Data\Models\Church;
+use App\Data\Models\PrintList;
 use App\Data\Models\Satellite;
 use App\Data\Models\User;
 use App\Enums\CardReasonEnum;
 use App\Enums\CardStepEnum;
+use App\Enums\GenderEnum;
 use App\Enums\RoleEnum;
+use App\Foundation\Support\NameKey;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
+use function Pest\Laravel\travelTo;
 use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
 use function Tests\Support\childOf;
 use function Tests\Support\church;
+use function Tests\Support\exportedRows;
 use function Tests\Support\familyAt;
 use function Tests\Support\guardianOf;
 use function Tests\Support\satelliteOf;
@@ -188,24 +194,156 @@ describe('moving a request', function (): void {
 
         actingAs($admin)->put("/ccf/card-requests/{$request->id}/mark-printed")->assertSessionHas('error', "Amara's card has already moved on: Asked · not paid.");
     });
+});
 
-    it('marks every approved card the admin sees printed, saying how many @story#144', function (): void {
-        ['dxb' => $dxb, 'amara' => $amara, 'admin' => $admin] = cardsChurch();
-        CardRequest::factory()->for($amara)->create(['step' => CardStepEnum::Approved]);
-        CardRequest::factory()->for(childOf(familyAt($dxb)))->create(['step' => CardStepEnum::Approved]);
+describe('print lists', function (): void {
+    it('makes a print list of exactly the approved cards the tab shows — the admin\'s satellites and search — and shows it on Approved @story#150', function (): void {
+        ['dxb' => $dxb, 'house' => $house, 'amara' => $amara, 'admin' => $admin] = cardsChurch();
+        $hers = CardRequest::factory()->for($amara)->create(['step' => CardStepEnum::Approved]);
+        CardRequest::factory()->for(childOf(familyAt($dxb), ['first_name' => 'Ben', 'last_name' => 'Cruz', 'nickname' => 'Ben']))->create(['step' => CardStepEnum::Approved]);
+        CardRequest::factory()->for(childOf(familyAt($house), ['first_name' => 'Amara', 'last_name' => 'Villa']))->create(['step' => CardStepEnum::Approved]);
+        travelTo(CarbonImmutable::parse('2026-10-31 10:31:00', 'Asia/Dubai'));
 
-        actingAs($admin)->put('/ccf/card-requests/mark-all-printed')->assertSessionHas('success', 'Marked 2 cards printed.');
-        actingAs($admin)->put('/ccf/card-requests/mark-all-printed')->assertSessionHas('success', 'There were no approved cards to mark printed.');
+        actingAs($admin)->post('/ccf/card-requests/print-lists', ['q' => 'amara'])->assertSessionHas('success', 'Print list made: 1 card.');
+
+        $list = PrintList::query()->sole();
+        expect([$list->made_by, $list->cards()->pluck('card_requests.id')->all()])->toBe([$admin->id, [$hers->id]]);
+        actingAs($admin)->get('/ccf/card-requests?tab=approved')->assertInertia(fn (AssertableInertia $p) => $p
+            ->where('print_lists', [['id' => $list->id, 'made' => 'Sat 31 Oct 10:31', 'made_by' => $admin->name, 'cards' => 1, 'to_print' => 1]]));
+        actingAs($admin)->get('/ccf/card-requests?tab=asked')->assertInertia(fn (AssertableInertia $p) => $p->where('print_lists', []));
     });
 
-    it('never marks another satellite\'s approved cards printed @story#145', function (): void {
-        ['house' => $house] = cardsChurch();
-        $theirs = CardRequest::factory()->for(childOf(familyAt($house)))->create(['step' => CardStepEnum::Approved]);
-        $dxbAdmin = staffMember(RoleEnum::Admin, atSatellite(Satellite::query()->where('name', 'CCF DXB')->sole()));
+    it('makes no print list when nothing approved is shown — and says so @story#151', function (): void {
+        ['admin' => $admin] = cardsChurch();
 
-        actingAs($dxbAdmin)->put('/ccf/card-requests/mark-all-printed')->assertSessionHas('success', 'There were no approved cards to mark printed.');
+        actingAs($admin)->post('/ccf/card-requests/print-lists', ['q' => 'nobody'])->assertSessionHas('success', 'There were no approved cards to put on a print list.');
 
-        expect($theirs->fresh()?->step)->toBe(CardStepEnum::Approved);
+        expect(PrintList::query()->count())->toBe(0);
+    });
+
+    it('downloads a print list\'s own cards in the Barcode tab\'s shape — re-downloadable, moving none @story#148', function (): void {
+        ['church' => $church, 'dxb' => $dxb, 'amara' => $amara, 'admin' => $admin] = cardsChurch();
+        $amara->forceFill(['middle_name' => 'Joy', 'level' => 2, 'gender' => GenderEnum::Girl])->save();
+        $hers = CardRequest::factory()->for($amara)->create(['step' => CardStepEnum::Approved]);
+        $list = PrintList::factory()->for($church)->create();
+        $list->cards()->attach([$hers->id]);
+        CardRequest::factory()->for(childOf(familyAt($dxb), ['first_name' => 'Amara', 'last_name' => 'Later']))->create(['step' => CardStepEnum::Approved]);
+
+        $response = actingAs($admin)->get("/ccf/card-requests/print-lists/{$list->id}")->assertOk();
+
+        expect(exportedRows($response))->toBe([
+            'Full name|Nickname|Level|Squad|Barcode',
+            'Amara Joy Reyes|Amara|Level 2|Level 2 Girls|'.NameKey::of('Amara', 'Joy', 'Reyes'),
+        ])->and(explode('|', exportedRows($response)[1])[4])->toBe($amara->fresh()?->name_key)
+            ->and($response->headers->get('content-disposition'))->toContain("nxtgen-print-list-{$list->id}-")
+            ->and($hers->fresh()?->step)->toBe(CardStepEnum::Approved);
+        actingAs($admin)->get("/ccf/card-requests/print-lists/{$list->id}")->assertOk();
+    });
+
+    it('shows a viewer only the cards on a list they may see; a list with none of theirs, or another church\'s, is not found @story#149', function (): void {
+        ['church' => $church, 'house' => $house, 'amara' => $amara, 'admin' => $dxbAdmin] = cardsChurch();
+        $hers = CardRequest::factory()->for($amara)->create(['step' => CardStepEnum::Approved]);
+        $pia = CardRequest::factory()->for(childOf(familyAt($house), ['first_name' => 'Pia', 'middle_name' => null, 'last_name' => 'Villa', 'nickname' => 'Pia']))->create(['step' => CardStepEnum::Approved]);
+        $both = PrintList::factory()->for($church)->create();
+        $both->cards()->attach([$hers->id, $pia->id]);
+        $houseOnly = PrintList::factory()->for($church)->create();
+        $houseOnly->cards()->attach([$pia->id]);
+        $elsewhere = PrintList::factory()->for(church())->create();
+
+        expect(exportedRows(actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->get("/ccf/card-requests/print-lists/{$both->id}")))
+            ->toBe(['Full name|Nickname|Level|Squad|Barcode', 'Pia Villa|Pia|||PIAVILLA']);
+        actingAs($dxbAdmin)->get("/ccf/card-requests/print-lists/{$houseOnly->id}")->assertNotFound();
+        actingAs($dxbAdmin)->get("/ccf/card-requests/print-lists/{$elsewhere->id}")->assertNotFound();
+        actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get("/ccf/card-requests/print-lists/{$both->id}")->assertNotFound();
+    });
+
+    it('marks a print list\'s still-approved cards printed, and says how many had already moved on @story#144', function (): void {
+        ['church' => $church, 'dxb' => $dxb, 'amara' => $amara, 'admin' => $admin] = cardsChurch();
+        $hers = CardRequest::factory()->for($amara)->create(['step' => CardStepEnum::Approved]);
+        $refused = CardRequest::factory()->for(childOf(familyAt($dxb)))->create(['step' => CardStepEnum::Refused]);
+        $list = PrintList::factory()->for($church)->create();
+        $list->cards()->attach([$hers->id, $refused->id]);
+        $later = CardRequest::factory()->for(childOf(familyAt($dxb), ['first_name' => 'Amara']))->create(['step' => CardStepEnum::Approved]);
+
+        actingAs($admin)->put("/ccf/card-requests/print-lists/{$list->id}/mark-printed")->assertSessionHas('success', '1 marked printed; 1 had already moved on.');
+
+        expect([$hers->fresh()?->step, $refused->fresh()?->step, $later->fresh()?->step])->toBe([CardStepEnum::Printed, CardStepEnum::Refused, CardStepEnum::Approved]);
+        actingAs($admin)->get('/ccf/card-requests?tab=approved')->assertInertia(fn (AssertableInertia $p) => $p->where('print_lists', []));
+    });
+
+    it('marks only the acting admin\'s cards on a list; a list with none of theirs is not found @story#145', function (): void {
+        ['church' => $church, 'house' => $house, 'amara' => $amara, 'admin' => $dxbAdmin] = cardsChurch();
+        $hers = CardRequest::factory()->for($amara)->create(['step' => CardStepEnum::Approved]);
+        $pia = CardRequest::factory()->for(childOf(familyAt($house)))->create(['step' => CardStepEnum::Approved]);
+        $both = PrintList::factory()->for($church)->create();
+        $both->cards()->attach([$hers->id, $pia->id]);
+        $houseOnly = PrintList::factory()->for($church)->create();
+        $houseOnly->cards()->attach([$pia->id]);
+
+        actingAs($dxbAdmin)->put("/ccf/card-requests/print-lists/{$both->id}/mark-printed")->assertSessionHas('success', '1 marked printed.');
+        actingAs($dxbAdmin)->put("/ccf/card-requests/print-lists/{$houseOnly->id}/mark-printed")->assertNotFound();
+
+        expect([$hers->fresh()?->step, $pia->fresh()?->step])->toBe([CardStepEnum::Printed, CardStepEnum::Approved]);
+    });
+});
+
+describe('print lists, across satellites and churches', function (): void {
+    it('downloads only the cards still to print or printed — never one given or refused since, nor another church\'s @story#148', function (): void {
+        ['church' => $church, 'dxb' => $dxb, 'amara' => $amara, 'admin' => $admin] = cardsChurch();
+        $approved = CardRequest::factory()->for($amara)->create(['step' => CardStepEnum::Approved]);
+        $printed = CardRequest::factory()->for(childOf(familyAt($dxb), ['first_name' => 'Ben', 'middle_name' => null, 'last_name' => 'Cruz', 'nickname' => 'Ben']))->create(['step' => CardStepEnum::Printed]);
+        $given = CardRequest::factory()->for(childOf(familyAt($dxb), ['first_name' => 'Cy']))->create(['step' => CardStepEnum::Given]);
+        $refused = CardRequest::factory()->for(childOf(familyAt($dxb), ['first_name' => 'Dee']))->create(['step' => CardStepEnum::Refused]);
+        $foreign = CardRequest::factory()->for(childOf(familyAt(satelliteOf(church())), ['first_name' => 'Eve']))->create(['step' => CardStepEnum::Approved]);
+        $list = PrintList::factory()->for($church)->create();
+        $list->cards()->attach([$approved->id, $printed->id, $given->id, $refused->id, $foreign->id]);
+
+        $names = array_map(fn (string $r): string => explode('|', $r)[0], exportedRows(actingAs($admin)->get("/ccf/card-requests/print-lists/{$list->id}")));
+
+        expect($names)->toBe(['Full name', 'Amara Reyes', 'Ben Cruz']);
+    });
+
+    it('marks no card of another church on a list @story#145', function (): void {
+        ['church' => $church, 'amara' => $amara, 'admin' => $admin] = cardsChurch();
+        $mine = CardRequest::factory()->for($amara)->create(['step' => CardStepEnum::Approved]);
+        $foreign = CardRequest::factory()->for(childOf(familyAt(satelliteOf(church()))))->create(['step' => CardStepEnum::Approved]);
+        $list = PrintList::factory()->for($church)->create();
+        $list->cards()->attach([$mine->id, $foreign->id]);
+
+        actingAs($admin)->put("/ccf/card-requests/print-lists/{$list->id}/mark-printed")->assertSessionHas('success', '1 marked printed.');
+
+        expect($foreign->fresh()?->step)->toBe(CardStepEnum::Approved);
+    });
+
+    it('keeps a list open for the DXB admin, with their cards left, once the House admin has marked theirs @story#144', function (): void {
+        ['church' => $church, 'house' => $house, 'amara' => $amara, 'admin' => $dxbAdmin] = cardsChurch();
+        $hers = CardRequest::factory()->for($amara)->create(['step' => CardStepEnum::Approved]);
+        $pia = CardRequest::factory()->for(childOf(familyAt($house)))->create(['step' => CardStepEnum::Approved]);
+        $list = PrintList::factory()->for($church)->create();
+        $list->cards()->attach([$hers->id, $pia->id]);
+
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->put("/ccf/card-requests/print-lists/{$list->id}/mark-printed")->assertSessionHas('success', '1 marked printed.');
+
+        actingAs($dxbAdmin)->get('/ccf/card-requests?tab=approved')->assertInertia(fn (AssertableInertia $p) => $p
+            ->where('print_lists.0.id', $list->id)->where('print_lists.0.cards', 1)->where('print_lists.0.to_print', 1));
+    });
+
+    it('makes a satellite admin\'s print list of their own satellite\'s cards only, with no search @story#150', function (): void {
+        ['house' => $house, 'amara' => $amara, 'admin' => $dxbAdmin] = cardsChurch();
+        $hers = CardRequest::factory()->for($amara)->create(['step' => CardStepEnum::Approved]);
+        CardRequest::factory()->for(childOf(familyAt($house)))->create(['step' => CardStepEnum::Approved]);
+
+        actingAs($dxbAdmin)->post('/ccf/card-requests/print-lists', [])->assertSessionHas('success', 'Print list made: 1 card.');
+
+        expect(PrintList::query()->sole()->cards()->pluck('card_requests.id')->all())->toBe([$hers->id]);
+    });
+
+    it('reads Cards\' address leniently — a bad page or an over-long search is not an error @story#134', function (): void {
+        ['amara' => $amara, 'admin' => $admin] = cardsChurch();
+        CardRequest::factory()->for($amara)->create();
+
+        actingAs($admin)->get('/ccf/card-requests?tab=asked&page=abc&q='.str_repeat('a', 300))->assertOk()
+            ->assertInertia(fn (AssertableInertia $p) => $p->where('pagination.page', 1)->where('q', str_repeat('a', 200)));
     });
 });
 

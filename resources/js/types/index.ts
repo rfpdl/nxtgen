@@ -107,6 +107,8 @@ export type AttendanceSatellite = App.Domains.CheckIn.DataObjects.AttendanceSate
 export type CardRequest = App.Domains.Card.DataObjects.CardRequestData
 /** One row of the Cards page (admins): whose card, family, why, the fee, and a refusal's reason. */
 export type CardRequestRow = App.Domains.Card.DataObjects.CardRequestRowData
+/** A print list still to print (GLOSSARY "Print list"): when, by whom, its cards the viewer sees and those left. */
+export type PrintList = App.Domains.Card.DataObjects.PrintListData
 /** A registration list's filters, named as the address parameters the filter bar sends back. */
 export type ListFilters = App.Domains.Family.DataObjects.ListFiltersData
 
@@ -133,6 +135,7 @@ export type CheckInInput = App.Services.Church.Data.CheckInInput
 export type CheckInChildInput = App.Services.Church.Data.CheckInChildInput
 export type CardRequestInput = App.Services.Church.Data.CardRequestInput
 export type RefuseCardRequestInput = App.Services.Church.Data.RefuseCardRequestInput
+export type MakePrintListInput = App.Services.Church.Data.MakePrintListInput
 
 /**
  * An Input while a person is still filling it in: every answer may still be blank (`''`), an unanswered

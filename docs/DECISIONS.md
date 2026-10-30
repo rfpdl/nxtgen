@@ -41,7 +41,7 @@ describes the design; this records the choices that shaped or changed it.
   family (its page a tap away) · satellite, reason — note, and the fee ("AED 10 · not paid" amber, "AED 10 · paid",
   "Free"). Moves: **Mark paid** while open and not paid; **Approve** only once paid or free (the button shows only
   then; an unpaid one is refused with "mark the AED 10 paid first"); **Refuse…** asks why (required), and only before
-  printing; **Mark printed** one, or **Mark all printed** — every approved card the admin sees (none: said plainly);
+  printing; **Mark printed** one (the first "Mark all printed" is replaced by Print lists — see the issue 04 line);
   **Given** on the Printed tab, and beside the Pill on the child's card for any staff who may open the family. Each
   move is one conditional UPDATE (id, church, the step it starts from): a stale or second move changes nothing and
   says "Amara's card has already moved on: Approved · paid." Moving a request needs an admin over the family's home
@@ -51,8 +51,23 @@ describes the design; this records the choices that shaped or changed it.
   pages (`?tab=`, `?q=`). **Which move is allowed at which step lives in one place** (`CardMoveEnum`): the move Jobs'
   conditions and the buttons both come from it — the server sends each row's moves. A free first card answers "Mark
   paid" with "Amara's first card is free — nothing to pay." Money reads "AED 10", "AED 10.50" (fils never dropped).
-  Cards' address is `/card-requests`; its moves are `…/mark-paid`, `approve`, `refuse`, `mark-printed`, `give`, and
-  `mark-all-printed`.
+  Cards' address is `/card-requests`; its moves are `…/mark-paid`, `approve`, `refuse`, `mark-printed` and `give`
+  (`mark-all-printed` is replaced by Print lists, below).
+- Claude, low-stakes (issue 04, and Astra's fix to 03; for Roy to confirm): **a Print list is kept on the server**
+  (GLOSSARY "Print list"; code `PrintList`). "Make print list" on the Approved tab keeps exactly the approved cards the
+  tab shows — the admin's satellites and their search, every page — by id, with who made it and when. The open lists
+  sit on the Approved tab ("Print list · 12 cards · made Sat 31 Oct 10:31 by Grace — Download · Mark these 10
+  printed") until none of their cards is left to print, so yesterday's list can still be marked. **Download** is its
+  Excel, again whenever needed. **Mark these N printed** moves only its own cards still Approved and within the acting
+  admin's satellites; the rest are skipped and the message says so ("10 marked printed; 2 had already moved on"). A card
+  approved, renamed or moved into the admin's satellites after the list was made never joins it — so the earlier
+  time-based cut-off (and its same-second gap, forged or shifted times) is gone (Astra found "Mark all printed" marked
+  every approved card). A list shows each viewer only the cards they may see; one with none of theirs, or another
+  church's, is not found. A card may be on two lists; marking either moves it once. The Excel is the sheet's Barcode
+  tab: Full name, Nickname, Level, Squad, Barcode — the Barcode the child's stored name code, the one the door matches;
+  the Squad by Level and gender; both empty for a child with no Level. It lists the list's cards still to print or
+  printed (a printed one may need printing again), never one given or refused since. File
+  `nxtgen-print-list-{id}-{date made}.xlsx`.
 
 ## 2026-10-28 (night — slice 3 decisions; Roy)
 

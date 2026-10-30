@@ -8,6 +8,7 @@ use App\Enums\CardFeeEnum;
 use App\Enums\CardMoveEnum;
 use App\Enums\CardReasonEnum;
 use App\Enums\CardStepEnum;
+use App\Foundation\Support\SearchWords;
 use Carbon\CarbonImmutable;
 use Database\Factories\CardRequestFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -87,6 +88,26 @@ final class CardRequest extends Model
     public function scopeOfFamiliesAt(Builder $query, ?array $satelliteIds): void
     {
         $query->when($satelliteIds !== null, fn (Builder $q) => $q->whereHas('child.family', fn (Builder $f) => $f->whereIn('home_satellite_id', $satelliteIds ?? [])));
+    }
+
+    /**
+     * Only requests for a child whose names hold every word of `$search` (SearchWords, as the children list reads a
+     * search; a phone number matches no child) — null = no search. Cards' list, its print list and "Mark these
+     * printed" all narrow with this, so they are always the same set.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeForChildNamed(Builder $query, ?string $search): void
+    {
+        $query->when($search !== null, fn (Builder $q) => SearchWords::of((string) $search)->apply(
+            $q,
+            fn (Builder $one, string $word) => $one->whereHas('child', fn (Builder $c) => $c
+                ->where('first_name', 'like', SearchWords::like($word))
+                ->orWhere('middle_name', 'like', SearchWords::like($word))
+                ->orWhere('last_name', 'like', SearchWords::like($word))
+                ->orWhere('nickname', 'like', SearchWords::like($word))),
+            fn (Builder $one) => $one->whereRaw('1 = 0'),
+        ));
     }
 
     /** Where the fee stands: free (a first card), paid, or not paid. */

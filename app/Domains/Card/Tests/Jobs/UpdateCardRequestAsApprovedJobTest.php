@@ -33,10 +33,10 @@ it('approves an Asked request that is paid or free, saying who and when', functi
 it('approves nothing unpaid, and nothing past Asked', function (array $state): void {
     /** @var array<model-property<CardRequest>, mixed> $state */
     $request = CardRequest::factory()->create($state);
-    $step = $request->step;
+    $before = [$request->step, $request->fresh()?->approved_at?->toDateTimeString(), $request->approved_by];
 
     expect((new UpdateCardRequestAsApprovedJob(request: $request, by: User::factory()->create()))->handle())->toBeFalse()
-        ->and([$request->fresh()?->step, $request->fresh()?->approved_at])->toBe([$step, null]);
+        ->and([$request->fresh()?->step, $request->fresh()?->approved_at?->toDateTimeString(), $request->fresh()?->approved_by])->toBe($before);
 })->with([
     'not paid' => [[]],
     'already approved' => [['step' => CardStepEnum::Approved, 'paid_at' => '2026-10-30 10:00:00']],

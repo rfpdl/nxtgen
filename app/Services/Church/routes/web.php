@@ -45,7 +45,10 @@ Route::put('/children/{child}/status', [ChildController::class, 'updateStatus'])
 Route::post('/children/{child}/card-requests', [CardRequestController::class, 'store'])->whereNumber('child')->name('church.card-requests.store');
 // Cards (name cards 03): admins see and move the requests by step; anyone who may open the family gives a printed one.
 Route::get('/card-requests', [CardRequestController::class, 'index'])->name('church.card-requests.index');
-Route::put('/card-requests/mark-all-printed', [CardRequestController::class, 'markAllPrinted'])->name('church.card-requests.mark-all-printed');
+// Print lists (name cards 04, GLOSSARY "Print list"): the approved cards the tab shows, kept; downloaded, marked printed.
+Route::post('/card-requests/print-lists', [CardRequestController::class, 'makePrintList'])->name('church.card-requests.print-lists.store');
+Route::get('/card-requests/print-lists/{printList}', [CardRequestController::class, 'downloadPrintList'])->whereNumber('printList')->name('church.card-requests.print-lists.show');
+Route::put('/card-requests/print-lists/{printList}/mark-printed', [CardRequestController::class, 'markPrintListPrinted'])->whereNumber('printList')->name('church.card-requests.print-lists.mark-printed');
 Route::put('/card-requests/{cardRequest}/mark-paid', [CardRequestController::class, 'markPaid'])->whereNumber('cardRequest')->name('church.card-requests.mark-paid');
 Route::put('/card-requests/{cardRequest}/approve', [CardRequestController::class, 'approve'])->whereNumber('cardRequest')->name('church.card-requests.approve');
 Route::put('/card-requests/{cardRequest}/refuse', [CardRequestController::class, 'refuse'])->whereNumber('cardRequest')->name('church.card-requests.refuse');

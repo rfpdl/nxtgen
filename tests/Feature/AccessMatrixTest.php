@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\AccessMatrix;
 
 use App\Data\Models\CardRequest;
+use App\Data\Models\PrintList;
 use App\Data\Models\SquadHeadCount;
 use App\Enums\AccessRowEnum;
 use App\Enums\CardStepEnum;
@@ -80,10 +81,14 @@ function matrix(): array
         'church.children.photo' => [AccessRowEnum::ChildPhoto, Actor::seeingFamily()],
         // Name cards (DECISIONS 2026-10-29): staff who may open the family file a new card; parents tell a Lifeshaper.
         'church.card-requests.store' => [AccessRowEnum::CardRequest, Actor::seeingFamily()],
-        // Cards (name cards 03): the page and "mark all printed" for every admin (their own satellites' requests);
-        // moving Home's request needs an admin over Home; giving a printed card, anyone who may open the family.
+        // Cards (name cards 03): the page for every admin (their own satellites' requests); moving Home's request needs
+        // an admin over Home; giving a printed card, anyone who may open the family.
         'church.card-requests.index' => [AccessRowEnum::Cards, [Actor::ChurchAdmin, Actor::HomeAdmin, Actor::AwayAdmin]],
-        'church.card-requests.mark-all-printed' => [AccessRowEnum::Cards, [Actor::ChurchAdmin, Actor::HomeAdmin, Actor::AwayAdmin]],
+        // Print lists (name cards 04): any admin makes one of the cards they see; Home's card on a list is downloaded and
+        // marked printed only by an admin over Home (a list with none of theirs is not found).
+        'church.card-requests.print-lists.store' => [AccessRowEnum::Cards, [Actor::ChurchAdmin, Actor::HomeAdmin, Actor::AwayAdmin]],
+        'church.card-requests.print-lists.show' => [AccessRowEnum::Cards, Actor::editingFamily()],
+        'church.card-requests.print-lists.mark-printed' => [AccessRowEnum::Cards, Actor::editingFamily()],
         'church.card-requests.mark-paid' => [AccessRowEnum::Cards, Actor::editingFamily()],
         'church.card-requests.approve' => [AccessRowEnum::Cards, Actor::editingFamily()],
         'church.card-requests.refuse' => [AccessRowEnum::Cards, Actor::editingFamily()],
@@ -182,7 +187,9 @@ function requestFor(string $route, AccessWorld $w): array
         'church.children.photo' => ['POST', "/ccf/children/{$c}/photo", ['photo' => $photo()]],
         'church.card-requests.store' => ['POST', "/ccf/children/{$c}/card-requests", ['reason' => 'lost', 'note' => 'Lost at the park']],
         'church.card-requests.index' => ['GET', '/ccf/card-requests?tab=asked', []],
-        'church.card-requests.mark-all-printed' => ['PUT', withApprovedCard($w, '/ccf/card-requests/mark-all-printed'), []],
+        'church.card-requests.print-lists.store' => ['POST', withApprovedCard($w, '/ccf/card-requests/print-lists'), ['q' => null]],
+        'church.card-requests.print-lists.show' => ['GET', '/ccf/card-requests/print-lists/'.printListOf($w)->id, []],
+        'church.card-requests.print-lists.mark-printed' => ['PUT', '/ccf/card-requests/print-lists/'.printListOf($w)->id.'/mark-printed', []],
         'church.card-requests.mark-paid' => ['PUT', '/ccf/card-requests/'.cardAt($w, CardStepEnum::Asked, paid: false)->id.'/mark-paid', []],
         'church.card-requests.approve' => ['PUT', '/ccf/card-requests/'.cardAt($w, CardStepEnum::Asked)->id.'/approve', []],
         'church.card-requests.refuse' => ['PUT', '/ccf/card-requests/'.cardAt($w, CardStepEnum::Asked)->id.'/refuse', ['reason' => 'Found it at home']],
@@ -223,17 +230,27 @@ function requestFor(string $route, AccessWorld $w): array
 function cardAt(AccessWorld $w, CardStepEnum $step, bool $paid = true): CardRequest
 {
     $request = CardRequest::query()->where('child_id', $w->child->id)->first() ?? CardRequest::factory()->for($w->child)->create();
-    $request->forceFill(['step' => $step, 'paid_at' => $paid ? now() : null])->save();
+    $request->forceFill(['step' => $step, 'paid_at' => $paid ? now() : null, 'approved_at' => $step === CardStepEnum::Asked ? null : now()])->save();
 
     return $request;
 }
 
-/** `$uri`, once the world's child has an approved card ("mark all printed" names no request). */
+/** `$uri`, once the world's child has an approved card ("Make print list" names no request). */
 function withApprovedCard(AccessWorld $w, string $uri): string
 {
     cardAt($w, CardStepEnum::Approved);
 
     return $uri;
+}
+
+/** A print list holding the world's child's approved card (made once, so one world serves every guess). */
+function printListOf(AccessWorld $w): PrintList
+{
+    $card = cardAt($w, CardStepEnum::Approved);
+    $list = PrintList::query()->where('church_id', $w->church->id)->first() ?? PrintList::factory()->for($w->church)->create();
+    $list->cards()->syncWithoutDetaching([$card->id]);
+
+    return $list;
 }
 
 /**
@@ -416,8 +433,12 @@ describe('a child, for staff', function (): void {
 describe('Cards, for admins', function (): void {
     it('opens Cards for admins only @story#134 @story#135', cellTest())
         ->with(cells('church.card-requests.index'));
-    it('marks every approved card an admin sees printed, for admins only @story#144 @story#145', cellTest())
-        ->with(cells('church.card-requests.mark-all-printed'));
+    it('lets any admin make a print list of the approved cards they see @story#150 @story#151', cellTest())
+        ->with(cells('church.card-requests.print-lists.store'));
+    it('downloads a print list holding a Home card only for an admin over Home @story#148 @story#149', cellTest())
+        ->with(cells('church.card-requests.print-lists.show'));
+    it('marks a print list holding a Home card printed only for an admin over Home @story#144 @story#145', cellTest())
+        ->with(cells('church.card-requests.print-lists.mark-printed'));
     it('has a Home card marked paid only by an admin over Home @story#136 @story#137', cellTest())
         ->with(cells('church.card-requests.mark-paid'));
     it('has a Home card approved only by an admin over Home @story#138 @story#139', cellTest())
@@ -498,12 +519,12 @@ function routesNamingAnId(): array
     return array_values(array_filter(array_keys(matrix()), function (string $route): bool {
         $uri = (string) Router::getRoutes()->getByName($route)?->uri();
 
-        return str_starts_with($uri, '{church}') && preg_match('/\{(family|child|pair|assignment|schedule|checkIn|cardRequest)\}/', $uri) === 1;
+        return str_starts_with($uri, '{church}') && preg_match('/\{(family|child|pair|assignment|schedule|checkIn|cardRequest|printList)\}/', $uri) === 1;
     }));
 }
 
-// Every refusal is a 404 and changes nothing, so one world serves all twenty-eight guesses.
-it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in their OWN church\'s address @story#29 @story#49 @story#51 @story#100 @story#102 @story#109 @story#111 @story#120 @story#123 @story#131 @story#137 @story#139 @story#141 @story#143 @story#147', function (): void {
+// Every refusal is a 404 and changes nothing, so one world serves all thirty guesses.
+it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in their OWN church\'s address @story#29 @story#49 @story#51 @story#100 @story#102 @story#109 @story#111 @story#120 @story#123 @story#131 @story#137 @story#139 @story#141 @story#143 @story#145 @story#147 @story#149', function (): void {
     Notification::fake();
     Storage::fake('photos');
     travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
@@ -521,6 +542,6 @@ it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in 
         $answers["{$method} {$guessed}"] = outcomeOf(call($method, $guessed, $payload), $method);
     }
 
-    expect($answers)->toHaveCount(28)
+    expect($answers)->toHaveCount(30)
         ->and(array_unique(array_values($answers)))->toBe(['404'], (string) json_encode($answers, JSON_PRETTY_PRINT));
 });

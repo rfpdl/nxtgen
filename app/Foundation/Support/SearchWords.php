@@ -30,6 +30,20 @@ final readonly class SearchWords
         public ?string $phone,
     ) {}
 
+    /** The longest search kept: a longer paste is cut, never refused. */
+    public const int MAX_LENGTH = 200;
+
+    /**
+     * A typed search as every list keeps it (Cards, its print list): spaces — a non-breaking one too — squeezed to one,
+     * cut to MAX_LENGTH letters; null when nothing is left.
+     */
+    public static function tidy(?string $typed): ?string
+    {
+        $tidy = trim((string) preg_replace('/(*UCP)[\s\p{Z}]+/u', ' ', (string) $typed));
+
+        return $tidy === '' ? null : mb_substr($tidy, 0, self::MAX_LENGTH);
+    }
+
     public static function of(string $term): self
     {
         $tokens = preg_split('/(*UCP)[\s\p{Z}]+/u', $term, -1, PREG_SPLIT_NO_EMPTY) ?: [];

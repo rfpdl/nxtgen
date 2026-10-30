@@ -69,3 +69,15 @@ both re-run clean once it eased, with no code changed between.
   approved (each leaves Asked), one printed on its own and given at the desk, one by "Mark all printed" and given from
   the Printed tab (leaves it), one refused; the closed tab's newest row read. Ocampo family now nine boys;
   `--repeat-each=2` on both card journeys: 15 passed.
+
+**2026-10-30 — Astra fix, first try (agent), replaced.** Astra [high]: "Mark all printed" ignored the search and
+marked every approved card in scope. A first fix scoped it by the search and a time cut-off (`up_to`); it still had
+gaps, so it was replaced by the server-held Print list (below, and issue 04).
+
+**2026-10-30 — Astra fix, redone (agent), not committed.** The time cut-off (`up_to`) above still let cards that
+were never on the downloaded list be marked (a reload moved the cut-off; same-second gap; a rename or a family moved
+into scope; a forged or shifted time; a dropped search). Replaced by a **Print list held on the server** (issue 04):
+"Make print list" keeps the tab's approved cards by id; "Mark these N printed" moves only that list's cards still
+Approved and within the acting admin's satellites, and says how many had already moved on. No client time or search
+reaches the move. `up_to`, `mark-all-printed` and UpdateApprovedCardRequestsAsPrintedJob are gone. Cards' query is a
+Data input (CardListInput). Tests in issue 04's Comment.

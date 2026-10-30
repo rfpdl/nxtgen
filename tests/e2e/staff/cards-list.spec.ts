@@ -1,13 +1,15 @@
 import { expect, test, type Page } from '@playwright/test'
 import { askForNewCard, freshCardChild, openCardFamily } from '../support/cards'
 import { openMenu } from '../support/menu'
+import { xlsxRows } from '../support/xlsx'
 import { CARDS, CHURCH, DOOR, sessionFile, type DoorProject } from '../support/world'
 
 /*
  * Cards (name cards 03, DECISIONS 2026-10-29). At the desk a Lifeshaper asks for new cards for three Ocampo boys (the
  * first still without one, so a retry takes others). The church admin opens Cards from the menu and finds each boy by
  * name: the first is paid, approved and marked printed, then given at the desk — the Pill gone, "New card…" back; the
- * second is printed with "Mark all printed" and marked Given from the Printed tab; the third is refused with a reason.
+ * second goes on a print list ("Make print list" on Approved; downloaded, its Barcode the code the door scans), is
+ * printed with the list's "Mark these N printed" and marked Given from the Printed tab; the third is refused with a reason.
  * A moved row leaves its old tab.
  *
  * Retry-safe: each boy has at most one OPEN request, so on Asked, Approved and Printed his name finds one row; on the
@@ -80,8 +82,34 @@ test('an admin finds, pays, approves, prints, gives and refuses new cards on Car
         await row(lost).getByTestId('card-action-mark_printed').click()
         await expect(flash).toContainText(`${lost}'s card is marked printed.`)
         await find(office, 'approved', torn)
-        await office.getByTestId('cards-printed-all').click()
-        await expect(flash).toContainText(/Marked \d+ cards? printed\./)
+        // As many as the tab shows for his name (a retry may show an earlier run's namesake still approved too).
+        const shown = Number(
+            /\((\d+)\)/.exec((await office.getByTestId('cards-title').textContent()) ?? '')?.[1],
+        )
+        expect(shown).toBeGreaterThan(0)
+        await office.getByTestId('cards-make-print-list').click()
+        await expect(flash).toHaveText(
+            `Print list made: ${shown === 1 ? '1 card' : `${shown} cards`}.`,
+        )
+        const printList = office.getByTestId('print-list').first()
+        const [download] = await Promise.all([
+            office.waitForEvent('download'),
+            printList.getByTestId('print-list-download').click(),
+        ])
+        expect(download.suggestedFilename()).toMatch(
+            /^nxtgen-print-list-\d+-\d{4}-\d{2}-\d{2}\.xlsx$/,
+        )
+        const rows = xlsxRows((await download.path())!)
+        expect(rows[0]).toBe('Full name|Nickname|Level|Squad|Barcode')
+        expect(rows).toContainEqual(
+            expect.stringMatching(
+                new RegExp(
+                    `^${torn} ${CARDS.surname}\\|${torn}\\|.*\\|${torn.toUpperCase()}${CARDS.surname.toUpperCase()}$`,
+                ),
+            ),
+        )
+        await printList.getByTestId('print-list-mark').click()
+        await expect(flash).toContainText(`${shown} marked printed.`)
 
         // Printed: the torn one is given from Cards, and leaves the tab.
         await find(office, 'printed', torn)

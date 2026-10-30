@@ -42,3 +42,12 @@ it('says whether a word is digit-ish (so only such a word is compared with phone
 it('reads %, _ and \\ in a word as letters', function (): void {
     expect(SearchWords::like('50%_off\\x'))->toBe('%50\\%\\_off\\\\x%');
 });
+
+it('tidies a typed search once for every list: spaces squeezed, blank is none, and never longer than 200 letters', function (?string $typed, ?string $tidy): void {
+    expect(SearchWords::tidy($typed))->toBe($tidy);
+})->with([
+    [null, null],
+    ['   ', null],
+    ["  Amara \u{00A0}  Reyes ", 'Amara Reyes'],
+    [str_repeat('a', 250), str_repeat('a', 200)],
+]);

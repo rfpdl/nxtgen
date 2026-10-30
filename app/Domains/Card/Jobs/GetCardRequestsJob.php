@@ -10,8 +10,6 @@ use App\Enums\CardListTabEnum;
 use App\Enums\CardStepEnum;
 use App\Foundation\Jobs\BaseJob;
 use App\Foundation\Support\ListPage;
-use App\Foundation\Support\SearchWords;
-use Illuminate\Database\Eloquent\Builder;
 
 /**
  * The Cards page's list (name cards 03): one tab's Card requests whose child's family lives at one of `$satelliteIds`
@@ -44,16 +42,7 @@ final class GetCardRequestsJob extends BaseJob
             ->where('church_id', $this->church->id)
             ->whereIn('step', array_map(fn (CardStepEnum $s): string => $s->value, $this->tab->steps()))
             ->ofFamiliesAt($this->satelliteIds)
-            // Every word (SearchWords) on the child's own names, as the children list searches them.
-            ->when($this->query !== null, fn (Builder $q) => SearchWords::of((string) $this->query)->apply(
-                $q,
-                fn (Builder $one, string $word) => $one->whereHas('child', fn (Builder $c) => $c
-                    ->where('first_name', 'like', SearchWords::like($word))
-                    ->orWhere('middle_name', 'like', SearchWords::like($word))
-                    ->orWhere('last_name', 'like', SearchWords::like($word))
-                    ->orWhere('nickname', 'like', SearchWords::like($word))),
-                fn (Builder $one) => $one->whereRaw('1 = 0'),
-            ))
+            ->forChildNamed($this->query)
             ->orderBy('id', $closed ? 'desc' : 'asc');
 
         return ListPage::of($query, $this->page, $this->perPage);

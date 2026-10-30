@@ -81,3 +81,4 @@ every staff, parent and public page is on the kit (issues 02 and 03 of `.plannin
 | ScanCardSheet           | organism | "Scan card" at the door: a bottom sheet (reka-ui Dialog) with the back camera reading a name card's Code 39; refused → type instead                  |
 | ChildCardRequest        | organism | A child's name card on the staff family page: "Card: Asked · not paid" (Pill) for an open request, else "New card…" → Lost/Damaged + note            |
 | CardRequestRow          | organism | One Card request on Cards: child's full name, family (link) · satellite, reason — note, fee Pill; the moves the server sends (PUT), Refuse… asks why |
+| PrintListCard           | molecule | A print list still to print on Cards' Approved tab: "Print list · 12 cards · made … by …", Download (Excel), "Mark these N printed" (PUT)            |

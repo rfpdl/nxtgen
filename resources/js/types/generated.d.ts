@@ -25,6 +25,13 @@ declare namespace App {
                     refused_reason: string | null
                     moves: App.Enums.CardMoveEnum[]
                 }
+                export type PrintListData = {
+                    id: number
+                    made: string
+                    made_by: string | null
+                    cards: number
+                    to_print: number
+                }
             }
         }
         namespace CheckIn {
@@ -521,6 +528,9 @@ declare namespace App {
                 }
                 export type HeadCountInput = {
                     count: number
+                }
+                export type MakePrintListInput = {
+                    q: string | null
                 }
                 export type MarkPresentInput = {
                     present: boolean

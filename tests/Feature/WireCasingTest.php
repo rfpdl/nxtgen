@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\WireCasing;
 
+use App\Data\Models\PrintList;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route as Router;
@@ -61,7 +62,7 @@ function pageRoutes(): array
     ));
 }
 
-/** A route's address in the world: its church, family and child are the world's; a link's token is any token. */
+/** A route's address in the world: its church, family, child and print list are the world's; a link's token is any token. */
 function addressOf(Route $route, AccessWorld $world): string
 {
     $values = [
@@ -70,6 +71,8 @@ function addressOf(Route $route, AccessWorld $world): string
         'child' => (string) $world->child->id,
         'purpose' => 'login',
         'token' => 'any-token',
+        // A print list of the world's church (made once): its download is a file, not a page.
+        'printList' => (string) (PrintList::query()->where('church_id', $world->church->id)->first() ?? PrintList::factory()->for($world->church)->create())->id,
     ];
 
     return '/'.ltrim((string) preg_replace_callback(

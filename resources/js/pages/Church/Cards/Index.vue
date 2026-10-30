@@ -4,12 +4,20 @@ import EmptyState from '@/components/atoms/EmptyState.vue'
 import TextField from '@/components/atoms/TextField.vue'
 import LinkTabs from '@/components/atoms/LinkTabs.vue'
 import PageHeader from '@/components/atoms/PageHeader.vue'
+import SectionHeading from '@/components/atoms/SectionHeading.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import Pager from '@/components/molecules/Pager.vue'
+import PrintListCard from '@/components/molecules/PrintListCard.vue'
 import CardRequestRow from '@/components/organisms/CardRequestRow.vue'
 import { useChurch } from '@/composables/useChurch'
 import { useEnum } from '@/composables/useEnum'
-import type { CardListTab, CardRequestRow as Row, Pagination } from '@/types'
+import type {
+    CardListTab,
+    CardRequestRow as Row,
+    MakePrintListInput,
+    Pagination,
+    PrintList,
+} from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import { route } from 'ziggy-js'
@@ -17,8 +25,8 @@ import { route } from 'ziggy-js'
 /**
  * Cards (name cards 03, DECISIONS 2026-10-29): the Card requests of the families an admin looks after, by step — Asked,
  * Approved, Printed, Given or refused (`enums.card_tab`), oldest first while there is something to do — or a child
- * found by name (`?q=`, kept across tabs and pages). Each row moves itself (CardRequestRow). On Approved, after a
- * print run, "Mark all printed".
+ * found by name (`?q=`, kept across tabs and pages). Each row moves itself (CardRequestRow). On Approved: "Make print list" keeps the cards it shows as a
+ * print list (name cards 04), and the lists still to print offer Download and "Mark these N printed" (PrintListCard).
  */
 const props = defineProps<{
     requests: Row[]
@@ -26,6 +34,8 @@ const props = defineProps<{
     tab: CardListTab
     /** The child-name search, kept across tabs and pages (null = none). */
     q: string | null
+    /** On Approved: the print lists still to print (GLOSSARY "Print list"); empty elsewhere. */
+    print_lists: PrintList[]
 }>()
 
 const church = useChurch()
@@ -61,6 +71,14 @@ function find(): void {
     )
 }
 
+/** "Make print list": the approved cards this tab shows — its search — kept as a list (name cards 04). */
+function makePrintList(): void {
+    const body: MakePrintListInput = { q: props.q }
+    router.post(route('church.card-requests.print-lists.store', church.value.slug), body, {
+        preserveScroll: true,
+    })
+}
+
 function goTo(page: number): void {
     router.get(route('church.card-requests.index', church.value.slug), {
         ...where(props.tab),
@@ -75,18 +93,25 @@ function goTo(page: number): void {
         <PageHeader
             :title="`Cards (${pagination.total})`"
             sub="New name cards: asked for, approved, printed, given"
-        >
-            <template v-if="tab === 'approved' && requests.length > 0" #actions>
-                <AppButton
-                    :href="route('church.card-requests.mark-all-printed', church.slug)"
-                    method="put"
-                    :preserve-scroll="true"
-                    data-testid="cards-printed-all"
-                    >Mark all printed</AppButton
-                >
-            </template>
-        </PageHeader>
+            title-testid="cards-title"
+        />
         <LinkTabs label="Cards" :tabs="tabs" :current="tab" testid-prefix="card-tab" />
+        <section
+            v-if="tab === 'approved' && (requests.length > 0 || print_lists.length > 0)"
+            class="flex flex-col gap-3"
+            data-testid="print-lists"
+        >
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <SectionHeading>Print lists</SectionHeading>
+                <AppButton
+                    v-if="requests.length > 0"
+                    data-testid="cards-make-print-list"
+                    @click="makePrintList"
+                    >Make print list</AppButton
+                >
+            </div>
+            <PrintListCard v-for="list in print_lists" :key="list.id" :list="list" />
+        </section>
         <form class="flex flex-wrap items-end gap-3" role="search" @submit.prevent="find">
             <TextField
                 v-model="search"
