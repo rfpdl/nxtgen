@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test'
+import { checkLayout } from './test'
 import { CARDS, CHURCH, DOOR, type DoorProject } from './world'
 
 /**
@@ -14,6 +15,7 @@ export async function openCardFamily(page: Page, project: string): Promise<void>
         .getByRole('link')
         .click()
     await page.waitForURL(/\/families\/\d+$/)
+    await checkLayout(page)
 }
 
 /**
@@ -42,6 +44,7 @@ export async function askForNewCard(
     await kid.getByTestId('new-card').click()
     await kid.getByTestId(`card-reason-${reason}`).click()
     await kid.getByTestId('card-note').fill(note)
+    await checkLayout(page)
     await kid.getByTestId('card-request-submit').click()
     await expect(page.getByTestId('flash-success')).toContainText(
         `A new card for ${name} is asked for.`,

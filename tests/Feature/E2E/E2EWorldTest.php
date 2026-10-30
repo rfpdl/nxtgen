@@ -52,9 +52,19 @@ it('seeds exactly what the browser journeys expect', function (): void {
 
     // The door journeys: each browser's own Cruz family at CCF DXB and visiting Villa family at House Church.
     foreach (E2ESeeder::DOOR_GUARDIANS as $project => $first) {
-        expect($world)->toContain("'{$project}': '{$first}'");
+        expect($world)->toMatch(worldKey($project, "'{$first}'"));
         $cruz = Family::query()->with(['children', 'homeSatellite'])->whereHas('primaryGuardian', fn ($g) => $g->where('first_name', $first)->where('last_name', 'Cruz'))->sole();
         $kid = fn (string $nickname): Child => $cruz->children->firstOrFail(fn (Child $c): bool => $c->nickname === $nickname);
+        // The Level journey: the browser's Torres girls, each at the Level her age suggests — Level 3.
+        $torres = Family::query()->with('children')->whereHas('primaryGuardian', fn ($g) => $g->where('first_name', $first)->where('last_name', 'Torres'))->sole();
+        expect($torres->children->map(fn (Child $c): array => [$c->nickname, $c->level])->all())
+            ->toBe(array_map(fn (string $name): array => [$name, 3], E2ESeeder::LEVEL_CHILDREN));
+        // doorFamily(): the parent's email and phone, the phone numbered by the project's place in PROJECTS.
+        $place = array_search($project, array_keys(E2ESeeder::DOOR_GUARDIANS), true) + 1;
+        expect($cruz->contactEmail())->toBe('cruz-'.mb_strtolower($first).'@nxtgen.test')
+            ->and(substr((string) preg_replace('/\D+/', '', (string) $cruz->primaryGuardian?->phone), -9))->toBe("50300000{$place}")
+            ->and($world)->toContain('email: `cruz-${first.toLowerCase()}@nxtgen.test`')
+            ->and($world)->toContain('phone: `050300000${PROJECTS.indexOf(project as Project) + 1}`');
         expect($cruz->homeSatellite->name)->toBe('CCF DXB')
             ->and([$kid('Amara')->allergies, $kid('Noah')->status->value, $kid('Lola')->level, $kid('Gabe')->status->value, $kid('Ben')->level])
             ->toBe(['Peanuts', 'inactive', null, 'graduated', 1]);
@@ -63,7 +73,7 @@ it('seeds exactly what the browser journeys expect', function (): void {
 
         // Who's in: the browser's own Reyes girls, both in Level 2 Girls at CCF DXB.
         $girls = E2ESeeder::ROLL_CALL_GIRLS[$project];
-        expect($world)->toContain("'{$project}': ['".implode("', '", $girls)."']");
+        expect($world)->toMatch(worldKey($project, "['".implode("', '", $girls)."']"));
         $reyes = Family::query()->with(['children', 'homeSatellite'])->whereHas('primaryGuardian', fn ($g) => $g->where('first_name', $first)->where('last_name', 'Reyes'))->sole();
         expect([$reyes->homeSatellite->name, $reyes->children->map(fn (Child $c): array => [$c->nickname, $c->level, $c->gender->value])->all()])
             ->toBe(['CCF DXB', [...array_map(fn (string $girl): array => [$girl, 2, 'girl'], $girls), ['Amara', 2, 'girl']]]);
@@ -71,7 +81,7 @@ it('seeds exactly what the browser journeys expect', function (): void {
         // The scan journey: this browser's Reyes Amara, whose name card it types — her key is the browser's own.
         $middle = E2ESeeder::SCAN_MIDDLE_NAMES[$project];
         $key = 'AMARA'.mb_strtoupper($middle).'REYES';
-        expect($world)->toContain("'{$project}': '{$key}'")
+        expect($world)->toMatch(worldKey($project, "'{$key}'"))
             ->and(Child::query()->where('name_key', $key)->sole()->family_id)->toBe($reyes->id);
 
         // Name cards: the browser's Ocampo family — imported, so no Card request for any of them.
@@ -80,7 +90,9 @@ it('seeds exactly what the browser journeys expect', function (): void {
             ->and(CardRequest::query()->whereIn('child_id', $lim->children->pluck('id'))->count())->toBe(0);
     }
     expect($world)->toContain("children: ['".implode("', '", E2ESeeder::CARD_CHILDREN)."']")
-        ->and($world)->toContain("surname: 'Ocampo'");
+        ->and($world)->toContain("surname: 'Ocampo'")
+        ->and($world)->toContain("children: ['".implode("', '", E2ESeeder::LEVEL_CHILDREN)."']")
+        ->and($world)->toContain("surname: 'Torres'");
     foreach (["allergic: 'Amara'", "active: 'Ben'", "inactive: 'Noah'", "noLevel: 'Lola'", "graduated: 'Gabe'", "allergy: 'Peanuts'", "suggestedLevel: 'Level 1'"] as $line) {
         expect($world)->toContain($line);
     }
@@ -89,3 +101,9 @@ it('seeds exactly what the browser journeys expect', function (): void {
 
     expect(User::query()->where('email', E2ESeeder::HOUSE_ADMIN_EMAIL)->firstOrFail()->roleAssignments()->first()?->role)->toBe(RoleEnum::Admin);
 });
+
+/** A `project: value` line of world.ts — the key quoted or bare, as prettier writes it (`desktop: …`, `'phone-portrait': …`). */
+function worldKey(string $project, string $value): string
+{
+    return '/(\''.preg_quote($project, '/').'\'|\b'.preg_quote($project, '/').'): '.preg_quote($value, '/').'/';
+}

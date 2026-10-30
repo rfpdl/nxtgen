@@ -1,4 +1,6 @@
-import { expect, test, type Page } from '@playwright/test'
+import { type Page } from '@playwright/test'
+import { navTo } from '../support/menu'
+import { checkLayout, expect, test } from '../support/test'
 import { CHURCH, CLASSES, SATELLITES, sessionFile } from '../support/world'
 
 /*
@@ -18,7 +20,7 @@ test("an admin sees CCF DXB's classes, adds one with no day, edits its time and 
     const admin = await browser.newContext({ storageState: sessionFile('churchAdmin') })
     const page = await admin.newPage()
     await page.goto(`/${CHURCH}/families`)
-    await page.getByRole('link', { name: 'Classes' }).click()
+    await navTo(page, 'Classes')
     await expect(page.getByRole('heading', { name: 'Classes', level: 1 })).toBeVisible()
 
     const dxb = satellite(page, SATELLITES.dxb)
@@ -28,16 +30,20 @@ test("an admin sees CCF DXB's classes, adds one with no day, edits its time and 
     ])
     await expect(satellite(page, SATELLITES.house)).toContainText('No classes yet.')
 
-    // Add "Special class" with no day: it shows every day. The form opens from the button, and closes once added.
+    // Add a special class with no day: it shows every day. The form opens from the button, and closes once added.
+    // Named for this run, so the projects (and a retry) never meet each other's.
+    const name = `Special class ${Math.random().toString(36).slice(2, 6)}`
+    const classes = await dxb.getByTestId('schedule').count()
     await expect(dxb.getByTestId('add-schedule')).toHaveCount(0)
     await dxb.getByTestId('open-add-schedule').click()
     const add = dxb.getByTestId('add-schedule')
-    await add.getByTestId('schedule-name').fill('Special class')
+    await add.getByTestId('schedule-name').fill(name)
+    await checkLayout(page)
     await add.getByTestId('schedule-submit').click()
     await expect(page.getByTestId('flash-success')).toContainText(
-        `Added "Special class" at ${SATELLITES.dxb}.`,
+        `Added "${name}" at ${SATELLITES.dxb}.`,
     )
-    const special = dxb.getByTestId('schedule').filter({ hasText: 'Special class' })
+    const special = dxb.getByTestId('schedule').filter({ hasText: name })
     await expect(special).toContainText('Any day')
     await expect(add).toHaveCount(0)
     await expect(dxb.getByTestId('open-add-schedule')).toBeVisible()
@@ -48,7 +54,7 @@ test("an admin sees CCF DXB's classes, adds one with no day, edits its time and 
     await edit.getByTestId('schedule-starts-at').fill('16:00')
     await edit.getByTestId('schedule-ends-at').fill('17:30')
     await edit.getByTestId('schedule-submit').click()
-    await expect(page.getByTestId('flash-success')).toContainText('Saved "Special class".')
+    await expect(page.getByTestId('flash-success')).toContainText(`Saved "${name}".`)
     await expect(special).toContainText('Any day · 16:00–17:30')
 
     // An end before the start is refused, beside the field.
@@ -62,8 +68,8 @@ test("an admin sees CCF DXB's classes, adds one with no day, edits its time and 
     await special.getByTestId('retire-schedule').click()
     await expect(special).toContainText('It will no longer show at the door.')
     await special.getByTestId('confirm-retire').click()
-    await expect(page.getByTestId('flash-success')).toContainText('Retired "Special class".')
-    await expect(dxb.getByTestId('schedule')).toHaveCount(2)
+    await expect(page.getByTestId('flash-success')).toContainText(`Retired "${name}".`)
+    await expect(dxb.getByTestId('schedule')).toHaveCount(classes)
     await admin.close()
 })
 

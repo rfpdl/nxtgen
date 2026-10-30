@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from '../support/test'
 import { CHURCH, FAMILIES, sessionFile } from '../support/world'
 
 /*
@@ -11,10 +11,12 @@ test('a satellite admin sees only their own satellite @story#43 @story#58', asyn
     page,
     browser,
 }) => {
-    await page.goto(`/${CHURCH}/families`)
+    // Searched, not read off the first page: the list pages once the run has registered enough families.
+    await page.goto(`/${CHURCH}/families?q=${FAMILIES.house.guardian}`)
     await expect(
         page.getByTestId('family-row').filter({ hasText: FAMILIES.house.guardian }),
     ).toBeVisible()
+    await page.goto(`/${CHURCH}/families?q=${FAMILIES.dxb.guardian}`)
     await expect(
         page.getByTestId('family-row').filter({ hasText: FAMILIES.dxb.guardian }),
     ).toHaveCount(0)
@@ -22,7 +24,7 @@ test('a satellite admin sees only their own satellite @story#43 @story#58', asyn
     // The church admin can see the DXB family's address; the satellite admin typing it gets nothing.
     const admin = await browser.newContext({ storageState: sessionFile('churchAdmin') })
     const adminPage = await admin.newPage()
-    await adminPage.goto(`/${CHURCH}/families`)
+    await adminPage.goto(`/${CHURCH}/families?q=${FAMILIES.dxb.guardian}`)
     const href = await adminPage
         .getByTestId('family-row')
         .filter({ hasText: FAMILIES.dxb.guardian })
@@ -51,7 +53,7 @@ test('a Lifeshaper can see a family but gets no edit forms @story#50 @story#53',
 }) => {
     const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const page = await lifeshaper.newPage()
-    await page.goto(`/${CHURCH}/families`)
+    await page.goto(`/${CHURCH}/families?q=${FAMILIES.dxb.guardian}`)
     await page
         .getByTestId('family-row')
         .filter({ hasText: FAMILIES.dxb.guardian })

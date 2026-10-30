@@ -17,6 +17,24 @@ const items = [
 ]
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 10))
+
+/** A screen whose width can cross 1024px mid-test: matchMedia('(min-width: 1024px)') with its change listeners. */
+const wide = { matches: false, listeners: new Set<(e: { matches: boolean }) => void>() }
+function crossTo(matches: boolean): void {
+    wide.matches = matches
+    for (const listener of wide.listeners) listener({ matches })
+}
+vi.stubGlobal('matchMedia', (query: string) => ({
+    get matches() {
+        return query.includes('1024') ? wide.matches : false
+    },
+    media: query,
+    addEventListener: (_: string, l: (e: { matches: boolean }) => void) => wide.listeners.add(l),
+    removeEventListener: (_: string, l: (e: { matches: boolean }) => void) =>
+        wide.listeners.delete(l),
+    addListener: (l: (e: { matches: boolean }) => void) => wide.listeners.add(l),
+    removeListener: (l: (e: { matches: boolean }) => void) => wide.listeners.delete(l),
+}))
 const sheet = () => document.body.querySelector<HTMLElement>('[data-testid="menu-sheet"]')
 
 function shell() {
@@ -37,6 +55,7 @@ async function openSheet(wrapper: ReturnType<typeof shell>): Promise<HTMLElement
 
 beforeEach(() => {
     document.body.innerHTML = ''
+    wide.matches = false
 })
 
 describe('AppShell', () => {
@@ -53,12 +72,16 @@ describe('AppShell', () => {
         wrapper.unmount()
     })
 
-    it('picks phone or desktop with CSS alone, so the first paint is already right', () => {
+    it('picks the sheet or the row with CSS alone — the row from 1024px (lg), where the whole menu fits on one line', () => {
         const wrapper = shell()
 
-        expect(wrapper.find('[data-testid="menu-open"]').classes()).toContain('md:hidden')
+        expect(wrapper.find('[data-testid="menu-open"]').classes()).toContain('lg:hidden')
         const row = wrapper.find('[data-testid="menu-row"]')
-        expect(row.classes()).toEqual(expect.arrayContaining(['hidden', 'md:flex']))
+        expect(row.classes()).toEqual(expect.arrayContaining(['hidden', 'lg:flex']))
+        expect(row.classes()).not.toContain('md:flex')
+        // Base-size words, so an admin's ten items fit one line in the 1024px frame.
+        const families = row.findAll('a').find((a) => a.text() === 'Families')
+        expect(families?.classes()).toContain('text-base!')
         expect(row.text()).toContain('Families')
         expect(row.find('[data-testid="sign-out"]').exists()).toBe(true)
         wrapper.unmount()
@@ -163,5 +186,32 @@ describe('AppShell', () => {
         expect(wrapper.find('main').classes()).toContain('max-w-2xl')
         expect(wrapper.find('header > div').classes()).toContain('max-w-2xl')
         expect(shell().find('main').classes()).toContain('max-w-5xl')
+    })
+
+    it('closes the sheet when the screen grows to the row (1024px) — nothing left trapped or inert', async () => {
+        const wrapper = shell()
+        await openSheet(wrapper)
+        expect(sheet()).not.toBeNull()
+
+        crossTo(true)
+        await flush()
+
+        expect(sheet()).toBeNull()
+        expect(wrapper.find('[data-testid="menu-open"]').attributes('aria-expanded')).toBe('false')
+        // Shrinking back opens nothing by itself.
+        crossTo(false)
+        await flush()
+        expect(sheet()).toBeNull()
+        wrapper.unmount()
+    })
+
+    it('stops listening to the screen once it is gone', () => {
+        const before = wide.listeners.size
+        const wrapper = shell()
+        expect(wide.listeners.size).toBe(before + 1)
+
+        wrapper.unmount()
+
+        expect(wide.listeners.size).toBe(before)
     })
 })

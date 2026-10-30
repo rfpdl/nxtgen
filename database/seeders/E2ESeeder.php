@@ -26,7 +26,8 @@ use Illuminate\Database\Seeder;
  * satellite. Families go through RegisterFamilyOperation — the import path, no emails — so the rows are ones
  * the app itself can produce. Must match `tests/e2e/support/world.ts`.
  *
- * The door journeys run on three browsers against one database, so each browser has its OWN families to check in
+ * The journeys run on eight browser projects (a phone, tablet and desktop by layout band; see playwright.config.ts)
+ * against one database, so each browser has its OWN families to check in
  * (DOOR_GUARDIANS): a Cruz family at CCF DXB — Amara (allergic), Ben, Noah (inactive), Lola (no Level), Gabe
  * (Graduated) — and a visiting Villa family at House Church (Pia). Birthdays differ per browser, so no two are
  * "possible duplicates". For Who's in (roll call), a Reyes family at CCF DXB with four Level 2 girls whose names are
@@ -38,25 +39,42 @@ final class E2ESeeder extends Seeder
     public const string HOUSE_ADMIN_EMAIL = 'house-admin@nxtgen.test';
 
     /** Browser project => the first name of its door families' parent. */
-    public const array DOOR_GUARDIANS = ['mobile-webkit' => 'Ana', 'mobile-chromium' => 'Bela', 'desktop-chromium' => 'Carla'];
+    public const array DOOR_GUARDIANS = [
+        'phone-portrait' => 'Ana', 'phone-portrait-safari' => 'Bela', 'desktop' => 'Carla', 'phone-landscape' => 'Dina',
+        'tablet-portrait' => 'Elsa', 'tablet-landscape' => 'Fara', 'phone-small' => 'Gina', 'tablet-edge' => 'Iva',
+    ];
 
     /**
      * Browser project => its Reyes family's Level 2 girls, named apart so no browser ticks another's: the first two for
      * the Who's in journey, the last two for the Attendance journey's roll call (one ticked, one not).
      */
-    public const array ROLL_CALL_GIRLS = ['mobile-webkit' => ['Sofia', 'Isabel', 'Lia', 'Gia'], 'mobile-chromium' => ['Mia', 'Elena', 'Nina', 'Ivy'], 'desktop-chromium' => ['Ruth', 'Hope', 'Tala', 'Faith']];
+    public const array ROLL_CALL_GIRLS = [
+        'phone-portrait' => ['Sofia', 'Isabel', 'Lia', 'Gia'], 'phone-portrait-safari' => ['Mia', 'Elena', 'Nina', 'Ivy'],
+        'desktop' => ['Ruth', 'Hope', 'Tala', 'Faith'], 'phone-landscape' => ['Jade', 'Kaye', 'Lea', 'Mae'],
+        'tablet-portrait' => ['Nia', 'Ora', 'Pam', 'Rae'], 'tablet-landscape' => ['Sia', 'Tia', 'Una', 'Vea'],
+        'phone-small' => ['Wyn', 'Xia', 'Yna', 'Zoe'], 'tablet-edge' => ['Ada', 'Cora', 'Dora', 'Eda'],
+    ];
 
     /**
      * Browser project => the middle name of its Reyes family's Amara, whose name card the scan journey types
      * (AMARAJOYREYES …): one key per browser, so each finds only its own child. She is never checked in.
      */
-    public const array SCAN_MIDDLE_NAMES = ['mobile-webkit' => 'Joy', 'mobile-chromium' => 'Kay', 'desktop-chromium' => 'Lee'];
+    public const array SCAN_MIDDLE_NAMES = [
+        'phone-portrait' => 'Joy', 'phone-portrait-safari' => 'Kay', 'desktop' => 'Lee', 'phone-landscape' => 'Rose',
+        'tablet-portrait' => 'Faye', 'tablet-landscape' => 'Gwen', 'phone-small' => 'Iris', 'tablet-edge' => 'June',
+    ];
 
     /**
      * Each browser's Ocampo family at CCF DXB (name cards): imported, so no Card request — each card journey asks for a
      * new card for the first of them still without one. Nine, so the two card journeys (four children a run) and a
      * retry (CI retries once) find fresh children without a reseed, and the door's families stay untouched.
      */
+    /**
+     * Each browser's Torres family at CCF DXB: girls whose age suggests Level 3. The Level journey moves the first still at
+     * Level 3 to Level 4 — three, so a retry finds another without a reseed.
+     */
+    public const array LEVEL_CHILDREN = ['Lexi', 'Lara', 'Luz'];
+
     public const array CARD_CHILDREN = ['Jon', 'Kit', 'Ned', 'Rex', 'Sam', 'Tom', 'Ugo', 'Vic', 'Wes'];
 
     public function run(): void
@@ -83,6 +101,7 @@ final class E2ESeeder extends Seeder
             $this->doorFamilies($ccf, $dxb, $house, $first, $day);
             $this->rollCallFamily($ccf, $dxb, $first, $day, self::ROLL_CALL_GIRLS[$project], self::SCAN_MIDDLE_NAMES[$project]);
             $this->cardFamily($ccf, $dxb, $first, $day);
+            $this->levelFamily($ccf, $dxb, $first, $day);
         }
     }
 
@@ -121,6 +140,15 @@ final class E2ESeeder extends Seeder
             ),
             new ChildDetailsData(firstName: 'Amara', middleName: $scanMiddle, lastName: 'Reyes', nickname: 'Amara', gender: GenderEnum::Girl, dateOfBirth: "2019-05-0{$day}", allergies: null),
         ]);
+    }
+
+    private function levelFamily(Church $church, Satellite $dxb, string $first, int $day): void
+    {
+        $this->register($church, $dxb, new GuardianDetailsData(firstName: $first, lastName: 'Torres', relationship: RelationshipEnum::Mother, phone: "+97150700000{$day}", email: 'torres-'.mb_strtolower($first).'@nxtgen.test'), array_map(
+            fn (string $name, int $month): ChildDetailsData => new ChildDetailsData(firstName: $name, middleName: null, lastName: 'Torres', nickname: $name, gender: GenderEnum::Girl, dateOfBirth: "2017-0{$month}-0{$day}", allergies: null),
+            self::LEVEL_CHILDREN,
+            [3, 4, 5],
+        ));
     }
 
     private function cardFamily(Church $church, Satellite $dxb, string $first, int $day): void

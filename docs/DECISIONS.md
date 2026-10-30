@@ -4,6 +4,28 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-10-30 (e2e by breakpoint — TODO #12; Roy)
+
+- **Every journey runs at every layout band, not on chosen devices** (Roy: "breakpoints, not devices"). The app's
+  breakpoints are Tailwind's `sm` (640px), `md` (768px) and `lg` (1024px, where the menu becomes a row), so eight
+  projects cover them: base — `phone-small` 360×740, `phone-portrait` 390×844 and `phone-portrait-safari` (the same in
+  Safari, for parents' iPhones); `sm` — `tablet-portrait` 720×1080; `md` — `tablet-edge` 768×1024 and
+  `phone-landscape` 844×390; `lg` — `tablet-landscape` 1024×768 (the row menu's tightest) and `desktop` 1280×800.
+  Phones and tablets are touch screens; the desktop is not. Admin journeys run on phones and tablets too.
+- Claude, low-stakes (for Roy to confirm): **every screen a journey shows is layout-checked**
+  (`tests/e2e/support/test.ts`) — after every page visit, at checkpoints (the menu, a form opened), and on every open
+  page before its window closes; a journey that checked nothing fails. It fails when the page scrolls sideways, the
+  menu does not fit (its row must be one line), or a control on a touch screen is under 44×44px (a label standing for
+  a hidden file input counts); and a touch project whose browser does not report a touch pointer fails, so the 44px
+  rule always applies. Journeys find menu items in the sheet or the row (`navTo`, `menuOf`) and decide "sheet or
+  row" from the project's width. Each project has its own seeded families (door, roll call, scan card, the Ocampo
+  boys, the Torres girls for the Level journey), so the runs never share a child and a retry needs no reseed.
+- Claude, low-stakes (for Roy to confirm): **the menu is a sheet up to 1024px and a one-line row from there**, in
+  base-size words (it was a row from 768px). The layout check found an admin's ten menu items wrapping onto two lines
+  at every width from 768px up to 1280px; at 768–1023px they cannot fit one line at all.
+- **For Roy:** on a phone held sideways (844×390) the bar takes a good part of the short screen before it scrolls
+  away. It now shows the Menu button, not the row; whether the bar should be slimmer there is your call.
+
 ## 2026-10-29 (name cards — lost cards, new cards, printing; Roy)
 
 - **Only staff file a Card request** (Lost or Damaged); a parent tells a Lifeshaper. Parents see nothing yet.

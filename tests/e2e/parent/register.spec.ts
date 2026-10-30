@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from '../support/test'
 import { fillChild, fillFamily } from '../support/forms'
 import { mailCount } from '../support/mailbox'
 import { signOutFromMenu } from '../support/menu'
@@ -86,7 +86,7 @@ test('a registered parent signs in again with just their email @story#9 @story#1
     await page.goto(`/${CHURCH}/register`)
     await fillFamily(
         page,
-        { first: 'Ana', last: 'Lim', email, phone: '0507654321', satellite: SATELLITES.house },
+        { first: 'Rhea', last: 'Lim', email, phone: '0507654321', satellite: SATELLITES.house },
         [{ first: 'Noah', last: 'Lim', nickname: 'Noah', gender: 'boy', dob: '2018-02-02' }],
     )
     await page.getByTestId('register-submit').click()

@@ -1,6 +1,16 @@
-import { expect, test, type Locator, type Page } from '@playwright/test'
+import { type Locator, type Page } from '@playwright/test'
+import { expect, test } from '../support/test'
 import { xlsxRows } from '../support/xlsx'
-import { CHURCH, CLASSES, DOOR, ROLL_CALL, SATELLITES, sessionFile } from '../support/world'
+import { menuOf, navTo } from '../support/menu'
+import {
+    CHURCH,
+    CLASSES,
+    DOOR,
+    ROLL_CALL,
+    SATELLITES,
+    sessionFile,
+    type DoorProject,
+} from '../support/world'
 
 /*
  * Journey — Attendance (DECISIONS 2026-10-26: reports are admins only, with Excel). A church admin checks a child in
@@ -20,7 +30,7 @@ function doorSaturday(): string {
 }
 
 /** Ben of this browser's own Cruz family is in at 1PM (checked in now, unless an earlier try already did). */
-async function checkInBen(page: Page): Promise<void> {
+async function checkInBen(page: Page, project: string): Promise<void> {
     await page.goto(`/${CHURCH}/door`)
     // The class picker is a row of chips, a radio group (the Bold look): pick 1PM.
     const chip = page.getByTestId('door-class').getByRole('radio', { name: CLASSES.onePm.name })
@@ -30,7 +40,7 @@ async function checkInBen(page: Page): Promise<void> {
     await page.getByTestId('door-search').press('Enter')
     const card = page
         .getByTestId('door-family')
-        .filter({ hasText: `${DOOR.guardians['desktop-chromium']} Cruz` })
+        .filter({ hasText: `${DOOR.guardians[project as DoorProject]} Cruz` })
     const ben = card.getByTestId('door-child').filter({
         has: page.getByTestId('child-name').getByText(DOOR.cruz.active, { exact: true }),
     })
@@ -46,12 +56,12 @@ async function checkInBen(page: Page): Promise<void> {
 
 test('an admin sees 1PM by Squad with counts, and downloads the same rows as Excel @story#112 @story#114', async ({
     browser,
-}) => {
+}, info) => {
     const admin = await browser.newContext({ storageState: sessionFile('churchAdmin') })
     const page = await admin.newPage()
-    await checkInBen(page)
+    await checkInBen(page, info.project.name)
 
-    await page.getByRole('link', { name: 'Attendance' }).click()
+    await navTo(page, 'Attendance')
     await expect(page.getByRole('heading', { name: 'Attendance', level: 1 })).toBeVisible()
     await page.getByTestId('attendance-satellite').selectOption({ label: SATELLITES.dxb })
     await expect(page).toHaveURL(/satellite=\d+/)
@@ -110,7 +120,7 @@ test('an admin sees 1PM by Squad with counts, and downloads the same rows as Exc
 
 /** Opens Attendance from the menu on CCF DXB · 1PM · the door's Saturday. */
 async function openAttendance(page: Page): Promise<string> {
-    await page.getByRole('link', { name: 'Attendance' }).click()
+    await navTo(page, 'Attendance')
     await page.getByTestId('attendance-satellite').selectOption({ label: SATELLITES.dxb })
     await expect(page).toHaveURL(/satellite=\d+/)
     await page.getByTestId('attendance-class').selectOption({ label: CLASSES.onePm.name })
@@ -129,10 +139,11 @@ function squadNamed(page: Page, name: string): Locator {
 
 test("an admin sees the roll call — present ✓, the Squad's head count and the warning — on screen and in Excel @story#124 @story#125", async ({
     browser,
-}) => {
+}, info) => {
+    const project = info.project.name as DoorProject
     const admin = await browser.newContext({ storageState: sessionFile('churchAdmin') })
     const page = await admin.newPage()
-    const [, , tala, faith] = ROLL_CALL.girls['desktop-chromium']
+    const [, , tala, faith] = ROLL_CALL.girls[project]
 
     // At the door, 1PM: this browser's Tala and Faith.
     await page.goto(`/${CHURCH}/door`)
@@ -141,7 +152,7 @@ test("an admin sees the roll call — present ✓, the Squad's head count and th
     await page.getByTestId('door-search').press('Enter')
     const card = page
         .getByTestId('door-family')
-        .filter({ hasText: `${DOOR.guardians['desktop-chromium']} Reyes` })
+        .filter({ hasText: `${DOOR.guardians[project]} Reyes` })
     // Tala and Faith are in (checked in now, unless an earlier try already did).
     const girl = (name: string): Locator =>
         card
@@ -221,7 +232,8 @@ test('a Lifeshaper has no Attendance @story#113', async ({ browser }) => {
     const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const page = await lifeshaper.newPage()
     await page.goto(`/${CHURCH}/door`)
-    await expect(page.getByTestId('nav-door')).toBeVisible()
+    // The menu opened (a sheet on a narrow screen), then the whole page: no Attendance anywhere.
+    await expect((await menuOf(page)).getByTestId('nav-door')).toBeVisible()
     await expect(page.getByRole('link', { name: 'Attendance' })).toHaveCount(0)
 
     const response = await page.goto(`/${CHURCH}/attendance`)

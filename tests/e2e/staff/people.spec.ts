@@ -1,4 +1,5 @@
-import { expect, test } from '@playwright/test'
+import { menuOf } from '../support/menu'
+import { expect, test } from '../support/test'
 import { latestMail, mailCount } from '../support/mailbox'
 import { fillFamily } from '../support/forms'
 import { openEmailedLink, signInByEmail } from '../support/sign-in'
@@ -103,7 +104,7 @@ test('a Lifeshaper who registers their own family can reach both, from one login
     await expect(page).toHaveURL(new RegExp(`/${CHURCH}/family`))
 
     // …and "Switch" asks again.
-    await page.getByTestId('switch-place').click()
+    await (await menuOf(page)).getByTestId('switch-place').click()
     await page.getByTestId('landing-option').filter({ hasText: 'Serve' }).click()
     await expect(page).toHaveURL(new RegExp(`/${CHURCH}/families`))
     await page.goto('/home')

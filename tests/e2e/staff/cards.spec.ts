@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from '../support/test'
 import { askForNewCard, freshCardChild, openCardFamily } from '../support/cards'
 import { registerAndConfirm } from '../support/forms'
-import { CHURCH, SATELLITES, sessionFile, uniqueSurname } from '../support/world'
+import { CHURCH, SATELLITES, projectPhone, sessionFile, uniqueSurname } from '../support/world'
 
 /*
  * Name cards (DECISIONS 2026-10-29). Issue 02: a parent registers Amara, and her family page shows staff her free first
@@ -9,12 +9,6 @@ import { CHURCH, SATELLITES, sessionFile, uniqueSurname } from '../support/world
  * through the import, so he has his card and no request) lost his; a Lifeshaper opens his family, taps "New card…",
  * picks Lost with a note, and sees "Card: Asked · not paid" in place of the button — still there after a reload.
  */
-const PHONES: Record<string, string> = {
-    'mobile-webkit': '0504442201',
-    'mobile-chromium': '0504442202',
-    'desktop-chromium': '0504442203',
-}
-
 test('a newly registered child has a free first card asked for; staff ask for a new card for a child who lost his @story#130 @story#132 @story#133', async ({
     page,
     browser,
@@ -25,7 +19,7 @@ test('a newly registered child has a free first card asked for; staff ask for a 
         {
             first: 'Lorna',
             last: surname,
-            phone: PHONES[info.project.name] ?? '0504442200',
+            phone: projectPhone('0504442200', info.project.name),
             satellite: SATELLITES.dxb,
         },
         [{ first: 'Amara', last: surname, nickname: 'Amara', gender: 'girl', dob: '2019-05-05' }],

@@ -23,7 +23,6 @@ Updated 2026-10-17. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 | # | Item | Why |
 |---|---|---|
 | 9 | Schedule-admin roles (shown as "class", `ScopeTypeEnum::Schedule`) in People — `canGrant` refuses them until Schedules exist | People |
-| 12 | E2E per breakpoint: a **tablet** project (iPad portrait/landscape) and layout assertions per size (no sideways scroll, ≥44/56px targets, menu fits); also run the staff photo-consent journey on phones (needs its own child per run) | Roy 2026-10-15 · review 4 |
 | 13 | E2E for link EXPIRY (2 h login / 7 d verify) — needs a controllable clock in the e2e server; Pest covers it | review 2 |
 | 7, 20 | **Two-connection concurrency tests:** claim acceptance; photo upload vs consent withdrawal; last-admin removal. The helper exists (check-in 02): `withCommittedWorld` + `atTheSameTime` in `tests/Support/Concurrency.php` — real forked processes, one MySQL connection each; used by check-in and Session creation | review-spar · review 3 |
 | 10 | E2E "test map" like admin-v2 (`e2e/map/serve.mjs`): the access matrix as a page, each cell → its tests, with Run buttons | Roy: admin-v2 has a good page per item |
@@ -51,6 +50,7 @@ Updated 2026-10-17. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 
 | # | Item | When |
 |---|---|---|
+| 12 | ~~E2E per breakpoint~~ — done: eight projects by layout band (sm/md/lg; phones 360 and 390 in Chrome and Safari, on their side, tablets 720/768/1024, desktop), every journey on each, every screen layout-checked (no sideways scroll, menu fits on one line, ≥44px on touch); photo consent on every project with its own child; the menu row moved to lg (DECISIONS 2026-10-30) | 2026-10-30 |
 | 2, 11 | E2E harness and journeys for everything built — 43 runs on iPhone Safari, Android Chrome, desktop Chrome | 2026-10-15/16 |
 | 4 | D-R1: import once, app is the source of truth (plan §7.6) | 2026-10-15 |
 | 5 | D-R2: People screens + `ChurchSeeder`; one satellite "CCF Dxb"; first admin blivejesus@gmail.com | 2026-10-16 |

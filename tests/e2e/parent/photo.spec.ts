@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from '../support/test'
 import { registerAndConfirm } from '../support/forms'
 import { CHURCH, SATELLITES, sessionFile, uniqueSurname } from '../support/world'
 
@@ -15,7 +15,7 @@ test('a parent agrees; a Lifeshaper takes the first photo; the parent replaces i
     const surname = uniqueSurname('Lim')
     await registerAndConfirm(
         page,
-        { first: 'Ana', last: surname, phone: '0504440000', satellite: SATELLITES.dxb },
+        { first: 'Rhea', last: surname, phone: '0504440000', satellite: SATELLITES.dxb },
         [{ first: 'Noah', last: surname, nickname: 'Noah', gender: 'boy', dob: '2018-02-02' }],
     )
     await expect(page).toHaveURL(new RegExp(`/${CHURCH}/family`))

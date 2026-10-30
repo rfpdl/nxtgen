@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { checkLayout, expect, test } from '../support/test'
 import { fillChild, fillFamily } from '../support/forms'
 import { latestMail, mailCount } from '../support/mailbox'
 import { openMenu } from '../support/menu'
@@ -155,11 +155,17 @@ test("re-sends a visiting family's confirmation link from the door search @story
     await latestMail(email, before)
 })
 
-test('on a phone the menu is a sheet: Password and Sign out are in it, focus stays in it, Esc closes it', async ({
+test('on a narrow screen the menu is a sheet: Password and Sign out are in it, focus stays in it, Esc closes it', async ({
     page,
-}, info) => {
-    test.skip(!info.project.name.startsWith('mobile'), 'The menu is a sheet on a phone only.')
+    browserName,
+}) => {
+    // From the project's own width, never from what the page draws: under 1024px (lg) the menu must be a sheet.
+    test.skip(
+        (page.viewportSize()?.width ?? 0) >= 1024,
+        'From 1024px the menu is a row: no sheet to test.',
+    )
     await page.goto(`/${CHURCH}/door`)
+    await expect(page.getByTestId('menu-open')).toBeVisible()
     await openMenu(page)
     const sheet = page.getByTestId('menu-sheet')
 
@@ -168,7 +174,7 @@ test('on a phone the menu is a sheet: Password and Sign out are in it, focus sta
 
     // Tab round the sheet more times than it has controls: focus never leaves it. Safari's plain Tab reaches only
     // text fields unless a setting is on; Option+Tab reaches every control, as a keyboard user there would press.
-    const tab = info.project.name === 'mobile-webkit' ? 'Alt+Tab' : 'Tab'
+    const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab'
     for (let i = 0; i < 12; i++) {
         await page.keyboard.press(tab)
         expect(await sheet.evaluate((el) => el.contains(document.activeElement))).toBe(true)
@@ -181,4 +187,43 @@ test('on a phone the menu is a sheet: Password and Sign out are in it, focus sta
     await openMenu(page)
     await sheet.getByTestId('backup-password').click()
     await expect(page).toHaveURL(/\/account\/password/)
+})
+
+test('turning the screen past 1024px closes an open menu sheet — the row and the page take clicks and focus; and back', async ({
+    page,
+    browserName,
+}) => {
+    // Sizes of its own: a tablet upright (768px, the sheet) turned on its side (1024px, the row).
+    await page.setViewportSize({ width: 768, height: 1024 })
+    await page.goto(`/${CHURCH}/door`)
+    await openMenu(page)
+    await expect(page.getByTestId('menu-sheet')).toBeVisible()
+
+    await page.setViewportSize({ width: 1024, height: 768 })
+    await expect(page.getByTestId('menu-sheet')).toHaveCount(0)
+    const row = page.getByTestId('menu-row')
+    await expect(row).toBeVisible()
+    await checkLayout(page)
+    // Nothing is left trapped: the keyboard reaches the row, and the row takes a click.
+    const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab'
+    await page.locator('body').focus()
+    let inRow = false
+    for (let i = 0; i < 15 && !inRow; i++) {
+        await page.keyboard.press(tab)
+        inRow = await row.evaluate((el) => el.contains(document.activeElement))
+    }
+    expect(inRow).toBe(true)
+    await row.getByRole('link', { name: 'Families', exact: true }).click()
+    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/families`))
+
+    // And back to narrow: the page still takes a click, and the Menu button opens the sheet again.
+    await page.setViewportSize({ width: 768, height: 1024 })
+    await expect(page.getByTestId('menu-open')).toBeVisible()
+    await page.getByTestId('register-family').click()
+    await expect(page.getByRole('heading', { name: 'Register a family' })).toBeVisible()
+    await openMenu(page)
+    await expect(page.getByTestId('menu-sheet')).toBeVisible()
+    await checkLayout(page)
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('menu-sheet')).toBeHidden()
 })

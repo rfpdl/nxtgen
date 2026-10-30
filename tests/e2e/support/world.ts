@@ -49,13 +49,45 @@ export const uniqueSurname = (base: string): string =>
     `${base}${Math.random().toString(36).slice(2, 7)}`
 
 /**
- * The door journeys' own families, one set per browser project (E2ESeeder::DOOR_GUARDIANS), so three browsers in
+ * The browser projects (playwright.config.ts), by layout band of the app (Tailwind's sm 640px, md 768px, lg 1024px):
+ * phones upright (a small one, chromium, and Safari for parents' iPhones), a tablet upright (sm), the md edge and a
+ * phone on its side (md), and a tablet on its side at the lg edge and a desktop (lg, the row menu). Every
+ * journey runs on each, one after another, against one database — so each has its own seeded families below.
+ */
+export const PROJECTS = [
+    'phone-portrait',
+    'phone-portrait-safari',
+    'desktop',
+    'phone-landscape',
+    'tablet-portrait',
+    'tablet-landscape',
+    'phone-small',
+    'tablet-edge',
+] as const
+
+export type Project = (typeof PROJECTS)[number]
+
+/** A phone number of this project's own, for a journey that registers a family: `base` with its last digit swapped. */
+export const projectPhone = (base: string, project: string): string =>
+    `${base.slice(0, -1)}${Math.max(0, PROJECTS.indexOf(project as Project))}`
+
+/**
+ * The door journeys' own families, one set per browser project (E2ESeeder::DOOR_GUARDIANS), so the browsers in
  * one database never check in the same child. At CCF DXB: the Cruz family — Amara (allergic: Peanuts), Ben, Noah
  * (inactive), Lola (no Level yet; her age suggests Level 1), Gabe (Graduated). Visiting from House Church: the Villa
  * family's Pia.
  */
 export const DOOR = {
-    guardians: { 'mobile-webkit': 'Ana', 'mobile-chromium': 'Bela', 'desktop-chromium': 'Carla' },
+    guardians: {
+        'phone-portrait': 'Ana',
+        'phone-portrait-safari': 'Bela',
+        desktop: 'Carla',
+        'phone-landscape': 'Dina',
+        'tablet-portrait': 'Elsa',
+        'tablet-landscape': 'Fara',
+        'phone-small': 'Gina',
+        'tablet-edge': 'Iva',
+    },
     cruz: {
         allergic: 'Amara',
         active: 'Ben',
@@ -71,15 +103,33 @@ export const DOOR = {
 export type DoorProject = keyof typeof DOOR.guardians
 
 /**
+ * This project's imported Cruz family as a parent knows it (E2ESeeder::doorFamilies): the parent's name, email and
+ * phone — the phone ends in the project's place in PROJECTS (1-based), as the seeder numbers them.
+ */
+export const doorFamily = (project: string): { guardian: string; email: string; phone: string } => {
+    const first = DOOR.guardians[project as DoorProject]
+    return {
+        guardian: `${first} Cruz`,
+        email: `cruz-${first.toLowerCase()}@nxtgen.test`,
+        phone: `050300000${PROJECTS.indexOf(project as Project) + 1}`,
+    }
+}
+
+/**
  * Who's in (roll call): each browser project's Reyes family at CCF DXB (E2ESeeder::ROLL_CALL_GIRLS) — Level 2 girls
- * named apart, because the three browsers share today's 1PM Session and its Level 2 Girls Squad. The first two are the
+ * named apart, because the browsers share today's 1PM Session and its Level 2 Girls Squad. The first two are the
  * Who's in journey's; the last two, the Attendance journey's (one ticked present, one not).
  */
 export const ROLL_CALL = {
     girls: {
-        'mobile-webkit': ['Sofia', 'Isabel', 'Lia', 'Gia'],
-        'mobile-chromium': ['Mia', 'Elena', 'Nina', 'Ivy'],
-        'desktop-chromium': ['Ruth', 'Hope', 'Tala', 'Faith'],
+        'phone-portrait': ['Sofia', 'Isabel', 'Lia', 'Gia'],
+        'phone-portrait-safari': ['Mia', 'Elena', 'Nina', 'Ivy'],
+        desktop: ['Ruth', 'Hope', 'Tala', 'Faith'],
+        'phone-landscape': ['Jade', 'Kaye', 'Lea', 'Mae'],
+        'tablet-portrait': ['Nia', 'Ora', 'Pam', 'Rae'],
+        'tablet-landscape': ['Sia', 'Tia', 'Una', 'Vea'],
+        'phone-small': ['Wyn', 'Xia', 'Yna', 'Zoe'],
+        'tablet-edge': ['Ada', 'Cora', 'Dora', 'Eda'],
     },
     squad: 'Level 2 Girls',
 } as const
@@ -90,9 +140,14 @@ export const ROLL_CALL = {
  */
 export const SCAN = {
     codes: {
-        'mobile-webkit': 'AMARAJOYREYES',
-        'mobile-chromium': 'AMARAKAYREYES',
-        'desktop-chromium': 'AMARALEEREYES',
+        'phone-portrait': 'AMARAJOYREYES',
+        'phone-portrait-safari': 'AMARAKAYREYES',
+        desktop: 'AMARALEEREYES',
+        'phone-landscape': 'AMARAROSEREYES',
+        'tablet-portrait': 'AMARAFAYEREYES',
+        'tablet-landscape': 'AMARAGWENREYES',
+        'phone-small': 'AMARAIRISREYES',
+        'tablet-edge': 'AMARAJUNEREYES',
     },
     child: 'Amara',
 } as const
@@ -105,4 +160,14 @@ export const SCAN = {
 export const CARDS = {
     surname: 'Ocampo',
     children: ['Jon', 'Kit', 'Ned', 'Rex', 'Sam', 'Tom', 'Ugo', 'Vic', 'Wes'],
+} as const
+
+/**
+ * The Level journey: each browser project's Torres family at CCF DXB (E2ESeeder::LEVEL_CHILDREN), parent
+ * DOOR.guardians' name — girls whose age suggests Level 3. The journey moves the first still at Level 3.
+ */
+export const LEVELS = {
+    surname: 'Torres',
+    children: ['Lexi', 'Lara', 'Luz'],
+    suggested: 'Level 3',
 } as const

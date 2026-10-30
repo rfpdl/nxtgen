@@ -1,22 +1,27 @@
-import { expect, test } from '@playwright/test'
-import { CHURCH, FAMILIES, sessionFile } from '../support/world'
+import { openCardFamily } from '../support/cards'
+import { expect, test } from '../support/test'
+import { sessionFile } from '../support/world'
 
 /*
  * Roy 2026-10-16: consent can be recorded by the parent OR by a Lifeshaper the parent told in person — saved with
  * the staff member's name and noted on the history. No photo until it is recorded.
+ *
+ * On this project's own Ocampo family (E2ESeeder::CARD_CHILDREN): the first boy with no consent yet, so every project
+ * — and a retry, with no reseed — has a child of its own (TODO #12).
  */
 test.use({ storageState: sessionFile('lifeshaper') })
 
 test("a Lifeshaper records the parent's yes, then takes the photo @story#66 @story#68", async ({
     page,
-}) => {
-    await page.goto(`/${CHURCH}/families?q=Dela%20Cruz`)
-    await page
-        .getByTestId('family-row')
-        .filter({ hasText: FAMILIES.dxb.guardian })
-        .getByRole('link')
-        .click()
-    const card = page.getByTestId('family-child').filter({ hasText: FAMILIES.dxb.child })
+}, info) => {
+    await openCardFamily(page, info.project.name)
+    const fresh = page
+        .getByTestId('family-child')
+        .filter({ has: page.getByTestId('record-photo-consent') })
+        .first()
+    const name =
+        (await fresh.getByRole('heading', { level: 3 }).first().textContent())?.trim() ?? ''
+    const card = page.getByTestId('family-child').filter({ hasText: name })
 
     await expect(card.getByTestId('take-photo')).toHaveCount(0)
     await card.getByTestId('record-photo-consent').click()

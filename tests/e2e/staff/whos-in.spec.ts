@@ -1,11 +1,12 @@
-import { expect, test, type Locator, type Page } from '@playwright/test'
+import { type Locator, type Page } from '@playwright/test'
+import { expect, test } from '../support/test'
 import { CHURCH, CLASSES, DOOR, ROLL_CALL, sessionFile, type DoorProject } from '../support/world'
 
 /*
  * Journey — a Squad leader's roll call, on their phone (DECISIONS 2026-10-28): check two girls in at 1PM, switch to
  * Who's in, pick Level 2 Girls, tap them present (and one again to untick her), confirm a head count one short (a
  * warning names who is not marked) then the right one; back on Check in the class is still 1PM; a child undone at
- * the door leaves Who's in. The three browsers share today's 1PM Session and its Level 2 Girls Squad, so each ticks
+ * the door leaves Who's in. The browser projects share today's 1PM Session and its Level 2 Girls Squad, so each ticks
  * its own Reyes girls (E2ESeeder) and reads "N of M present" before comparing after.
  */
 test.use({ storageState: sessionFile('lifeshaper') })

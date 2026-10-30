@@ -1,18 +1,19 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from '../support/test'
 import { registerAndConfirm } from '../support/forms'
-import { CHURCH, CLASSES, SATELLITES, sessionFile, uniqueSurname } from '../support/world'
+import {
+    CHURCH,
+    CLASSES,
+    SATELLITES,
+    projectPhone,
+    sessionFile,
+    uniqueSurname,
+} from '../support/world'
 
 /*
  * Child history (slice 3, DECISIONS 2026-10-28 night): a parent registers Amara; a Lifeshaper checks her in at 1PM and
  * ticks her present on Who's in; the family page shows staff the line "Sat … · 1PM · CCF DXB · Level 2 Girls ·
  * Present ✓"; undone at the door, the line is gone. The parent's own My family page never shows attendance.
  */
-const PHONES: Record<string, string> = {
-    'mobile-webkit': '0504441101',
-    'mobile-chromium': '0504441102',
-    'desktop-chromium': '0504441103',
-}
-
 test("staff see a child's attendance on the family page; the parent never does @story#126 @story#127", async ({
     page,
     browser,
@@ -21,9 +22,9 @@ test("staff see a child's attendance on the family page; the parent never does @
     await registerAndConfirm(
         page,
         {
-            first: 'Ana',
+            first: 'Rhea',
             last: surname,
-            phone: PHONES[info.project.name] ?? '0504441100',
+            phone: projectPhone('0504441100', info.project.name),
             satellite: SATELLITES.dxb,
         },
         [{ first: 'Amara', last: surname, nickname: 'Amara', gender: 'girl', dob: '2019-05-05' }],
@@ -37,7 +38,7 @@ test("staff see a child's attendance on the family page; the parent never does @
     await door.getByTestId('door-class').getByRole('radio', { name: CLASSES.onePm.name }).click()
     await door.getByTestId('door-search').fill(surname)
     await door.getByTestId('door-search').press('Enter')
-    const card = door.getByTestId('door-family').filter({ hasText: `Ana ${surname}` })
+    const card = door.getByTestId('door-family').filter({ hasText: `Rhea ${surname}` })
     await card.getByTestId('tick-child').check()
     await card.getByTestId('check-in').click()
     await expect(door.getByTestId('flash-success')).toContainText('Checked in Amara.')

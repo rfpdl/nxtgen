@@ -1,0 +1,365 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+@font-face { font-family: Lexend; src: url(lexend.woff2) format('woff2'); font-weight: 100 900; }
+:root {
+  --cream: #fff8e6; --amber: #f2b32a; --ink: #2b1d00; --green: #14611f; --green-edge: #0a3a11;
+  --l1: #12a3dc; --l1s: #e2f4fc; --l2: #f2c200; --l2s: #fff6c7; --l3: #e1262c; --l4: #2a9d3a;
+  --cyan: oklch(0.75 0.13 216); --orange: oklch(0.72 0.17 55); --bamber: oklch(0.78 0.15 78);
+  --girl: oklch(0.55 0.2 5); --boy: oklch(0.52 0.19 258);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--cream); font-family: Lexend, sans-serif; color: var(--ink); }
+#stage { position: absolute; inset: 0; overflow: hidden; background: var(--cream); }
+.abs { position: absolute; left: 0; top: 0; will-change: transform, opacity; }
+.dots { position: absolute; inset: 0; background-image: radial-gradient(rgba(43,29,0,.07) 3px, transparent 3.5px); background-size: 48px 48px; }
+
+/* stickers and captions */
+.kicker { font-weight: 700; font-size: 34px; padding: 10px 26px 12px; border: 4px solid var(--ink); border-radius: 999px; background: var(--amber); box-shadow: 0 6px 0 var(--ink); white-space: nowrap; }
+.cap { font-weight: 800; font-size: 96px; line-height: 1.04; letter-spacing: -0.02em; white-space: nowrap; }
+.cap .hl { background: linear-gradient(transparent 58%, var(--amber) 58%, var(--amber) 92%, transparent 92%); padding: 0 6px; }
+.sticker { font-weight: 700; border: 4px solid var(--ink); border-radius: 22px; background: #fff; box-shadow: 0 8px 0 var(--ink); white-space: nowrap; }
+
+/* paper chaos */
+.sheet { width: 360px; height: 470px; background: #fff; border: 3px solid #d9cfb8; border-radius: 6px; box-shadow: 0 10px 24px rgba(43,29,0,.18); padding: 26px 24px; }
+.sheet h4 { font-size: 22px; font-weight: 800; letter-spacing: .04em; margin-bottom: 6px; }
+.sheet .sub { font-size: 15px; color: #7a6a4a; margin-bottom: 12px; }
+.sheet svg { display: block; }
+.ncard { width: 300px; height: 190px; border-radius: 16px; border: 5px solid; background: #fff; padding: 14px 16px; box-shadow: 0 10px 22px rgba(43,29,0,.2); }
+.ncard .top { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; letter-spacing: .06em; }
+
+/* phone */
+.phone { width: 434px; height: 888px; border-radius: 64px; background: var(--ink); padding: 22px; box-shadow: 0 16px 0 rgba(43,29,0,.9), 0 30px 60px rgba(43,29,0,.25); }
+.screen { position: relative; width: 390px; height: 844px; border-radius: 44px; overflow: hidden; background: #fff; }
+.screen img { position: absolute; left: 0; top: 0; width: 390px; display: block; }
+.screen .bar { position: absolute; left: 0; top: 0; width: 390px; height: 72px; overflow: hidden; }
+.screen .ov { position: absolute; left: 0; top: 0; width: 390px; overflow: hidden; }
+.ring { position: absolute; border: 5px solid var(--orange); border-radius: 18px; pointer-events: none; }
+.tap { position: absolute; width: 70px; height: 70px; margin: -35px 0 0 -35px; border-radius: 50%; background: rgba(43,29,0,.28); border: 4px solid rgba(255,255,255,.9); }
+
+/* laptop */
+.laptop { width: 1060px; }
+.lid { background: var(--ink); border-radius: 30px 30px 10px 10px; padding: 22px; box-shadow: 0 30px 60px rgba(43,29,0,.25); }
+.lid .scr { position: relative; width: 1016px; height: 635px; overflow: hidden; border-radius: 8px; background: #fff; }
+.lid img { width: 1016px; display: block; }
+.base { height: 30px; margin: 0 -40px; background: #3d2c08; border-radius: 0 0 26px 26px; box-shadow: 0 10px 0 var(--ink); }
+
+/* name card (the real one: NXTGEN, name, barcode) */
+.bigcard { width: 640px; height: 400px; border-radius: 30px; border: 10px solid var(--girl); background: oklch(0.97 0.02 5); padding: 26px 34px; box-shadow: 0 14px 0 var(--ink); }
+.bigcard .row { display: flex; align-items: center; gap: 16px; }
+.bigcard .nx { font-weight: 800; font-size: 34px; letter-spacing: .08em; }
+.bigcard .nm { font-weight: 800; font-size: 54px; margin-top: 14px; }
+.bigcard .lv { display: inline-flex; align-items: center; gap: 10px; margin-top: 6px; font-size: 26px; font-weight: 700; background: var(--l2s); color: #5a4500; border-radius: 999px; padding: 4px 18px; }
+.bigcard .lv i { width: 16px; height: 16px; border-radius: 50%; background: var(--l2); display: inline-block; }
+.bigcard .bc { margin-top: 18px; background: #fff; padding: 10px 14px 4px; border-radius: 10px; }
+.bigcard .code { text-align: center; font-size: 22px; font-weight: 600; letter-spacing: .3em; margin-top: 2px; }
+.laser { position: absolute; height: 8px; border-radius: 4px; background: var(--l3); box-shadow: 0 0 22px 8px rgba(225,38,44,.55); }
+
+.wm { font-weight: 800; letter-spacing: -0.03em; white-space: nowrap; }
+.wm .x { color: var(--orange); }
+.conf { position: absolute; border-radius: 4px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="dots"></div>
+  <div id="papers"></div>
+  <div id="layer"></div>
+</div>
+<script>
+// ---------- helpers ----------
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x))
+const seg = (t, a, b) => clamp((t - a) / (b - a))
+const outCubic = (x) => 1 - Math.pow(1 - x, 3)
+const inCubic = (x) => x * x * x
+const inOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2)
+const outBack = (x, s = 2.2) => 1 + (s + 1) * Math.pow(x - 1, 3) + s * Math.pow(x - 1, 2)
+const lerp = (a, b, x) => a + (b - a) * x
+const $ = (html) => { const d = document.createElement('div'); d.innerHTML = html.trim(); return d.firstChild }
+const layer = document.getElementById('layer')
+const add = (html, parent = layer) => { const el = $(html); el.classList.add('abs'); parent.appendChild(el); return el }
+const place = (el, { x = 0, y = 0, s = 1, r = 0, o = 1, sx, sy } = {}) => {
+  el.style.transform = `translate(${x}px, ${y}px) rotate(${r}deg) scale(${sx ?? s}, ${sy ?? s})`
+  el.style.opacity = o
+  el.style.visibility = o <= 0.001 ? 'hidden' : 'visible'
+}
+const pop = (t, at, dur = 0.45) => (t < at ? 0 : outBack(seg(t, at, at + dur)))
+let rnd = 7; const rand = () => ((rnd = (rnd * 16807) % 2147483647) / 2147483647)
+
+const LOGO = (size) => `<svg viewBox="0 0 48 48" width="${size}" height="${size}" style="display:block">
+  <circle cx="24" cy="24" r="24" fill="oklch(0.78 0.15 78)"/>
+  <rect x="8" y="13" width="32" height="22" fill="#fff" stroke="oklch(0.72 0.17 55)" stroke-width="2"/>
+  <g font-family="Lexend" font-size="9" font-weight="800" text-anchor="middle" letter-spacing="0.4">
+    <text x="24" y="22.5" fill="oklch(0.75 0.13 216)">N<tspan fill="oklch(0.72 0.17 55)">X</tspan>T</text>
+    <text x="24" y="31.5" fill="oklch(0.75 0.13 216)">GEN</text></g></svg>`
+
+// Code 39 (GLOSSARY "Name card"): the full name in capitals, no spaces.
+const C39 = { A:'100001001',B:'001001001',C:'101001000',D:'000011001',E:'100011000',F:'001011000',G:'000001101',H:'100001100',I:'001001100',J:'000011100',K:'100000011',L:'001000011',M:'101000010',N:'000010011',O:'100010010',P:'001010010',Q:'000000111',R:'100000110',S:'001000110',T:'000010110',U:'110000001',V:'011000001',W:'111000000',X:'010010001',Y:'110010000',Z:'011010000','*':'010010100' }
+function code39(text, h, nw = 3, ww = 8) {
+  let x = 0, rects = ''
+  for (const ch of `*${text}*`) {
+    const p = C39[ch]
+    for (let i = 0; i < 9; i++) { const w = p[i] === '1' ? ww : nw; if (i % 2 === 0) rects += `<rect x="${x}" y="0" width="${w}" height="${h}" fill="#111"/>`; x += w }
+    x += nw
+  }
+  return `<svg viewBox="0 0 ${x} ${h}" width="100%" height="${h}" preserveAspectRatio="none" style="display:block">${rects}</svg>`
+}
+
+// ---------- shots ----------
+const S = 'shots/'
+const shotH = { 'reg-1-filled-full': 5312, 'reg-3-family-full': 1423, 'card-0-family-full': 1828, 'card-1-picker-full': 2076, 'card-2-lost-full': 2076, 'card-3-asked-full': 1880, 'card-4-printed-full': 1828, 'card-5-given-full': 1892 }
+const preload = ['reg-1-filled-full','reg-3-family-full','door-0-start','door-2-found','door-3-both','door-4-checked','whos-2-confirmed-full','card-0-family-full','card-1-picker-full','card-2-lost-full','card-3-asked-full','card-4-printed-full','card-5-given-full','cards-3-printlist']
+window.ready = Promise.all([document.fonts.load('800 40px Lexend'), document.fonts.load('600 40px Lexend'), ...preload.map((n) => { const i = new Image(); i.src = S + n + '.png'; return i.decode() })])
+
+function makePhone() {
+  const el = add(`<div class="phone"><div class="screen"><img class="main"><div class="bar"><img></div><div class="ov"></div><div class="ring"></div><div class="tap"></div></div></div>`)
+  const main = el.querySelector('img.main'), bar = el.querySelector('.bar'), barImg = bar.querySelector('img')
+  const ring = el.querySelector('.ring'), tap = el.querySelector('.tap')
+  return {
+    el,
+    // name: shot; off: CSS px scrolled; withBar: keep the app's top bar pinned (a scrolled full-page shot)
+    show(name, off = 0, withBar = false) {
+      const src = S + name + '.png'
+      if (main.getAttribute('src') !== src) main.setAttribute('src', src)
+      main.style.transform = `translateY(${-off}px)`
+      bar.style.display = withBar && off > 0 ? 'block' : 'none'
+      if (withBar && barImg.getAttribute('src') !== src) barImg.setAttribute('src', src)
+    },
+    ring(box, k) { // box in screen CSS px; k 0..1 pulse
+      if (!box || k <= 0) { ring.style.opacity = 0; return }
+      const g = 8 + 10 * (1 - k)
+      Object.assign(ring.style, { left: box[0] - g + 'px', top: box[1] - g + 'px', width: box[2] + 2 * g + 'px', height: box[3] + 2 * g + 'px', opacity: Math.min(1, k * 2) })
+    },
+    tap(x, y, k) { // k 0..1 over the tap
+      if (k <= 0 || k >= 1) { tap.style.opacity = 0; return }
+      tap.style.left = x + 'px'; tap.style.top = y + 'px'
+      tap.style.opacity = Math.sin(k * Math.PI)
+      tap.style.transform = `scale(${0.6 + 0.6 * k})`
+    },
+  }
+}
+const bottom = (name) => shotH[name] - 844
+
+// ---------- scene 1: paper chaos ----------
+const papers = document.getElementById('papers')
+const scribble = (w, rows, seed) => {
+  rnd = seed; let s = ''
+  for (let r = 0; r < rows; r++) {
+    const y = 18 + r * 34
+    s += `<line x1="0" y1="${y + 8}" x2="${w}" y2="${y + 8}" stroke="#cfe0f0" stroke-width="2"/>`
+    let x = 6, d = `M${x} ${y}`
+    const len = 90 + rand() * (w - 150)
+    while (x < len) { x += 7 + rand() * 9; d += ` L${x.toFixed(1)} ${(y - 6 + rand() * 9).toFixed(1)}` }
+    s += `<path d="${d}" fill="none" stroke="#3b4a8a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/>`
+    if (rand() > 0.5) s += `<path d="M${w - 34} ${y - 4} l6 7 l12 -14" fill="none" stroke="#3b4a8a" stroke-width="3" stroke-linecap="round"/>`
+  }
+  return `<svg width="${w}" height="${rows * 34 + 20}">${s}</svg>`
+}
+const chaos = []
+const sheetSpots = [[980, 120, -14], [1340, 200, 9], [760, 470, 6], [1180, 540, -8], [1520, 560, 15], [560, 640, -18], [1420, -40, -4]]
+sheetSpots.forEach(([x, y, r], i) => {
+  const el = add(`<div class="sheet"><h4>SIGN-IN SHEET</h4><div class="sub">Kids · 1PM · page ${i + 1}</div>${scribble(312, 11, 11 + i * 31)}</div>`, papers)
+  chaos.push({ el, x, y, r, at: 0.05 + i * 0.12, kind: 's' })
+})
+const cardSpots = [[880, 380, 22, 'girl'], [1600, 330, -25, 'boy'], [1250, 820, 12, 'boy'], [700, 900, -9, 'girl'], [1700, 820, 30, 'girl'], [1080, 60, -30, 'boy']]
+cardSpots.forEach(([x, y, r, g], i) => {
+  const el = add(`<div class="ncard" style="border-color:var(--${g});background:oklch(0.97 0.02 ${g === 'girl' ? 5 : 258})"><div class="top">${LOGO(38)} NXTGEN</div>
+    <div style="height:14px;margin:16px 0 14px;width:${120 + i * 17}px;background:#3b4a8a;opacity:.25;border-radius:7px"></div>
+    <div style="background:#fff;padding:6px 8px;border-radius:6px">${code39(['SAMPLE', 'NAMECARD', 'LOST', 'NXTGEN', 'CARD', 'KIDS'][i], 46, 2, 5)}</div></div>`, papers)
+  chaos.push({ el, x, y, r, at: 0.35 + i * 0.13, kind: 'c' })
+})
+const hookA = add(`<div class="cap sticker" style="font-size:118px;padding:14px 40px 22px;border-radius:30px">Saturday. 1 PM.</div>`)
+const hookB = add(`<div class="cap sticker" style="font-size:84px;padding:14px 36px 20px;background:var(--amber)">80 kids at the door.</div>`)
+
+// ---------- scene 2 / 6: logo ----------
+const logo = add(`<div>${LOGO(330)}</div>`)
+const word = add(`<div class="wm" style="font-size:210px">N<span class="x">x</span>tGen</div>`)
+const sorted = add(`<div class="cap sticker" style="font-size:92px;padding:12px 40px 22px;background:var(--green);color:#fff;box-shadow:0 10px 0 var(--green-edge);border-color:var(--green-edge)">Check-in, sorted.</div>`)
+const outro = add(`<div class="cap" style="font-size:84px;text-align:center">Every kid known,<br><span class="hl">every Saturday.</span></div>`)
+const outroSub = add(`<div style="font-size:38px;font-weight:600;color:#6b5a35;white-space:nowrap">The kids church app for CCF Dubai</div>`)
+
+// confetti in the Level colours
+const confColors = ['var(--l1)', 'var(--l2)', 'var(--l3)', 'var(--l4)', 'var(--orange)', 'var(--cyan)']
+rnd = 42
+const confetti = Array.from({ length: 60 }, (_, i) => {
+  const el = add(`<div class="conf" style="width:${14 + rand() * 14}px;height:${10 + rand() * 10}px;background:${confColors[i % 6]}"></div>`)
+  return { el, a: rand() * Math.PI * 2, v: 500 + rand() * 900, spin: (rand() - 0.5) * 900, drift: rand() }
+})
+function burst(t, at, cx, cy, n0 = 0, n1 = 60) {
+  confetti.forEach((c, i) => {
+    if (i < n0 || i >= n1) return
+    const k = t - at
+    if (k < 0 || k > 2.2) { place(c.el, { o: 0 }); return }
+    const sp = c.v * (1 - Math.exp(-k * 3)) / 3
+    place(c.el, { x: cx + Math.cos(c.a) * sp, y: cy + Math.sin(c.a) * sp + 260 * k * k, r: c.spin * k, o: clamp(1 - (k - 1.4) / 0.8) })
+  })
+}
+
+// ---------- shared ----------
+const kicker = add(`<div class="kicker"></div>`)
+const capA = add(`<div class="cap"></div>`)
+const capB = add(`<div class="cap"></div>`)
+const capC = add(`<div class="cap"></div>`)
+const phone = makePhone()
+const bubbles = [0, 1, 2].map(() => add(`<div class="sticker" style="font-size:44px;padding:10px 28px 14px"></div>`))
+const setBubble = (b, html, style = '') => { if (b.dataset.h !== html + style) { b.innerHTML = html; b.style.cssText = style; b.dataset.h = html + style } }
+const pill = (n, label) => `<span style="display:inline-flex;align-items:center;gap:14px"><i style="width:22px;height:22px;border-radius:50%;background:var(--l${n});display:inline-block"></i>${label}</span>`
+
+const bigcard = add(`<div class="bigcard"><div class="row">${LOGO(64)}<span class="nx">NXTGEN</span></div>
+  <div class="nm">Amara Joy Reyes</div><div class="lv"><i></i>Level 2 Girls</div>
+  <div class="bc">${code39('AMARAJOYREYES', 74)}<div class="code">AMARAJOYREYES</div></div></div>`)
+const laser = add(`<div class="laser" style="width:640px"></div>`)
+const laptop = add(`<div class="laptop"><div class="lid"><div class="scr"><img src="shots/cards-3-printlist.png"><div class="ring" style="position:absolute;border:6px solid var(--orange);border-radius:16px"></div></div></div><div class="base"></div></div>`)
+const lapRing = laptop.querySelector('.ring')
+
+const setText = (el, html) => { if (el.dataset.h !== html) { el.innerHTML = html; el.dataset.h = html } }
+const hide = (...els) => els.forEach((e) => place(e, { o: 0 }))
+
+// ---------- render ----------
+window.render = function (t) {
+  hide(hookA, hookB, logo, word, sorted, outro, outroSub, kicker, capA, capB, capC, phone.el, bigcard, laser, laptop, ...bubbles)
+  confetti.forEach((c) => place(c.el, { o: 0 }))
+  phone.ring(null, 0); phone.tap(0, 0, 0)
+
+  // 1 · Hook 0–3.0 (papers swept at 3.0–3.4)
+  chaos.forEach((c, i) => {
+    const k = pop(t, c.at, 0.5)
+    const sweep = inCubic(seg(t, 2.95, 3.45 + i * 0.015))
+    const jit = Math.sin(t * 9 + i * 1.7) * 2.2 * seg(t, c.at + 0.5, c.at + 0.8)
+    place(c.el, { x: c.x - sweep * 2300 + (1 - clamp(k)) * 160, y: c.y - (1 - clamp(k)) * 700 + Math.cos(t * 7 + i) * 2 * jit, r: c.r * (0.4 + 0.6 * k) + jit - sweep * 40, s: c.kind === 's' ? 1 : 1, o: t < c.at ? 0 : 1 })
+  })
+  if (t < 3.4) {
+    const out = inCubic(seg(t, 2.95, 3.35))
+    place(hookA, { x: 110 - out * 1400, y: 250, s: pop(t, 0.25), r: -3 })
+    place(hookB, { x: 130 - out * 1400, y: 470, s: pop(t, 0.85), r: 2 })
+  }
+
+  // 2 · Reveal 3.0–5.5
+  if (t >= 3.1 && t < 5.5) {
+    const out = inCubic(seg(t, 5.25, 5.5))
+    place(logo, { x: 330, y: 260 - out * 1200, s: pop(t, 3.1, 0.55), r: (1 - clamp(pop(t, 3.1, 0.55))) * -40 })
+    const w = outCubic(seg(t, 3.3, 3.75))
+    place(word, { x: 720 + (1 - w) * 120, y: 300 - out * 1200, o: w })
+    place(sorted, { x: 720, y: 600 - out * 1200, s: pop(t, 3.6), r: -2 })
+    burst(t, 3.15, 495, 425)
+  }
+
+  // 3 · Register 5.5–9.5
+  if (t >= 5.5 && t < 9.5) {
+    const inK = outBack(seg(t, 5.5, 5.95), 1.4), outK = inCubic(seg(t, 9.25, 9.5))
+    const px = 300, py = 96 + (1 - inK) * 1100 - outK * 1100
+    place(phone.el, { x: px, y: py, r: (1 - inK) * 8 })
+    if (t < 7.5) {
+      const k1 = inOut(seg(t, 5.9, 6.5)), k2 = inOut(seg(t, 6.6, 7.0)), k3 = inOut(seg(t, 7.0, 7.3))
+      const off = 2040 * k1 + (3590 - 2040) * k2 + (4468 - 3590) * k3
+      phone.show('reg-1-filled-full', off)
+      phone.tap(195, 795, seg(t, 7.25, 7.5))
+    } else {
+      phone.show('reg-3-family-full', 150, true)
+      phone.ring([28, 335 - 150, 104, 30], seg(t, 7.8, 8.0) * (1 - seg(t, 9.1, 9.3)))
+      phone.ring(t > 8.3 ? [28, 799 - 150, 104, 30] : [28, 335 - 150, 104, 30], seg(t, 7.8, 8.0) * (1 - seg(t, 9.1, 9.3)))
+    }
+    setText(kicker, '1 · Parents register'); place(kicker, { x: 900, y: 230 - outK * 900, s: pop(t, 5.6) })
+    setText(capA, 'A whole family,'); place(capA, { x: 900, y: 330 - outK * 900, o: outCubic(seg(t, 5.8, 6.1)), sy: 1, s: 1 })
+    setText(capB, '<span class="hl">in a minute.</span>'); place(capB, { x: 900, y: 440 - outK * 900, o: outCubic(seg(t, 6.0, 6.3)) })
+    // the children appear with their Level pills
+    setBubble(bubbles[0], pill(2, 'Amara · Level 2'), 'font-size:46px;padding:12px 30px 16px;background:var(--l2s)')
+    setBubble(bubbles[1], pill(1, 'Ben · Level 1'), 'font-size:46px;padding:12px 30px 16px;background:var(--l1s)')
+    place(bubbles[0], { x: 930, y: 650 - outK * 900, s: pop(t, 7.75), r: -3 })
+    place(bubbles[1], { x: 1010, y: 790 - outK * 900, s: pop(t, 8.25), r: 2 })
+  }
+
+  // 4 · Check in 9.5–14.5
+  if (t >= 9.5 && t < 14.5) {
+    const outK = inCubic(seg(t, 14.25, 14.5))
+    const inK = outBack(seg(t, 9.5, 9.95), 1.4)
+    place(phone.el, { x: 1330 + (1 - inK) * 700 + outK * 900, y: 96 })
+    if (t < 10.6) phone.show('door-0-start')
+    else if (t < 11.1) phone.show('door-2-found')
+    else if (t < 11.6) phone.show('door-3-both')
+    else if (t < 12.6) phone.show('door-4-checked')
+    else phone.show('whos-2-confirmed-full', inOut(seg(t, 13.4, 14.0)) * 300, true)
+    if (t >= 10.6 && t < 11.1) phone.ring([46, 584, 40, 44], seg(t, 10.6, 10.75))
+    phone.tap(75, 1028 / 1.408, seg(t, 10.85, 11.1))
+    phone.tap(195, 822, seg(t, 11.35, 11.6))
+    phone.tap(290, 113, seg(t, 12.35, 12.6))
+
+    setText(kicker, '2 · Lifeshapers at the door'); place(kicker, { x: 140, y: 150 - outK * 900, s: pop(t, 9.55) })
+    setText(capA, 'Scan.'); place(capA, { x: 140, y: 250 - outK * 900, s: pop(t, 9.7), o: t >= 9.7 ? 1 : 0 })
+    setText(capB, 'Tick.'); place(capB, { x: 470, y: 250 - outK * 900, s: pop(t, 10.95), o: t >= 10.95 ? 1 : 0 })
+    setText(capC, '<span class="hl">Everyone counted.</span>'); place(capC, { x: 140, y: 360 - outK * 900, s: pop(t, 12.6), o: t >= 12.6 ? 1 : 0 })
+
+    // the name card under the scanner, then off into the phone
+    const cIn = outBack(seg(t, 9.6, 10.05), 1.5), cOut = inCubic(seg(t, 10.55, 10.95))
+    if (t < 10.95) {
+      place(bigcard, { x: 200 - (1 - cIn) * 900 + cOut * 1150, y: 520 + cOut * -60, r: -4 + cOut * 10, s: 1 - cOut * 0.6, o: 1 - cOut * 0.6 })
+      const sweep = seg(t, 10.05, 10.5)
+      if (sweep > 0 && sweep < 1) place(laser, { x: 200, y: 520 + 250 + Math.sin(sweep * Math.PI * 2) * 50, r: -4, o: 1 })
+    }
+    // what the door says, in its own words
+    setBubble(bubbles[0], '✓ Checked in Amara and Ben.', 'font-size:44px;padding:12px 30px 16px;background:var(--green);color:#fff;border-color:var(--green-edge);box-shadow:0 8px 0 var(--green-edge)')
+    place(bubbles[0], { x: 140, y: 560 - outK * 900, s: pop(t, 11.75), r: -2 })
+    setBubble(bubbles[1], pill(1, 'Level 1 · 2 of 2 present'), 'font-size:42px;padding:12px 28px 16px;background:var(--l1s)')
+    setBubble(bubbles[2], pill(2, 'Level 2 Girls · 2 of 2 present'), 'font-size:42px;padding:12px 28px 16px;background:var(--l2s)')
+    place(bubbles[1], { x: 170, y: 700 - outK * 900, s: pop(t, 12.85), r: 1.5 })
+    place(bubbles[2], { x: 140, y: 830 - outK * 900, s: pop(t, 13.25), r: -1.5 })
+  }
+
+  // 5 · Lost card 14.5–20.5
+  if (t >= 14.5 && t < 20.5) {
+    const outK = inCubic(seg(t, 20.25, 20.5))
+    const inK = outBack(seg(t, 14.5, 14.95), 1.4)
+    const lapK = outCubic(seg(t, 17.45, 17.8)) * (1 - inCubic(seg(t, 18.85, 19.15)))
+    place(phone.el, { x: 220 + (1 - inK) * -900 - lapK * 1100, y: 96 + outK * 1100 })
+    const bOff = (n) => bottom(n)
+    if (t < 15.25) phone.show('card-0-family-full', bOff('card-0-family-full'), true)
+    else if (t < 15.75) phone.show('card-1-picker-full', bOff('card-1-picker-full'), true)
+    else if (t < 16.25) phone.show('card-2-lost-full', bOff('card-2-lost-full'), true)
+    else if (t < 19.5) phone.show('card-3-asked-full', 1036 - 72, true)
+    else if (t < 19.65) phone.show('card-4-printed-full', bOff('card-4-printed-full'), true)
+    else phone.show('card-5-given-full', 1048 - 72, true)
+    phone.tap(100, 571, seg(t, 14.95, 15.25))      // New card…
+    phone.tap(70, 355, seg(t, 15.45, 15.75))       // Lost
+    phone.tap(133, 567, seg(t, 15.95, 16.25))      // Ask for a new card
+    if (t >= 16.25 && t < 17.6) phone.ring([28, 636, 210, 34], seg(t, 16.35, 16.55))
+    if (t >= 19.15 && t < 19.5) { phone.show('card-4-printed-full', bOff('card-4-printed-full'), true); phone.tap(266, 571, seg(t, 19.25, 19.5)) }
+    if (t >= 19.65) phone.ring([8, 72, 374, 66], seg(t, 19.7, 19.9))
+
+    // the Cards page: Print list
+    place(laptop, { x: 60 + (1 - lapK) * -1300, y: 300, s: 0.86, o: lapK > 0.001 ? 1 : 0 }); laptop.style.transformOrigin = '0 0'
+    Object.assign(lapRing.style, { left: '106px', top: '382px', width: '802px', height: '114px', opacity: seg(t, 18.0, 18.2) })
+
+    setText(kicker, '3 · Name cards'); place(kicker, { x: 1000, y: 150 - outK * 900, s: pop(t, 14.55) })
+    setText(capA, 'Lost card?'); place(capA, { x: 1000, y: 250 - outK * 900, s: pop(t, 14.7), o: t >= 14.7 ? 1 : 0 })
+    setText(capB, 'Back in their hands'); place(capB, { x: 1000, y: 360 - outK * 900, o: outCubic(seg(t, 15.2, 15.5)), sx: 0.82, sy: 0.82 })
+    setText(capC, '<span class="hl">by next week.</span>'); place(capC, { x: 1000, y: 450 - outK * 900, o: outCubic(seg(t, 15.4, 15.7)), sx: 0.82, sy: 0.82 })
+    capB.style.transformOrigin = capC.style.transformOrigin = '0 0'
+
+    setBubble(bubbles[0], 'Card: Asked · not paid', 'font-size:46px;padding:12px 30px 16px;background:#fdf0cc;color:#5a4500')
+    place(bubbles[0], { x: 1040, y: 640, s: pop(t, 16.35) * (1 - outCubic(seg(t, 17.75, 17.95))), r: -2 })
+    setBubble(bubbles[1], 'Print list · 3 cards', 'font-size:46px;padding:12px 30px 16px;background:var(--amber)')
+    place(bubbles[1], { x: 1040, y: 640, s: pop(t, 17.95) * (1 - outCubic(seg(t, 19.4, 19.6))), r: 2 })
+    setBubble(bubbles[2], '✓ Given', 'font-size:52px;padding:12px 34px 16px;background:var(--green);color:#fff;border-color:var(--green-edge);box-shadow:0 8px 0 var(--green-edge)')
+    place(bubbles[2], { x: 1040, y: 640 - outK * 900, s: pop(t, 19.6), r: -3 })
+    if (t > 19.6) burst(t, 19.6, 1180, 690, 0, 30)
+  }
+  capB.style.transformOrigin = capC.style.transformOrigin = '0 0'
+
+  // 6 · Outro 20.5–25
+  if (t >= 20.5) {
+    const k = pop(t, 20.55, 0.6)
+    place(logo, { x: 960 - 165 * 0.82, y: 110, s: k * 0.82, r: (1 - clamp(k)) * 30 })
+    logo.style.transformOrigin = '165px 165px'
+    const w = outCubic(seg(t, 20.8, 21.2))
+    place(word, { x: 960 - word.offsetWidth / 2, y: 400 + (1 - w) * 40, o: w })
+    place(outro, { x: 960 - outro.offsetWidth / 2, y: 660, o: outCubic(seg(t, 21.2, 21.6)), s: 1 })
+    place(outroSub, { x: 960 - outroSub.offsetWidth / 2, y: 900, o: outCubic(seg(t, 21.8, 22.2)) })
+    burst(t, 20.6, 960, 260)
+  }
+}
+window.render(0)
+</script>
+</body>
+</html>

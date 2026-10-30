@@ -17,13 +17,16 @@ import {
     DialogTitle,
     DialogTrigger,
 } from 'reka-ui'
-import { computed, ref } from 'vue'
+import { useMediaQuery } from '@vueuse/core'
+import { computed, ref, watch } from 'vue'
 
 /**
  * The Bold frame for every signed-in page (DECISIONS 2026-10-28): an amber bar with the logo, the page's name and
  * `place` (the church) under it; the menu `items`, then Switch and Sign out. On a phone the menu is a sheet of big
- * buttons behind the Menu button (a reka-ui Dialog: focus stays inside, Esc closes and gives focus back); from 768px
- * it is a row in the bar. Which one shows is CSS alone (`md:`), so the first paint is already right. The flash
+ * buttons behind the Menu button (a reka-ui Dialog: focus stays inside, Esc closes and gives focus back); from 1024px
+ * (`lg`) it is a row in the bar, in base-size words, on ONE line — an admin's ten items do not fit one line at 768px
+ * (TODO #12's layout check found it wrapping even at 1280px). Which one shows is CSS alone, so the first paint is
+ * already right. The flash
  * message sits under the bar; the page is the slot.
  *
  * Without `items` there is no menu at all — the public pages (welcome, register, sign in) and the few signed-in
@@ -39,6 +42,13 @@ const width = computed(() => (props.narrow ? 'max-w-2xl' : 'max-w-5xl'))
 
 const { message, dismiss } = useFlashMessages()
 const open = ref(false)
+
+// The sheet is for screens under 1024px (lg). Grown past it (a tablet turned, a window widened), the sheet's dialog is
+// hidden by CSS but would stay open — its focus trap keeping the page inert. So crossing to the row closes it.
+const rowShows = useMediaQuery('(min-width: 1024px)')
+watch(rowShows, (row) => {
+    if (row) open.value = false
+})
 
 /**
  * reka-ui's focus trap wraps a plain Tab only; Safari's Option+Tab (how its keyboard users reach every control) walked
@@ -78,7 +88,7 @@ function wrapOptionTab(event: KeyboardEvent): void {
                             <AppButton
                                 variant="quiet"
                                 size="icon"
-                                class="md:hidden"
+                                class="lg:hidden"
                                 data-testid="menu-open"
                             >
                                 <Menu class="size-7" aria-hidden="true" />
@@ -86,9 +96,9 @@ function wrapOptionTab(event: KeyboardEvent): void {
                             </AppButton>
                         </DialogTrigger>
                         <DialogPortal>
-                            <DialogOverlay class="bg-text/40 fixed inset-0 z-40 md:hidden" />
+                            <DialogOverlay class="bg-text/40 fixed inset-0 z-40 lg:hidden" />
                             <DialogContent
-                                class="bg-surface rounded-b-card fixed inset-x-0 top-0 z-50 flex max-h-dvh flex-col gap-3 overflow-y-auto p-4 pb-6 md:hidden"
+                                class="bg-surface rounded-b-card fixed inset-x-0 top-0 z-50 flex max-h-dvh flex-col gap-3 overflow-y-auto p-4 pb-6 lg:hidden"
                                 data-testid="menu-sheet"
                                 @keydown="wrapOptionTab"
                             >
@@ -132,7 +142,7 @@ function wrapOptionTab(event: KeyboardEvent): void {
                 </div>
                 <nav
                     v-if="items"
-                    class="hidden flex-wrap items-center gap-1 pb-1 md:flex"
+                    class="hidden flex-wrap items-center gap-1 pb-1 lg:flex"
                     aria-label="Menu"
                     data-testid="menu-row"
                 >
@@ -142,7 +152,7 @@ function wrapOptionTab(event: KeyboardEvent): void {
                         :href="item.href"
                         variant="quiet"
                         :class="[
-                            'px-2.5!',
+                            'px-2.5! text-base!',
                             item.current ? 'underline decoration-4 underline-offset-8' : null,
                         ]"
                         :aria-current="item.current ? 'page' : undefined"

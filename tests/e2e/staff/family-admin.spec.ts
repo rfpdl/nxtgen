@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
-import { expect, test } from '@playwright/test'
+import { allNavigation, closeMenu } from '../support/menu'
+import { expect, test } from '../support/test'
 import { fillFamily } from '../support/forms'
 import { latestMail, mailCount } from '../support/mailbox'
 import { openEmailedLink } from '../support/sign-in'
@@ -22,7 +23,9 @@ test('register for a parent, resend, correct the email, set a status @story#47 @
 
     // No Register tab: the Families list's button opens the search-first page.
     await page.goto(`/${CHURCH}/families`)
-    await expect(page.getByRole('navigation')).not.toContainText('Register a family')
+    for (const nav of await allNavigation(page))
+        await expect(nav).not.toContainText('Register a family')
+    await closeMenu(page)
     await page.getByTestId('register-family').click()
     await expect(page.getByRole('heading', { name: 'Register a family' })).toBeVisible()
     await page.getByTestId('register-new').click()

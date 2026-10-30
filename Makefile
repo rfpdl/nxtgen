@@ -187,7 +187,7 @@ check: pint analyse test-arch test-parallel test-fe lint format-check typecheck 
 
 # Deliberately outside `check`: it needs browsers and a server, and it runs against its own database
 # on its own port so a run never touches the working data.
-e2e: ## Browser journeys (iPhone Safari + desktop Chrome) on the e2e database; builds assets first
+e2e: ## Browser journeys at every layout band (phone, tablet, desktop; Safari too) on the e2e database; builds assets first
 	npm run build
 	npx playwright test $(E2E_ARGS)
 

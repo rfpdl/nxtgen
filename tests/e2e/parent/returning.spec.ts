@@ -1,8 +1,8 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from '../support/test'
 import { fillFamily } from '../support/forms'
 import { latestMail, magicPath, mailCount } from '../support/mailbox'
 import { openEmailedLink } from '../support/sign-in'
-import { CHURCH, FAMILIES } from '../support/world'
+import { CHURCH, DOOR, SATELLITES, doorFamily } from '../support/world'
 
 /*
  * R1 exit criterion (plan §12): a returning IMPORTED parent who fills in the form again is told they are
@@ -11,23 +11,18 @@ import { CHURCH, FAMILIES } from '../support/world'
  */
 test('an imported parent who registers again is signed in to their existing family @story#14', async ({
     page,
-}) => {
-    const { email, child, satellite } = FAMILIES.dxb
+}, info) => {
+    // This project's own imported Cruz family: one address per project, under the 5-emails-per-address limit.
+    const { email } = doorFamily(info.project.name)
+    const child = DOOR.cruz.allergic
+    const satellite = SATELLITES.dxb
     const before = mailCount(email)
 
     await page.goto(`/${CHURCH}/register`)
     await fillFamily(
         page,
-        { first: 'Maria', last: 'Dela Cruz', email, phone: '0500000000', satellite },
-        [
-            {
-                first: 'Miguel',
-                last: 'Dela Cruz',
-                nickname: 'Migs',
-                gender: 'boy',
-                dob: '2017-03-14',
-            },
-        ],
+        { first: 'Maria', last: 'Cruz', email, phone: '0500000000', satellite },
+        [{ first: 'Amara', last: 'Cruz', nickname: 'Amara', gender: 'girl', dob: '2019-03-01' }],
     )
     await page.getByTestId('register-submit').click()
 

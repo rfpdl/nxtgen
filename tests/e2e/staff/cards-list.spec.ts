@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test'
+import { type Page } from '@playwright/test'
+import { expect, test } from '../support/test'
 import { askForNewCard, freshCardChild, openCardFamily } from '../support/cards'
 import { openMenu } from '../support/menu'
 import { xlsxRows } from '../support/xlsx'

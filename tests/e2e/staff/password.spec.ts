@@ -1,4 +1,5 @@
-import { expect, test } from '@playwright/test'
+import { menuOf } from '../support/menu'
+import { expect, test } from '../support/test'
 import { CHURCH, STAFF, sessionFile } from '../support/world'
 
 /*
@@ -14,7 +15,7 @@ test('a staff member sets a backup password and signs in with it @story#16 @stor
     const password = `church-morning-${Date.now()}`
 
     await page.goto(`/${CHURCH}/families`)
-    await page.getByTestId('backup-password').click()
+    await (await menuOf(page)).getByTestId('backup-password').click()
     await page.getByTestId('new-password').fill(password)
     await page.getByTestId('new-password-confirm').fill(password)
     await page.getByTestId('save-password').click()

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from '../support/test'
 import { registerAndConfirm } from '../support/forms'
 import { CHURCH, SATELLITES } from '../support/world'
 
