@@ -1,3 +1,4 @@
+import { savedDownload } from '../support/download'
 import { type Locator, type Page } from '@playwright/test'
 import { expect, test } from '../support/test'
 import { xlsxRows } from '../support/xlsx'
@@ -111,7 +112,7 @@ test('an admin sees 1PM by Squad with counts, and downloads the same rows as Exc
         page.getByTestId('attendance-export').click(),
     ])
     expect(download.suggestedFilename()).toBe(`nxtgen-attendance-ccf-dxb-1pm-${day}.xlsx`)
-    expect(xlsxRows((await download.path())!)).toEqual([
+    expect(xlsxRows(await savedDownload(download))).toEqual([
         'Squad|Child nickname|Child full name|Checked in at|Checked in by|Present|Squad head count',
         ...rows,
     ])
@@ -220,7 +221,7 @@ test("an admin sees the roll call — present ✓, the Squad's head count and th
         page.getByTestId('attendance-export').click(),
     ])
     expect(download.suggestedFilename()).toBe(`nxtgen-attendance-ccf-dxb-1pm-${day}.xlsx`)
-    const talaRows = xlsxRows((await download.path())!).filter((r) =>
+    const talaRows = xlsxRows(await savedDownload(download)).filter((r) =>
         r.includes(`|${tala}|${tala} Reyes|`),
     )
     expect(talaRows).toHaveLength(1)

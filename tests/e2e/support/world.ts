@@ -51,8 +51,9 @@ export const uniqueSurname = (base: string): string =>
 /**
  * The browser projects (playwright.config.ts), by layout band of the app (Tailwind's sm 640px, md 768px, lg 1024px):
  * phones upright (a small one, chromium, and Safari for parents' iPhones), a tablet upright (sm), the md edge and a
- * phone on its side (md), and a tablet on its side at the lg edge and a desktop (lg, the row menu). Every
- * journey runs on each, one after another, against one database — so each has its own seeded families below.
+ * phone on its side (md), and a tablet on its side at the lg edge and a desktop (lg, the row menu) — then Safari and
+ * Firefox each on a phone upright and on its side and on a desktop (Roy 2026-11-03). Every journey runs on each, one
+ * after another, against one database — so each has its own seeded families below.
  */
 export const PROJECTS = [
     'phone-portrait',
@@ -63,13 +64,18 @@ export const PROJECTS = [
     'tablet-landscape',
     'phone-small',
     'tablet-edge',
+    'phone-landscape-safari',
+    'desktop-safari',
+    'phone-portrait-firefox',
+    'phone-landscape-firefox',
+    'desktop-firefox',
 ] as const
 
 export type Project = (typeof PROJECTS)[number]
 
-/** A phone number of this project's own, for a journey that registers a family: `base` with its last digit swapped. */
+/** A phone number of this project's own, for a journey that registers a family: `base` with its last two digits swapped. */
 export const projectPhone = (base: string, project: string): string =>
-    `${base.slice(0, -1)}${Math.max(0, PROJECTS.indexOf(project as Project))}`
+    `${base.slice(0, -2)}${String(Math.max(0, PROJECTS.indexOf(project as Project))).padStart(2, '0')}`
 
 /**
  * The door journeys' own families, one set per browser project (E2ESeeder::DOOR_GUARDIANS), so the browsers in
@@ -87,6 +93,11 @@ export const DOOR = {
         'tablet-landscape': 'Fara',
         'phone-small': 'Gina',
         'tablet-edge': 'Iva',
+        'phone-landscape-safari': 'Joan',
+        'desktop-safari': 'Kara',
+        'phone-portrait-firefox': 'Lina',
+        'phone-landscape-firefox': 'Meg',
+        'desktop-firefox': 'Nora',
     },
     cruz: {
         allergic: 'Amara',
@@ -104,14 +115,14 @@ export type DoorProject = keyof typeof DOOR.guardians
 
 /**
  * This project's imported Cruz family as a parent knows it (E2ESeeder::doorFamilies): the parent's name, email and
- * phone — the phone ends in the project's place in PROJECTS (1-based), as the seeder numbers them.
+ * phone — the phone ends in the project's place in PROJECTS (1-based, two digits), as the seeder numbers them.
  */
 export const doorFamily = (project: string): { guardian: string; email: string; phone: string } => {
     const first = DOOR.guardians[project as DoorProject]
     return {
         guardian: `${first} Cruz`,
         email: `cruz-${first.toLowerCase()}@nxtgen.test`,
-        phone: `050300000${PROJECTS.indexOf(project as Project) + 1}`,
+        phone: `05030000${String(PROJECTS.indexOf(project as Project) + 1).padStart(2, '0')}`,
     }
 }
 
@@ -126,10 +137,15 @@ export const ROLL_CALL = {
         'phone-portrait-safari': ['Mia', 'Elena', 'Nina', 'Ivy'],
         desktop: ['Ruth', 'Hope', 'Tala', 'Faith'],
         'phone-landscape': ['Jade', 'Kaye', 'Lea', 'Mae'],
-        'tablet-portrait': ['Nia', 'Ora', 'Pam', 'Rae'],
+        'tablet-portrait': ['Nia', 'Opal', 'Pam', 'Rae'],
         'tablet-landscape': ['Sia', 'Tia', 'Una', 'Vea'],
         'phone-small': ['Wyn', 'Xia', 'Yna', 'Zoe'],
         'tablet-edge': ['Ada', 'Cora', 'Dora', 'Eda'],
+        'phone-landscape-safari': ['Abi', 'Bia', 'Cai', 'Dia'],
+        'desktop-safari': ['Eve', 'Kai', 'Hedy', 'Jem'],
+        'phone-portrait-firefox': ['Joni', 'Kia', 'Lua', 'Mona'],
+        'phone-landscape-firefox': ['Pru', 'Oli', 'Pita', 'Qia'],
+        'desktop-firefox': ['Rue', 'Sue', 'Tess', 'Uma'],
     },
     squad: 'Level 2 Girls',
 } as const
@@ -148,6 +164,11 @@ export const SCAN = {
         'tablet-landscape': 'AMARAGWENREYES',
         'phone-small': 'AMARAIRISREYES',
         'tablet-edge': 'AMARAJUNEREYES',
+        'phone-landscape-safari': 'AMARABELLEREYES',
+        'desktop-safari': 'AMARADAWNREYES',
+        'phone-portrait-firefox': 'AMARAHAZELREYES',
+        'phone-landscape-firefox': 'AMARAPEARLREYES',
+        'desktop-firefox': 'AMARAWRENREYES',
     },
     child: 'Amara',
 } as const

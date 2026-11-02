@@ -48,5 +48,24 @@ services:
       - '1026:1025'
       - '8026:8025'
 
+  # Firefox for `make e2e` on a Mac (Roy 2026-11-03: Chrome, Safari and Firefox). Playwright's Firefox does not start on
+  # this macOS ("Could not find profile folder"), so the browser runs here, on Linux, and the journeys drive it from
+  # the Mac (playwright.config.ts: E2E_FIREFOX_WS; `<loopback>` reaches the Mac's e2e server). The image must be the
+  # SAME version as @playwright/test — `make e2e` passes it in. CI runs Linux and launches Firefox itself.
+  playwright-firefox:
+    profiles: ['e2e']
+    image: mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION:-1.64.1}-noble
+    container_name: nxtgen-app-playwright-firefox
+    init: true
+    working_dir: /home/pwuser
+    command: ['/bin/sh', '-c', 'npx -y playwright@${PLAYWRIGHT_VERSION:-1.64.1} run-server --port 3031 --host 0.0.0.0']
+    ports:
+      - '127.0.0.1:3031:3031'
+    healthcheck:
+      test: ['CMD', 'node', '-e', "require('net').connect(3031, '127.0.0.1').on('connect', () => process.exit(0)).on('error', () => process.exit(1))"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+
 volumes:
   mysqldata:

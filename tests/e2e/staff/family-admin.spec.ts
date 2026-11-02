@@ -1,3 +1,4 @@
+import { savedDownload } from '../support/download'
 import { readFileSync } from 'node:fs'
 import { allNavigation, closeMenu } from '../support/menu'
 import { expect, test } from '../support/test'
@@ -184,7 +185,7 @@ test('downloads the families list as Excel — what the filters show @story#45',
     ])
 
     expect(download.suggestedFilename()).toMatch(/\.xlsx$/)
-    const bytes = readFileSync((await download.path())!)
+    const bytes = readFileSync(await savedDownload(download))
     // An .xlsx is a zip: it starts with "PK".
     expect(bytes.subarray(0, 2).toString()).toBe('PK')
 })

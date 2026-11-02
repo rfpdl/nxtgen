@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Http\Middleware\MoveE2EClock;
 use Carbon\CarbonImmutable;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -28,7 +30,9 @@ use Symfony\Component\Mime\Address;
  *
  * The door's day is the next Saturday (today, on a Saturday): CCF DXB's 1PM and 7PM meet only on Saturdays, and the
  * Lifeshaper journeys check children into 1PM whatever day the suite runs. Only the door reads it
- * (GetChurchTodayJob); every other clock is the real one.
+ * (GetChurchTodayJob); every other clock is the real one — unless a journey's request asks for a later one
+ * (MoveE2EClock: a link opened after it has expired). So old sessions are never cleared here: by a moved clock,
+ * every saved sign-in would look old.
  */
 final class E2EServiceProvider extends ServiceProvider
 {
@@ -68,6 +72,11 @@ final class E2EServiceProvider extends ServiceProvider
             Vite::useHotFile(storage_path('framework/e2e-no-hot'));
             config(['nxtgen.door_today' => self::doorSaturday(CarbonImmutable::now(self::churchTimezone()))]);
         }
+
+        $this->app->make(Kernel::class)->prependMiddleware(MoveE2EClock::class);
+        // Old sessions are cleared on a random request, by its clock. A request a week ahead would clear every saved
+        // staff sign-in (tests/e2e/.auth) and fail every staff journey after it; the e2e database is wiped each run.
+        config(['session.lottery' => [0, 100]]);
 
         Route::get('/__e2e/health', fn () => response()->json([
             'e2e' => true,

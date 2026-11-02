@@ -10,6 +10,7 @@ use App\Data\Models\Schedule;
 use App\Data\Models\User;
 use App\Enums\RoleEnum;
 use Database\Seeders\E2ESeeder;
+use Illuminate\Support\Str;
 
 use function Pest\Laravel\seed;
 
@@ -59,12 +60,12 @@ it('seeds exactly what the browser journeys expect', function (): void {
         $torres = Family::query()->with('children')->whereHas('primaryGuardian', fn ($g) => $g->where('first_name', $first)->where('last_name', 'Torres'))->sole();
         expect($torres->children->map(fn (Child $c): array => [$c->nickname, $c->level])->all())
             ->toBe(array_map(fn (string $name): array => [$name, 3], E2ESeeder::LEVEL_CHILDREN));
-        // doorFamily(): the parent's email and phone, the phone numbered by the project's place in PROJECTS.
+        // doorFamily(): the parent's email and phone, the phone numbered by the project's place in PROJECTS (two digits).
         $place = array_search($project, array_keys(E2ESeeder::DOOR_GUARDIANS), true) + 1;
         expect($cruz->contactEmail())->toBe('cruz-'.mb_strtolower($first).'@nxtgen.test')
-            ->and(substr((string) preg_replace('/\D+/', '', (string) $cruz->primaryGuardian?->phone), -9))->toBe("50300000{$place}")
+            ->and(substr((string) preg_replace('/\D+/', '', (string) $cruz->primaryGuardian?->phone), -9))->toBe('5030000'.sprintf('%02d', $place))
             ->and($world)->toContain('email: `cruz-${first.toLowerCase()}@nxtgen.test`')
-            ->and($world)->toContain('phone: `050300000${PROJECTS.indexOf(project as Project) + 1}`');
+            ->and($world)->toContain("phone: `05030000\${String(PROJECTS.indexOf(project as Project) + 1).padStart(2, '0')}`");
         expect($cruz->homeSatellite->name)->toBe('CCF DXB')
             ->and([$kid('Amara')->allergies, $kid('Noah')->status->value, $kid('Lola')->level, $kid('Gabe')->status->value, $kid('Ben')->level])
             ->toBe(['Peanuts', 'inactive', null, 'graduated', 1]);
@@ -103,6 +104,30 @@ it('seeds exactly what the browser journeys expect', function (): void {
 });
 
 /** A `project: value` line of world.ts — the key quoted or bare, as prettier writes it (`desktop: …`, `'phone-portrait': …`). */
+it('names each browser\'s parent and roll-call girls so no other browser\'s family has the name in it', function (): void {
+    // The door search and the journeys' row filters match a name anywhere in a word: with a Mara, "Mara Reyes" found
+    // every Amara Reyes; Who's in's "Ina" row was also Nina's.
+    seed(E2ESeeder::class);
+    $families = Family::query()->with(['primaryGuardian', 'children'])->get();
+    $clashes = [];
+
+    foreach (E2ESeeder::DOOR_GUARDIANS as $project => $first) {
+        $others = $families->reject(fn (Family $f): bool => $f->primaryGuardian?->first_name === $first);
+        $names = $others->flatMap(fn (Family $f): array => [
+            $f->primaryGuardian?->first_name,
+            ...$f->children->flatMap(fn (Child $c): array => [$c->first_name, $c->middle_name, $c->nickname])->all(),
+        ])->filter()->unique();
+
+        foreach ([$first, ...E2ESeeder::ROLL_CALL_GIRLS[$project]] as $own) {
+            foreach ($names->filter(fn (string $name): bool => Str::contains($name, $own, ignoreCase: true)) as $name) {
+                $clashes[] = "{$project}: {$own} is inside {$name}";
+            }
+        }
+    }
+
+    expect($clashes)->toBe([]);
+});
+
 function worldKey(string $project, string $value): string
 {
     return '/(\''.preg_quote($project, '/').'\'|\b'.preg_quote($project, '/').'): '.preg_quote($value, '/').'/';

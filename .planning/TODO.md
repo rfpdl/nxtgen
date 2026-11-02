@@ -1,7 +1,7 @@
 # TODO
 
 Numbers are stable — reviews and code comments refer to them. Grouped by when they are needed.
-Updated 2026-10-17. **The refactor (`.planning/tasks/2026-10-17-refactor/`) comes first** — it absorbed #1, #17, #18, #19, #24 (all done). Decisions behind these: `docs/DECISIONS.md`; security items: `SECURITY.md`.
+Updated 2026-11-03. **The refactor (`.planning/tasks/2026-10-17-refactor/`) comes first** — it absorbed #1, #17, #18, #19, #24 (all done). Decisions behind these: `docs/DECISIONS.md`; security items: `SECURITY.md`.
 
 ## Before Release 1 ships (exit criteria, plan §12)
 
@@ -15,7 +15,7 @@ Updated 2026-10-17. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 
 | # | Item | Status |
 |---|---|---|
-| 23 | Laravel Cloud app + MySQL + **private** bucket (`PHOTOS_DISK=s3`) + domain; a mail provider key + sending domain; the Registry tab exported as CSV and the review file checked (with Ate Noemi). First admin = blivejesus@gmail.com (in config) | Roy handling |
+| 23 | Laravel Cloud app + MySQL + **private** bucket (`PHOTOS_DISK=s3`) + domain + **the scheduler switched on** (photo sweep, #22); a mail provider key + sending domain; the Registry tab exported as CSV and the review file checked (with Ate Noemi). First admin = blivejesus@gmail.com (in config) | Roy handling |
 | 3 | (same as #23 — Laravel Cloud, D2) | merged into #23 |
 
 ## Release 2 — Check-in (28 Oct)
@@ -23,8 +23,6 @@ Updated 2026-10-17. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 | # | Item | Why |
 |---|---|---|
 | 9 | Schedule-admin roles (shown as "class", `ScopeTypeEnum::Schedule`) in People — `canGrant` refuses them until Schedules exist | People |
-| 13 | E2E for link EXPIRY (2 h login / 7 d verify) — needs a controllable clock in the e2e server; Pest covers it | review 2 |
-| 7, 20 | **Two-connection concurrency tests:** claim acceptance; photo upload vs consent withdrawal; last-admin removal. The helper exists (check-in 02): `withCommittedWorld` + `atTheSameTime` in `tests/Support/Concurrency.php` — real forked processes, one MySQL connection each; used by check-in and Session creation | review-spar · review 3 |
 | 10 | E2E "test map" like admin-v2 (`e2e/map/serve.mjs`): the access matrix as a page, each cell → its tests, with Run buttons | Roy: admin-v2 has a good page per item |
 | — | Open questions for R2: `lifeshapers_can_open` default; follow-up threshold (weeks absent) — plan §13 | plan §13 |
 
@@ -34,7 +32,6 @@ Updated 2026-10-17. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 |---|---|---|
 | 27 | **Moving-Up** (admin-run, never automatic): each Child's Level + 1; from the top Level (4) the Child's status becomes Graduated. Nothing is built yet beyond `children.level` (refactor 05) | before the February Moving-Up |
 | 8 | A church slug must never be a reserved path — ChurchSeeder refuses one; enforce again in any create-church screen | with Platform screens |
-| 22 | Photo housekeeping: a scheduled sweep deleting stored photo files no `children.photo_path` points to (never shown — nothing points at them) | after R1 |
 | 25 | A "delete this photo for good" action (a parent asking for erasure) — withdrawal only hides (SECURITY #19) | when a parent asks, or before a data-protection review |
 | — | "No Level" filter on the children lists (plan §13 q5; was "no group") — the list shows "No Level" today, there is no filter for it | awaiting Roy |
 | 26 | Storybook, as aegis (a story per component) — not now (DECISIONS 2026-10-17) | when components grow |
@@ -50,6 +47,10 @@ Updated 2026-10-17. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 
 | # | Item | When |
 |---|---|---|
+| 7, 20 | ~~Two-connection concurrency tests~~ — done: a claim link used twice at once (new and existing login), a photo upload arriving while the withdrawal is saving, the last two church admins removing each other. Found and fixed a deadlock in the last-admin count (DECISIONS 2026-11-03) | 2026-11-03 |
+| 13 | ~~E2E for link expiry~~ — done: `MoveE2EClock` (an e2e-only per-request clock header) + `parent/link-expiry.spec.ts` | 2026-11-03 |
+| 22 | ~~Photo sweep~~ — done: `nxtgen:photos-sweep`, daily 03:00; needs Laravel Cloud's scheduler on (#23) | 2026-11-03 |
+| 12b | ~~E2E in Chrome, Safari and Firefox, upright and sideways~~ — 13 projects; Firefox in Docker on a Mac (DECISIONS 2026-11-03) | 2026-11-03 |
 | 12 | ~~E2E per breakpoint~~ — done: eight projects by layout band (sm/md/lg; phones 360 and 390 in Chrome and Safari, on their side, tablets 720/768/1024, desktop), every journey on each, every screen layout-checked (no sideways scroll, menu fits on one line, ≥44px on touch); photo consent on every project with its own child; the menu row moved to lg (DECISIONS 2026-10-30) | 2026-10-30 |
 | 2, 11 | E2E harness and journeys for everything built — 43 runs on iPhone Safari, Android Chrome, desktop Chrome | 2026-10-15/16 |
 | 4 | D-R1: import once, app is the source of truth (plan §7.6) | 2026-10-15 |

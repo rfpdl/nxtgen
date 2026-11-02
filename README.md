@@ -33,13 +33,15 @@ make check    # pint, larastan level 10, architecture guards, pest, vitest, esli
 ## Browser tests (E2E)
 
 ```bash
-make e2e          # every journey at each layout band (sm 640, md 768, lg 1024): phones upright (360, 390 Chrome + Safari) and on their side, tablets 720/768/1024, desktop; layout-checked (own DB, nxtgen_e2e)
+make e2e          # every journey at each layout band (sm 640, md 768, lg 1024) in Chrome, Safari and Firefox: phones upright and on their side, tablets 720/768/1024, desktops; layout-checked (own DB, nxtgen_e2e)
 make e2e-ui       # watch each journey run, one by one
 make e2e-report   # the last run's report: each journey, its steps; screenshot, video and trace for failures
 ```
 
 They sign in the way people do — by opening the emailed link (copied to `storage/app/e2e/mailbox.jsonl` under
-`APP_ENV=e2e` only). First time: `npx playwright install webkit chromium`.
+`APP_ENV=e2e` only). First time: `npx playwright install webkit chromium firefox`. On a Mac, Playwright's Firefox does
+not start, so `make e2e` runs Firefox in Docker (`playwright-firefox` in docker-compose.yml, started for you) and drives
+it from the Mac; elsewhere (CI) it launches Firefox itself.
 
 ## Starting production
 

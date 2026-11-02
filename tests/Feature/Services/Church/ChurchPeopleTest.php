@@ -18,11 +18,13 @@ use Inertia\Testing\AssertableInertia;
 use function Pest\Laravel\actingAs;
 use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
+use function Tests\Support\atTheSameTime;
 use function Tests\Support\church;
 use function Tests\Support\familyAt;
 use function Tests\Support\guardianOf;
 use function Tests\Support\satelliteOf;
 use function Tests\Support\staffMember;
+use function Tests\Support\withCommittedWorld;
 
 /*
  * People (D-R2): who serves in the church, and adding/removing their roles. Plan §3.2 "Grant roles" row and
@@ -38,6 +40,21 @@ function peopleChurch(): array
     $admin = staffMember(RoleEnum::Admin, atChurch($church), ['name' => 'Ana Admin']);
 
     return ['church' => $church, 'htc' => $htc, 'house' => $house, 'admin' => $admin];
+}
+
+/**
+ * One admin removes a role through the whole request; what they are told: "removed" or "refused". Refused is also
+ * a 404: when the other admin's removal commits first, this one is no longer an admin at all.
+ */
+function removeAndSay(User $admin, RoleAssignment $role): string
+{
+    $response = actingAs($admin)->delete("/ccf/people/roles/{$role->id}");
+    if ($response->status() === 404) {
+        return 'refused';
+    }
+    $response->assertRedirect();
+
+    return session()->has('success') ? 'removed' : 'refused';
 }
 
 /** @return array<string, mixed> */
@@ -231,5 +248,24 @@ describe('removing a role', function (): void {
         $role = RoleAssignment::query()->where('user_id', $foreign->id)->firstOrFail();
 
         actingAs($admin)->delete("/ccf/people/roles/{$role->id}")->assertNotFound();
+    });
+
+    it('keeps one church admin when the last two remove each other at the same moment @story#79', function (): void {
+        ['admin' => $ana] = peopleChurch();
+        $ben = staffMember(RoleEnum::Admin, atChurch(Church::query()->where('slug', 'ccf')->sole()), ['name' => 'Ben Admin']);
+        $anaRole = RoleAssignment::query()->where('user_id', $ana->id)->sole();
+        $benRole = RoleAssignment::query()->where('user_id', $ben->id)->sole();
+
+        withCommittedWorld(function () use ($ana, $ben, $anaRole, $benRole): void {
+            // Each removes the other, each through the whole request (its transaction and locked count included).
+            $answers = atTheSameTime(
+                fn (): string => removeAndSay($ana, $benRole),
+                fn (): string => removeAndSay($ben, $anaRole),
+            );
+            sort($answers);
+
+            expect($answers)->toBe(['refused', 'removed'])
+                ->and(RoleAssignment::query()->whereIn('id', [$anaRole->id, $benRole->id])->where('is_active', true)->count())->toBe(1);
+        });
     });
 });

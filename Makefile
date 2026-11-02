@@ -187,9 +187,14 @@ check: pint analyse test-arch test-parallel test-fe lint format-check typecheck 
 
 # Deliberately outside `check`: it needs browsers and a server, and it runs against its own database
 # on its own port so a run never touches the working data.
-e2e: ## Browser journeys at every layout band (phone, tablet, desktop; Safari too) on the e2e database; builds assets first
+# On a Mac, Firefox runs in Docker (docker-compose.yml `playwright-firefox`); elsewhere Playwright launches it.
+PLAYWRIGHT_VERSION = $(shell node -p "require('@playwright/test/package.json').version")
+E2E_FIREFOX_WS ?= $(if $(filter Darwin,$(shell uname)),ws://127.0.0.1:3031/,)
+
+e2e: ## Browser journeys at every layout band (phone, tablet, desktop) in Chrome, Safari and Firefox on the e2e database; builds assets first
 	npm run build
-	npx playwright test $(E2E_ARGS)
+	$(if $(E2E_FIREFOX_WS),PLAYWRIGHT_VERSION=$(PLAYWRIGHT_VERSION) docker compose --profile e2e up -d --wait playwright-firefox,)
+	E2E_FIREFOX_WS=$(E2E_FIREFOX_WS) npx playwright test $(E2E_ARGS)
 
 e2e-report: ## Open the last run's HTML report (each journey, steps, screenshots, video, trace)
 	npx playwright show-report playwright-report

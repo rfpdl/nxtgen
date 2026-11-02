@@ -1,3 +1,4 @@
+import { savedDownload } from '../support/download'
 import { type Page } from '@playwright/test'
 import { expect, test } from '../support/test'
 import { askForNewCard, freshCardChild, openCardFamily } from '../support/cards'
@@ -100,7 +101,7 @@ test('an admin finds, pays, approves, prints, gives and refuses new cards on Car
         expect(download.suggestedFilename()).toMatch(
             /^nxtgen-print-list-\d+-\d{4}-\d{2}-\d{2}\.xlsx$/,
         )
-        const rows = xlsxRows((await download.path())!)
+        const rows = xlsxRows(await savedDownload(download))
         expect(rows[0]).toBe('Full name|Nickname|Level|Squad|Barcode')
         expect(rows).toContainEqual(
             expect.stringMatching(

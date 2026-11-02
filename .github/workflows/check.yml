@@ -135,7 +135,7 @@ jobs:
       # The two browsers playwright.config.ts uses. WebKit is not optional: a resized Chromium is not
       # Mobile Safari, and parents register on their phones.
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps webkit chromium
+        run: npx playwright install --with-deps webkit chromium firefox
 
       - run: make e2e
 

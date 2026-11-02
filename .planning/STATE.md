@@ -1,6 +1,6 @@
 # State
 
-**Read this first at session start.** Updated: 2026-10-30.
+**Read this first at session start.** Updated: 2026-11-03.
 
 ## Where things stand
 
@@ -10,9 +10,10 @@
 | **Release 1 — Registration** | **Built and committed** on `release-1`. Ships when plan §12's exit criteria pass: only TODO **#21** (staging dry run) remains — #18 (access-matrix grid + response allowlists) done in refactor 09 |
 | **Release 2 — Check-in** | Slice 1 (classes, door, Attendance), slice 2 (roll call: Who's in, head count, Attendance roll call, multi-word search) and slice 3 (child history, name-card scan) built, reviewed (two-axis + test review + Astra, which approves) and pushed — `tasks/2026-10-26-check-in/`, `tasks/2026-10-28-roll-call/`, `tasks/2026-10-28-slice-3/` |
 | **Name cards** | Built, reviewed (two-axis + test review + Astra, which approves) and pushed: staff report a lost/damaged card, a free first card for every new child, the admin Cards page (paid, approve, refuse, printed, given), print lists with an Excel download — `tasks/2026-10-29-name-cards/` |
+| **Overnight 2026-11-03** | Tests and cleanup (DECISIONS 2026-11-03): e2e in Chrome, Safari and Firefox, upright and sideways (13 projects; Firefox in Docker on a Mac); two-connection race tests (TODO #7/#20 — found and fixed a deadlock when two church admins remove each other); link-expiry journey with an e2e clock (#13); the nightly photo sweep (#22, needs Laravel Cloud's scheduler) |
 | **Next step** | Roy tries roll call, child history, name-card scanning and the name cards module (`php artisan migrate`; Cards is in the admin menu). Then confirms the Claude calls in DECISIONS 2026-10-28 and 2026-10-29. Open: follow-up list (skipped for now), TODO #29 merge, #27 Moving-Up (before Feb), offline check-in |
 | **Waiting on Roy** | Laravel Cloud + mail provider + Registry CSV (TODO #23); "No group" filter yes/no (plan §13 q5); a real-iPhone photo try (TODO #16) |
-| **Gate** | `make check` green — 2240 Pest + 173 arch, 447 Vitest, PHPStan L10 · `make e2e` green — 377 runs on 8 breakpoint projects (phone 360/390 + Safari, tablet 720/768/1024, phone landscape, desktop), 2 skips |
+| **Gate** | `make check` green — 2262 Pest + 173 arch, 447 Vitest, PHPStan L10 · `make e2e` green — 623 runs on 13 projects (Chrome, Safari, Firefox; phones upright and sideways, tablets 720/768/1024, desktops), 4 skips |
 
 ## Where to look
 

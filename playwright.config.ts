@@ -8,14 +8,18 @@ import { defineConfig, devices } from '@playwright/test'
  * serves on 3021, so the dev server on 3020 and your working data are never touched. E2EServiceProvider
  * refuses to start against a database not named `*_e2e`.
  *
- * Eight projects, by the app's layout bands (TODO #12, Roy 2026-10-30) — not by device. The app's breakpoints are
+ * Thirteen projects, by the app's layout bands (TODO #12, Roy 2026-10-30) and by browser (Roy 2026-11-03: Chrome, Safari
+ * and Firefox, each upright and on its side) — not by device. The app's breakpoints are
  * Tailwind's `sm` (640px), `md` (768px: two columns begin) and `lg` (1024px: the menu turns from a sheet into a row),
  * so each project sits in one band, and every journey runs on every project (admins use phones and tablets too):
  *   - base: `phone-portrait` 390×844 (chromium), `phone-portrait-safari` the same in WebKit (parents' iPhones;
  *     Safari's bugs are its own), and `phone-small` 360×740, where a wide line first pushes the page sideways;
  *   - `sm`: `tablet-portrait` 720×1080;
  *   - `md`: `tablet-edge` 768×1024 (its very edge) and `phone-landscape` 844×390 — still the sheet menu;
- *   - `lg`: `tablet-landscape` 1024×768 (its very edge: the row menu at its tightest) and `desktop` 1280×800.
+ *   - `lg`: `tablet-landscape` 1024×768 (its very edge: the row menu at its tightest) and `desktop` 1280×800;
+ *   - Safari and Firefox: a phone upright (390×844) and on its side (844×390), and a desktop (1280×800) each — WebKit is
+ *     every iPhone and iPad browser, and Firefox has its own layout engine (Gecko). Firefox cannot pretend to be a
+ *     mobile browser (no `isMobile`), so its phones are a narrow touch window: still a coarse pointer, still ≥ 44px.
  * Phones and tablets are touch screens (hasTouch, isMobile); the desktop is not. Every screen a journey shows is checked
  * for its layout (support/test.ts): no sideways scroll, the menu fits (its row one line, from 1024px), and on touch screens
  * every control ≥ 44px.
@@ -25,6 +29,20 @@ import { defineConfig, devices } from '@playwright/test'
  */
 const PORT = 3021
 const BASE_URL = `http://127.0.0.1:${PORT}`
+
+/*
+ * Firefox from a Playwright server instead of launched here, when E2E_FIREFOX_WS is set (`make e2e` sets it on a Mac,
+ * where Playwright's Firefox does not start; docker-compose.yml `playwright-firefox`). `<loopback>` makes the browser's
+ * 127.0.0.1 this machine's, so it reaches the e2e server like the others.
+ */
+const FIREFOX_WS = process.env.E2E_FIREFOX_WS
+const firefox = (use: Record<string, unknown>) => ({
+    ...devices['Desktop Firefox'],
+    ...use,
+    ...(FIREFOX_WS
+        ? { connectOptions: { wsEndpoint: FIREFOX_WS, exposeNetwork: '<loopback>' } }
+        : {}),
+})
 
 export default defineConfig({
     testDir: './tests/e2e',
@@ -100,6 +118,31 @@ export default defineConfig({
             name: 'desktop',
             dependencies: ['setup'],
             use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
+        },
+        {
+            name: 'phone-landscape-safari',
+            dependencies: ['setup'],
+            use: { ...devices['iPhone 14 landscape'], viewport: { width: 844, height: 390 } },
+        },
+        {
+            name: 'desktop-safari',
+            dependencies: ['setup'],
+            use: { ...devices['Desktop Safari'], viewport: { width: 1280, height: 800 } },
+        },
+        {
+            name: 'phone-portrait-firefox',
+            dependencies: ['setup'],
+            use: firefox({ viewport: { width: 390, height: 844 }, hasTouch: true }),
+        },
+        {
+            name: 'phone-landscape-firefox',
+            dependencies: ['setup'],
+            use: firefox({ viewport: { width: 844, height: 390 }, hasTouch: true }),
+        },
+        {
+            name: 'desktop-firefox',
+            dependencies: ['setup'],
+            use: firefox({ viewport: { width: 1280, height: 800 } }),
         },
     ],
 

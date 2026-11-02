@@ -4,6 +4,33 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-11-03 (overnight: browsers, race tests, link expiry, photo sweep — Roy)
+
+- **E2E in Chrome, Safari and Firefox, upright and on their side** (Roy: "e2e supports safari, firefox, chrome. then
+  work portrait and landscape as well"). Five projects added to the eight: `phone-landscape-safari` 844×390,
+  `desktop-safari`, `phone-portrait-firefox` 390×844, `phone-landscape-firefox` 844×390, `desktop-firefox` — thirteen.
+  Safari now has phone upright + sideways + desktop; Firefox the same. Firefox cannot pretend to be a mobile browser
+  (no `isMobile`), so its phones are narrow touch windows (coarse pointer; the 44px rule still applies). Each new
+  project has its own seeded families; the seed now numbers browsers with two digits (birthdays, phones).
+- Claude, low-stakes (for Roy to confirm): **on a Mac, Firefox runs in Docker.** Playwright's Firefox (and the older
+  build) will not start on this macOS ("Could not find profile folder"). `make e2e` starts `playwright-firefox`
+  (docker-compose.yml, same version as `@playwright/test`) and the journeys drive it over `E2E_FIREFOX_WS`; CI is Linux
+  and launches it itself. No iPad project in Safari yet — say if Lifeshapers use iPads at the door.
+- Claude, low-stakes: **an e2e clock a journey can move** (TODO #13). Under APP_ENV=e2e only, a request carrying
+  `X-E2E-Clock-Ahead: <minutes>` runs that much later (`MoveE2EClock`). Per request, so only that journey's browser
+  sees it. The link-expiry journey opens a confirm link 7 days + 1 minute late and a sign-in link 2 hours + 1 minute
+  late (both: "That link has expired or was already used"), then the same sign-in link at 1½ hours — it still works.
+  So the e2e server never clears old sessions: Laravel does that on a random request, by that request's clock, and a
+  week ahead it cleared every saved staff sign-in (the first full run lost 150 staff journeys to it).
+- **Fix: two church admins removing each other at the same moment got an error page.** The new two-connection test
+  (TODO #20) found it: locking only the admin rows deadlocked (MySQL 1213), and one admin saw a 500 (the rule held —
+  one admin always stayed). `GetChurchAdminCountJob` now locks the church's row first, so the second waits and is told
+  "This is the only church admin". Revert-checked.
+- Claude, low-stakes: **the photo sweep** (TODO #22) — `php artisan nxtgen:photos-sweep` (`--dry-run` lists), daily at
+  03:00 in the church's timezone (`nxtgen.church.timezone`). Church by church it deletes stored photo files no child points at, once they
+  are a day old (an upload writes its file a moment before it saves the pointer). A hidden photo is pointed at, so it
+  stays (SECURITY #19). **For Roy:** Laravel Cloud's scheduler must be switched on for it to run.
+
 ## 2026-10-30 (e2e by breakpoint — TODO #12; Roy)
 
 - **Every journey runs at every layout band, not on chosen devices** (Roy: "breakpoints, not devices"). The app's

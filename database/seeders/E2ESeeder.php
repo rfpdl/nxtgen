@@ -26,7 +26,7 @@ use Illuminate\Database\Seeder;
  * satellite. Families go through RegisterFamilyOperation — the import path, no emails — so the rows are ones
  * the app itself can produce. Must match `tests/e2e/support/world.ts`.
  *
- * The journeys run on eight browser projects (a phone, tablet and desktop by layout band; see playwright.config.ts)
+ * The journeys run on thirteen browser projects (by layout band and browser — Chrome, Safari, Firefox; see playwright.config.ts)
  * against one database, so each browser has its OWN families to check in
  * (DOOR_GUARDIANS): a Cruz family at CCF DXB — Amara (allergic), Ben, Noah (inactive), Lola (no Level), Gabe
  * (Graduated) — and a visiting Villa family at House Church (Pia). Birthdays differ per browser, so no two are
@@ -42,6 +42,8 @@ final class E2ESeeder extends Seeder
     public const array DOOR_GUARDIANS = [
         'phone-portrait' => 'Ana', 'phone-portrait-safari' => 'Bela', 'desktop' => 'Carla', 'phone-landscape' => 'Dina',
         'tablet-portrait' => 'Elsa', 'tablet-landscape' => 'Fara', 'phone-small' => 'Gina', 'tablet-edge' => 'Iva',
+        'phone-landscape-safari' => 'Joan', 'desktop-safari' => 'Kara', 'phone-portrait-firefox' => 'Lina',
+        'phone-landscape-firefox' => 'Meg', 'desktop-firefox' => 'Nora',
     ];
 
     /**
@@ -51,8 +53,11 @@ final class E2ESeeder extends Seeder
     public const array ROLL_CALL_GIRLS = [
         'phone-portrait' => ['Sofia', 'Isabel', 'Lia', 'Gia'], 'phone-portrait-safari' => ['Mia', 'Elena', 'Nina', 'Ivy'],
         'desktop' => ['Ruth', 'Hope', 'Tala', 'Faith'], 'phone-landscape' => ['Jade', 'Kaye', 'Lea', 'Mae'],
-        'tablet-portrait' => ['Nia', 'Ora', 'Pam', 'Rae'], 'tablet-landscape' => ['Sia', 'Tia', 'Una', 'Vea'],
+        'tablet-portrait' => ['Nia', 'Opal', 'Pam', 'Rae'], 'tablet-landscape' => ['Sia', 'Tia', 'Una', 'Vea'],
         'phone-small' => ['Wyn', 'Xia', 'Yna', 'Zoe'], 'tablet-edge' => ['Ada', 'Cora', 'Dora', 'Eda'],
+        'phone-landscape-safari' => ['Abi', 'Bia', 'Cai', 'Dia'], 'desktop-safari' => ['Eve', 'Kai', 'Hedy', 'Jem'],
+        'phone-portrait-firefox' => ['Joni', 'Kia', 'Lua', 'Mona'], 'phone-landscape-firefox' => ['Pru', 'Oli', 'Pita', 'Qia'],
+        'desktop-firefox' => ['Rue', 'Sue', 'Tess', 'Uma'],
     ];
 
     /**
@@ -62,6 +67,8 @@ final class E2ESeeder extends Seeder
     public const array SCAN_MIDDLE_NAMES = [
         'phone-portrait' => 'Joy', 'phone-portrait-safari' => 'Kay', 'desktop' => 'Lee', 'phone-landscape' => 'Rose',
         'tablet-portrait' => 'Faye', 'tablet-landscape' => 'Gwen', 'phone-small' => 'Iris', 'tablet-edge' => 'June',
+        'phone-landscape-safari' => 'Belle', 'desktop-safari' => 'Dawn', 'phone-portrait-firefox' => 'Hazel',
+        'phone-landscape-firefox' => 'Pearl', 'desktop-firefox' => 'Wren',
     ];
 
     /**
@@ -95,9 +102,10 @@ final class E2ESeeder extends Seeder
         $this->family($ccf, $dxb, 'Maria', 'Dela Cruz', 'delacruz@nxtgen.test', '+971501000001', 'Miguel', 'Migs', GenderEnum::Boy, '2017-03-14');
         $this->family($ccf, $house, 'Grace', 'Santos', 'santos@nxtgen.test', '+971502000002', 'Bea', 'Bea', GenderEnum::Girl, '2018-07-02');
 
-        $day = 0;
+        $place = 0;
         foreach (self::DOOR_GUARDIANS as $project => $first) {
-            $day++;
+            // The browser's place, two digits ("01"…"13"): its birthdays' day of the month and its phones' last digits.
+            $day = sprintf('%02d', ++$place);
             $this->doorFamilies($ccf, $dxb, $house, $first, $day);
             $this->rollCallFamily($ccf, $dxb, $first, $day, self::ROLL_CALL_GIRLS[$project], self::SCAN_MIDDLE_NAMES[$project]);
             $this->cardFamily($ccf, $dxb, $first, $day);
@@ -105,56 +113,56 @@ final class E2ESeeder extends Seeder
         }
     }
 
-    private function doorFamilies(Church $church, Satellite $dxb, Satellite $house, string $first, int $day): void
+    private function doorFamilies(Church $church, Satellite $dxb, Satellite $house, string $first, string $day): void
     {
         $lower = mb_strtolower($first);
         $kid = fn (string $name, GenderEnum $gender, string $dob, ?string $allergies = null): ChildDetailsData => new ChildDetailsData(
             firstName: $name, middleName: null, lastName: 'Cruz', nickname: $name, gender: $gender, dateOfBirth: $dob, allergies: $allergies,
         );
-        $this->register($church, $dxb, new GuardianDetailsData(firstName: $first, lastName: 'Cruz', relationship: RelationshipEnum::Mother, phone: "+97150300000{$day}", email: "cruz-{$lower}@nxtgen.test"), [
-            $kid('Amara', GenderEnum::Girl, "2019-03-0{$day}", 'Peanuts'),
-            $kid('Ben', GenderEnum::Boy, "2021-06-0{$day}"),
-            $kid('Noah', GenderEnum::Boy, "2017-05-0{$day}"),
-            $kid('Lola', GenderEnum::Girl, "2022-06-0{$day}"),
-            $kid('Gabe', GenderEnum::Boy, "2014-01-0{$day}"),
+        $this->register($church, $dxb, new GuardianDetailsData(firstName: $first, lastName: 'Cruz', relationship: RelationshipEnum::Mother, phone: "+9715030000{$day}", email: "cruz-{$lower}@nxtgen.test"), [
+            $kid('Amara', GenderEnum::Girl, "2019-03-{$day}", 'Peanuts'),
+            $kid('Ben', GenderEnum::Boy, "2021-06-{$day}"),
+            $kid('Noah', GenderEnum::Boy, "2017-05-{$day}"),
+            $kid('Lola', GenderEnum::Girl, "2022-06-{$day}"),
+            $kid('Gabe', GenderEnum::Boy, "2014-01-{$day}"),
         ]);
-        $this->register($church, $house, new GuardianDetailsData(firstName: $first, lastName: 'Villa', relationship: RelationshipEnum::Mother, phone: "+97150400000{$day}", email: "villa-{$lower}@nxtgen.test"), [
-            new ChildDetailsData(firstName: 'Pia', middleName: null, lastName: 'Villa', nickname: 'Pia', gender: GenderEnum::Girl, dateOfBirth: "2019-09-0{$day}", allergies: null),
+        $this->register($church, $house, new GuardianDetailsData(firstName: $first, lastName: 'Villa', relationship: RelationshipEnum::Mother, phone: "+9715040000{$day}", email: "villa-{$lower}@nxtgen.test"), [
+            new ChildDetailsData(firstName: 'Pia', middleName: null, lastName: 'Villa', nickname: 'Pia', gender: GenderEnum::Girl, dateOfBirth: "2019-09-{$day}", allergies: null),
         ]);
 
         // As the door finds them: Noah inactive, Lola with no Level yet (her age suggests Level 1), Gabe Graduated.
-        $cruz = fn (string $name) => Child::query()->where('church_id', $church->id)->where('last_name', 'Cruz')->where('first_name', $name)->where('date_of_birth', 'like', '%-0'.$day);
+        $cruz = fn (string $name) => Child::query()->where('church_id', $church->id)->where('last_name', 'Cruz')->where('first_name', $name)->where('date_of_birth', 'like', '%-'.$day);
         $cruz('Noah')->update(['status' => ChildStatusEnum::Inactive]);
         $cruz('Lola')->update(['level' => null]);
         $cruz('Gabe')->update(['status' => ChildStatusEnum::Graduated, 'level' => 4]);
     }
 
     /** @param list<string> $girls */
-    private function rollCallFamily(Church $church, Satellite $dxb, string $first, int $day, array $girls, string $scanMiddle): void
+    private function rollCallFamily(Church $church, Satellite $dxb, string $first, string $day, array $girls, string $scanMiddle): void
     {
-        $this->register($church, $dxb, new GuardianDetailsData(firstName: $first, lastName: 'Reyes', relationship: RelationshipEnum::Mother, phone: "+97150500000{$day}", email: 'reyes-'.mb_strtolower($first).'@nxtgen.test'), [
+        $this->register($church, $dxb, new GuardianDetailsData(firstName: $first, lastName: 'Reyes', relationship: RelationshipEnum::Mother, phone: "+9715050000{$day}", email: 'reyes-'.mb_strtolower($first).'@nxtgen.test'), [
             ...array_map(
-                fn (string $name, int $month): ChildDetailsData => new ChildDetailsData(firstName: $name, middleName: null, lastName: 'Reyes', nickname: $name, gender: GenderEnum::Girl, dateOfBirth: "2019-0{$month}-0{$day}", allergies: null),
+                fn (string $name, int $month): ChildDetailsData => new ChildDetailsData(firstName: $name, middleName: null, lastName: 'Reyes', nickname: $name, gender: GenderEnum::Girl, dateOfBirth: "2019-0{$month}-{$day}", allergies: null),
                 $girls,
                 [4, 8, 9, 7],
             ),
-            new ChildDetailsData(firstName: 'Amara', middleName: $scanMiddle, lastName: 'Reyes', nickname: 'Amara', gender: GenderEnum::Girl, dateOfBirth: "2019-05-0{$day}", allergies: null),
+            new ChildDetailsData(firstName: 'Amara', middleName: $scanMiddle, lastName: 'Reyes', nickname: 'Amara', gender: GenderEnum::Girl, dateOfBirth: "2019-05-{$day}", allergies: null),
         ]);
     }
 
-    private function levelFamily(Church $church, Satellite $dxb, string $first, int $day): void
+    private function levelFamily(Church $church, Satellite $dxb, string $first, string $day): void
     {
-        $this->register($church, $dxb, new GuardianDetailsData(firstName: $first, lastName: 'Torres', relationship: RelationshipEnum::Mother, phone: "+97150700000{$day}", email: 'torres-'.mb_strtolower($first).'@nxtgen.test'), array_map(
-            fn (string $name, int $month): ChildDetailsData => new ChildDetailsData(firstName: $name, middleName: null, lastName: 'Torres', nickname: $name, gender: GenderEnum::Girl, dateOfBirth: "2017-0{$month}-0{$day}", allergies: null),
+        $this->register($church, $dxb, new GuardianDetailsData(firstName: $first, lastName: 'Torres', relationship: RelationshipEnum::Mother, phone: "+9715070000{$day}", email: 'torres-'.mb_strtolower($first).'@nxtgen.test'), array_map(
+            fn (string $name, int $month): ChildDetailsData => new ChildDetailsData(firstName: $name, middleName: null, lastName: 'Torres', nickname: $name, gender: GenderEnum::Girl, dateOfBirth: "2017-0{$month}-{$day}", allergies: null),
             self::LEVEL_CHILDREN,
             [3, 4, 5],
         ));
     }
 
-    private function cardFamily(Church $church, Satellite $dxb, string $first, int $day): void
+    private function cardFamily(Church $church, Satellite $dxb, string $first, string $day): void
     {
-        $this->register($church, $dxb, new GuardianDetailsData(firstName: $first, lastName: 'Ocampo', relationship: RelationshipEnum::Mother, phone: "+97150600000{$day}", email: 'ocampo-'.mb_strtolower($first).'@nxtgen.test'), array_map(
-            fn (string $name, int $month): ChildDetailsData => new ChildDetailsData(firstName: $name, middleName: null, lastName: 'Ocampo', nickname: $name, gender: GenderEnum::Boy, dateOfBirth: "2020-0{$month}-0{$day}", allergies: null),
+        $this->register($church, $dxb, new GuardianDetailsData(firstName: $first, lastName: 'Ocampo', relationship: RelationshipEnum::Mother, phone: "+9715060000{$day}", email: 'ocampo-'.mb_strtolower($first).'@nxtgen.test'), array_map(
+            fn (string $name, int $month): ChildDetailsData => new ChildDetailsData(firstName: $name, middleName: null, lastName: 'Ocampo', nickname: $name, gender: GenderEnum::Boy, dateOfBirth: "2020-0{$month}-{$day}", allergies: null),
             self::CARD_CHILDREN,
             [1, 2, 3, 4, 5, 6, 7, 8, 9],
         ));
