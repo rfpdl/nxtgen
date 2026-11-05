@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NxtGen test map</title>
+<style>
+    :root { --ink: #2b1d00; --muted: #6b5a3a; --paper: #fff8e6; --card: #fff; --edge: #e8dcc0; --ok: #14611f; --ok-soft: #e3f3e5;
+        --no: #8a8170; --no-soft: #f1ede4; --bad: #b3261e; --bad-soft: #fde7e5; --run: #1e5aa8; --run-soft: #e4eefb; --amber: #f2b32a; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 15px/1.45 system-ui, -apple-system, sans-serif; color: var(--ink); background: var(--paper); }
+    header { position: sticky; top: 0; z-index: 2; background: var(--amber); padding: 10px 16px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    header h1 { font-size: 18px; margin: 0 12px 0 0; }
+    header input, header select { font: inherit; padding: 6px 10px; border: 2px solid var(--ink); border-radius: 8px; background: #fff; }
+    header input { flex: 1 1 220px; min-width: 0; }
+    main, #panel { overflow-wrap: anywhere; }
+    main { max-width: 1200px; margin: 0 auto; padding: 16px 16px 280px; }
+    h2 { margin: 28px 0 10px; font-size: 17px; }
+    .summary { color: var(--muted); }
+    details.item { background: var(--card); border: 2px solid var(--edge); border-radius: 12px; margin: 8px 0; }
+    details.item > summary { cursor: pointer; padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; list-style: none; }
+    details.item > summary::-webkit-details-marker { display: none; }
+    .method { font: 600 12px ui-monospace, monospace; background: var(--ink); color: #fff; border-radius: 4px; padding: 1px 6px; }
+    .uri { font-family: ui-monospace, monospace; }
+    .what { font-weight: 600; }
+    .dim { color: var(--muted); }
+    .body { padding: 0 14px 12px; }
+    .cells { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 10px; }
+    .cell { font-size: 12px; border-radius: 999px; padding: 2px 8px; }
+    .cell.ok { background: var(--ok-soft); color: var(--ok); font-weight: 600; }
+    .cell.no { background: var(--no-soft); color: var(--no); }
+    .story { border-top: 1px solid var(--edge); padding: 8px 0; }
+    .story-head { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+    .tag { font: 600 11px ui-monospace, monospace; border-radius: 4px; padding: 1px 6px; }
+    .tag.happy { background: var(--ok-soft); color: var(--ok); }
+    .tag.unhappy { background: var(--bad-soft); color: var(--bad); }
+    ul.tests { list-style: none; margin: 6px 0 0; padding: 0 0 0 12px; }
+    ul.tests li { display: flex; gap: 8px; align-items: baseline; padding: 2px 0; flex-wrap: wrap; }
+    .kind { font: 11px ui-monospace, monospace; color: var(--muted); min-width: 28px; }
+    .file { font: 12px ui-monospace, monospace; color: var(--muted); }
+    .status { font-size: 12px; border-radius: 999px; padding: 1px 8px; }
+    .status.passed { background: var(--ok-soft); color: var(--ok); }
+    .status.failed, .status.missing { background: var(--bad-soft); color: var(--bad); }
+    .status.running { background: var(--run-soft); color: var(--run); }
+    .status.skipped { background: var(--no-soft); color: var(--no); }
+    button.run { font: 600 12px system-ui; border: 2px solid var(--ink); background: #fff; border-radius: 8px; padding: 2px 10px; cursor: pointer; min-height: 28px; }
+    button.run:disabled { opacity: .4; cursor: default; }
+    #panel { position: fixed; left: 0; right: 0; bottom: 0; z-index: 3; background: var(--ink); color: #fff; max-height: 240px; display: flex; flex-direction: column; }
+    #panel .bar { padding: 6px 16px; display: flex; gap: 10px; align-items: center; font-weight: 600; }
+    #panel pre { margin: 0; padding: 0 16px 10px; overflow: auto; font: 12px/1.4 ui-monospace, monospace; white-space: pre-wrap; }
+    .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+    <h1>NxtGen test map</h1>
+    <input id="find" type="search" placeholder="Find a route, page, story or test" aria-label="Find">
+    <label class="live-only">Browser tests on <select id="project" aria-label="Browser project"></select></label>
+</header>
+<main>
+    <p class="summary" id="summary"></p>
+    <h2>Staff and parent routes — who gets in, and the tests that prove it</h2>
+    <div id="routes"></div>
+    <h2>Everything else — sign-in, public pages, commands</h2>
+    <div id="features"></div>
+</main>
+<section id="panel" class="hidden" aria-live="polite">
+    <div class="bar"><span id="run-label"></span></div>
+    <pre id="run-log"></pre>
+</section>
+<script>
+/*__MAP_BOOT__*/
+const { live, token, data, projects } = window.MAP_BOOT
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
+const keyOf = (t) => `${t.file}::${t.title}`
+const ALL = new Map()
+let results = {}
+let running = false
+
+for (const el of document.querySelectorAll('.live-only')) el.classList.toggle('hidden', !live)
+document.getElementById('project').innerHTML = projects.map((p) => `<option>${esc(p)}</option>`).join('')
+
+function testLine(t) {
+    ALL.set(keyOf(t), t)
+    return `<li data-key="${esc(keyOf(t))}"><span class="kind">${t.kind === 'e2e' ? 'e2e' : 'pest'}</span>
+        <span>${esc(t.title)}</span> <span class="file">${esc(t.file)}</span>
+        <span class="status hidden"></span>
+        ${live ? `<button class="run" data-keys="${esc(JSON.stringify([keyOf(t)]))}">Run</button>` : ''}</li>`
+}
+
+function stories(list) {
+    return list.map((s) => `<div class="story"><div class="story-head">
+        <span class="tag ${s.kind}">${esc(s.token)}</span><span>${esc(s.text)}</span>
+        ${live ? `<button class="run" data-keys="${esc(JSON.stringify(s.tests.map(keyOf)))}">Run all ${s.tests.length}</button>` : ''}
+        </div><ul class="tests">${s.tests.map(testLine).join('')}</ul></div>`).join('')
+}
+
+function allKeys(list) {
+    return JSON.stringify([...new Set(list.flatMap((s) => s.tests.map(keyOf)))])
+}
+
+document.getElementById('routes').innerHTML = data.routes.map((r) => `<details class="item" data-text="${esc([r.name, r.uri, r.title, r.rule, r.feature, ...r.stories.flatMap((s) => [s.token, s.text, ...s.tests.map((t) => t.title)])].join(' ').toLowerCase())}">
+    <summary><span class="method">${esc(r.method)}</span><span class="uri">${esc(r.uri)}</span>
+        <span class="what">${esc(r.title ?? r.feature)}</span><span class="dim">${esc(r.name)}</span></summary>
+    <div class="body"><div class="dim">${esc(r.rule)}</div>
+        <div class="cells">${Object.entries(r.cells).map(([actor, got]) => `<span class="cell ${got === 'ok' ? 'ok' : 'no'}" title="${esc(actor)}: ${esc(got)}">${esc(actor)} ${got === 'ok' ? '✓' : got === 'login' ? '→ sign in' : '404'}</span>`).join('')}</div>
+        ${live ? `<button class="run" data-keys="${esc(allKeys(r.stories))}">Run every test for this route</button>` : ''}
+        ${stories(r.stories)}</div></details>`).join('')
+
+document.getElementById('features').innerHTML = data.features.map((f) => `<details class="item" data-text="${esc([f.service, f.feature, f.title, ...f.stories.flatMap((s) => [s.token, s.text, ...s.tests.map((t) => t.title)])].join(' ').toLowerCase())}">
+    <summary><span class="method">${esc(f.service)}</span><span class="what">${esc(f.title ?? f.feature)}</span>
+        <span class="dim">${esc(f.feature)} · ${esc(f.persona)}</span></summary>
+    <div class="body">${stories(f.stories)}</div></details>`).join('')
+
+const storyCount = [...data.routes, ...data.features].reduce((n, i) => n + i.stories.length, 0)
+document.getElementById('summary').textContent =
+    `${data.routes.length} routes × ${data.actors.length} kinds of people, ${data.features.length} other features, ${storyCount} stories, ${ALL.size} tests.` +
+    (data.untested.length ? ` Stories with no test: ${data.untested.join(', ')}.` : ' Every story has a test.') +
+    (live ? '' : ' (A saved copy: start `make test-map` to run tests.)')
+
+document.getElementById('find').addEventListener('input', (e) => {
+    const q = e.target.value.trim().toLowerCase()
+    for (const item of document.querySelectorAll('details.item')) {
+        const hit = !q || item.dataset.text.includes(q)
+        item.classList.toggle('hidden', !hit)
+        if (q && hit) item.open = true
+    }
+})
+
+function paint() {
+    for (const li of document.querySelectorAll('ul.tests li')) {
+        const status = results[li.dataset.key]
+        const pill = li.querySelector('.status')
+        pill.className = `status ${status ?? ''}${status ? '' : ' hidden'}`
+        pill.textContent = status ?? ''
+    }
+    for (const b of document.querySelectorAll('button.run')) b.disabled = running
+}
+
+async function poll() {
+    const run = await (await fetch('/run')).json()
+    running = run.state === 'running'
+    Object.assign(results, run.results)
+    const panel = document.getElementById('panel')
+    panel.classList.toggle('hidden', run.state === 'idle')
+    document.getElementById('run-label').textContent = `${running ? 'Running' : 'Last run'}: ${run.label}`
+    const log = document.getElementById('run-log')
+    log.textContent = run.log.join('\n')
+    log.scrollTop = log.scrollHeight
+    paint()
+    if (running) setTimeout(poll, 1000)
+}
+
+document.addEventListener('click', async (e) => {
+    const button = e.target.closest('button.run')
+    if (!button || running) return
+    e.preventDefault()
+    const keys = JSON.parse(button.dataset.keys)
+    for (const k of keys) results[k] = 'running'
+    running = true
+    paint()
+    const res = await fetch('/run', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-map-token': token },
+        body: JSON.stringify({ keys, project: document.getElementById('project').value }),
+    })
+    if (!res.ok) {
+        running = false
+        document.getElementById('panel').classList.remove('hidden')
+        document.getElementById('run-label').textContent = (await res.json()).error
+        paint()
+        return
+    }
+    poll()
+})
+
+if (live) poll()
+</script>
+</body>
+</html>

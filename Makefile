@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help up down fresh reseed seed migrate migrate-check \
+.PHONY: help up down fresh reseed seed migrate migrate-check test-map test-map-static \
         pint analyse test test-parallel assert-parallel-grant test-unit test-arch \
         test-fe lint format format-check typecheck discipline build \
         check e2e e2e-ui e2e-report dev coverage coverage-fe
@@ -147,7 +147,8 @@ test-arch: ## Run only the architecture guards
 # NODE_OPTIONS silences Node 26's "localStorage is not available" notice, which it prints once per
 # worker and which is actively misleading here: resources/js/tests/setup.ts installs a real
 # in-memory Storage, precisely because happy-dom on this Node does not.
-test-fe: ## Run Vitest component tests, and prove every file was collected
+test-fe: ## Run Vitest component tests, and prove every file was collected (and the test map's helpers)
+	@node --test tests/map/ >/tmp/nxtgen-map-test.log 2>&1 || (cat /tmp/nxtgen-map-test.log; exit 1)
 	@set -o pipefail; NODE_OPTIONS=--disable-warning=ExperimentalWarning npx vitest run 2>&1 | tee /tmp/nxtgen-vitest.log
 	@disk=$$(find resources/js -name '*.test.ts' | wc -l | tr -d ' '); \
 	ran=$$(sed 's/\x1b\[[0-9;]*m//g' /tmp/nxtgen-vitest.log | grep -oE 'Test Files.*\(([0-9]+)\)' | grep -oE '\(([0-9]+)\)' | tr -d '()' | tail -1); \
@@ -195,6 +196,12 @@ e2e: ## Browser journeys at every layout band (phone, tablet, desktop) in Chrome
 	npm run build
 	$(if $(E2E_FIREFOX_WS),PLAYWRIGHT_VERSION=$(PLAYWRIGHT_VERSION) docker compose --profile e2e up -d --wait playwright-firefox,)
 	E2E_FIREFOX_WS=$(E2E_FIREFOX_WS) npx playwright test $(E2E_ARGS)
+
+test-map: ## The test map: every route, who gets in, each story's tests with Run buttons (http://127.0.0.1:8790)
+	node tests/map/serve.mjs
+
+test-map-static: ## The same map as a file to read (storage/app/test-map.html), nothing to run
+	node tests/map/serve.mjs --static
 
 e2e-report: ## Open the last run's HTML report (each journey, steps, screenshots, video, trace)
 	npx playwright show-report playwright-report

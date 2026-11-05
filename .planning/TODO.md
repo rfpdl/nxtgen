@@ -23,7 +23,6 @@ Updated 2026-11-03. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 | # | Item | Why |
 |---|---|---|
 | 9 | Schedule-admin roles (shown as "class", `ScopeTypeEnum::Schedule`) in People — `canGrant` refuses them until Schedules exist | People |
-| 10 | E2E "test map" like admin-v2 (`e2e/map/serve.mjs`): the access matrix as a page, each cell → its tests, with Run buttons | Roy: admin-v2 has a good page per item |
 | — | Open questions for R2: `lifeshapers_can_open` default; follow-up threshold (weeks absent) — plan §13 | plan §13 |
 
 ## Later
@@ -49,6 +48,7 @@ Updated 2026-11-03. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 | 7, 20 | ~~Two-connection concurrency tests~~ — done: a claim link used twice at once (new and existing login), a photo upload arriving while the withdrawal is saving, the last two church admins removing each other. Found and fixed a deadlock in the last-admin count (DECISIONS 2026-11-03) | 2026-11-03 |
 | 13 | ~~E2E for link expiry~~ — done: `MoveE2EClock` (an e2e-only per-request clock header) + `parent/link-expiry.spec.ts` | 2026-11-03 |
 | 22 | ~~Photo sweep~~ — done: `nxtgen:photos-sweep`, daily 03:00; needs Laravel Cloud's scheduler on (#23) | 2026-11-03 |
+| 10 | ~~E2E test map~~ — done: `make test-map` (http://127.0.0.1:8790): every staff and parent route × every kind of person, each story with its tests and Run buttons (Pest, or Playwright on a picked browser); `make test-map-static` writes it as a file (DECISIONS 2026-11-06) | 2026-11-06 |
 | 27 | ~~Moving-Up~~ — done: a church admin's page (a button on Children), every Active child with a Level ticked with their new Level, untick to keep back; the last Moving-Up put back for one child or everyone (DECISIONS 2026-11-06, `tasks/2026-11-06-moving-up/`) | 2026-11-06 |
 | 12c | ~~E2E on an iPad in Safari, upright and on its side~~ — 15 projects (DECISIONS 2026-11-06) | 2026-11-06 |
 | 12b | ~~E2E in Chrome, Safari and Firefox, upright and sideways~~ — 13 projects; Firefox in Docker on a Mac (DECISIONS 2026-11-03) | 2026-11-03 |

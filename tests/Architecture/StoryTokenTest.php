@@ -6,6 +6,7 @@ namespace Tests\Architecture;
 
 use App\Foundation\Attributes\UserStory;
 use Symfony\Component\Finder\Finder;
+use Tests\Support\StoryClaims;
 
 /**
  * Every Feature says what it is for, and every criterion it names is proved by a test — ported from aegis's
@@ -75,22 +76,10 @@ function criteriaOf(?UserStory $story): array
     return $criteria;
 }
 
-/**
- * The story numbers a test file claims: only tokens inside a test's TITLE — Pest's `it(`/`test(`/`describe(`,
- * Playwright's `test(` — with comments stripped first, so a note that mentions a story claims nothing.
- *
- * @return list<int>
- */
+/** @return list<int> the story numbers a test file claims (StoryClaims — the test map reads the same) */
 function storyClaimsIn(string $source, bool $php): array
 {
-    $code = $php
-        ? stripComments($source)
-        : (string) preg_replace(['#/\*.*?\*/#s', '#(?<![:\\\\])//[^\n]*#'], '', $source);
-
-    preg_match_all('/\b(?:it|test|describe)(?:\.\w+)?\(\s*([\'"`])((?:\\\\.|(?!\1).)*)\1/s', $code, $titles);
-    preg_match_all('/@story#(\d+)\b/', implode("\n", $titles[2]), $m);
-
-    return array_values(array_unique(array_map(intval(...), $m[1])));
+    return StoryClaims::numbersIn($source, $php);
 }
 
 /** @return array<int, list<string>> story number => the test files that claim it */

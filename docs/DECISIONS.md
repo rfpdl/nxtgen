@@ -28,6 +28,12 @@ describes the design; this records the choices that shaped or changed it.
     change all lock the church's row first, so they queue instead of overwriting each other or deadlocking. The door's
     check-in does not: it only sets a Level on a child with none and makes an inactive child active — children Moving-Up
     never moves — and locking it would make Saturday's check-ins wait on each other.
+- **The test map (TODO #10)**, like admin-v2's: `make test-map` serves a page on 127.0.0.1 — every staff and parent
+  route with its access rule and who gets in (✓ or 404), each story (happy and unhappy) with the tests that prove it,
+  and Run buttons that run just those tests (Pest; Playwright on the browser picked, Chrome desktop by default) and
+  show passed or failed. Claude, low-stakes: it reads the lists the tests use — the access matrix moved to
+  `tests/Support/AccessMatrix.php`, the story scanning to `StoryClaims.php` — so it cannot drift from the suite. A Run
+  names only tests the map lists, and a write needs the page's own token.
 - Overnight order (Roy): Moving-Up, then the test map page (#10), then the "No Level" filter. Commit, merge, push when
   `make check` and `make e2e` are green.
 

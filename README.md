@@ -38,6 +38,15 @@ make e2e-ui       # watch each journey run, one by one
 make e2e-report   # the last run's report: each journey, its steps; screenshot, video and trace for failures
 ```
 
+```bash
+make test-map         # the test map: every route, who gets in, each story's tests, Run buttons — http://127.0.0.1:8790
+make test-map-static  # the same page as a file, storage/app/test-map.html
+```
+
+The test map runs only tests it lists: Pest for PHP tests, Playwright on the browser you pick for journeys (the e2e
+database, as `make e2e` has it). It reads the same lists the tests use (`tests/Support/AccessMatrix.php`,
+`StoryClaims.php`), so it shows what the suite proves.
+
 They sign in the way people do — by opening the emailed link (copied to `storage/app/e2e/mailbox.jsonl` under
 `APP_ENV=e2e` only). First time: `npx playwright install webkit chromium firefox`. On a Mac, Playwright's Firefox does
 not start, so `make e2e` runs Firefox in Docker (`playwright-firefox` in docker-compose.yml, started for you) and drives
