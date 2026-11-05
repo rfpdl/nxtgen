@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Child;
 
+use App\Domains\Church\Jobs\GetChurchForUpdateJob;
 use App\Domains\Family\Jobs\UpdateChildStatusJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -33,8 +34,12 @@ final class UpdateChildStatusFeature extends BaseChurchFeature
     {
         $child = $this->scopedChild($this->childId, $this->scope()->canEditFamily(...));
 
-        // The status and its history note together, or neither.
-        DB::transaction(fn () => $this->run(new UpdateChildStatusJob(child: $child, status: $input->status, by: $this->staff())));
+        // The status and its history note together, or neither — after the church's row, as Moving-Up takes it, so the
+        // two queue instead of overwriting each other (Astra, Moving-Up).
+        DB::transaction(function () use ($child, $input): void {
+            $this->run(new GetChurchForUpdateJob(church: $this->church()));
+            $this->run(new UpdateChildStatusJob(child: $child, status: $input->status, by: $this->staff()));
+        });
 
         return back()->with('success', "{$child->displayName()} is now {$input->status->label()}.");
     }

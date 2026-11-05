@@ -39,6 +39,7 @@ enum AccessRowEnum: string implements HasEnumMetadata
     case Attendance = 'attendance';
     case CardRequest = 'card_request';
     case Cards = 'cards';
+    case MovingUp = 'moving_up';
 
     /** The rule, in the matrix's words: who may. */
     public function label(): string
@@ -64,6 +65,7 @@ enum AccessRowEnum: string implements HasEnumMetadata
             self::Attendance => 'Attendance (a Session\'s children by Squad) + Excel: church admin at any satellite; satellite admin at their own',
             self::CardRequest => 'File a Card request (a lost or damaged name card) for a child, and mark a printed card given at the desk: staff who can see the family',
             self::Cards => 'Cards (name card requests): the page — admins, their satellites\' families (church admin: all); mark paid, approve, refuse, mark printed — church admin; admin of the family\'s home satellite',
+            self::MovingUp => 'Moving-Up (every child to the next Level) and putting the last one back: church admin only',
             self::OwnFamily => 'The parent\'s own family: view, edit details, add/edit children (not status/Level)',
         };
     }

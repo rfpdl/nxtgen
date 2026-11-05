@@ -34,6 +34,14 @@ final class LevelChart
         return "Level {$level}";
     }
 
+    /** The Level after Moving-Up: the next one, or null from the top Level — the child graduates (GLOSSARY "Moving-Up"). */
+    public static function movedUp(int $level): ?int
+    {
+        $higher = array_values(array_filter(self::levels(), fn (int $l): bool => $l > $level));
+
+        return $higher[0] ?? null;
+    }
+
     /** The Level whose ages include `$age` (completed years), or null when the chart has none. */
     public static function forAge(int $age): ?int
     {

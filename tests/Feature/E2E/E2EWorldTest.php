@@ -51,6 +51,14 @@ it('seeds exactly what the browser journeys expect', function (): void {
         expect($world)->toContain("name: '{$class->name}', when: '{$class->weekday?->everyLabel()} · {$class->startsAt()}–{$class->endsAt()}'");
     }
 
+    // The Moving-Up journey: each browser's Navarro children at their Levels, with its middle name.
+    expect($world)->toContain('children: { Mika: 1, Theo: 4 }');
+    foreach (E2ESeeder::SCAN_MIDDLE_NAMES as $middle) {
+        foreach (E2ESeeder::MOVING_UP_CHILDREN as $name => $level) {
+            expect(Child::query()->where('first_name', $name)->where('middle_name', $middle)->where('last_name', 'Navarro')->sole()->level)->toBe($level);
+        }
+    }
+
     // The door journeys: each browser's own Cruz family at CCF DXB and visiting Villa family at House Church.
     foreach (E2ESeeder::DOOR_GUARDIANS as $project => $first) {
         expect($world)->toMatch(worldKey($project, "'{$first}'"));

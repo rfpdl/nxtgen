@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Tests\Feature\AccessMatrix;
 
 use App\Data\Models\CardRequest;
+use App\Data\Models\MovingUp;
 use App\Data\Models\PrintList;
 use App\Data\Models\SquadHeadCount;
 use App\Enums\AccessRowEnum;
 use App\Enums\CardStepEnum;
+use App\Enums\ChildStatusEnum;
 use App\Foundation\Attributes\AccessRow;
 use Carbon\CarbonImmutable;
 use Closure;
@@ -101,6 +103,11 @@ function matrix(): array
         'church.people.index' => [AccessRowEnum::GrantRoles, [Actor::ChurchAdmin, Actor::HomeAdmin, Actor::AwayAdmin]],
         'church.people.store' => [AccessRowEnum::GrantRoles, Actor::editingFamily()],
         'church.people.roles.destroy' => [AccessRowEnum::GrantRoles, Actor::editingFamily()],
+        // Moving-Up (DECISIONS 2026-11-06): the whole church at once, so a church admin only — no satellite admin.
+        'church.moving-up.index' => [AccessRowEnum::MovingUp, [Actor::ChurchAdmin]],
+        'church.moving-up.store' => [AccessRowEnum::MovingUp, [Actor::ChurchAdmin]],
+        'church.moving-up.children.put-back' => [AccessRowEnum::MovingUp, [Actor::ChurchAdmin]],
+        'church.moving-up.put-back' => [AccessRowEnum::MovingUp, [Actor::ChurchAdmin]],
         // Classes (DECISIONS 2026-10-26): the page opens for every admin; Home's class is changed only by an admin
         // over Home.
         'church.schedules.index' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin, Actor::AwayAdmin]],
@@ -199,6 +206,10 @@ function requestFor(string $route, AccessWorld $w): array
         'church.people.index' => ['GET', '/ccf/people', []],
         'church.people.store' => ['POST', '/ccf/people', ['name' => 'Leo Lifeshaper', 'email' => 'leo@example.com', 'role' => 'lifeshaper', 'scope_type' => 'satellite', 'scope_id' => $w->home->id]],
         'church.people.roles.destroy' => ['DELETE', "/ccf/people/roles/{$w->assignment->id}", []],
+        'church.moving-up.index' => ['GET', '/ccf/moving-up', []],
+        'church.moving-up.store' => ['POST', '/ccf/moving-up', ['children' => [['child_id' => $c, 'level' => childAtLevel($w)]]]],
+        'church.moving-up.children.put-back' => ['PUT', '/ccf/moving-up/'.movingUpOf($w)->id."/children/{$c}/put-back", []],
+        'church.moving-up.put-back' => ['PUT', '/ccf/moving-up/'.movingUpOf($w)->id.'/put-back', []],
         'church.schedules.index' => ['GET', '/ccf/classes', []],
         'church.schedules.store' => ['POST', '/ccf/classes', ['satellite_id' => $w->home->id, 'name' => 'Special class', 'weekday' => null, 'starts_at' => null, 'ends_at' => null]],
         'church.schedules.update' => ['PUT', "/ccf/classes/{$w->schedule->id}", ['name' => '1PM', 'weekday' => 'saturday', 'starts_at' => '13:30', 'ends_at' => '15:00']],
@@ -241,6 +252,27 @@ function withApprovedCard(AccessWorld $w, string $uri): string
     cardAt($w, CardStepEnum::Approved);
 
     return $uri;
+}
+
+/** The world's child at a Level (it may have none), to be moved up from it. */
+function childAtLevel(AccessWorld $w): int
+{
+    $w->child->forceFill(['level' => 2, 'status' => ChildStatusEnum::Active])->save();
+
+    return 2;
+}
+
+/** The church's last Moving-Up, which moved the world's child from Level 2 to 3 — so it can be put back. */
+function movingUpOf(AccessWorld $w): MovingUp
+{
+    $w->child->forceFill(['level' => 3, 'status' => ChildStatusEnum::Active])->save();
+    $movingUp = MovingUp::query()->create(['church_id' => $w->church->id]);
+    $movingUp->children()->create([
+        'church_id' => $w->church->id, 'child_id' => $w->child->id,
+        'from_level' => 2, 'from_status' => ChildStatusEnum::Active, 'to_level' => 3, 'to_status' => ChildStatusEnum::Active,
+    ]);
+
+    return $movingUp;
 }
 
 /** A print list holding the world's child's approved card (made once, so one world serves every guess). */
@@ -460,6 +492,17 @@ describe('duplicates and People, for admins', function (): void {
         ->with(cells('church.people.roles.destroy'));
 });
 
+describe('Moving-Up, for a church admin', function (): void {
+    it('opens Moving-Up for a church admin only @story#154 @story#155', cellTest())
+        ->with(cells('church.moving-up.index'));
+    it('moves children up only for a church admin @story#156 @story#157', cellTest())
+        ->with(cells('church.moving-up.store'));
+    it('puts one child back only for a church admin @story#158 @story#159', cellTest())
+        ->with(cells('church.moving-up.children.put-back'));
+    it('puts everyone back only for a church admin @story#160 @story#161', cellTest())
+        ->with(cells('church.moving-up.put-back'));
+});
+
 describe('Classes, for admins', function (): void {
     it('opens Classes for admins only @story#95 @story#96', cellTest())
         ->with(cells('church.schedules.index'));
@@ -519,12 +562,12 @@ function routesNamingAnId(): array
     return array_values(array_filter(array_keys(matrix()), function (string $route): bool {
         $uri = (string) Router::getRoutes()->getByName($route)?->uri();
 
-        return str_starts_with($uri, '{church}') && preg_match('/\{(family|child|pair|assignment|schedule|checkIn|cardRequest|printList)\}/', $uri) === 1;
+        return str_starts_with($uri, '{church}') && preg_match('/\{(family|child|pair|assignment|schedule|checkIn|cardRequest|printList|movingUp)\}/', $uri) === 1;
     }));
 }
 
-// Every refusal is a 404 and changes nothing, so one world serves all thirty guesses.
-it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in their OWN church\'s address @story#29 @story#49 @story#51 @story#100 @story#102 @story#109 @story#111 @story#120 @story#123 @story#131 @story#137 @story#139 @story#141 @story#143 @story#145 @story#147 @story#149', function (): void {
+// Every refusal is a 404 and changes nothing, so one world serves all thirty-two guesses.
+it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in their OWN church\'s address @story#29 @story#49 @story#51 @story#100 @story#102 @story#109 @story#111 @story#120 @story#123 @story#131 @story#137 @story#139 @story#141 @story#143 @story#145 @story#147 @story#149 @story#159 @story#161', function (): void {
     Notification::fake();
     Storage::fake('photos');
     travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
@@ -542,6 +585,6 @@ it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in 
         $answers["{$method} {$guessed}"] = outcomeOf(call($method, $guessed, $payload), $method);
     }
 
-    expect($answers)->toHaveCount(30)
+    expect($answers)->toHaveCount(32)
         ->and(array_unique(array_values($answers)))->toBe(['404'], (string) json_encode($answers, JSON_PRETTY_PRINT));
 });

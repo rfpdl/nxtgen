@@ -87,6 +87,15 @@ final class E2ESeeder extends Seeder
 
     public const array CARD_CHILDREN = ['Jon', 'Kit', 'Ned', 'Rex', 'Sam', 'Tom', 'Ugo', 'Vic', 'Wes'];
 
+    /**
+     * Each browser's Navarro family at CCF DXB (Moving-Up): Mika at Level 1 and Theo at Level 4, each with the browser's
+     * own middle name (SCAN_MIDDLE_NAMES), so the journey ticks only its own two — "Mika Joy Navarro" — out of the whole
+     * church, moves them up and puts them back.
+     *
+     * @var array<string, int>
+     */
+    public const array MOVING_UP_CHILDREN = ['Mika' => 1, 'Theo' => 4];
+
     public function run(): void
     {
         $this->call(DemoChurchSeeder::class);
@@ -113,6 +122,7 @@ final class E2ESeeder extends Seeder
             $this->rollCallFamily($ccf, $dxb, $first, $day, self::ROLL_CALL_GIRLS[$project], self::SCAN_MIDDLE_NAMES[$project]);
             $this->cardFamily($ccf, $dxb, $first, $day);
             $this->levelFamily($ccf, $dxb, $first, $day);
+            $this->movingUpFamily($ccf, $dxb, $first, $day, self::SCAN_MIDDLE_NAMES[$project]);
         }
     }
 
@@ -160,6 +170,18 @@ final class E2ESeeder extends Seeder
             self::LEVEL_CHILDREN,
             [3, 4, 5],
         ));
+    }
+
+    private function movingUpFamily(Church $church, Satellite $dxb, string $first, string $day, string $middle): void
+    {
+        $this->register($church, $dxb, new GuardianDetailsData(firstName: $first, lastName: 'Navarro', relationship: RelationshipEnum::Mother, phone: "+9715080000{$day}", email: 'navarro-'.mb_strtolower($first).'@nxtgen.test'), [
+            new ChildDetailsData(firstName: 'Mika', middleName: $middle, lastName: 'Navarro', nickname: 'Mika', gender: GenderEnum::Girl, dateOfBirth: "2021-02-{$day}", allergies: null),
+            new ChildDetailsData(firstName: 'Theo', middleName: $middle, lastName: 'Navarro', nickname: 'Theo', gender: GenderEnum::Boy, dateOfBirth: "2014-02-{$day}", allergies: null),
+        ]);
+        foreach (self::MOVING_UP_CHILDREN as $name => $level) {
+            Child::query()->where('church_id', $church->id)->where('last_name', 'Navarro')->where('first_name', $name)->where('middle_name', $middle)->sole()
+                ->forceFill(['level' => $level])->save();
+        }
     }
 
     private function cardFamily(Church $church, Satellite $dxb, string $first, string $day): void

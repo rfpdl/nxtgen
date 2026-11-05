@@ -200,3 +200,19 @@ export const LEVELS = {
     children: ['Lexi', 'Lara', 'Luz'],
     suggested: 'Level 3',
 } as const
+
+/**
+ * Moving-Up: each browser project's Navarro family at CCF DXB (E2ESeeder::MOVING_UP_CHILDREN) — Mika at Level 1 and Theo
+ * at Level 4, with the project's middle name (SCAN's: AMARAJOYREYES → "Joy"), so the journey ticks only its own two.
+ */
+export const MOVING_UP = {
+    surname: 'Navarro',
+    children: { Mika: 1, Theo: 4 },
+} as const
+
+/** "Mika Joy Navarro": this project's Moving-Up child's full name, as the page shows it. */
+export const movingUpChild = (name: keyof typeof MOVING_UP.children, project: string): string => {
+    const code = SCAN.codes[project as keyof typeof SCAN.codes]
+    const middle = code.slice('AMARA'.length, -'REYES'.length)
+    return `${name} ${middle.charAt(0)}${middle.slice(1).toLowerCase()} ${MOVING_UP.surname}`
+}

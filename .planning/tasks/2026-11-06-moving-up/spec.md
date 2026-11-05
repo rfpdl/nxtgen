@@ -1,6 +1,6 @@
 # Moving-Up — the yearly step to the next Level
 
-Status: ready-for-agent
+Status: resolved
 Decided: Roy 2026-11-06 (DECISIONS): a church admin only, never automatic; the admin sees every child with their new
 Level and unticks anyone who stays; the last Moving-Up can be put back — one child ("Put back") or everyone ("Put
 everyone back"), on the Moving-Up page. Plan: Levels are stored and change at Moving-Up (yearly, admin-run), before the

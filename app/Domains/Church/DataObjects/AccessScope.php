@@ -96,6 +96,12 @@ final readonly class AccessScope
         return $this->isChurchAdmin;
     }
 
+    /** Moving-Up, and putting the last one back (DECISIONS 2026-11-06): church admin only — the whole church at once. */
+    public function canMoveUp(): bool
+    {
+        return $this->isChurchAdmin;
+    }
+
     public function canMergeRecords(): bool
     {
         return $this->isChurchAdmin;

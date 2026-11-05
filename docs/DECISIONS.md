@@ -11,6 +11,23 @@ describes the design; this records the choices that shaped or changed it.
   can **untick** anyone who stays. It remembers each child's old Level and status, so on the Moving-Up page the last
   Moving-Up lists every child moved, each with **"Put back"**, plus **"Put everyone back"** (Roy: "can we undo
   specific student as well?").
+- **Moving-Up built** (`tasks/2026-11-06-moving-up/`). Claude, low-stakes, for Roy to confirm:
+  - **Where:** a "Moving-Up" button on the Children page, church admins only — not a menu item. It is once a year,
+    and a tenth menu item no longer fits the desktop menu row on one line.
+  - **Who moves:** Active children with a Level. Inactive and Graduated children stay as they are; children with no
+    Level are not moved, and the page says how many need one first.
+  - **Exactly what the admin saw:** each ticked child is sent with the Level the page showed; if anyone changed
+    since (another admin, a double tap), nobody moves and the page says to look again. Two presses at once run one
+    after the other (the church's row is locked), so a child never moves up twice.
+  - **Put back** only from the last Moving-Up, and not a child whose Level or status someone changed since (that
+    change stands; the message names them). Each move and each put-back is noted on the child's history.
+  - Each Level has "Untick all" / "Tick all" — e.g. to keep a whole Level back.
+  - **Asks first**, and when the last Moving-Up was in the past 30 days it warns that another would move everyone up a
+    second Level (code + test review: a second press would otherwise lock the first one in for good).
+  - **One lock order for a child's Level and status** (Astra): Moving-Up, put-back, the Level correction and the status
+    change all lock the church's row first, so they queue instead of overwriting each other or deadlocking. The door's
+    check-in does not: it only sets a Level on a child with none and makes an inactive child active — children Moving-Up
+    never moves — and locking it would make Saturday's check-ins wait on each other.
 - Overnight order (Roy): Moving-Up, then the test map page (#10), then the "No Level" filter. Commit, merge, push when
   `make check` and `make e2e` are green.
 

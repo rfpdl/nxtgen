@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/atoms/AppButton.vue'
 import EmptyState from '@/components/atoms/EmptyState.vue'
 import PageHeader from '@/components/atoms/PageHeader.vue'
 import Pill from '@/components/atoms/Pill.vue'
@@ -7,8 +8,15 @@ import ChurchShell from '@/components/layout/ChurchShell.vue'
 import Pager from '@/components/molecules/Pager.vue'
 import RegistrationListFilters from '@/components/molecules/RegistrationListFilters.vue'
 import { useChurch } from '@/composables/useChurch'
-import type { ChildListRow, LevelOption, ListFilters, Pagination, SatelliteOption } from '@/types'
-import { Head, router } from '@inertiajs/vue3'
+import type {
+    ChildListRow,
+    LevelOption,
+    ListFilters,
+    Pagination,
+    SatelliteOption,
+    SharedProps,
+} from '@/types'
+import { Head, router, usePage } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
 /**
@@ -16,7 +24,7 @@ import { route } from 'ziggy-js'
  * flag — with the same search and filters as the families list. Each child opens their family; a child whose family's
  * email is unconfirmed offers "Send the confirmation link again" (DECISIONS 2026-10-17).
  * On the kit (the Bold look): one stacked row per child — the whole row opens the family — the Level a Pill in its
- * own colour.
+ * own colour. A church admin also gets "Moving-Up" here — once a year, so not a menu item (DECISIONS 2026-11-06).
  */
 defineProps<{
     children: ChildListRow[]
@@ -26,6 +34,7 @@ defineProps<{
 }>()
 
 const church = useChurch()
+const nav = usePage<SharedProps>().props.church_nav
 
 /** Another page of the same filtered list: the filters stay in the address. */
 function goTo(page: number): void {
@@ -41,7 +50,16 @@ function apply(params: Record<string, string | number>): void {
 <template>
     <Head title="Children" />
     <ChurchShell>
-        <PageHeader :title="`Children (${pagination.total})`" />
+        <PageHeader :title="`Children (${pagination.total})`">
+            <template v-if="nav?.can_move_up" #actions>
+                <AppButton
+                    variant="secondary"
+                    :href="route('church.moving-up.index', church.slug)"
+                    data-testid="children-moving-up"
+                    >Moving-Up</AppButton
+                >
+            </template>
+        </PageHeader>
         <RegistrationListFilters
             :key="JSON.stringify(filters)"
             :filters="filters"

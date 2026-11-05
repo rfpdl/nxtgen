@@ -109,6 +109,10 @@ export type CardRequest = App.Domains.Card.DataObjects.CardRequestData
 export type CardRequestRow = App.Domains.Card.DataObjects.CardRequestRowData
 /** A print list still to print (GLOSSARY "Print list"): when, by whom, its cards the viewer sees and those left. */
 export type PrintList = App.Domains.Card.DataObjects.PrintListData
+/** Moving-Up (DECISIONS 2026-11-06): a child who will move, the last Moving-Up, and one child it moved. */
+export type MovingUpCandidate = App.Domains.Level.DataObjects.MovingUpCandidateData
+export type MovingUp = App.Domains.Level.DataObjects.MovingUpData
+export type MovingUpChild = App.Domains.Level.DataObjects.MovingUpChildData
 /** A registration list's filters, named as the address parameters the filter bar sends back. */
 export type ListFilters = App.Domains.Family.DataObjects.ListFiltersData
 
@@ -123,6 +127,7 @@ export type RegisterFamilyInput = App.Foundation.Inputs.RegisterFamilyInput
 export type ChildPhotoInput = App.Foundation.Inputs.ChildPhotoInput
 export type PasswordLoginInput = App.Services.Auth.Data.PasswordLoginInput
 export type RequestMagicLinkInput = App.Services.Auth.Data.RequestMagicLinkInput
+export type MoveChildrenUpInput = App.Services.Church.Data.MoveChildrenUpInput
 export type UpdatePasswordInput = App.Services.Auth.Data.UpdatePasswordInput
 export type AddStaffInput = App.Services.Church.Data.AddStaffInput
 export type CorrectFamilyEmailInput = App.Services.Church.Data.CorrectFamilyEmailInput

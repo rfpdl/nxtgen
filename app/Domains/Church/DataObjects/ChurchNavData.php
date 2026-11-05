@@ -19,6 +19,7 @@ final class ChurchNavData extends Data
         public bool $can_manage_classes,
         public bool $can_see_attendance,
         public bool $can_manage_cards,
+        public bool $can_move_up,
     ) {}
 
     public static function fromScope(AccessScope $scope): self
@@ -28,6 +29,7 @@ final class ChurchNavData extends Data
             can_manage_classes: $scope->canManageClasses(),
             can_see_attendance: $scope->canSeeAttendance(),
             can_manage_cards: $scope->canManageCards(),
+            can_move_up: $scope->canMoveUp(),
         );
     }
 }

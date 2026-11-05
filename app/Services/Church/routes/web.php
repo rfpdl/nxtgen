@@ -19,6 +19,7 @@ use App\Services\Church\Http\Controllers\Door\Controller as DoorController;
 use App\Services\Church\Http\Controllers\Duplicate\Controller as DuplicateController;
 use App\Services\Church\Http\Controllers\Family\Controller as FamilyController;
 use App\Services\Church\Http\Controllers\Home\Controller as HomeController;
+use App\Services\Church\Http\Controllers\MovingUp\Controller as MovingUpController;
 use App\Services\Church\Http\Controllers\People\Controller as PeopleController;
 use App\Services\Church\Http\Controllers\Poster\Controller as PosterController;
 use App\Services\Church\Http\Controllers\Schedule\Controller as ScheduleController;
@@ -54,6 +55,12 @@ Route::put('/card-requests/{cardRequest}/approve', [CardRequestController::class
 Route::put('/card-requests/{cardRequest}/refuse', [CardRequestController::class, 'refuse'])->whereNumber('cardRequest')->name('church.card-requests.refuse');
 Route::put('/card-requests/{cardRequest}/mark-printed', [CardRequestController::class, 'markPrinted'])->whereNumber('cardRequest')->name('church.card-requests.mark-printed');
 Route::put('/card-requests/{cardRequest}/give', [CardRequestController::class, 'give'])->whereNumber('cardRequest')->name('church.card-requests.give');
+
+// Moving-Up (TODO #27): the yearly step to the next Level, and putting the last one back — church admin only.
+Route::get('/moving-up', [MovingUpController::class, 'index'])->name('church.moving-up.index');
+Route::post('/moving-up', [MovingUpController::class, 'store'])->name('church.moving-up.store');
+Route::put('/moving-up/{movingUp}/children/{child}/put-back', [MovingUpController::class, 'putBackChild'])->whereNumber(['movingUp', 'child'])->name('church.moving-up.children.put-back');
+Route::put('/moving-up/{movingUp}/put-back', [MovingUpController::class, 'putBackEveryone'])->whereNumber('movingUp')->name('church.moving-up.put-back');
 
 Route::get('/people', [PeopleController::class, 'index'])->name('church.people.index');
 Route::post('/people', [PeopleController::class, 'store'])->middleware('throttle:per-device')->name('church.people.store');

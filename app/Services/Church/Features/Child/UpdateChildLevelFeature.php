@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Child;
 
+use App\Domains\Church\Jobs\GetChurchForUpdateJob;
 use App\Domains\Family\Jobs\GetChurchChildJob;
 use App\Domains\Family\Jobs\UpdateChildLevelJob;
 use App\Enums\AccessRowEnum;
@@ -39,7 +40,11 @@ final class UpdateChildLevelFeature extends BaseChurchFeature
         $child = $this->run(new GetChurchChildJob(church: $this->church(), id: $this->childId));
 
         // The Level and its history note together, or neither.
-        DB::transaction(fn () => $this->run(new UpdateChildLevelJob(child: $child, level: $input->level, by: $this->staff())));
+        // After the church's row, as Moving-Up takes it: the two queue instead of overwriting each other (Astra, Moving-Up).
+        DB::transaction(function () use ($child, $input): void {
+            $this->run(new GetChurchForUpdateJob(church: $this->church()));
+            $this->run(new UpdateChildLevelJob(child: $child, level: $input->level, by: $this->staff()));
+        });
 
         return back()->with('success', "{$child->displayName()} is now in ".LevelChart::name($input->level).'.');
     }

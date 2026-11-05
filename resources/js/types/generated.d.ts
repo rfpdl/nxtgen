@@ -156,6 +156,7 @@ declare namespace App {
                     can_manage_classes: boolean
                     can_see_attendance: boolean
                     can_manage_cards: boolean
+                    can_move_up: boolean
                 }
                 export type GrantOptionData = {
                     label: string
@@ -315,6 +316,29 @@ declare namespace App {
                     level: number
                     name: string
                 }
+                export type MovingUpCandidateData = {
+                    id: number
+                    nickname: string
+                    full_name: string
+                    satellite: string
+                    level: App.Foundation.DataObjects.LevelData
+                    moves_to: string
+                }
+                export type MovingUpChildData = {
+                    child_id: number
+                    nickname: string
+                    full_name: string
+                    from: string
+                    to: string
+                    put_back: string | null
+                }
+                export type MovingUpData = {
+                    id: number
+                    made: string
+                    made_by: string | null
+                    is_recent: boolean
+                    children: App.Domains.Level.DataObjects.MovingUpChildData[]
+                }
             }
         }
         namespace Schedule {
@@ -358,6 +382,7 @@ declare namespace App {
             | 'attendance'
             | 'card_request'
             | 'cards'
+            | 'moving_up'
         export type CardFeeEnum = 'free' | 'paid' | 'not_paid'
         export type CardListTabEnum = 'asked' | 'approved' | 'printed' | 'closed'
         export type CardMatchEnum = 'exact' | 'several' | 'close' | 'none'
@@ -375,6 +400,7 @@ declare namespace App {
         export type MagicLinkRouteEnum = 'login' | 'verify' | 'claim'
         export type NoteKindEnum = 'system' | 'observation'
         export type NoteVisibilityEnum = 'staff' | 'family'
+        export type PutBackResultEnum = 'put_back' | 'already_put_back' | 'changed_since'
         export type RegistrationOutcomeEnum =
             'registered' | 'already_registered' | 'claim_sent' | 'claim_resent'
         export type RegistrationSourceEnum = 'self' | 'staff' | 'import'
@@ -535,6 +561,13 @@ declare namespace App {
                 export type MarkPresentInput = {
                     present: boolean
                     revision: number
+                }
+                export type MoveChildUpInput = {
+                    child_id: number
+                    level: number
+                }
+                export type MoveChildrenUpInput = {
+                    children: App.Services.Church.Data.MoveChildUpInput[]
                 }
                 export type RefuseCardRequestInput = {
                     reason: string

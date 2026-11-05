@@ -13,6 +13,7 @@ const page = {
             can_manage_classes: false,
             can_see_attendance: false,
             can_manage_cards: false,
+            can_move_up: false,
         },
     },
 }

@@ -21,6 +21,9 @@ decided by `AccessScope` against the access-matrix row the Feature declares (`#[
 - Status (active, inactive, Graduated) is set by a church admin or the home Satellite's admin.
 - **Only a church admin corrects a Level**, outside Moving-Up, and only to a Level on the chart. There is no gender
   rule: the Child's Squad follows from Level and gender.
+- **Moving-Up is a church admin's only** (DECISIONS 2026-11-06): every Active child with a Level goes up one Level,
+  from the top Level to Graduated; the admin unticks anyone who stays. If any child changed since the page was opened,
+  nobody moves. The last Moving-Up can be put back — one child, or everyone — except a child someone changed since.
 - A Lifeshaper may record a parent's in-person yes to photos ("Are you sure the parent said yes?"), then take the
   photo. Consent sent with a photo does not count.
 - Every change to status, Level, Consent or email is noted on the Child or Family, with who did it.

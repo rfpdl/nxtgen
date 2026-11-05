@@ -82,3 +82,4 @@ every staff, parent and public page is on the kit (issues 02 and 03 of `.plannin
 | ChildCardRequest        | organism | A child's name card on the staff family page: "Card: Asked · not paid" (Pill) for an open request, else "New card…" → Lost/Damaged + note            |
 | CardRequestRow          | organism | One Card request on Cards: child's full name, family (link) · satellite, reason — note, fee Pill; the moves the server sends (PUT), Refuse… asks why |
 | PrintListCard           | molecule | A print list still to print on Cards' Approved tab: "Print list · 12 cards · made … by …", Download (Excel), "Mark these N printed" (PUT)            |
+| MovingUpLastCard        | molecule | The last Moving-Up: when and by whom, each child "Level 1 → Level 2" (or Graduated), "Put back" each, "Put everyone back" (PUTs)                 |

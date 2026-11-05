@@ -7,6 +7,7 @@ namespace Tests\Feature\ResponseAllowlist;
 use App\Data\Models\CardRequest;
 use App\Data\Models\PrintList;
 use App\Enums\CardStepEnum;
+use App\Enums\ChildStatusEnum;
 use App\Http\Middleware\HandleInertiaRequests;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Storage;
@@ -34,8 +35,8 @@ const SHARED = ['auth.can_switch', 'auth.user.id', 'auth.user.name', 'church.nam
 /** A page that is not a staff page: the staff menu is null. */
 const FRAME = [...SHARED, 'church_nav'];
 
-/** A staff page: the staff menu's switches (People, Classes, Attendance). Duplicates has no tab (DECISIONS 2026-10-17, after first look). */
-const STAFF_FRAME = [...SHARED, 'church_nav.can_manage_cards', 'church_nav.can_manage_classes', 'church_nav.can_manage_people', 'church_nav.can_see_attendance'];
+/** A staff page: the staff menu's switches (People, Classes, Attendance, Cards, Moving-Up). Duplicates has no tab (DECISIONS 2026-10-17, after first look). */
+const STAFF_FRAME = [...SHARED, 'church_nav.can_manage_cards', 'church_nav.can_manage_classes', 'church_nav.can_manage_people', 'church_nav.can_move_up', 'church_nav.can_see_attendance'];
 
 /** Health, photo and contact fields: never on a list or search page, whoever asks — only the allergy yes/no. */
 const NEVER_ON_LISTS = '/photo|allerg|illness|fear|dislike|guardian_notes|phone|notes|ministries/';
@@ -336,6 +337,23 @@ describe('admin pages', function (): void {
         Actor::HomeAdmin->value => [Actor::HomeAdmin, true],
         Actor::AwayAdmin->value => [Actor::AwayAdmin, false],
     ]);
+
+    it('shows Moving-Up as names, satellites and Levels — no health, contact or family details @story#154', function (): void {
+        $props = propsOf(Actor::ChurchAdmin, function (AccessWorld $w): string {
+            $w->child->forceFill(['level' => 2, 'status' => ChildStatusEnum::Active])->save();
+            actingAs($w->user(Actor::ChurchAdmin) ?? throw new \LogicException('A church admin signs in.'))->post('/ccf/moving-up', ['children' => [['child_id' => $w->child->id, 'level' => 2]]]);
+
+            return '/ccf/moving-up';
+        });
+
+        expect(keyPaths($props))->toBe(allowlist(
+            STAFF_FRAME,
+            ['without_level'],
+            prefixed('children.*', ['full_name', 'id', 'level.name', 'level.number', 'moves_to', 'nickname', 'satellite']),
+            ['last.id', 'last.is_recent', 'last.made', 'last.made_by'],
+            prefixed('last.children.*', ['child_id', 'from', 'full_name', 'nickname', 'put_back', 'to']),
+        ))->and(forbiddenOnLists($props))->toBe([]);
+    });
 });
 
 describe('the Classes page', function (): void {

@@ -92,8 +92,8 @@ _Avoid_: Teacher, group leader
 
 **Moving-Up**:
 The yearly step, done by people (never automatically), where Children go to the next Level; from the top Level they
-leave NxtGen. Also said as "level up".
-_Avoid_: Promotion, graduation
+leave NxtGen. Also said as "level up". The last one can be **put back** — for one Child, or everyone.
+_Avoid_: Promotion, graduation; undo, revert (say "put back")
 
 **Graduated**:
 A Child who has moved up out of the top Level and is no longer part of NxtGen.

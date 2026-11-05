@@ -30,7 +30,6 @@ Updated 2026-11-03. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 
 | # | Item | Trigger |
 |---|---|---|
-| 27 | **Moving-Up** (admin-run, never automatic): each Child's Level + 1; from the top Level (4) the Child's status becomes Graduated. Nothing is built yet beyond `children.level` (refactor 05) | before the February Moving-Up |
 | 8 | A church slug must never be a reserved path — ChurchSeeder refuses one; enforce again in any create-church screen | with Platform screens |
 | 25 | A "delete this photo for good" action (a parent asking for erasure) — withdrawal only hides (SECURITY #19) | when a parent asks, or before a data-protection review |
 | — | "No Level" filter on the children lists (plan §13 q5; was "no group") — the list shows "No Level" today, there is no filter for it | awaiting Roy |
@@ -50,6 +49,7 @@ Updated 2026-11-03. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 | 7, 20 | ~~Two-connection concurrency tests~~ — done: a claim link used twice at once (new and existing login), a photo upload arriving while the withdrawal is saving, the last two church admins removing each other. Found and fixed a deadlock in the last-admin count (DECISIONS 2026-11-03) | 2026-11-03 |
 | 13 | ~~E2E for link expiry~~ — done: `MoveE2EClock` (an e2e-only per-request clock header) + `parent/link-expiry.spec.ts` | 2026-11-03 |
 | 22 | ~~Photo sweep~~ — done: `nxtgen:photos-sweep`, daily 03:00; needs Laravel Cloud's scheduler on (#23) | 2026-11-03 |
+| 27 | ~~Moving-Up~~ — done: a church admin's page (a button on Children), every Active child with a Level ticked with their new Level, untick to keep back; the last Moving-Up put back for one child or everyone (DECISIONS 2026-11-06, `tasks/2026-11-06-moving-up/`) | 2026-11-06 |
 | 12c | ~~E2E on an iPad in Safari, upright and on its side~~ — 15 projects (DECISIONS 2026-11-06) | 2026-11-06 |
 | 12b | ~~E2E in Chrome, Safari and Firefox, upright and sideways~~ — 13 projects; Firefox in Docker on a Mac (DECISIONS 2026-11-03) | 2026-11-03 |
 | 12 | ~~E2E per breakpoint~~ — done: eight projects by layout band (sm/md/lg; phones 360 and 390 in Chrome and Safari, on their side, tablets 720/768/1024, desktop), every journey on each, every screen layout-checked (no sideways scroll, menu fits on one line, ≥44px on touch); photo consent on every project with its own child; the menu row moved to lg (DECISIONS 2026-10-30) | 2026-10-30 |
