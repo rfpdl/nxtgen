@@ -10,6 +10,7 @@ use App\Domains\Church\Jobs\GetSatellitesJob;
 use App\Domains\Family\DataObjects\FamilyListRowData;
 use App\Domains\Family\DataObjects\ListFiltersData;
 use App\Domains\Family\Jobs\GetFamiliesJob;
+use App\Domains\Level\DataObjects\LevelOptionData;
 use App\Domains\Level\Jobs\GetLevelsJob;
 use App\Enums\AccessRowEnum;
 use App\Enums\ChildStatusEnum;
@@ -54,7 +55,7 @@ final class ShowFamiliesFeature extends BaseChurchFeature
             'filters' => ListFiltersData::fromFamilyFilters($filters),
             'options' => [
                 'satellites' => $satellites,
-                'levels' => $this->run(new GetLevelsJob),
+                'levels' => [...$this->run(new GetLevelsJob), LevelOptionData::none()],
             ],
             'enums' => ['child_status' => ChildStatusEnum::toFrontend()],
         ]);

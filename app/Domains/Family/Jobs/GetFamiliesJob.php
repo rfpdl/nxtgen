@@ -9,6 +9,7 @@ use App\Data\Models\Family;
 use App\Domains\Family\DataObjects\FamilyListFiltersData;
 use App\Enums\DuplicateStatusEnum;
 use App\Foundation\Jobs\BaseJob;
+use App\Foundation\Support\LevelChart;
 use App\Foundation\Support\ListPage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
@@ -42,7 +43,8 @@ final class GetFamiliesJob extends BaseJob
             ->when($f->satelliteId !== null, fn (Builder $q) => $q->where('home_satellite_id', $f->satelliteId))
             ->when($f->query !== null, fn (Builder $q) => $q->matching((string) $f->query))
             ->when($f->status !== null, fn (Builder $q) => $q->whereHas('children', fn (Builder $c) => $c->where('status', $f->status)))
-            ->when($f->level !== null, fn (Builder $q) => $q->whereHas('children', fn (Builder $c) => $c->where('level', $f->level)))
+            ->when($f->level === LevelChart::NONE, fn (Builder $q) => $q->whereHas('children', fn (Builder $c) => $c->whereNull('level')))
+            ->when($f->level !== null && $f->level !== LevelChart::NONE, fn (Builder $q) => $q->whereHas('children', fn (Builder $c) => $c->where('level', $f->level)))
             ->when($f->unconfirmedOnly, fn (Builder $q) => $q->whereHas('primaryGuardian', fn (Builder $g) => $g
                 ->whereNull('user_id')
                 ->orWhereHas('user', fn (Builder $u) => $u->whereNull('email_verified_at'))))

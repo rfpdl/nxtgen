@@ -21,4 +21,10 @@ final class LevelOptionData extends Data
     {
         return new self(level: $level, name: LevelChart::name($level));
     }
+
+    /** "No Level" on a list's Level filter: the children with none yet (LevelChart::NONE). */
+    public static function none(): self
+    {
+        return new self(level: LevelChart::NONE, name: 'No Level');
+    }
 }

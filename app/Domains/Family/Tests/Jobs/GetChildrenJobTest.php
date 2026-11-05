@@ -7,6 +7,7 @@ use App\Data\Models\User;
 use App\Domains\Family\DataObjects\ChildListFiltersData;
 use App\Domains\Family\Jobs\GetChildrenJob;
 use App\Enums\ChildStatusEnum;
+use App\Foundation\Support\LevelChart;
 
 use function Tests\Support\childOf;
 use function Tests\Support\church;
@@ -58,6 +59,15 @@ it('narrows by status and level', function (): void {
     $filters = new ChildListFiltersData(status: ChildStatusEnum::Active, level: 2);
 
     expect(listedNicknames(new GetChildrenJob(church: $church, satelliteIds: null, filters: $filters)))->toBe(['Active L2']);
+});
+
+it('narrows to the children with no Level yet ("No Level")', function (): void {
+    $church = church();
+    $family = familyAt(satelliteOf($church));
+    childOf($family, ['nickname' => 'Lola', 'level' => null]);
+    childOf($family, ['nickname' => 'Ben', 'level' => 1]);
+
+    expect(listedNicknames(new GetChildrenJob(church: $church, satelliteIds: null, filters: new ChildListFiltersData(level: LevelChart::NONE))))->toBe(['Lola']);
 });
 
 it('searches the child\'s own names or the parent, without a child\'s name dragging in siblings', function (): void {

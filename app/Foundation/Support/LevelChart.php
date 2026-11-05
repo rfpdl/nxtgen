@@ -14,6 +14,9 @@ use Illuminate\Support\Str;
  */
 final class LevelChart
 {
+    /** A list filter's "No Level" (plan §13 q5): a child who has none yet. Never a Level on the chart. */
+    public const int NONE = 0;
+
     /** @return list<int> the Levels, lowest first */
     public static function levels(): array
     {

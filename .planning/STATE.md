@@ -12,9 +12,10 @@
 | **Name cards** | Built, reviewed (two-axis + test review + Astra, which approves) and pushed: staff report a lost/damaged card, a free first card for every new child, the admin Cards page (paid, approve, refuse, printed, given), print lists with an Excel download — `tasks/2026-10-29-name-cards/` |
 | **Overnight 2026-11-03** | Tests and cleanup (DECISIONS 2026-11-03): e2e in Chrome, Safari and Firefox, upright and sideways (13 projects; Firefox in Docker on a Mac); two-connection race tests (TODO #7/#20 — found and fixed a deadlock when two church admins remove each other); link-expiry journey with an e2e clock (#13); the nightly photo sweep (#22, needs Laravel Cloud's scheduler) |
 | **Moving-Up** | Built, reviewed (code + test review + Astra: two lock gaps found and fixed) and pushed: a church admin's page (button on Children), untick to keep back, confirm, put back one child or everyone — `tasks/2026-11-06-moving-up/` (DECISIONS 2026-11-06) |
-| **Next step** | Roy tries roll call, child history, name-card scanning and the name cards module (`php artisan migrate`; Cards is in the admin menu). Then confirms the Claude calls in DECISIONS 2026-10-28 and 2026-10-29. Open: follow-up list (skipped for now), TODO #29 merge, #27 Moving-Up (before Feb), offline check-in |
+| **Also 2026-11-06** | The test map (`make test-map`, TODO #10) and the "No Level" filter on Children and Families (plan §13 q5) — both reviewed by Astra and pushed |
+| **Next step** | Roy tries Moving-Up (Children → Moving-Up; `php artisan migrate`), the test map (`make test-map`) and the No Level filter, and confirms the Claude calls in DECISIONS 2026-11-06 (and 2026-11-03). Open: offline check-in, #29 merge, #9 class admin roles |
 | **Waiting on Roy** | Laravel Cloud + mail provider + Registry CSV (TODO #23); "No group" filter yes/no (plan §13 q5); a real-iPhone photo try (TODO #16) |
-| **Gate** | `make check` green — 2376 Pest + 173 arch, 459 Vitest, PHPStan L10 · `make e2e` green — 733 runs on 15 projects (Chrome, Safari, Firefox; phones upright and sideways, tablets 720/768/1024, an iPad in Safari both ways, desktops), 5 skips |
+| **Gate** | `make check` green — 2381 Pest + 173 arch, 460 Vitest (+ the test map's node tests), PHPStan L10 · `make e2e` green — 748 runs on 15 projects (Chrome, Safari, Firefox; phones upright and sideways, tablets 720/768/1024, an iPad in Safari both ways, desktops), 5 skips |
 
 ## Where to look
 

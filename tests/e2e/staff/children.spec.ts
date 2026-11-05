@@ -48,3 +48,16 @@ test('an admin finds a child by Level on the children list and corrects their Le
     await page.goto(`/${CHURCH}/children?q=${encodeURIComponent(`${child} ${family}`)}`)
     await expect(page.getByTestId('child-row').filter({ hasText: child })).toContainText('Level 4')
 })
+
+test('finds the children with no Level yet with the "No Level" filter', async ({ page }, info) => {
+    const family = `Cruz ${DOOR.guardians[info.project.name as DoorProject]}`
+    await page.goto(`/${CHURCH}/children`)
+    await page.getByTestId('filter-level').selectOption({ label: 'No Level' })
+    await expect(page).toHaveURL(/level=0/)
+    await page.getByTestId('filter-q').fill(family)
+    await page.getByTestId('filter-q').press('Enter')
+    await expect(page).toHaveURL(/[?&]q=/)
+    // This project's Lola: seeded with no Level (the door asks for one first — door.spec, later in the run).
+    await expect(page.getByTestId('child-row')).toHaveCount(1)
+    await expect(page.getByTestId('child-row')).toContainText(DOOR.cruz.noLevel)
+})

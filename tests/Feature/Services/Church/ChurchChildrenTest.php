@@ -57,7 +57,7 @@ describe('the children list', function (): void {
             ->where('children.0.has_allergies', true)
             ->where('children.0.satellite', 'CCF DXB')
             ->where('children.0.family_id', $amara->family_id)
-            ->has('options.levels', 4)->has('options.satellites', 2)->has('enums.child_status', 3));
+            ->has('options.levels', 5)->where('options.levels.4', ['level' => 0, 'name' => 'No Level'])->has('options.satellites', 2)->has('enums.child_status', 3));
     });
 
     it('shows a Lifeshaper only their satellite @story#58', function (): void {
@@ -67,12 +67,13 @@ describe('the children list', function (): void {
             ->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Bea'));
     });
 
-    it('searches and filters by Level, status and satellite — never widening the viewer\'s scope @story#58', function (): void {
+    it('searches and filters by Level (or No Level), status and satellite — never widening the viewer\'s scope @story#58', function (): void {
         ['church' => $church, 'dxb' => $dxb, 'house' => $house] = kidsChurch();
         $admin = staffMember(RoleEnum::Admin, atChurch($church));
 
         actingAs($admin)->get('/ccf/children?q=bea')->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Bea')->where('filters.q', 'bea'));
         actingAs($admin)->get('/ccf/children?level=2')->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Amara')->where('filters.level', 2));
+        actingAs($admin)->get('/ccf/children?level=0')->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Bea')->where('filters.level', 0));
         actingAs($admin)->get('/ccf/children?status=inactive')->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Bea'));
         actingAs($admin)->get("/ccf/children?satellite={$house->id}")->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1));
 

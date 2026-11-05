@@ -34,6 +34,9 @@ describes the design; this records the choices that shaped or changed it.
   show passed or failed. Claude, low-stakes: it reads the lists the tests use — the access matrix moved to
   `tests/Support/AccessMatrix.php`, the story scanning to `StoryClaims.php` — so it cannot drift from the suite. A Run
   names only tests the map lists, and a write needs the page's own token.
+- **"No Level" filter** (plan §13 q5, Roy chose it for tonight): the Level filter on Children and Families has a last
+  choice, "No Level" (`?level=0`) — the children with no Level yet (on Families: families with such a child). The Excel
+  downloads follow the filters as always. Claude, low-stakes: on both lists, as they share one filter bar.
 - Overnight order (Roy): Moving-Up, then the test map page (#10), then the "No Level" filter. Commit, merge, push when
   `make check` and `make e2e` are green.
 

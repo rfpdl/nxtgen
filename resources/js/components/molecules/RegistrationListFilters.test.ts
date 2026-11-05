@@ -14,6 +14,7 @@ const options = {
     levels: [
         { level: 1, name: 'Level 1' },
         { level: 2, name: 'Level 2' },
+        { level: 0, name: 'No Level' },
     ],
 }
 const empty = {
@@ -79,6 +80,14 @@ describe('RegistrationListFilters', () => {
         expect(wrapper.emitted('apply')?.at(-1)).toEqual([
             { q: 'Ramos', status: 'inactive', level: 2, duplicates: 1 },
         ])
+    })
+
+    it('sends "No Level" as level 0 — a real choice, not an empty one', async () => {
+        const wrapper = mount(RegistrationListFilters, { props: { filters: empty, options } })
+        await wrapper.find('[data-testid="filter-level"]').setValue('0')
+        await wrapper.find('form').trigger('submit')
+
+        expect(wrapper.emitted('apply')?.[0]).toEqual([{ level: 0 }])
     })
 
     it('clears everything', async () => {

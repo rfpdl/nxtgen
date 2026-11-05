@@ -466,11 +466,16 @@ describe('searching and filtering the list', function (): void {
 
         actingAs($admin)->get("/ccf/families?satellite={$house->id}")->assertInertia(fn (AssertableInertia $p) => $p
             ->has('families', 1)->where('families.0.primary_name', 'Mira Ramos')
-            ->has('options.satellites', 2)->has('options.levels', 4)->has('enums.child_status', 3));
+            ->has('options.satellites', 2)->has('options.levels', 5)->has('enums.child_status', 3));
         actingAs($admin)->get('/ccf/families?status=inactive')->assertInertia(fn (AssertableInertia $p) => $p
             ->has('families', 1)->where('families.0.primary_name', 'Janice Ramos'));
         actingAs($admin)->get('/ccf/families?level=2')->assertInertia(fn (AssertableInertia $p) => $p
             ->has('families', 1)->where('families.0.primary_name', 'Janice Ramos')->where('filters.level', 2));
+
+        // "No Level": the families with a child who has none yet (plan §13 q5).
+        Child::query()->where('family_id', $a->id)->firstOrFail()->forceFill(['level' => null])->save();
+        actingAs($admin)->get('/ccf/families?level=0')->assertInertia(fn (AssertableInertia $p) => $p
+            ->has('families', 1)->where('families.0.primary_name', 'Janice Ramos')->where('filters.level', 0));
     });
 
     it('filters to families with an open possible duplicate, on either side', function (): void {

@@ -8,6 +8,7 @@ use App\Data\Models\Child;
 use App\Data\Models\Church;
 use App\Domains\Family\DataObjects\ChildListFiltersData;
 use App\Foundation\Jobs\BaseJob;
+use App\Foundation\Support\LevelChart;
 use App\Foundation\Support\ListPage;
 use App\Foundation\Support\SearchWords;
 use Illuminate\Database\Eloquent\Builder;
@@ -52,7 +53,8 @@ final class GetChildrenJob extends BaseJob
                 fn (Builder $one, string $digits) => $one->whereHas('family', fn (Builder $fam) => $fam->withParentPhone($digits)),
             ))
             ->when($f->status !== null, fn (Builder $q) => $q->where('status', $f->status))
-            ->when($f->level !== null, fn (Builder $q) => $q->where('level', $f->level))
+            ->when($f->level === LevelChart::NONE, fn (Builder $q) => $q->whereNull('level'))
+            ->when($f->level !== null && $f->level !== LevelChart::NONE, fn (Builder $q) => $q->where('level', $f->level))
             ->orderBy('nickname')
             ->orderBy('id');
 

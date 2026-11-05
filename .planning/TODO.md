@@ -31,7 +31,6 @@ Updated 2026-11-03. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 |---|---|---|
 | 8 | A church slug must never be a reserved path — ChurchSeeder refuses one; enforce again in any create-church screen | with Platform screens |
 | 25 | A "delete this photo for good" action (a parent asking for erasure) — withdrawal only hides (SECURITY #19) | when a parent asks, or before a data-protection review |
-| — | "No Level" filter on the children lists (plan §13 q5; was "no group") — the list shows "No Level" today, there is no filter for it | awaiting Roy |
 | 26 | Storybook, as aegis (a story per component) — not now (DECISIONS 2026-10-17) | when components grow |
 
 ## Later — from Roy's first look (2026-10-17)
@@ -48,6 +47,7 @@ Updated 2026-11-03. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 | 7, 20 | ~~Two-connection concurrency tests~~ — done: a claim link used twice at once (new and existing login), a photo upload arriving while the withdrawal is saving, the last two church admins removing each other. Found and fixed a deadlock in the last-admin count (DECISIONS 2026-11-03) | 2026-11-03 |
 | 13 | ~~E2E for link expiry~~ — done: `MoveE2EClock` (an e2e-only per-request clock header) + `parent/link-expiry.spec.ts` | 2026-11-03 |
 | 22 | ~~Photo sweep~~ — done: `nxtgen:photos-sweep`, daily 03:00; needs Laravel Cloud's scheduler on (#23) | 2026-11-03 |
+| — | ~~"No Level" filter~~ — done: the Children and Families lists' Level filter has "No Level" (`?level=0`): children with none yet, families with such a child; the Excel downloads follow (DECISIONS 2026-11-06; plan §13 q5) | 2026-11-06 |
 | 10 | ~~E2E test map~~ — done: `make test-map` (http://127.0.0.1:8790): every staff and parent route × every kind of person, each story with its tests and Run buttons (Pest, or Playwright on a picked browser); `make test-map-static` writes it as a file (DECISIONS 2026-11-06) | 2026-11-06 |
 | 27 | ~~Moving-Up~~ — done: a church admin's page (a button on Children), every Active child with a Level ticked with their new Level, untick to keep back; the last Moving-Up put back for one child or everyone (DECISIONS 2026-11-06, `tasks/2026-11-06-moving-up/`) | 2026-11-06 |
 | 12c | ~~E2E on an iPad in Safari, upright and on its side~~ — 15 projects (DECISIONS 2026-11-06) | 2026-11-06 |
