@@ -1,6 +1,6 @@
 # State
 
-**Read this first at session start.** Updated: 2026-11-03.
+**Read this first at session start.** Updated: 2026-11-06.
 
 ## Where things stand
 
@@ -13,7 +13,7 @@
 | **Overnight 2026-11-03** | Tests and cleanup (DECISIONS 2026-11-03): e2e in Chrome, Safari and Firefox, upright and sideways (13 projects; Firefox in Docker on a Mac); two-connection race tests (TODO #7/#20 — found and fixed a deadlock when two church admins remove each other); link-expiry journey with an e2e clock (#13); the nightly photo sweep (#22, needs Laravel Cloud's scheduler) |
 | **Next step** | Roy tries roll call, child history, name-card scanning and the name cards module (`php artisan migrate`; Cards is in the admin menu). Then confirms the Claude calls in DECISIONS 2026-10-28 and 2026-10-29. Open: follow-up list (skipped for now), TODO #29 merge, #27 Moving-Up (before Feb), offline check-in |
 | **Waiting on Roy** | Laravel Cloud + mail provider + Registry CSV (TODO #23); "No group" filter yes/no (plan §13 q5); a real-iPhone photo try (TODO #16) |
-| **Gate** | `make check` green — 2262 Pest + 173 arch, 447 Vitest, PHPStan L10 · `make e2e` green — 623 runs on 13 projects (Chrome, Safari, Firefox; phones upright and sideways, tablets 720/768/1024, desktops), 4 skips |
+| **Gate** | `make check` green — 2262 Pest + 173 arch, 447 Vitest, PHPStan L10 · `make e2e` green — 718 runs on 15 projects (Chrome, Safari, Firefox; phones upright and sideways, tablets 720/768/1024, an iPad in Safari both ways, desktops), 5 skips |
 
 ## Where to look
 

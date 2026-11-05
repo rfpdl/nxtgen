@@ -4,6 +4,20 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-11-06 (iPad at the door — Roy)
+
+- **Moving-Up (TODO #27), Roy's answers:** only a **church admin** runs it, never automatic. Each child moves up one
+  Level; from Level 4 the child becomes Graduated. Before it runs, the admin sees every child with their new Level and
+  can **untick** anyone who stays. It remembers each child's old Level and status, so on the Moving-Up page the last
+  Moving-Up lists every child moved, each with **"Put back"**, plus **"Put everyone back"** (Roy: "can we undo
+  specific student as well?").
+- Overnight order (Roy): Moving-Up, then the test map page (#10), then the "No Level" filter. Commit, merge, push when
+  `make check` and `make e2e` are green.
+
+- **E2E on an iPad in Safari, upright and on its side** (Roy: "yes we might have ipad at the door"). Two projects:
+  `tablet-portrait-safari` 810×1080 (the menu still a sheet) and `tablet-landscape-safari` 1080×810 (the menu a row)
+  — fifteen in all. Each has its own seeded families, like every browser.
+
 ## 2026-11-03 (overnight: browsers, race tests, link expiry, photo sweep — Roy)
 
 - **E2E in Chrome, Safari and Firefox, upright and on their side** (Roy: "e2e supports safari, firefox, chrome. then
@@ -15,7 +29,7 @@ describes the design; this records the choices that shaped or changed it.
 - Claude, low-stakes (for Roy to confirm): **on a Mac, Firefox runs in Docker.** Playwright's Firefox (and the older
   build) will not start on this macOS ("Could not find profile folder"). `make e2e` starts `playwright-firefox`
   (docker-compose.yml, same version as `@playwright/test`) and the journeys drive it over `E2E_FIREFOX_WS`; CI is Linux
-  and launches it itself. No iPad project in Safari yet — say if Lifeshapers use iPads at the door.
+  and launches it itself. (iPad in Safari: added 2026-11-06.)
 - Claude, low-stakes: **an e2e clock a journey can move** (TODO #13). Under APP_ENV=e2e only, a request carrying
   `X-E2E-Clock-Ahead: <minutes>` runs that much later (`MoveE2EClock`). Per request, so only that journey's browser
   sees it. The link-expiry journey opens a confirm link 7 days + 1 minute late and a sign-in link 2 hours + 1 minute

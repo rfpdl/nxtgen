@@ -8,8 +8,8 @@ import { defineConfig, devices } from '@playwright/test'
  * serves on 3021, so the dev server on 3020 and your working data are never touched. E2EServiceProvider
  * refuses to start against a database not named `*_e2e`.
  *
- * Thirteen projects, by the app's layout bands (TODO #12, Roy 2026-10-30) and by browser (Roy 2026-11-03: Chrome, Safari
- * and Firefox, each upright and on its side) — not by device. The app's breakpoints are
+ * Fifteen projects, by the app's layout bands (TODO #12, Roy 2026-10-30) and by browser (Roy 2026-11-03: Chrome, Safari
+ * and Firefox, each upright and on its side; 2026-11-06: an iPad at the door) — not by device. The app's breakpoints are
  * Tailwind's `sm` (640px), `md` (768px: two columns begin) and `lg` (1024px: the menu turns from a sheet into a row),
  * so each project sits in one band, and every journey runs on every project (admins use phones and tablets too):
  *   - base: `phone-portrait` 390×844 (chromium), `phone-portrait-safari` the same in WebKit (parents' iPhones;
@@ -17,6 +17,7 @@ import { defineConfig, devices } from '@playwright/test'
  *   - `sm`: `tablet-portrait` 720×1080;
  *   - `md`: `tablet-edge` 768×1024 (its very edge) and `phone-landscape` 844×390 — still the sheet menu;
  *   - `lg`: `tablet-landscape` 1024×768 (its very edge: the row menu at its tightest) and `desktop` 1280×800;
+ *   - Safari: an iPad upright (810×1080) and on its side (1080×810) — Lifeshapers may use one at the door;
  *   - Safari and Firefox: a phone upright (390×844) and on its side (844×390), and a desktop (1280×800) each — WebKit is
  *     every iPhone and iPad browser, and Firefox has its own layout engine (Gecko). Firefox cannot pretend to be a
  *     mobile browser (no `isMobile`), so its phones are a narrow touch window: still a coarse pointer, still ≥ 44px.
@@ -143,6 +144,18 @@ export default defineConfig({
             name: 'desktop-firefox',
             dependencies: ['setup'],
             use: firefox({ viewport: { width: 1280, height: 800 } }),
+        },
+        {
+            // An iPad at the door (Roy 2026-11-06), upright: md, the menu still a sheet.
+            name: 'tablet-portrait-safari',
+            dependencies: ['setup'],
+            use: { ...devices['iPad (gen 7)'], viewport: { width: 810, height: 1080 } },
+        },
+        {
+            // …and on its side: lg, the menu a row.
+            name: 'tablet-landscape-safari',
+            dependencies: ['setup'],
+            use: { ...devices['iPad (gen 7) landscape'], viewport: { width: 1080, height: 810 } },
         },
     ],
 

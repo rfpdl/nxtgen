@@ -33,7 +33,7 @@ make check    # pint, larastan level 10, architecture guards, pest, vitest, esli
 ## Browser tests (E2E)
 
 ```bash
-make e2e          # every journey at each layout band (sm 640, md 768, lg 1024) in Chrome, Safari and Firefox: phones upright and on their side, tablets 720/768/1024, desktops; layout-checked (own DB, nxtgen_e2e)
+make e2e          # every journey at each layout band (sm 640, md 768, lg 1024) in Chrome, Safari and Firefox: phones upright and on their side, tablets 720/768/1024, an iPad both ways, desktops; layout-checked (own DB, nxtgen_e2e)
 make e2e-ui       # watch each journey run, one by one
 make e2e-report   # the last run's report: each journey, its steps; screenshot, video and trace for failures
 ```

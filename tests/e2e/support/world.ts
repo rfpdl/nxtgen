@@ -69,6 +69,8 @@ export const PROJECTS = [
     'phone-portrait-firefox',
     'phone-landscape-firefox',
     'desktop-firefox',
+    'tablet-portrait-safari',
+    'tablet-landscape-safari',
 ] as const
 
 export type Project = (typeof PROJECTS)[number]
@@ -98,6 +100,8 @@ export const DOOR = {
         'phone-portrait-firefox': 'Lina',
         'phone-landscape-firefox': 'Meg',
         'desktop-firefox': 'Nora',
+        'tablet-portrait-safari': 'Pat',
+        'tablet-landscape-safari': 'Vera',
     },
     cruz: {
         allergic: 'Amara',
@@ -146,6 +150,8 @@ export const ROLL_CALL = {
         'phone-portrait-firefox': ['Joni', 'Kia', 'Lua', 'Mona'],
         'phone-landscape-firefox': ['Pru', 'Oli', 'Pita', 'Qia'],
         'desktop-firefox': ['Rue', 'Sue', 'Tess', 'Uma'],
+        'tablet-portrait-safari': ['Bree', 'Cleo', 'Dot', 'Fern'],
+        'tablet-landscape-safari': ['Bo', 'Juno', 'Liv', 'Edie'],
     },
     squad: 'Level 2 Girls',
 } as const
@@ -169,6 +175,8 @@ export const SCAN = {
         'phone-portrait-firefox': 'AMARAHAZELREYES',
         'phone-landscape-firefox': 'AMARAPEARLREYES',
         'desktop-firefox': 'AMARAWRENREYES',
+        'tablet-portrait-safari': 'AMARASKYEREYES',
+        'tablet-landscape-safari': 'AMARALARKREYES',
     },
     child: 'Amara',
 } as const

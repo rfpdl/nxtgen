@@ -26,7 +26,7 @@ use Illuminate\Database\Seeder;
  * satellite. Families go through RegisterFamilyOperation — the import path, no emails — so the rows are ones
  * the app itself can produce. Must match `tests/e2e/support/world.ts`.
  *
- * The journeys run on thirteen browser projects (by layout band and browser — Chrome, Safari, Firefox; see playwright.config.ts)
+ * The journeys run on fifteen browser projects (by layout band and browser — Chrome, Safari, Firefox; see playwright.config.ts)
  * against one database, so each browser has its OWN families to check in
  * (DOOR_GUARDIANS): a Cruz family at CCF DXB — Amara (allergic), Ben, Noah (inactive), Lola (no Level), Gabe
  * (Graduated) — and a visiting Villa family at House Church (Pia). Birthdays differ per browser, so no two are
@@ -43,7 +43,8 @@ final class E2ESeeder extends Seeder
         'phone-portrait' => 'Ana', 'phone-portrait-safari' => 'Bela', 'desktop' => 'Carla', 'phone-landscape' => 'Dina',
         'tablet-portrait' => 'Elsa', 'tablet-landscape' => 'Fara', 'phone-small' => 'Gina', 'tablet-edge' => 'Iva',
         'phone-landscape-safari' => 'Joan', 'desktop-safari' => 'Kara', 'phone-portrait-firefox' => 'Lina',
-        'phone-landscape-firefox' => 'Meg', 'desktop-firefox' => 'Nora',
+        'phone-landscape-firefox' => 'Meg', 'desktop-firefox' => 'Nora', 'tablet-portrait-safari' => 'Pat',
+        'tablet-landscape-safari' => 'Vera',
     ];
 
     /**
@@ -57,7 +58,8 @@ final class E2ESeeder extends Seeder
         'phone-small' => ['Wyn', 'Xia', 'Yna', 'Zoe'], 'tablet-edge' => ['Ada', 'Cora', 'Dora', 'Eda'],
         'phone-landscape-safari' => ['Abi', 'Bia', 'Cai', 'Dia'], 'desktop-safari' => ['Eve', 'Kai', 'Hedy', 'Jem'],
         'phone-portrait-firefox' => ['Joni', 'Kia', 'Lua', 'Mona'], 'phone-landscape-firefox' => ['Pru', 'Oli', 'Pita', 'Qia'],
-        'desktop-firefox' => ['Rue', 'Sue', 'Tess', 'Uma'],
+        'desktop-firefox' => ['Rue', 'Sue', 'Tess', 'Uma'], 'tablet-portrait-safari' => ['Bree', 'Cleo', 'Dot', 'Fern'],
+        'tablet-landscape-safari' => ['Bo', 'Juno', 'Liv', 'Edie'],
     ];
 
     /**
@@ -68,7 +70,8 @@ final class E2ESeeder extends Seeder
         'phone-portrait' => 'Joy', 'phone-portrait-safari' => 'Kay', 'desktop' => 'Lee', 'phone-landscape' => 'Rose',
         'tablet-portrait' => 'Faye', 'tablet-landscape' => 'Gwen', 'phone-small' => 'Iris', 'tablet-edge' => 'June',
         'phone-landscape-safari' => 'Belle', 'desktop-safari' => 'Dawn', 'phone-portrait-firefox' => 'Hazel',
-        'phone-landscape-firefox' => 'Pearl', 'desktop-firefox' => 'Wren',
+        'phone-landscape-firefox' => 'Pearl', 'desktop-firefox' => 'Wren', 'tablet-portrait-safari' => 'Skye',
+        'tablet-landscape-safari' => 'Lark',
     ];
 
     /**
