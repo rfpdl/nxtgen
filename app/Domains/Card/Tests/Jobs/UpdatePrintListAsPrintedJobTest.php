@@ -3,11 +3,14 @@
 declare(strict_types=1);
 
 use App\Data\Models\CardRequest;
+use App\Data\Models\Family;
 use App\Data\Models\PrintList;
 use App\Data\Models\User;
 use App\Domains\Card\Jobs\UpdateCardRequestAsRefusedJob;
 use App\Domains\Card\Jobs\UpdatePrintListAsPrintedJob;
 use App\Enums\CardStepEnum;
+use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Support\Facades\DB;
 
 use function Tests\Support\atTheSameTime;
 use function Tests\Support\childOf;
@@ -63,6 +66,28 @@ it('marks only the cards within the admin\'s satellites — another satellite\'s
 
     expect((new UpdatePrintListAsPrintedJob(church: $church, printList: $list, satelliteIds: [$dxb->id], by: User::factory()->create()))->handle())->toBe(1)
         ->and([$mine->fresh()?->step, $theirs->fresh()?->step])->toBe([CardStepEnum::Printed, CardStepEnum::Approved]);
+});
+
+it('leaves a card whose family moved out of the admin\'s satellites between finding the cards and marking them (Astra)', function (): void {
+    $church = church();
+    $dxb = satelliteOf($church);
+    $house = satelliteOf($church);
+    $card = CardRequest::factory()->for(childOf($family = familyAt($dxb)))->create(['step' => CardStepEnum::Approved]);
+    $list = PrintList::factory()->for($church)->create();
+    $list->cards()->attach([$card->id]);
+
+    // Right after the job reads which cards to mark, another admin moves the family to House Church.
+    $moved = false;
+    DB::listen(function (QueryExecuted $query) use (&$moved, $family, $house): void {
+        if (! $moved && str_starts_with($query->sql, 'select') && str_contains($query->sql, 'from `card_requests`')) {
+            $moved = true;
+            Family::query()->whereKey($family->id)->update(['home_satellite_id' => $house->id]);
+        }
+    });
+
+    expect((new UpdatePrintListAsPrintedJob(church: $church, printList: $list, satelliteIds: [$dxb->id], by: User::factory()->create()))->handle())->toBe(0)
+        ->and($moved)->toBeTrue()
+        ->and($card->fresh()?->step)->toBe(CardStepEnum::Approved);
 });
 
 it('never both prints and refuses a card refused at the same moment as its list is marked printed', function (): void {
