@@ -36,6 +36,8 @@ final class ChildPortalData extends Data
         public string $status_label,
         public bool $photo_consent,
         public ?string $photo_url,
+        /** A photo is on file — shown, or hidden because consent was taken back — so it can be deleted for good. */
+        public bool $has_photo,
     ) {}
 
     public static function fromModel(Child $child): self
@@ -58,6 +60,7 @@ final class ChildPortalData extends Data
             photo_consent: $child->photo_consent_at !== null,
             photo_url: $child->photo_path === null || $child->photo_consent_at === null ? null
                 : URL::temporarySignedRoute('photos.child', now()->addMinutes(30), ['child' => $child->id, 'v' => md5($child->photo_path)]),
+            has_photo: $child->photo_path !== null,
         );
     }
 }

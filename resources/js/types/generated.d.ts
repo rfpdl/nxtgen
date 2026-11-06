@@ -235,6 +235,7 @@ declare namespace App {
                     status_label: string
                     photo_consent: boolean
                     photo_url: string | null
+                    has_photo: boolean
                 }
                 export type DuplicatePairData = {
                     id: number
@@ -402,6 +403,7 @@ declare namespace App {
             | 'cards'
             | 'moving_up'
             | 'manage_links'
+            | 'delete_child_photo'
         export type CardFeeEnum = 'free' | 'paid' | 'not_paid'
         export type CardListTabEnum = 'asked' | 'approved' | 'printed' | 'closed'
         export type CardMatchEnum = 'exact' | 'several' | 'close' | 'none'

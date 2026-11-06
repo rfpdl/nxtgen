@@ -10,8 +10,9 @@ import { ref } from 'vue'
  * A child's photo (Roy 2026-10-16): a parent or a Lifeshaper can take one with the phone camera or choose one —
  * once consent is recorded. The parent agrees with its own button; a staff member can record that the parent said
  * yes in person (saved with their name, noted on the child). Only the parent takes consent back, which hides
- * the photo until they agree again. Choosing a file sends it straight away. On the kit (the Bold look): the
- * pickers are FileButtons.
+ * the photo until they agree again. Choosing a file sends it straight away. With `deleteAction` (the parent; an admin
+ * in Admin) a photo on file — shown or hidden — can be deleted for good, after a second tap (TODO #25). On the kit
+ * (the Bold look): the pickers are FileButtons.
  */
 const props = defineProps<{
     child: ChildPortal
@@ -19,6 +20,7 @@ const props = defineProps<{
     action: string
     consentAction?: string
     withdrawAction?: string
+    deleteAction?: string
 }>()
 
 const form = useForm<Pick<Draft<ChildPhotoInput>, 'photo'>>({ photo: null })
@@ -41,6 +43,14 @@ const confirming = ref(false)
 function giveConsent(): void {
     confirming.value = false
     if (props.consentAction) router.put(props.consentAction, {}, { preserveScroll: true })
+}
+
+/** Deleting for good asks once more: it cannot be undone. */
+const deleting = ref(false)
+
+function deleteForGood(): void {
+    deleting.value = false
+    if (props.deleteAction) router.delete(props.deleteAction, { preserveScroll: true })
 }
 
 function withdraw(): void {
@@ -118,6 +128,38 @@ function withdraw(): void {
             >
                 Take back my consent (hides the photo)
             </AppButton>
+        </div>
+        <div v-if="deleteAction && child.has_photo" class="flex flex-col gap-2">
+            <AppButton
+                v-if="!deleting"
+                variant="link"
+                class="self-start"
+                data-testid="delete-photo"
+                @click="deleting = true"
+            >
+                Delete the photo for good
+            </AppButton>
+            <div v-else class="bg-warning-soft rounded-control flex flex-col gap-3 p-3">
+                <p class="text-text font-semibold">
+                    Delete {{ child.nickname }}'s photo for good? This cannot be undone.
+                </p>
+                <div class="flex flex-wrap gap-3">
+                    <AppButton
+                        variant="danger"
+                        data-testid="confirm-delete-photo"
+                        @click="deleteForGood"
+                    >
+                        Yes, delete it
+                    </AppButton>
+                    <AppButton
+                        variant="secondary"
+                        data-testid="keep-photo"
+                        @click="deleting = false"
+                    >
+                        Keep it
+                    </AppButton>
+                </div>
+            </div>
         </div>
         <p v-if="form.errors.photo" role="alert" class="text-danger font-semibold">
             {{ form.errors.photo }}

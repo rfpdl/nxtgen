@@ -20,6 +20,7 @@ const child = (over: Partial<ChildPortal> = {}): ChildPortal => ({
     status_label: 'Active',
     photo_consent: false,
     photo_url: null,
+    has_photo: false,
     ...over,
 })
 

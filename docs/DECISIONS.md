@@ -4,6 +4,16 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-11-07 (overnight — Claude, from Roy's list)
+
+- **Delete a photo for good (TODO #25, SECURITY #19).** Claude, low-stakes, for Roy to confirm: the **parent** deletes
+  their child's photo from their own page (a hidden one too), or an **admin who may edit the family** does it for
+  them in Admin; **not a Lifeshaper** — it cannot be undone. The file goes, the child's history says who; consent is
+  left as it was. Taking consent back still only hides (Roy 2026-10-16). The file is deleted only after the change
+  is saved; one that will not delete is left for the nightly sweep (Astra).
+- **Merge families / children (TODO #29): spec only**, as asked — `tasks/2026-11-07-merge/spec.md`: what moves,
+  what clashes (two check-ins for one Session, two open card requests), locks, undo, and 8 questions for Roy.
+
 ## 2026-11-06 (iPad at the door — Roy)
 
 - **Links on the QR poster (TODO #31 step 3, built).** Claude, low-stakes, for Roy to confirm: up to **6 Links a

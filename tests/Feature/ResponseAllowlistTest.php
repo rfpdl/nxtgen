@@ -69,7 +69,7 @@ const FAMILY_VIEW = [
     'family.children.*.allergies', 'family.children.*.date_of_birth', 'family.children.*.dislikes', 'family.children.*.fears',
     'family.children.*.first_name', 'family.children.*.gender', 'family.children.*.guardian_notes', 'family.children.*.id',
     'family.children.*.illnesses', 'family.children.*.last_name', 'family.children.*.level.name', 'family.children.*.level.number', 'family.children.*.middle_name',
-    'family.children.*.nickname', 'family.children.*.photo_consent', 'family.children.*.photo_url', 'family.children.*.status_label',
+    'family.children.*.has_photo', 'family.children.*.nickname', 'family.children.*.photo_consent', 'family.children.*.photo_url', 'family.children.*.status_label',
     'family.guardians.*.first_name', 'family.guardians.*.last_name', 'family.guardians.*.phone', 'family.guardians.*.relationship_label',
     'notes.*.at', 'notes.*.author', 'notes.*.body', 'notes.*.id',
     // Each child's attendance (slice 3) — staff only: when, where, which Squad, present. No health detail or photo.
@@ -496,7 +496,7 @@ describe('the parent\'s own family page', function (): void {
         $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/family');
 
         expect(keyPaths($props))->toBe(allowlist(FRAME, ['enums.gender', 'enums.relationship', 'family.area', 'family.home_satellite', 'satellites.*.id', 'satellites.*.name'],
-            prefixed('family.children.*', ['allergies', 'date_of_birth', 'dislikes', 'fears', 'first_name', 'gender', 'guardian_notes', 'id', 'illnesses', 'last_name', 'level.name', 'level.number', 'middle_name', 'nickname', 'photo_consent', 'photo_url', 'status_label']),
+            prefixed('family.children.*', ['allergies', 'date_of_birth', 'dislikes', 'fears', 'first_name', 'gender', 'guardian_notes', 'id', 'illnesses', 'has_photo', 'last_name', 'level.name', 'level.number', 'middle_name', 'nickname', 'photo_consent', 'photo_url', 'status_label']),
             prefixed('family.guardians.*', ['first_name', 'last_name', 'phone', 'relationship_label']),
             array_values(array_filter(FAMILY_EDIT_DETAILS, fn (string $p): bool => str_starts_with($p, 'details.'))),
             prefixed('me', ['first_name', 'id', 'last_name', 'ministries', 'phone', 'relationship']),

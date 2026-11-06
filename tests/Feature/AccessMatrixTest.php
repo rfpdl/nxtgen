@@ -144,6 +144,7 @@ function requestFor(string $route, AccessWorld $w): array
         'children.level' => ['PUT', "{$base}/children/{$c}/level", ['level' => 3]],
         'children.photo-consent' => ['PUT', "{$base}/children/{$c}/photo-consent", []],
         'children.photo' => ['POST', "{$base}/children/{$c}/photo", ['photo' => $photo()]],
+        'children.photo.destroy' => ['DELETE', "{$base}/children/{$c}/photo", []],
         'card-requests.store' => ['POST', "{$base}/children/{$c}/card-requests", ['reason' => 'lost', 'note' => 'Lost at the park']],
         'card-requests.index' => ['GET', "{$base}/card-requests?tab=asked", []],
         'card-requests.print-lists.store' => ['POST', withApprovedCard($w, "{$base}/card-requests/print-lists"), ['q' => null]],
@@ -200,6 +201,7 @@ function familyRequestFor(string $route, AccessWorld $w, int $c, Closure $photo,
         'family.children.photo' => ['POST', "/ccf/family/children/{$c}/photo", ['photo' => $photo(), 'consent' => true]],
         'family.children.photo-consent.give' => ['PUT', "/ccf/family/children/{$c}/photo-consent", []],
         'family.children.photo-consent' => ['DELETE', "/ccf/family/children/{$c}/photo-consent", []],
+        'family.children.photo.destroy' => ['DELETE', "/ccf/family/children/{$c}/photo", []],
         'photos.child' => ['GET', URL::temporarySignedRoute('photos.child', now()->addMinutes(30), ['child' => $c]), []],
         default => throw new LogicException("No request for {$route} — add it to familyRequestFor()."),
     };
@@ -443,6 +445,13 @@ describe('a child, for staff', function (): void {
         ->with(bothAreas('card-requests.give'));
 });
 
+describe('a photo deleted for good', function (): void {
+    it('is deleted from Admin only by an admin who may edit the family @story#178 @story#179', cellTest())
+        ->with(cells('nxtgen.admin.children.photo.destroy'));
+    it('is deleted by the child\'s own parent, and nobody else @story#176 @story#177', cellTest())
+        ->with(cells('family.children.photo.destroy'));
+});
+
 describe('Cards, for admins', function (): void {
     it('opens Cards for admins only @story#134 @story#135', cellTest())
         ->with(cells('nxtgen.admin.card-requests.index'));
@@ -556,12 +565,12 @@ function routesNamingAnId(): array
     return array_values(array_filter(array_keys(matrix()), function (string $route): bool {
         $uri = (string) Router::getRoutes()->getByName($route)?->uri();
 
-        return str_starts_with($uri, '{church}') && preg_match('/\{(family|child|pair|assignment|schedule|checkIn|cardRequest|printList|movingUp)\}/', $uri) === 1;
+        return str_starts_with($uri, '{church}') && preg_match('/\{(family|child|pair|assignment|schedule|checkIn|cardRequest|printList|movingUp|link)\}/', $uri) === 1;
     }));
 }
 
-// Every refusal is a 404 and changes nothing, so one world serves all thirty-two guesses.
-it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in their OWN church\'s address @story#29 @story#49 @story#51 @story#100 @story#102 @story#109 @story#111 @story#120 @story#123 @story#131 @story#137 @story#139 @story#141 @story#143 @story#145 @story#147 @story#149 @story#159 @story#161', function (): void {
+// Every refusal is a 404 and changes nothing, so one world serves every guess.
+it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in their OWN church\'s address @story#29 @story#49 @story#51 @story#100 @story#102 @story#109 @story#111 @story#120 @story#123 @story#131 @story#137 @story#139 @story#141 @story#143 @story#145 @story#147 @story#149 @story#159 @story#161 @story#169 @story#171 @story#173 @story#177 @story#179', function (): void {
     Notification::fake();
     Storage::fake('photos');
     travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
@@ -579,6 +588,6 @@ it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in 
         $answers["{$method} {$guessed}"] = outcomeOf(call($method, $guessed, $payload), $method);
     }
 
-    expect($answers)->toHaveCount(41)
+    expect($answers)->toHaveCount(46)
         ->and(array_unique(array_values($answers)))->toBe(['404'], (string) json_encode($answers, JSON_PRETTY_PRINT));
 });

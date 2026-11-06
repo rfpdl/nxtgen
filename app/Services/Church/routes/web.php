@@ -68,6 +68,8 @@ Route::prefix('nxtgen/admin')->name('nxtgen.admin.')->middleware(RequireAdminAre
     Route::get('/children', [ChildController::class, 'index'])->name('children.index');
     Route::put('/children/{child}/level', [ChildController::class, 'updateLevel'])->whereNumber('child')->name('children.level');
     Route::put('/children/{child}/status', [ChildController::class, 'updateStatus'])->whereNumber('child')->name('children.status');
+    // A photo deleted for good (TODO #25): a parent asking for erasure — an admin who may edit the family.
+    Route::delete('/children/{child}/photo', [ChildController::class, 'deletePhoto'])->whereNumber('child')->name('children.photo.destroy');
     Route::put('/duplicates/{pair}', [DuplicateController::class, 'resolve'])->whereNumber('pair')->name('duplicates.resolve');
 
     // Cards (name cards 03): admins see and move the requests by step. Print lists (name cards 04, GLOSSARY "Print

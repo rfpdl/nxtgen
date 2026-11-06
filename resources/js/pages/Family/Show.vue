@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import PageHeader from '@/components/atoms/PageHeader.vue'
-import RowList from '@/components/atoms/RowList.vue'
 import SectionHeading from '@/components/atoms/SectionHeading.vue'
 import FamilyShell from '@/components/layout/FamilyShell.vue'
 import FamilyChildCard from '@/components/molecules/FamilyChildCard.vue'
@@ -8,6 +7,7 @@ import AddChildForm from '@/components/organisms/AddChildForm.vue'
 import ChildPhotoForm from '@/components/organisms/ChildPhotoForm.vue'
 import EditChildForm from '@/components/organisms/EditChildForm.vue'
 import FamilyDetailsForm from '@/components/organisms/FamilyDetailsForm.vue'
+import GuardianList from '@/components/molecules/GuardianList.vue'
 import { useChurch } from '@/composables/useChurch'
 import type { FamilyDetails, FamilyPortal, GuardianEdit, SatelliteOption } from '@/types'
 import { Head } from '@inertiajs/vue3'
@@ -57,6 +57,7 @@ const sub = computed(() =>
                     :withdraw-action="
                         route('family.children.photo-consent', [church.slug, child.id])
                     "
+                    :delete-action="route('family.children.photo.destroy', [church.slug, child.id])"
                 />
                 <EditChildForm
                     :action="route('family.children.update', [church.slug, child.id])"
@@ -68,14 +69,7 @@ const sub = computed(() =>
 
         <section class="flex flex-col gap-3">
             <SectionHeading>Parents and guardians</SectionHeading>
-            <RowList :items="family.guardians" :item-key="(g) => `${g.first_name}-${g.last_name}`">
-                <template #default="{ item: g }">
-                    <p class="text-text text-lg" data-testid="guardian">
-                        <span class="font-bold">{{ g.first_name }} {{ g.last_name }}</span> ·
-                        {{ g.relationship_label }}<span v-if="g.phone"> · {{ g.phone }}</span>
-                    </p>
-                </template>
-            </RowList>
+            <GuardianList :guardians="family.guardians" />
             <FamilyDetailsForm
                 :action="route('family.update', church.slug)"
                 :details="details"

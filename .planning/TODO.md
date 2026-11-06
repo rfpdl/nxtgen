@@ -30,7 +30,7 @@ Updated 2026-11-03. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 | # | Item | Trigger |
 |---|---|---|
 | 8 | A church slug must never be a reserved path — ChurchSeeder refuses one; enforce again in any create-church screen | with Platform screens |
-| 25 | A "delete this photo for good" action (a parent asking for erasure) — withdrawal only hides (SECURITY #19) | when a parent asks, or before a data-protection review |
+| 25 | ~~A "delete this photo for good" action~~ — done 2026-11-07: the parent on their own page, an admin in Admin (`tasks/2026-11-07-photo-delete/`) | done |
 | 26 | Storybook, as aegis (a story per component) — not now (DECISIONS 2026-10-17) | when components grow |
 
 ## Later — from Roy's first look (2026-10-17)
@@ -38,7 +38,7 @@ Updated 2026-11-03. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 | # | Item | Trigger |
 |---|---|---|
 | 31 | **Admin and Serve** (Roy 2026-11-06): staff addresses by service — `/ccf/admin/…` and `/ccf/serve/…`; Lifeshapers edit families in Serve; the QR poster gets the church's Links (`tasks/2026-11-06-admin-serve/`) | done 2026-11-06 |
-| 29 | **Merge two families or two children** (a child registered again, legacy duplicates) — write a spec first (who may, what moves, history) | when a re-registration happens |
+| 29 | **Merge two families or two children** (a child registered again, legacy duplicates) — spec written 2026-11-07 — `tasks/2026-11-07-merge/spec.md`, 8 questions for Roy before building | when a re-registration happens |
 | 30 | ~~UI overhaul~~ — done: the Bold theme, one UI kit for every page (`tasks/2026-10-28-ui-theme/`) | done 2026-10-28 |
 
 ## Done

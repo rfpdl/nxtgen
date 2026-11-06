@@ -261,3 +261,59 @@ describe('seeing a photo', function (): void {
             ->where('family.children.0.photo_url', null)->where('family.children.0.photo_consent', false));
     });
 });
+
+/*
+ * Deleting a photo for good (TODO #25, SECURITY #19): a parent asking for erasure — withdrawing consent only hides
+ * the photo. The parent from their own page; an admin who may edit the family, in Admin. Never a Lifeshaper.
+ */
+describe('deleting a photo for good', function (): void {
+    it('lets a parent delete their child\'s photo for good — even one hidden when consent was taken back @story#176', function (): void {
+        ['guardian' => $guardian, 'child' => $child] = photoFamily();
+        actingAs($guardian)->post("/ccf/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true]);
+        $path = (string) $child->fresh()?->photo_path;
+        actingAs($guardian)->delete("/ccf/family/children/{$child->id}/photo-consent");
+        actingAs($guardian)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p
+            ->where('family.children.0.photo_url', null)->where('family.children.0.has_photo', true));
+
+        actingAs($guardian)->delete("/ccf/family/children/{$child->id}/photo")
+            ->assertRedirect()->assertSessionHas('success', 'Amara\'s photo is deleted for good.');
+
+        Storage::disk('photos')->assertMissing($path);
+        expect($child->fresh()?->photo_path)->toBeNull()
+            ->and(Note::query()->where('body', 'like', '%photo deleted for good%')->exists())->toBeTrue();
+        actingAs($guardian)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('family.children.0.has_photo', false));
+    });
+
+    it('deletes only their own child\'s, and says plainly when there is nothing to delete @story#177', function (): void {
+        ['guardian' => $guardian, 'child' => $child] = photoFamily();
+        $stranger = Child::factory()->create(['photo_path' => 'children/9/x.jpg']);
+
+        actingAs($guardian)->delete("/ccf/family/children/{$stranger->id}/photo")->assertNotFound();
+        actingAs($guardian)->delete("/ccf/family/children/{$child->id}/photo")->assertSessionHas('error', 'Amara has no photo to delete.');
+
+        expect($stranger->fresh()?->photo_path)->toBe('children/9/x.jpg');
+    });
+
+    it('lets an admin who may edit the family delete a child\'s photo for good, in Admin @story#178', function (): void {
+        ['htc' => $htc, 'guardian' => $guardian, 'child' => $child] = photoFamily();
+        actingAs($guardian)->post("/ccf/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true]);
+        $path = (string) $child->fresh()?->photo_path;
+
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->delete("/ccf/nxtgen/admin/children/{$child->id}/photo")
+            ->assertRedirect()->assertSessionHas('success', 'Amara\'s photo is deleted for good.');
+
+        Storage::disk('photos')->assertMissing($path);
+        expect($child->fresh()?->photo_path)->toBeNull();
+    });
+
+    it('is not for a Lifeshaper, another satellite\'s admin, or anyone in Serve @story#179', function (): void {
+        ['htc' => $htc, 'house' => $house, 'child' => $child] = photoFamily();
+        $child->forceFill(['photo_path' => 'children/1/kept.jpg', 'photo_consent_at' => now()])->save();
+
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->delete("/ccf/nxtgen/admin/children/{$child->id}/photo")->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->delete("/ccf/nxtgen/admin/children/{$child->id}/photo")->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->delete("/ccf/nxtgen/serve/children/{$child->id}/photo")->assertStatus(405);
+
+        expect($child->fresh()?->photo_path)->toBe('children/1/kept.jpg');
+    });
+});

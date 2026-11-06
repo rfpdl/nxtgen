@@ -42,6 +42,7 @@ const child = (over: Partial<ChildPortal> = {}): ChildPortal => ({
     status_label: 'Active',
     photo_consent: false,
     photo_url: null,
+    has_photo: false,
     ...over,
 })
 
@@ -142,5 +143,47 @@ describe('ChildPhotoForm', () => {
 
         expect(post).toHaveBeenCalledWith('/s', expect.anything())
         expect(wrapper.find('[data-testid="withdraw-photo-consent"]').exists()).toBe(false)
+    })
+
+    it('deletes a photo for good — even a hidden one — only after a second tap (TODO #25)', async () => {
+        const wrapper = mount(ChildPhotoForm, {
+            props: {
+                child: child({ has_photo: true }),
+                who: 'guardian',
+                action: '/photo',
+                deleteAction: '/photo-delete',
+            },
+        })
+
+        await wrapper.find('[data-testid="delete-photo"]').trigger('click')
+        expect(wrapper.text()).toContain("Delete Amara's photo for good? This cannot be undone.")
+        await wrapper.find('[data-testid="keep-photo"]').trigger('click')
+        expect(del).not.toHaveBeenCalled()
+
+        await wrapper.find('[data-testid="delete-photo"]').trigger('click')
+        await wrapper.find('[data-testid="confirm-delete-photo"]').trigger('click')
+        expect(del).toHaveBeenCalledWith('/photo-delete', { preserveScroll: true })
+    })
+
+    it('offers no delete without a photo on file, or without the right to delete', () => {
+        expect(
+            mount(ChildPhotoForm, {
+                props: {
+                    child: child(),
+                    who: 'guardian',
+                    action: '/photo',
+                    deleteAction: '/photo-delete',
+                },
+            })
+                .find('[data-testid="delete-photo"]')
+                .exists(),
+        ).toBe(false)
+        expect(
+            mount(ChildPhotoForm, {
+                props: { child: child({ has_photo: true }), who: 'staff', action: '/photo' },
+            })
+                .find('[data-testid="delete-photo"]')
+                .exists(),
+        ).toBe(false)
     })
 })

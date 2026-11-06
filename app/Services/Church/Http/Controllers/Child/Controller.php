@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Http\Controllers\Child;
 
+use App\Services\Church\Features\Child\DeleteChildPhotoFeature;
 use App\Services\Church\Features\Child\RecordPhotoConsentFeature;
 use App\Services\Church\Features\Child\ShowChildrenFeature;
 use App\Services\Church\Features\Child\StaffAddChildPhotoFeature;
@@ -43,5 +44,10 @@ final class Controller extends \Lucid\Units\Controller
     public function recordPhotoConsent(string $church, int $child): RedirectResponse
     {
         return $this->serve(RecordPhotoConsentFeature::class, ['childId' => $child]);
+    }
+
+    public function deletePhoto(string $church, int $child): RedirectResponse
+    {
+        return $this->serve(DeleteChildPhotoFeature::class, ['childId' => $child]);
     }
 }

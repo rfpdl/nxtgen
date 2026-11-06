@@ -4,11 +4,12 @@ import { CHURCH, SATELLITES, sessionFile, uniqueSurname } from '../support/world
 
 /*
  * Photos (Roy 2026-10-16): a parent or a Lifeshaper can take or upload one, once the parent agrees. The parent
- * can take consent back, which deletes it. The photo shows only through a short-lived signed link.
+ * can take consent back, which hides it, and delete it for good (TODO #25). The photo shows only through a
+ * short-lived signed link.
  */
 const PHOTO = 'tests/Fixtures/phone-photo-rotated-gps.jpg'
 
-test('a parent agrees; a Lifeshaper takes the first photo; the parent replaces it, then takes consent back @story#36 @story#37 @story#38 @story#68', async ({
+test('a parent agrees; a Lifeshaper takes the first photo; the parent replaces it, takes consent back, then deletes the hidden photo for good @story#36 @story#37 @story#38 @story#68 @story#176', async ({
     page,
     browser,
 }) => {
@@ -56,4 +57,17 @@ test('a parent agrees; a Lifeshaper takes the first photo; the parent replaces i
     await card.getByTestId('withdraw-photo-consent').click()
     await expect(page.getByTestId('flash-success')).toContainText("Noah's photo is hidden")
     await expect(card.getByTestId('child-photo-img')).toHaveCount(0)
+
+    // Hidden is not gone: the parent deletes it for good, after a second tap — and it is on Noah's history.
+    await card.getByTestId('delete-photo').click()
+    await expect(card).toContainText("Delete Noah's photo for good? This cannot be undone.")
+    await card.getByTestId('confirm-delete-photo').click()
+    await expect(page.getByTestId('flash-success')).toHaveText("Noah's photo is deleted for good.")
+    await expect(card.getByTestId('delete-photo')).toHaveCount(0)
+    const later = await browser.newContext({ storageState: sessionFile('lifeshaper') })
+    const desk = await later.newPage()
+    await desk.goto(`/${CHURCH}/nxtgen/serve/families?q=${surname}`)
+    await desk.getByTestId('family-row').getByRole('link').click()
+    await expect(desk.getByTestId('history')).toContainText('Noah: photo deleted for good by Rhea')
+    await later.close()
 })

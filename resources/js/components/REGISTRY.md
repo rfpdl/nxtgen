@@ -69,6 +69,7 @@ every staff, parent and public page is on the kit (issues 02 and 03 of `.plannin
 | AttendanceSquadTable    | molecule | One Squad of a Session on Attendance: name, count, head count + warning; table (sm+) or stacked rows (phone): names, time, who, present              |
 | ScheduleForm            | organism | Add (POST, with `satelliteId`) or edit (PUT, from a saved `schedule`) a class: name, day, times; `done` on save or cancel                            |
 | SatelliteSchedules      | organism | One satellite on the Classes page: its classes, one edited in place at a time, "+ Add a class" opening the add form                                  |
+| GuardianList            | molecule | A family's parents and guardians (both family pages): name in bold, relationship, phone if any                                                       |
 | LinkCard                | molecule | One Link on the Links page: label and address; Edit, Move up/down (not past either end), Remove after a second tap                                   |
 | LinkForm                | organism | Add (POST, with `satelliteId`, Facebook/WhatsApp starter labels) or change (PUT, from a saved `link`) a Link; `done` on save or cancel               |
 | SatelliteLinks          | organism | One satellite on the Links page: its Links in order, one edited in place, "+ Add a link" until the poster holds `max`                                |

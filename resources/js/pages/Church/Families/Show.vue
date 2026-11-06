@@ -6,6 +6,7 @@ import Pill from '@/components/atoms/Pill.vue'
 import ResendLinkButton from '@/components/atoms/ResendLinkButton.vue'
 import RowList from '@/components/atoms/RowList.vue'
 import SectionHeading from '@/components/atoms/SectionHeading.vue'
+import GuardianList from '@/components/molecules/GuardianList.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import ChildAdminControls from '@/components/molecules/ChildAdminControls.vue'
 import ChildAttendanceList from '@/components/molecules/ChildAttendanceList.vue'
@@ -55,7 +56,7 @@ const props = defineProps<{
     primary: GuardianEdit | null
     other_guardians: GuardianEdit[]
     satellites: SatelliteOption[]
-    /** Correct the email, set a child's status: an editor, in the Admin area only (Roy 2026-11-06). */
+    /** Correct the email, set a child's status, delete a photo for good: an editor, in the Admin area only (Roy 2026-11-06). */
     admin_controls: boolean
     /** Church admins only (plan §3.2), in the Admin area: correct a child's Level outside Moving-Up. */
     can_set_level: boolean
@@ -86,26 +87,24 @@ const page = usePage<{ errors: Record<string, string | undefined> }>()
 
 const lastLevelChild = ref<number | null>(null)
 
-function setLevel(childId: number, level: number): void {
-    lastLevelChild.value = childId
-    const body: UpdateChildLevelInput = { level }
-    router.put(route('nxtgen.admin.children.level', [church.value.slug, childId]), body, {
+/** One of Admin's own changes to this family (Level, status, a duplicate), keeping the scroll. */
+function adminPut(name: string, id: number, body: Record<string, string | number>): void {
+    router.put(route(`nxtgen.admin.${name}`, [church.value.slug, id]), body, {
         preserveScroll: true,
     })
+}
+
+function setLevel(childId: number, level: number): void {
+    lastLevelChild.value = childId
+    adminPut('children.level', childId, { level } satisfies UpdateChildLevelInput)
 }
 
 function answerDuplicate(pairId: number, status: Exclude<DuplicateStatus, 'open'>): void {
-    const body: ResolveDuplicateInput = { status }
-    router.put(route('nxtgen.admin.duplicates.resolve', [church.value.slug, pairId]), body, {
-        preserveScroll: true,
-    })
+    adminPut('duplicates.resolve', pairId, { status } satisfies ResolveDuplicateInput)
 }
 
 function setStatus(childId: number, status: ChildStatus): void {
-    const body: UpdateChildStatusInput = { status }
-    router.put(route('nxtgen.admin.children.status', [church.value.slug, childId]), body, {
-        preserveScroll: true,
-    })
+    adminPut('children.status', childId, { status } satisfies UpdateChildStatusInput)
 }
 </script>
 
@@ -135,14 +134,7 @@ function setStatus(childId: number, status: ChildStatus): void {
         </section>
         <section class="flex flex-col gap-3">
             <SectionHeading>Parents and guardians</SectionHeading>
-            <RowList :items="family.guardians" :item-key="(g) => `${g.first_name}-${g.last_name}`">
-                <template #default="{ item: g }">
-                    <p class="text-text text-lg">
-                        {{ g.first_name }} {{ g.last_name }} · {{ g.relationship_label
-                        }}<span v-if="g.phone"> · {{ g.phone }}</span>
-                    </p>
-                </template>
-            </RowList>
+            <GuardianList :guardians="family.guardians" />
             <FamilyDetailsForm
                 v-if="details && primary"
                 :action="areaRoute('families.update', [church.slug, family.id])"
@@ -174,6 +166,11 @@ function setStatus(childId: number, status: ChildStatus): void {
                     who="staff"
                     :action="areaRoute('children.photo', [church.slug, child.id])"
                     :consent-action="areaRoute('children.photo-consent', [church.slug, child.id])"
+                    :delete-action="
+                        admin_controls
+                            ? route('nxtgen.admin.children.photo.destroy', [church.slug, child.id])
+                            : undefined
+                    "
                 />
                 <EditChildForm
                     v-if="family.can_edit"

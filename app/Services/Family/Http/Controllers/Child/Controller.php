@@ -6,6 +6,7 @@ namespace App\Services\Family\Http\Controllers\Child;
 
 use App\Services\Family\Features\Child\AddChildFeature;
 use App\Services\Family\Features\Child\AddChildPhotoFeature;
+use App\Services\Family\Features\Child\DeleteChildPhotoFeature;
 use App\Services\Family\Features\Child\GivePhotoConsentFeature;
 use App\Services\Family\Features\Child\UpdateChildFeature;
 use App\Services\Family\Features\Child\WithdrawPhotoConsentFeature;
@@ -36,5 +37,10 @@ final class Controller extends \Lucid\Units\Controller
     public function withdrawPhotoConsent(string $church, int $child): RedirectResponse
     {
         return $this->serve(WithdrawPhotoConsentFeature::class, ['childId' => $child]);
+    }
+
+    public function deletePhoto(string $church, int $child): RedirectResponse
+    {
+        return $this->serve(DeleteChildPhotoFeature::class, ['childId' => $child]);
     }
 }

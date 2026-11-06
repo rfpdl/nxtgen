@@ -35,6 +35,7 @@ const child = (allergies: string | null): ChildPortal => ({
     status_label: 'Active',
     photo_consent: false,
     photo_url: null,
+    has_photo: false,
 })
 
 describe('EditChildForm', () => {

@@ -20,5 +20,6 @@ Route::put('/', [HomeController::class, 'update'])->name('family.update');
 Route::post('/children', [ChildController::class, 'store'])->name('family.children.store');
 Route::put('/children/{child}', [ChildController::class, 'update'])->whereNumber('child')->name('family.children.update');
 Route::post('/children/{child}/photo', [ChildController::class, 'addPhoto'])->whereNumber('child')->name('family.children.photo');
+Route::delete('/children/{child}/photo', [ChildController::class, 'deletePhoto'])->whereNumber('child')->name('family.children.photo.destroy');
 Route::put('/children/{child}/photo-consent', [ChildController::class, 'givePhotoConsent'])->whereNumber('child')->name('family.children.photo-consent.give');
 Route::delete('/children/{child}/photo-consent', [ChildController::class, 'withdrawPhotoConsent'])->whereNumber('child')->name('family.children.photo-consent');

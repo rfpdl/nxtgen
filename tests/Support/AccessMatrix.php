@@ -56,6 +56,9 @@ final class AccessMatrix
             'nxtgen.admin.families.email' => [AccessRowEnum::CorrectContact, Actor::editingFamily()],
             'nxtgen.admin.children.status' => [AccessRowEnum::SetChildStatus, Actor::editingFamily()],
             'nxtgen.admin.children.level' => [AccessRowEnum::SetChildLevel, [Actor::ChurchAdmin]],
+            // A photo deleted for good (TODO #25): it cannot be undone, so an admin who may edit the family — never a
+            // Lifeshaper.
+            'nxtgen.admin.children.photo.destroy' => [AccessRowEnum::DeleteChildPhoto, Actor::editingFamily()],
             // Cards (name cards 03): the page for every admin (their own satellites' requests); moving Home's request needs
             // an admin over Home.
             'nxtgen.admin.card-requests.index' => [AccessRowEnum::Cards, Actor::admins()],
@@ -114,6 +117,7 @@ final class AccessMatrix
             'family.children.photo' => [AccessRowEnum::OwnFamily, [Actor::Parent]],
             'family.children.photo-consent.give' => [AccessRowEnum::OwnFamily, [Actor::Parent]],
             'family.children.photo-consent' => [AccessRowEnum::OwnFamily, [Actor::Parent]],
+            'family.children.photo.destroy' => [AccessRowEnum::OwnFamily, [Actor::Parent]],
             'photos.child' => [AccessRowEnum::SeeChildPhoto, [Actor::Parent, ...Actor::seeingFamily()]],
         ];
     }
