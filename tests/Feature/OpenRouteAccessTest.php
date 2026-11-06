@@ -50,6 +50,9 @@ function openMatrix(): array
         'auth.password.login' => $all('302 /home'),
         'auth.link.request' => $all('302 /login'),
         'logout' => ['302 /login', '302 /', '302 /', '302 /'],
+        // /loginp: the password page; signed in already, home. /loginc: everyone ends signed out at sign in.
+        'login.password' => ['200', '302 /home', '302 /home', '302 /home'],
+        'login.clear' => $all('302 /login'),
         // Holding an emailed link is the permission: it works for whoever brings it.
         'auth.magic.confirm' => $all('200'),
         'auth.magic.login' => $all('302 /home'),
@@ -87,6 +90,8 @@ function openRequest(string $route, AccessWorld $w): array
         'auth.password.login' => ['POST', '/login/password', ['email' => (string) $w->user(Actor::ChurchAdmin)?->email, 'password' => 'a-long-passphrase']],
         'auth.link.request' => ['POST', '/login/link', ['email' => 'someone@example.com']],
         'logout' => ['POST', '/logout', []],
+        'login.password' => ['GET', '/loginp', []],
+        'login.clear' => ['GET', '/loginc', []],
         'auth.magic.confirm' => ['GET', '/magic/login/'.$link(MagicLinkPurposeEnum::Login), []],
         'auth.magic.login' => ['POST', '/magic/login/'.$link(MagicLinkPurposeEnum::Login), []],
         'auth.magic.verify' => ['POST', '/magic/verify/'.$link(MagicLinkPurposeEnum::VerifyEmail), []],
@@ -135,10 +140,10 @@ it('has a row for every Auth and Public route, and no row for a route that is go
     $rows = array_keys(openMatrix());
     sort($rows);
 
-    expect(openRouteNames())->toHaveCount(16)->toBe($rows);
+    expect(openRouteNames())->toHaveCount(18)->toBe($rows);
 });
 
-it('opens public pages to everyone, signed-in pages to the signed in, the password page to staff @story#1 @story#4 @story#12 @story#19 @story#20 @story#24', function (string $route, Actor $actor, string $expected): void {
+it('opens public pages to everyone, signed-in pages to the signed in, the password page to staff @story#1 @story#4 @story#12 @story#19 @story#20 @story#24 @story#162 @story#163', function (string $route, Actor $actor, string $expected): void {
     Notification::fake();
     Storage::fake('photos');
     $world = AccessWorld::make();

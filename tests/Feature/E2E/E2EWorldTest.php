@@ -109,6 +109,11 @@ it('seeds exactly what the browser journeys expect', function (): void {
         ->and(DuplicateCandidate::query()->count())->toBe(0);
 
     expect(User::query()->where('email', E2ESeeder::HOUSE_ADMIN_EMAIL)->firstOrFail()->roleAssignments()->first()?->role)->toBe(RoleEnum::Admin);
+
+    expect($world)->toContain('`volunteer-${project}@nxtgen.test`');
+    foreach (array_keys(E2ESeeder::DOOR_GUARDIANS) as $project) {
+        expect(User::query()->where('email', sprintf(E2ESeeder::VOLUNTEER_EMAIL, $project))->firstOrFail()->roleAssignments()->first()?->role)->toBe(RoleEnum::Lifeshaper);
+    }
 });
 
 /** A `project: value` line of world.ts — the key quoted or bare, as prettier writes it (`desktop: …`, `'phone-portrait': …`). */

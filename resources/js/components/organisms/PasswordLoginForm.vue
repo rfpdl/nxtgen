@@ -10,11 +10,11 @@ import { ref } from 'vue'
 /**
  * "Use a password instead" — the staff backup (plan D7) for a morning the email is slow. Collapsed by default:
  * the email link is how everyone signs in; parents have no password at all. On the kit (the Bold look): a Card with
- * two TextFields and one big button.
+ * two TextFields and one big button. Already open on /loginp.
  */
-const props = defineProps<{ action: string }>()
+const props = defineProps<{ action: string; open?: boolean }>()
 
-const open = ref(false)
+const open = ref(props.open)
 const form = useForm<PasswordLoginInput>({ email: '', password: '' })
 
 function submit(): void {

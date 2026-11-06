@@ -18,6 +18,8 @@ use App\Services\Auth\Http\Controllers\Login\Controller as LoginController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/login', [LoginController::class, 'show'])->name('login');
+Route::get('/loginp', [LoginController::class, 'showPassword'])->middleware('guest')->name('login.password');
+Route::get('/loginc', [LoginController::class, 'clear'])->name('login.clear');
 Route::post('/login/password', [LoginController::class, 'password'])->middleware(['guest', 'throttle:password-login'])->name('auth.password.login');
 Route::post('/login/link', [LoginController::class, 'requestLink'])->middleware('throttle:magic-link')->name('auth.link.request');
 Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');

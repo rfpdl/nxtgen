@@ -38,6 +38,9 @@ export const CLASSES = {
 } as const
 
 /** Saved sign-in for a staff member, written by auth.setup.ts. */
+/** Each browser's own Lifeshaper (E2ESeeder::VOLUNTEER_EMAIL), signed in by the journey that needs them. */
+export const volunteer = (project: string): string => `volunteer-${project}@nxtgen.test`
+
 export const sessionFile = (role: StaffRole): string => `tests/e2e/.auth/${role}.json`
 
 /** A fresh address per run, so the per-address email limit never carries over between runs. */

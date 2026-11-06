@@ -28,6 +28,15 @@ describe('PasswordLoginForm', () => {
         expect(wrapper.find('[data-testid="password-password"]').exists()).toBe(true)
     })
 
+    it('starts open on the password page, /loginp — nothing to click first', () => {
+        const wrapper = mount(PasswordLoginForm, {
+            props: { action: '/login/password', open: true },
+        })
+
+        expect(wrapper.find('[data-testid="use-password"]').exists()).toBe(false)
+        expect(wrapper.find('[data-testid="password-password"]').exists()).toBe(true)
+    })
+
     it('sends the email and password to the action', async () => {
         const wrapper = mount(PasswordLoginForm, { props: { action: '/login/password' } })
         await wrapper.find('[data-testid="use-password"]').trigger('click')

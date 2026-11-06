@@ -46,7 +46,7 @@ function go(): void {
 
 <template>
     <Head :title="copy.title" />
-    <AppShell :title="copy.title" narrow>
+    <AppShell title="NxtGen" narrow>
         <PageHeader :title="copy.title" :sub="copy.sub" />
         <Card>
             <AppButton size="lg" block :loading="busy" data-testid="confirm-link" @click="go">

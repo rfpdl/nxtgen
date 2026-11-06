@@ -38,6 +38,9 @@ final class E2ESeeder extends Seeder
 {
     public const string HOUSE_ADMIN_EMAIL = 'house-admin@nxtgen.test';
 
+    /** Each browser's own Lifeshaper at CCF DXB (`volunteer-desktop@…`): the password journey sets and uses its own password. */
+    public const string VOLUNTEER_EMAIL = 'volunteer-%s@nxtgen.test';
+
     /** Browser project => the first name of its door families' parent. */
     public const array DOOR_GUARDIANS = [
         'phone-portrait' => 'Ana', 'phone-portrait-safari' => 'Bela', 'desktop' => 'Carla', 'phone-landscape' => 'Dina',
@@ -123,6 +126,9 @@ final class E2ESeeder extends Seeder
             $this->cardFamily($ccf, $dxb, $first, $day);
             $this->levelFamily($ccf, $dxb, $first, $day);
             $this->movingUpFamily($ccf, $dxb, $first, $day, self::SCAN_MIDDLE_NAMES[$project]);
+
+            $volunteer = User::query()->create(['name' => 'Volunteer', 'email' => sprintf(self::VOLUNTEER_EMAIL, $project), 'email_verified_at' => now()]);
+            ChurchSeeder::assign($ccf, $volunteer, RoleEnum::Lifeshaper, ScopeTypeEnum::Satellite, $dxb->id);
         }
     }
 
