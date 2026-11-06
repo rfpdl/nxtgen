@@ -13,7 +13,7 @@ use Inertia\Response;
 #[UserStory(
     title: 'Open the sign-in page',
     persona: 'anyone',
-    happyPaths: ['story#8' => 'The sign-in page offers an emailed link, and a password for Staff'],
+    happyPaths: ['story#8' => 'The sign-in page offers an emailed link only; the Staff password has its own address, /loginp'],
 )]
 final class ShowLoginFeature extends BaseAuthFeature
 {

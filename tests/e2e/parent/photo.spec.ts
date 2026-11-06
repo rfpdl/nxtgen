@@ -24,7 +24,7 @@ test('a parent agrees; a Lifeshaper takes the first photo; the parent replaces i
     // A Lifeshaper cannot add one before the parent agrees.
     const staff = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const door = await staff.newPage()
-    await door.goto(`/${CHURCH}/families?q=${surname}`)
+    await door.goto(`/${CHURCH}/nxtgen/serve/families?q=${surname}`)
     await door.getByTestId('family-row').getByRole('link').click()
     const staffCard = door.getByTestId('family-child').filter({ hasText: 'Noah' })
     await expect(staffCard).toContainText('The parent has not agreed to a photo yet')

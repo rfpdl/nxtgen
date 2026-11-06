@@ -51,7 +51,7 @@ describe('child status', function (): void {
         $child = childOf($family, []);
         $admin = staffMember(RoleEnum::Admin, atSatellite($htc));
 
-        actingAs($admin)->put("/ccf/children/{$child->id}/status", ['status' => 'graduated'])->assertRedirect();
+        actingAs($admin)->put("/ccf/nxtgen/admin/children/{$child->id}/status", ['status' => 'graduated'])->assertRedirect();
 
         $child->refresh();
         expect($child->status)->toBe(ChildStatusEnum::Graduated)->and($child->status_changed_by)->toBe($admin->id);
@@ -62,7 +62,7 @@ describe('child status', function (): void {
         $child = childOf($family, []);
 
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))
-            ->put("/ccf/children/{$child->id}/status", ['status' => 'inactive'])->assertNotFound();
+            ->put("/ccf/nxtgen/admin/children/{$child->id}/status", ['status' => 'inactive'])->assertNotFound();
 
         expect($child->fresh()?->status)->toBe(ChildStatusEnum::Active);
     });
@@ -72,7 +72,7 @@ describe('child status', function (): void {
         $child = childOf($family, []);
 
         actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))
-            ->put("/ccf/children/{$child->id}/status", ['status' => 'inactive'])->assertNotFound();
+            ->put("/ccf/nxtgen/admin/children/{$child->id}/status", ['status' => 'inactive'])->assertNotFound();
     });
 });
 
@@ -83,7 +83,7 @@ describe('correcting the family email (v1 rule)', function (): void {
         $version = $guardianUser->credential_version;
 
         actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
-            ->put("/ccf/families/{$family->id}/email", ['email' => 'janice@example.com'])
+            ->put("/ccf/nxtgen/admin/families/{$family->id}/email", ['email' => 'janice@example.com'])
             ->assertRedirect()->assertSessionHas('success');
 
         $guardianUser->refresh();
@@ -97,7 +97,7 @@ describe('correcting the family email (v1 rule)', function (): void {
         RoleAssignment::factory()->create(['church_id' => $church->id, 'user_id' => $guardianUser->id]);
 
         actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
-            ->put("/ccf/families/{$family->id}/email", ['email' => 'janice@example.com'])
+            ->put("/ccf/nxtgen/admin/families/{$family->id}/email", ['email' => 'janice@example.com'])
             ->assertRedirect()->assertSessionHas('error');
 
         expect($guardianUser->fresh()?->email)->toBe('janice@typo.com');
@@ -107,7 +107,7 @@ describe('correcting the family email (v1 rule)', function (): void {
         ['church' => $church, 'family' => $family, 'guardianUser' => $guardianUser] = correctionChurch(verified: true);
 
         actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
-            ->put("/ccf/families/{$family->id}/email", ['email' => 'janice@example.com'])
+            ->put("/ccf/nxtgen/admin/families/{$family->id}/email", ['email' => 'janice@example.com'])
             ->assertSessionHas('error');
 
         expect($guardianUser->fresh()?->email)->toBe('janice@typo.com');
@@ -118,7 +118,7 @@ describe('correcting the family email (v1 rule)', function (): void {
         User::factory()->create(['email' => 'taken@example.com']);
 
         actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
-            ->put("/ccf/families/{$family->id}/email", ['email' => 'taken@example.com'])
+            ->put("/ccf/nxtgen/admin/families/{$family->id}/email", ['email' => 'taken@example.com'])
             ->assertSessionHasErrors('email');
     });
 
@@ -126,7 +126,7 @@ describe('correcting the family email (v1 rule)', function (): void {
         ['church' => $church, 'htc' => $htc, 'family' => $family] = correctionChurch();
 
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))
-            ->put("/ccf/families/{$family->id}/email", ['email' => 'janice@example.com'])
+            ->put("/ccf/nxtgen/admin/families/{$family->id}/email", ['email' => 'janice@example.com'])
             ->assertNotFound();
     });
 });
@@ -141,7 +141,7 @@ it('says honestly when the corrected email could not be sent because of the per-
     }
 
     actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
-        ->put("/ccf/families/{$family->id}/email", ['email' => 'janice@example.com'])
+        ->put("/ccf/nxtgen/admin/families/{$family->id}/email", ['email' => 'janice@example.com'])
         ->assertSessionHas('error', 'Email updated, but too many emails went to this address recently, so no link was sent. Use "Send the confirmation link again" in 10 minutes.');
 
     expect($guardianUser->fresh()?->email)->toBe('janice@example.com');
@@ -157,7 +157,7 @@ it('lets a satellite admin edit a family of their satellite, and its parent @sto
     ['church' => $church, 'htc' => $htc, 'family' => $family] = correctionChurch();
 
     actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))
-        ->put("/ccf/families/{$family->id}", familyEdit($htc, ['area_text' => 'Karama']))
+        ->put("/ccf/nxtgen/serve/families/{$family->id}", familyEdit($htc, ['area_text' => 'Karama']))
         ->assertRedirect()->assertSessionHas('success');
 
     expect($family->fresh()?->area_text)->toBe('Karama')
@@ -167,9 +167,9 @@ it('lets a satellite admin edit a family of their satellite, and its parent @sto
 it('gives the staff page the edit details only to someone who may edit', function (): void {
     ['church' => $church, 'htc' => $htc, 'family' => $family] = correctionChurch();
 
-    actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->get("/ccf/families/{$family->id}")
+    actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->get("/ccf/nxtgen/serve/families/{$family->id}")
         ->assertInertia(fn (AssertableInertia $p) => $p->where('family.can_edit', true)->has('details')->has('primary'));
-    actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get("/ccf/families/{$family->id}")
+    actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get("/ccf/nxtgen/serve/families/{$family->id}")
         ->assertInertia(fn (AssertableInertia $p) => $p->where('family.can_edit', false)->where('details', null)->where('primary', null));
 });
 
@@ -178,7 +178,7 @@ it('refuses a Lifeshaper and an admin of another satellite @story#53', function 
     $satellite = $where === 'own' ? $htc : $house;
 
     actingAs(staffMember($role, atSatellite($satellite)))
-        ->put("/ccf/families/{$family->id}", familyEdit($htc, ['area_text' => 'Nope']))->assertNotFound();
+        ->put("/ccf/nxtgen/serve/families/{$family->id}", familyEdit($htc, ['area_text' => 'Nope']))->assertNotFound();
 
     expect($family->fresh()?->area_text)->not->toBe('Nope');
 })->with([
@@ -192,7 +192,7 @@ it('lets staff who may edit fix a child\'s details, not the status @story#60', f
     $status = $child->status;
 
     actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))
-        ->put("/ccf/children/{$child->id}", childEdit() + ['status' => 'graduated'])->assertRedirect()->assertSessionHas('success');
+        ->put("/ccf/nxtgen/serve/children/{$child->id}", childEdit() + ['status' => 'graduated'])->assertRedirect()->assertSessionHas('success');
 
     $child->refresh();
     expect($child->nickname)->toBe('Caloy')->and($child->status)->toBe($status);
@@ -203,7 +203,7 @@ it('refuses a child edit outside the editor\'s satellite @story#61', function ()
     $child = childOf($family, ['nickname' => 'Kept']);
 
     actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))
-        ->put("/ccf/children/{$child->id}", childEdit())->assertNotFound();
+        ->put("/ccf/nxtgen/serve/children/{$child->id}", childEdit())->assertNotFound();
 
     expect($child->fresh()?->nickname)->toBe('Kept');
 });
@@ -219,7 +219,7 @@ describe('system notes', function (): void {
         $admin = staffMember(RoleEnum::Admin, atSatellite($htc));
         $admin->forceFill(['name' => 'Sam Admin'])->save();
 
-        actingAs($admin)->put("/ccf/families/{$family->id}/email", ['email' => 'janice@real.com'])->assertSessionHas('success');
+        actingAs($admin)->put("/ccf/nxtgen/admin/families/{$family->id}/email", ['email' => 'janice@real.com'])->assertSessionHas('success');
 
         $note = Note::query()->sole();
         expect($note->noteable_type)->toBe('family')
@@ -235,7 +235,7 @@ describe('system notes', function (): void {
         $child = childOf($family, ['nickname' => 'Amara']);
 
         actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))
-            ->put("/ccf/children/{$child->id}/status", ['status' => 'inactive']);
+            ->put("/ccf/nxtgen/admin/children/{$child->id}/status", ['status' => 'inactive']);
 
         $note = Note::query()->sole();
         expect($note->noteable_type)->toBe('child')->and($note->noteable_id)->toBe($child->id)
@@ -250,7 +250,7 @@ describe('system notes', function (): void {
         Note::factory()->for($family, 'noteable')->create(['church_id' => $church->id, 'body' => 'Older', 'author_id' => $admin->id, 'created_at' => now()->subDay()]);
         Note::factory()->for($child, 'noteable')->create(['church_id' => $church->id, 'body' => 'Newer', 'author_id' => null]);
 
-        actingAs($admin)->get("/ccf/families/{$family->id}")->assertInertia(fn (AssertableInertia $p) => $p
+        actingAs($admin)->get("/ccf/nxtgen/serve/families/{$family->id}")->assertInertia(fn (AssertableInertia $p) => $p
             ->has('notes', 2)
             ->where('notes.0.body', 'Newer')
             ->where('notes.0.author', 'NxtGen')

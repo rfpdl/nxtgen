@@ -24,7 +24,7 @@ test('an admin finds a possible duplicate with the list filter and clears it on 
     // A family sharing the phone of this project's own imported Cruz family — each project its own pair.
     const seeded = doorFamily(info.project.name)
     const surname = uniqueSurname('DelaCruz')
-    await page.goto(`/${CHURCH}/families`)
+    await page.goto(`/${CHURCH}/nxtgen/admin/families`)
     // Duplicates has no menu item (DECISIONS 2026-10-17, after first look) — in no navigation on the page.
     for (const nav of await allNavigation(page)) await expect(nav).not.toContainText('Duplicates')
     await closeMenu(page)
@@ -45,7 +45,7 @@ test('an admin finds a possible duplicate with the list filter and clears it on 
     await expect(page.getByTestId('flash-success')).toBeVisible()
 
     // The families list's filter finds it.
-    await page.goto(`/${CHURCH}/families?duplicates=1&q=${surname}`)
+    await page.goto(`/${CHURCH}/nxtgen/admin/families?duplicates=1&q=${surname}`)
     await expect(page.getByTestId('filter-duplicates')).toBeChecked()
     await page
         .getByTestId('family-row')
@@ -77,6 +77,6 @@ test('an admin finds a possible duplicate with the list filter and clears it on 
     }
 
     // Cleared: the filter no longer finds it.
-    await page.goto(`/${CHURCH}/families?duplicates=1&q=${surname}`)
+    await page.goto(`/${CHURCH}/nxtgen/admin/families?duplicates=1&q=${surname}`)
     await expect(page.getByTestId('family-row')).toHaveCount(0)
 })

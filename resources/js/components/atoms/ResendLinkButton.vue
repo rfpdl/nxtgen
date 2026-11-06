@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppButton from '@/components/atoms/AppButton.vue'
 import { useChurch } from '@/composables/useChurch'
-import { route } from 'ziggy-js'
+import { areaRoute } from '@/composables/useArea'
 
 /**
  * "Send the confirmation link again" for a family whose email is unconfirmed — on the family page, the families list
@@ -16,7 +16,7 @@ const church = useChurch()
 <template>
     <AppButton
         variant="secondary"
-        :href="route('church.families.resend', [church.slug, familyId])"
+        :href="areaRoute('families.resend', [church.slug, familyId])"
         method="post"
         :preserve-scroll="true"
         class="self-start"

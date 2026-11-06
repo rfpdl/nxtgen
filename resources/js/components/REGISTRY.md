@@ -57,7 +57,7 @@ every staff, parent and public page is on the kit (issues 02 and 03 of `.plannin
 | EditChildForm           | organism | "Edit {child}'s details": ChildFieldset from what is saved, PUT to the given action; never status/Level                                              |
 | RegistrationListFilters | molecule | Families + children lists: search, satellite/status/Level (+ unconfirmed/duplicates with familyToggles); emits address params                        |
 | SwitchLink              | atom     | "Switch" between My family / Serve (or churches): only when there is more than one place to go                                                       |
-| PasswordLoginForm       | organism | "Use a password instead" on sign-in: the staff backup, collapsed by default (a link), then a Card of TextFields + Sign in                            |
+| PasswordLoginForm       | organism | The staff backup password on /loginp (never on /login): a Card of TextFields + Sign in                                                              |
 | ChildPhotoForm          | organism | A child's photo: take (camera) or choose; parent agrees/takes back consent, staff only after consent                                                 |
 | ChildAdminControls      | molecule | Staff status (`enums.child_status`) + Level pickers inside a child's card; a refused Level shows on that child                                       |
 | ResendLinkButton        | atom     | "Send the confirmation link again" (a secondary AppButton that POSTs) for an unconfirmed family: family page, lists, door search                     |

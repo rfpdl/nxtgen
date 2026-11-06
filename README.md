@@ -61,7 +61,7 @@ it from the Mac; elsewhere (CI) it launches Firefox itself.
 2. `php artisan migrate --force && php artisan db:seed --force` — creates that church, its satellites, each
    satellite's squads and the first admin only (never the demo logins). It refuses to run with a log-only mailer. Running it
    again adds anything missing and changes nothing that exists.
-3. The first admin signs in at `/login` and adds everyone else on **People** (`/{church}/people`).
+3. The first admin signs in at `/login` and adds everyone else on **People** (`/{church}/admin/people`).
 4. Families: the registry import, once (`nxtgen:registry-propose` → review → `nxtgen:registry-apply`). It sends
    no emails. If it reports families "waiting for an existing login to confirm" (a volunteer who is also a parent
    in the sheet), open each and use **Send the confirmation link again**.

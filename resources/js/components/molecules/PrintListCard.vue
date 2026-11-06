@@ -34,13 +34,16 @@ const markLabel = computed(() =>
             <AppButton
                 variant="secondary"
                 external
-                :href="route('church.card-requests.print-lists.show', [church.slug, list.id])"
+                :href="route('nxtgen.admin.card-requests.print-lists.show', [church.slug, list.id])"
                 data-testid="print-list-download"
                 >Download</AppButton
             >
             <AppButton
                 :href="
-                    route('church.card-requests.print-lists.mark-printed', [church.slug, list.id])
+                    route('nxtgen.admin.card-requests.print-lists.mark-printed', [
+                        church.slug,
+                        list.id,
+                    ])
                 "
                 method="put"
                 :preserve-scroll="true"

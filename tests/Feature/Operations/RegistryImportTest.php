@@ -439,7 +439,7 @@ it('reports families waiting for an existing login to confirm, and the resend ge
     expect(Guardian::query()->where('user_id', $lifeshaper->id)->exists())->toBeFalse();
 
     // An admin sends the link from the family page; the parent opens it and the family is theirs.
-    actingAs($admin)->post("/ccf/families/{$family->id}/resend")->assertSessionHas('success');
+    actingAs($admin)->post("/ccf/nxtgen/serve/families/{$family->id}/resend")->assertSessionHas('success');
     $url = '';
     Notification::assertSentOnDemand(MagicLinkNotification::class, function (MagicLinkNotification $n) use (&$url): bool {
         $url = $n->url;

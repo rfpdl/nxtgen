@@ -74,7 +74,7 @@ function moveUp(): void {
     const body: MoveChildrenUpInput = {
         children: chosen.value.map((c) => ({ child_id: c.id, level: c.level.number })),
     }
-    router.post(route('church.moving-up.store', church.value.slug), body, {
+    router.post(route('nxtgen.admin.moving-up.store', church.value.slug), body, {
         preserveScroll: true,
         onStart: () => (moving.value = true),
         onFinish: () => {

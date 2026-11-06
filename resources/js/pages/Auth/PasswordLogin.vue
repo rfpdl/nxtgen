@@ -13,7 +13,7 @@ import { route } from 'ziggy-js'
     <Head title="Sign in with a password" />
     <AppShell title="NxtGen" narrow>
         <PageHeader title="Sign in" sub="For volunteers who set a backup password." />
-        <PasswordLoginForm :action="route('auth.password.login')" open />
+        <PasswordLoginForm :action="route('auth.password.login')" />
         <AppButton
             :href="route('login')"
             variant="link"

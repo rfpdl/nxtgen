@@ -22,7 +22,7 @@ describe('ResendLinkButton', () => {
         )
 
         expect(button.text()).toBe('Send the confirmation link again')
-        expect(button.attributes('href')).toBe('/#church.families.resend/ccf/7')
+        expect(button.attributes('href')).toBe('/#nxtgen.serve.families.resend/ccf/7')
         expect(button.attributes('data-method')).toBe('post')
         expect(button.attributes('data-as')).toBe('button')
         expect(button.attributes('data-preserve-scroll')).toBe('true')

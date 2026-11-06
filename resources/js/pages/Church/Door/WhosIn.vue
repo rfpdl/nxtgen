@@ -50,14 +50,17 @@ const shown = computed(() =>
 )
 
 const checkInHref = computed(() =>
-    route('church.door.show', { church: church.value.slug, class: props.class_id ?? undefined }),
+    route('nxtgen.serve.door.show', {
+        church: church.value.slug,
+        class: props.class_id ?? undefined,
+    }),
 )
 
 /** Another class or Squad: the taps not yet sent are dropped first, so none fires from the next page. */
 function visit(params: { class?: number; squad?: number | null }): void {
     stop()
     router.get(
-        route('church.door.whos-in', church.value.slug),
+        route('nxtgen.serve.door.whos-in', church.value.slug),
         { class: params.class ?? props.class_id ?? undefined, squad: params.squad ?? undefined },
         { preserveScroll: true },
     )

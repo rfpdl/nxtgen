@@ -94,7 +94,7 @@ describe('SatelliteSchedules', () => {
         await wrapper.find('[data-testid="confirm-retire"]').trigger('click')
 
         expect(routerPut).toHaveBeenCalledWith(
-            'church.schedules.retire:["ccf",4]',
+            'nxtgen.admin.schedules.retire:["ccf",4]',
             {},
             expect.anything(),
         )

@@ -9,6 +9,7 @@ import type { CardMove, CardRequestRow, Draft, RefuseCardRequestInput } from '@/
 import { useForm } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import { route } from 'ziggy-js'
+import { areaRoute } from '@/composables/useArea'
 
 /**
  * One Card request on the Cards page (name cards 03): whose card (the full name, as printed), the family (its page a
@@ -23,10 +24,10 @@ const { options: moveNames } = useEnum('card_move')
 
 /** Each move's action (Refuse is a form, below). */
 const ROUTES: Record<Exclude<CardMove, 'refuse'>, string> = {
-    mark_paid: 'church.card-requests.mark-paid',
-    approve: 'church.card-requests.approve',
-    mark_printed: 'church.card-requests.mark-printed',
-    give: 'church.card-requests.give',
+    mark_paid: 'nxtgen.admin.card-requests.mark-paid',
+    approve: 'nxtgen.admin.card-requests.approve',
+    mark_printed: 'nxtgen.admin.card-requests.mark-printed',
+    give: 'nxtgen.serve.card-requests.give',
 }
 
 const buttons = computed(() =>
@@ -47,7 +48,7 @@ function closeRefuse(): void {
 }
 
 function refuse(): void {
-    form.put(route('church.card-requests.refuse', [church.value.slug, props.request.id]), {
+    form.put(route('nxtgen.admin.card-requests.refuse', [church.value.slug, props.request.id]), {
         preserveScroll: true,
         onSuccess: closeRefuse,
     })
@@ -60,7 +61,7 @@ function refuse(): void {
         <AppButton
             variant="link"
             class="self-start"
-            :href="route('church.families.show', [church.slug, request.family_id])"
+            :href="areaRoute('families.show', [church.slug, request.family_id])"
             data-testid="card-family"
             >{{ request.family_name }} · {{ request.satellite }}</AppButton
         >

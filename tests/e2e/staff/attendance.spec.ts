@@ -32,7 +32,7 @@ function doorSaturday(): string {
 
 /** Ben of this browser's own Cruz family is in at 1PM (checked in now, unless an earlier try already did). */
 async function checkInBen(page: Page, project: string): Promise<void> {
-    await page.goto(`/${CHURCH}/door`)
+    await page.goto(`/${CHURCH}/nxtgen/serve/door`)
     // The class picker is a row of chips, a radio group (the Bold look): pick 1PM.
     const chip = page.getByTestId('door-class').getByRole('radio', { name: CLASSES.onePm.name })
     await chip.click()
@@ -62,6 +62,9 @@ test('an admin sees 1PM by Squad with counts, and downloads the same rows as Exc
     const page = await admin.newPage()
     await checkInBen(page, info.project.name)
 
+    // From the door (Serve) to Admin, then Attendance.
+    await navTo(page, 'Admin')
+    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/admin/families`))
     await navTo(page, 'Attendance')
     await expect(page.getByRole('heading', { name: 'Attendance', level: 1 })).toBeVisible()
     await page.getByTestId('attendance-satellite').selectOption({ label: SATELLITES.dxb })
@@ -119,8 +122,10 @@ test('an admin sees 1PM by Squad with counts, and downloads the same rows as Exc
     await admin.close()
 })
 
-/** Opens Attendance from the menu on CCF DXB · 1PM · the door's Saturday. */
+/** Opens Attendance from the door's menu (Serve → Admin) on CCF DXB · 1PM · the door's Saturday. */
 async function openAttendance(page: Page): Promise<string> {
+    await navTo(page, 'Admin')
+    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/admin/families`))
     await navTo(page, 'Attendance')
     await page.getByTestId('attendance-satellite').selectOption({ label: SATELLITES.dxb })
     await expect(page).toHaveURL(/satellite=\d+/)
@@ -147,7 +152,7 @@ test("an admin sees the roll call — present ✓, the Squad's head count and th
     const [, , tala, faith] = ROLL_CALL.girls[project]
 
     // At the door, 1PM: this browser's Tala and Faith.
-    await page.goto(`/${CHURCH}/door`)
+    await page.goto(`/${CHURCH}/nxtgen/serve/door`)
     await page.getByTestId('door-class').getByRole('radio', { name: CLASSES.onePm.name }).click()
     await page.getByTestId('door-search').fill('Reyes')
     await page.getByTestId('door-search').press('Enter')
@@ -232,12 +237,12 @@ test("an admin sees the roll call — present ✓, the Squad's head count and th
 test('a Lifeshaper has no Attendance @story#113', async ({ browser }) => {
     const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const page = await lifeshaper.newPage()
-    await page.goto(`/${CHURCH}/door`)
+    await page.goto(`/${CHURCH}/nxtgen/serve/door`)
     // The menu opened (a sheet on a narrow screen), then the whole page: no Attendance anywhere.
     await expect((await menuOf(page)).getByTestId('nav-door')).toBeVisible()
     await expect(page.getByRole('link', { name: 'Attendance' })).toHaveCount(0)
 
-    const response = await page.goto(`/${CHURCH}/attendance`)
+    const response = await page.goto(`/${CHURCH}/nxtgen/admin/attendance`)
     expect(response?.status()).toBe(404)
     await lifeshaper.close()
 })

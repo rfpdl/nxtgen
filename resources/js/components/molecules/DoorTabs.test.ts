@@ -19,8 +19,8 @@ describe('DoorTabs', () => {
         const tabs = wrapper.findAll('a')
         expect(tabs.map((t) => t.text())).toEqual(['Check in', "Who's in"])
         expect(tabs.map((t) => t.attributes('href'))).toEqual([
-            'church.door.show:{"church":"ccf","class":7}',
-            'church.door.whos-in:{"church":"ccf","class":7}',
+            'nxtgen.serve.door.show:{"church":"ccf","class":7}',
+            'nxtgen.serve.door.whos-in:{"church":"ccf","class":7}',
         ])
     })
 
@@ -38,7 +38,7 @@ describe('DoorTabs', () => {
         const wrapper = mount(DoorTabs, { props: { current: 'whos-in', classId: null } })
 
         expect(wrapper.findAll('a')[0]?.attributes('href')).toBe(
-            'church.door.show:{"church":"ccf"}',
+            'nxtgen.serve.door.show:{"church":"ccf"}',
         )
     })
 })

@@ -14,9 +14,11 @@ import type { FamilyListRow, LevelOption, ListFilters, Pagination, SatelliteOpti
 import { Head, router } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { route } from 'ziggy-js'
+import { areaRoute, inAdminArea } from '@/composables/useArea'
 
 /**
- * The families list (plan §6): "Register a family" (the page's one main button), the Excel of what the list shows,
+ * The families list (plan §6), in NxtGen Admin and Serve: "Register a family" (the page's one main button), the Excel
+ * of what the list shows (Admin only — Roy 2026-11-06),
  * the search and filters, and one stacked row per family — the whole row opens it; its children are pills in their
  * Level's colour; an unconfirmed email says so and, where the viewer may, offers the link again (under the row's
  * link). 50 to a page.
@@ -33,17 +35,19 @@ const church = useChurch()
 /** Another page of the same filtered list: the filters stay in the address. */
 function goTo(page: number): void {
     const current = Object.fromEntries(new URLSearchParams(window.location.search))
-    router.get(route('church.families.index', church.value.slug), { ...current, page })
+    router.get(areaRoute('families.index', church.value.slug), { ...current, page })
 }
 
 function apply(params: Record<string, string | number>): void {
-    router.get(route('church.families.index', church.value.slug), params, { preserveScroll: true })
+    router.get(areaRoute('families.index', church.value.slug), params, { preserveScroll: true })
 }
 
 /** The download is what the list shows: the same filters, as the same address parameters. */
 const exportHref = computed(() => {
     const query = new URLSearchParams(window.location.search).toString()
-    return route('church.families.export', church.value.slug) + (query === '' ? '' : `?${query}`)
+    return (
+        route('nxtgen.admin.families.export', church.value.slug) + (query === '' ? '' : `?${query}`)
+    )
 })
 </script>
 
@@ -53,11 +57,16 @@ const exportHref = computed(() => {
         <PageHeader :title="`Families (${pagination.total})`">
             <template #actions>
                 <AppButton
-                    :href="route('church.families.register', church.slug)"
+                    :href="areaRoute('families.register', church.slug)"
                     data-testid="register-family"
                     >Register a family</AppButton
                 >
-                <AppButton :href="exportHref" external variant="secondary" data-testid="export"
+                <AppButton
+                    v-if="inAdminArea()"
+                    :href="exportHref"
+                    external
+                    variant="secondary"
+                    data-testid="export"
                     >Download Excel</AppButton
                 >
             </template>
@@ -73,7 +82,7 @@ const exportHref = computed(() => {
             v-if="families.length > 0"
             :items="families"
             :item-key="(f) => f.id"
-            :href="(f) => route('church.families.show', [church.slug, f.id])"
+            :href="(f) => areaRoute('families.show', [church.slug, f.id])"
             row-testid="family-row"
         >
             <template #default="{ item: family }">

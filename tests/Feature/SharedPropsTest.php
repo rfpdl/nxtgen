@@ -23,9 +23,19 @@ use function Tests\Support\staffMember;
 it('gives a staff page the church it is about', function (): void {
     $admin = staffMember(RoleEnum::Admin, atChurch(church(['slug' => 'ccf', 'name' => 'CCF'])));
 
-    actingAs($admin)->get('/ccf/families')->assertInertia(fn (AssertableInertia $p) => $p
+    actingAs($admin)->get('/ccf/nxtgen/serve/families')->assertInertia(fn (AssertableInertia $p) => $p
         ->where('church', ['name' => 'CCF', 'slug' => 'ccf'])
-        ->where('church_nav', ['can_manage_people' => true, 'can_manage_classes' => true, 'can_see_attendance' => true, 'can_manage_cards' => true, 'can_move_up' => true]));
+        ->where('church_nav', ['area' => 'nxtgen.serve', 'can_use_admin' => true, 'can_manage_people' => true, 'can_manage_classes' => true, 'can_see_attendance' => true, 'can_manage_cards' => true, 'can_move_up' => true]));
+});
+
+it('tells the staff menu which area the page is in (Roy 2026-11-06)', function (): void {
+    $church = church(['slug' => 'ccf']);
+    $admin = staffMember(RoleEnum::Admin, atChurch($church));
+
+    actingAs($admin)->get('/ccf/nxtgen/admin/families')->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav.area', 'nxtgen.admin'));
+    actingAs($admin)->get('/ccf/admin/people')->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav.area', 'admin'));
+    actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get('/ccf/nxtgen/serve/door')
+        ->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav.area', 'nxtgen.serve')->where('church_nav.can_use_admin', false));
 });
 
 it('gives a parent\'s family page its church', function (): void {
@@ -53,7 +63,7 @@ it('gives the staff menu only to a staff page — never to the next request in t
     $parent = User::factory()->create();
     guardianOf(familyAt(satelliteOf($church)), $parent);
 
-    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/families')
+    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/nxtgen/serve/families')
         ->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav.can_manage_people', true));
     actingAs($parent)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav', null));
 });

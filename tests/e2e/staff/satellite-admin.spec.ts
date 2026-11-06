@@ -12,11 +12,11 @@ test('a satellite admin sees only their own satellite @story#43 @story#58', asyn
     browser,
 }) => {
     // Searched, not read off the first page: the list pages once the run has registered enough families.
-    await page.goto(`/${CHURCH}/families?q=${FAMILIES.house.guardian}`)
+    await page.goto(`/${CHURCH}/nxtgen/admin/families?q=${FAMILIES.house.guardian}`)
     await expect(
         page.getByTestId('family-row').filter({ hasText: FAMILIES.house.guardian }),
     ).toBeVisible()
-    await page.goto(`/${CHURCH}/families?q=${FAMILIES.dxb.guardian}`)
+    await page.goto(`/${CHURCH}/nxtgen/admin/families?q=${FAMILIES.dxb.guardian}`)
     await expect(
         page.getByTestId('family-row').filter({ hasText: FAMILIES.dxb.guardian }),
     ).toHaveCount(0)
@@ -24,7 +24,7 @@ test('a satellite admin sees only their own satellite @story#43 @story#58', asyn
     // The church admin can see the DXB family's address; the satellite admin typing it gets nothing.
     const admin = await browser.newContext({ storageState: sessionFile('churchAdmin') })
     const adminPage = await admin.newPage()
-    await adminPage.goto(`/${CHURCH}/families?q=${FAMILIES.dxb.guardian}`)
+    await adminPage.goto(`/${CHURCH}/nxtgen/admin/families?q=${FAMILIES.dxb.guardian}`)
     const href = await adminPage
         .getByTestId('family-row')
         .filter({ hasText: FAMILIES.dxb.guardian })
@@ -40,7 +40,7 @@ test('a satellite admin sees only their own satellite @story#43 @story#58', asyn
 test('a satellite admin can only add Lifeshapers to their own satellite @story#77', async ({
     page,
 }) => {
-    await page.goto(`/${CHURCH}/people`)
+    await page.goto(`/${CHURCH}/admin/people`)
 
     // A retrying assertion: allTextContents() reads once, before the page may have rendered its options.
     await expect(page.getByTestId('staff-role').locator('option')).toHaveText([
@@ -53,7 +53,7 @@ test('a Lifeshaper can see a family but gets no edit forms @story#50 @story#53',
 }) => {
     const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const page = await lifeshaper.newPage()
-    await page.goto(`/${CHURCH}/families?q=${FAMILIES.dxb.guardian}`)
+    await page.goto(`/${CHURCH}/nxtgen/serve/families?q=${FAMILIES.dxb.guardian}`)
     await page
         .getByTestId('family-row')
         .filter({ hasText: FAMILIES.dxb.guardian })
@@ -69,9 +69,9 @@ test('a Lifeshaper can see a family but gets no edit forms @story#50 @story#53',
 test('a Lifeshaper does not get the People page @story#75', async ({ browser }) => {
     const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const page = await lifeshaper.newPage()
-    await page.goto(`/${CHURCH}/families`)
+    await page.goto(`/${CHURCH}/nxtgen/serve/families`)
     await expect(page.getByRole('link', { name: 'People' })).toHaveCount(0)
-    const response = await page.goto(`/${CHURCH}/people`)
+    const response = await page.goto(`/${CHURCH}/admin/people`)
     expect(response?.status()).toBe(404)
     await lifeshaper.close()
 })

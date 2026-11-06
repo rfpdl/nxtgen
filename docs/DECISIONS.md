@@ -6,14 +6,26 @@ describes the design; this records the choices that shaped or changed it.
 
 ## 2026-11-06 (iPad at the door — Roy)
 
+- **Overnight answers (Roy):** a Lifeshaper edits a family's details, guardians and children in Serve for the
+  satellites they serve — not the email, status or Level. A satellite you are assigned to is the satellite you work
+  in: the poster (and its Links) for someone in A and B is A's or B's, picked; a church-wide Role sees every
+  satellite's. Then class admin roles (#9), "delete a photo for good" (#25), and the merge spec (#29) — spec only.
+- **Addresses by area (Roy):** `/{church}/{ministry}/{area}/…` — `/ccf/nxtgen/admin/…`, `/ccf/nxtgen/serve/…`,
+  church-wide admin at `/ccf/admin/…` (People). The ministry is in the address now, so Elevate later is
+  `/ccf/elevate/…` and nothing moves again; families stay church-wide underneath. A path, not a subdomain: one person
+  can be in several churches with one sign-in. Claude, low-stakes: a page shown in both NxtGen areas (the families
+  list, a family, register) posts to its own area's address, so it never leaves it; a Lifeshaper loses the Children
+  list and the families Excel (Admin only) and keeps the families list in Serve.
 - **Staff pages split by service (Roy, TODO #31):** `/ccf/admin/…` for managing people, families and children;
   `/ccf/serve/…` for the everyday app (check-in, registration) — where anyone without admin lands. A Lifeshaper can
   find, view, register and edit families in Serve (no exports, merging or deleting). The QR poster shows the
   registration QR plus the church's own Links (Facebook group, WhatsApp group, or any link an admin names). Plan:
   `tasks/2026-11-06-admin-serve/spec.md`.
 
-- **Two short sign-in addresses (Roy):** **/loginp** opens the volunteers' backup password on its own page, already
-  open — same form, same rule (only someone who serves; parents use the email link). **/loginc** clears this
+- **The password is never on /login (Roy):** /login offers the emailed link alone; the backup password is only on
+  /loginp (the folded "Volunteer with a password?" link is gone).
+- **Two short sign-in addresses (Roy):** **/loginp** is the volunteers' backup password, on its own page — the only
+  place it is offered (only someone who serves; parents use the email link). **/loginc** clears this
   device's sign-in: signed out (the remember-me cookie too), the remembered landing page forgotten, then back to
   /login. Claude: /loginc is a plain GET so typing it is enough; the cost is that a link to it can sign someone out
   (SECURITY #22). The e2e password journey now uses a volunteer of each browser's own (E2ESeeder::VOLUNTEER_EMAIL): 15

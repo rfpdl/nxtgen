@@ -9,6 +9,7 @@ use App\Domains\Church\DataObjects\ChurchData;
 use App\Domains\Church\DataObjects\ChurchNavData;
 use App\Domains\Church\Jobs\GetLandingOptionsJob;
 use App\Foundation\Support\RequestContext;
+use App\Foundation\Support\RouteArea;
 use App\Foundation\Support\RouteChurch;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -52,7 +53,7 @@ final class HandleInertiaRequests extends Middleware
 
             // The staff menu (ChurchShell), from the AccessScope RequireAssignment put on THIS request; null on any
             // page that is not a staff page. Navigation only — every Feature still asks the scope itself.
-            'church_nav' => fn (): ?ChurchNavData => ($scope = RequestContext::scope($request)) !== null ? ChurchNavData::fromScope($scope) : null,
+            'church_nav' => fn (): ?ChurchNavData => ($scope = RequestContext::scope($request)) !== null ? ChurchNavData::fromScope($scope, RouteArea::of($request)) : null,
 
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

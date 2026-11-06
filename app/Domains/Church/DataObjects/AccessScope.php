@@ -175,6 +175,12 @@ final readonly class AccessScope
         return $satellite->church_id === $this->churchId && $this->canWorkHere() && ($ids === null || in_array($satellite->id, $ids, true));
     }
 
+    /** The Admin areas (Roy 2026-11-06): any admin Role here, church or satellite. Everyone else serves in Serve. */
+    public function canUseAdmin(): bool
+    {
+        return $this->isAnyAdmin();
+    }
+
     /**
      * Attendance (reports are admins only — DECISIONS 2026-10-26): church admins and satellite admins. WHICH
      * satellites' Sessions each may see is attendanceSatelliteIds.

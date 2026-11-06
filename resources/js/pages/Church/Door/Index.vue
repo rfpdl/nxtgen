@@ -55,7 +55,7 @@ const scanning = ref(false)
 
 function visit(params: { class?: number | null; q?: string; card?: boolean }): void {
     router.get(
-        route('church.door.show', church.value.slug),
+        route('nxtgen.serve.door.show', church.value.slug),
         {
             class: params.class ?? props.class_id ?? undefined,
             q: params.q ?? props.query,
@@ -76,7 +76,7 @@ function scanned(code: string): void {
 
 function undo(checkInId: number): void {
     router.put(
-        route('church.door.undo', [church.value.slug, checkInId]),
+        route('nxtgen.serve.door.undo', [church.value.slug, checkInId]),
         {},
         { preserveScroll: true },
     )

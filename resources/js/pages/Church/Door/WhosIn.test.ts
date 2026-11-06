@@ -67,7 +67,7 @@ describe("Who's in", () => {
             'No one checked in yet',
         )
         expect(wrapper.find('[data-testid="go-check-in"]').attributes('href')).toBe(
-            'church.door.show:{"church":"ccf","class":1}',
+            'nxtgen.serve.door.show:{"church":"ccf","class":1}',
         )
         expect(wrapper.find('[data-testid="squad-picker"]').exists()).toBe(false)
     })
@@ -77,6 +77,8 @@ describe("Who's in", () => {
 
         await wrapper.find('[data-testid="squad-picker"] [data-value="5"]').trigger('click')
 
-        expect(gets).toEqual([{ url: 'church.door.whos-in:"ccf"', data: { class: 1, squad: 5 } }])
+        expect(gets).toEqual([
+            { url: 'nxtgen.serve.door.whos-in:"ccf"', data: { class: 1, squad: 5 } },
+        ])
     })
 })

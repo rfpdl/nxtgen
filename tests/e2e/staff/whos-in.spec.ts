@@ -42,7 +42,7 @@ test("marks children present by Squad on Who's in, keeps the class across the ta
     const [sofia, isabel] = ROLL_CALL.girls[project]
 
     // At the door, 1PM: check this browser's two Reyes girls in.
-    await page.goto(`/${CHURCH}/door`)
+    await page.goto(`/${CHURCH}/nxtgen/serve/door`)
     await onePm(page).click()
     await expect(onePm(page)).toHaveAttribute('aria-checked', 'true')
     await page.getByTestId('door-search').fill('Reyes')

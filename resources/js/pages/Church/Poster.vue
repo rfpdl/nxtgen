@@ -2,7 +2,7 @@
 import AppButton from '@/components/atoms/AppButton.vue'
 import { useChurch } from '@/composables/useChurch'
 import { Head } from '@inertiajs/vue3'
-import { route } from 'ziggy-js'
+import { areaRoute } from '@/composables/useArea'
 
 /**
  * The registration poster for the foyer (plan §6 R1): print it. Plain big words for parents, the QR code to scan,
@@ -25,7 +25,7 @@ function print(): void {
         <div class="flex items-center gap-4 print:hidden">
             <AppButton size="lg" data-testid="print-poster" @click="print">Print</AppButton>
             <AppButton
-                :href="route('church.families.index', church.slug)"
+                :href="areaRoute('families.index', church.slug)"
                 variant="secondary"
                 size="lg"
                 >Back</AppButton

@@ -23,7 +23,7 @@ const when = computed(
 )
 
 function putBack(child: MovingUpChild): string {
-    return route('church.moving-up.children.put-back', [
+    return route('nxtgen.admin.moving-up.children.put-back', [
         church.value.slug,
         props.movingUp.id,
         child.child_id,
@@ -41,7 +41,7 @@ function putBack(child: MovingUpChild): string {
             <AppButton
                 v-if="waiting > 0"
                 variant="secondary"
-                :href="route('church.moving-up.put-back', [church.slug, movingUp.id])"
+                :href="route('nxtgen.admin.moving-up.put-back', [church.slug, movingUp.id])"
                 method="put"
                 :preserve-scroll="true"
                 data-testid="moving-up-put-back-everyone"

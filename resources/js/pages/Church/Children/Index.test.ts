@@ -40,7 +40,7 @@ describe('Children', () => {
 
         nav.can_move_up = true
         expect(page().find('[data-testid="children-moving-up"]').attributes('href')).toBe(
-            'church.moving-up.index:"ccf"',
+            'nxtgen.admin.moving-up.index:"ccf"',
         )
     })
 })

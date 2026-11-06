@@ -4,14 +4,13 @@ import Card from '@/components/atoms/Card.vue'
 import PageHeader from '@/components/atoms/PageHeader.vue'
 import TextField from '@/components/atoms/TextField.vue'
 import AppShell from '@/components/layout/AppShell.vue'
-import PasswordLoginForm from '@/components/organisms/PasswordLoginForm.vue'
 import type { RequestMagicLinkInput } from '@/types'
 import { Head, useForm } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
 /**
  * Sign in for everyone (the Bold look): type the email, get a link — one field, one big button. The volunteers'
- * backup password waits below, closed.
+ * backup password is not here: it has its own address, /loginp (Roy 2026-11-06).
  */
 const form = useForm<RequestMagicLinkInput>({ email: '' })
 
@@ -49,6 +48,5 @@ function submit(): void {
                 </AppButton>
             </form>
         </Card>
-        <PasswordLoginForm :action="route('auth.password.login')" />
     </AppShell>
 </template>

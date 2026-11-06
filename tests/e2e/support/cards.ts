@@ -8,7 +8,7 @@ import { CARDS, CHURCH, DOOR, type DoorProject } from './world'
  */
 export async function openCardFamily(page: Page, project: string): Promise<void> {
     const guardian = DOOR.guardians[project as DoorProject]
-    await page.goto(`/${CHURCH}/families?q=${guardian} ${CARDS.surname}`)
+    await page.goto(`/${CHURCH}/nxtgen/serve/families?q=${guardian} ${CARDS.surname}`)
     await page
         .getByTestId('family-row')
         .filter({ hasText: `${guardian} ${CARDS.surname}` })

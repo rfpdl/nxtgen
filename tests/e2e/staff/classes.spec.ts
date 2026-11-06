@@ -19,7 +19,7 @@ test("an admin sees CCF DXB's classes, adds one with no day, edits its time and 
 }) => {
     const admin = await browser.newContext({ storageState: sessionFile('churchAdmin') })
     const page = await admin.newPage()
-    await page.goto(`/${CHURCH}/families`)
+    await page.goto(`/${CHURCH}/nxtgen/admin/families`)
     await navTo(page, 'Classes')
     await expect(page.getByRole('heading', { name: 'Classes', level: 1 })).toBeVisible()
 
@@ -76,7 +76,7 @@ test("an admin sees CCF DXB's classes, adds one with no day, edits its time and 
 test("a satellite admin sees only their own satellite's classes @story#95", async ({ browser }) => {
     const houseAdmin = await browser.newContext({ storageState: sessionFile('houseAdmin') })
     const page = await houseAdmin.newPage()
-    await page.goto(`/${CHURCH}/classes`)
+    await page.goto(`/${CHURCH}/nxtgen/admin/classes`)
 
     await expect(page.getByRole('heading', { level: 2 })).toHaveText([SATELLITES.house])
     await expect(page.getByText(CLASSES.onePm.name, { exact: true })).toHaveCount(0)
@@ -86,10 +86,10 @@ test("a satellite admin sees only their own satellite's classes @story#95", asyn
 test('a Lifeshaper has no Classes menu and no Classes page @story#96', async ({ browser }) => {
     const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const page = await lifeshaper.newPage()
-    await page.goto(`/${CHURCH}/families`)
+    await page.goto(`/${CHURCH}/nxtgen/serve/door`)
     await expect(page.getByRole('link', { name: 'Classes' })).toHaveCount(0)
 
-    const response = await page.goto(`/${CHURCH}/classes`)
+    const response = await page.goto(`/${CHURCH}/nxtgen/admin/classes`)
     expect(response?.status()).toBe(404)
     await lifeshaper.close()
 })

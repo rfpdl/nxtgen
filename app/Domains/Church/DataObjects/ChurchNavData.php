@@ -8,13 +8,16 @@ use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
- * The staff menu's switches (ChurchShell), shared as `church_nav` on every staff page from the request's AccessScope.
- * Navigation only — every Feature still asks the scope itself.
+ * The staff menu's switches (ChurchShell), shared as `church_nav` on every staff page from the request's AccessScope,
+ * and the area the page is in (RouteArea: 'admin', 'nxtgen.admin', 'nxtgen.serve') — which menu to show, and where a
+ * page shown in both NxtGen areas builds its links. Navigation only — every Feature still asks the scope itself.
  */
 #[TypeScript]
 final class ChurchNavData extends Data
 {
     public function __construct(
+        public ?string $area,
+        public bool $can_use_admin,
         public bool $can_manage_people,
         public bool $can_manage_classes,
         public bool $can_see_attendance,
@@ -22,9 +25,11 @@ final class ChurchNavData extends Data
         public bool $can_move_up,
     ) {}
 
-    public static function fromScope(AccessScope $scope): self
+    public static function fromScope(AccessScope $scope, ?string $area): self
     {
         return new self(
+            area: $area,
+            can_use_admin: $scope->canUseAdmin(),
             can_manage_people: $scope->canManagePeople(),
             can_manage_classes: $scope->canManageClasses(),
             can_see_attendance: $scope->canSeeAttendance(),

@@ -45,7 +45,7 @@ describe('filing a new card', function (): void {
         ['dxb' => $dxb, 'amara' => $amara] = cardChurch();
         $joy = staffMember(RoleEnum::Lifeshaper, atSatellite($dxb));
 
-        actingAs($joy)->post("/ccf/children/{$amara->id}/card-requests", ['reason' => 'lost', 'note' => 'Lost at the park'])
+        actingAs($joy)->post("/ccf/nxtgen/serve/children/{$amara->id}/card-requests", ['reason' => 'lost', 'note' => 'Lost at the park'])
             ->assertRedirect()->assertSessionHas('success', 'A new card for Amara is asked for.');
 
         $request = CardRequest::query()->sole();
@@ -56,7 +56,7 @@ describe('filing a new card', function (): void {
     it('lets an admin file a damaged card with no note @story#130', function (): void {
         ['church' => $church, 'amara' => $amara] = cardChurch();
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->post("/ccf/children/{$amara->id}/card-requests", ['reason' => 'damaged', 'note' => null])
+        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->post("/ccf/nxtgen/serve/children/{$amara->id}/card-requests", ['reason' => 'damaged', 'note' => null])
             ->assertSessionHas('success');
 
         expect([CardRequest::query()->sole()->reason, CardRequest::query()->sole()->note])->toBe([CardReasonEnum::Damaged, null]);
@@ -65,7 +65,7 @@ describe('filing a new card', function (): void {
     it('keeps a note of exactly 200 letters, and stores a blank note as none @story#130', function (string $note, ?string $stored): void {
         ['dxb' => $dxb, 'amara' => $amara] = cardChurch();
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->post("/ccf/children/{$amara->id}/card-requests", ['reason' => 'lost', 'note' => $note])
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->post("/ccf/nxtgen/serve/children/{$amara->id}/card-requests", ['reason' => 'lost', 'note' => $note])
             ->assertSessionHasNoErrors()->assertSessionHas('success');
 
         expect(CardRequest::query()->sole()->note)->toBe($stored);
@@ -79,7 +79,7 @@ describe('filing a new card', function (): void {
         ['dxb' => $dxb, 'amara' => $amara] = cardChurch();
         $closed = CardRequest::factory()->for($amara)->create(['step' => $step]);
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->post("/ccf/children/{$amara->id}/card-requests", ['reason' => 'damaged'])
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->post("/ccf/nxtgen/serve/children/{$amara->id}/card-requests", ['reason' => 'damaged'])
             ->assertSessionHas('success', 'A new card for Amara is asked for.');
 
         $requests = CardRequest::query()->where('child_id', $amara->id)->orderBy('id')->get();
@@ -90,7 +90,7 @@ describe('filing a new card', function (): void {
     it('files nothing for a family the staff member cannot open — another satellite\'s Lifeshaper gets a 404 @story#131', function (): void {
         ['house' => $house, 'amara' => $amara] = cardChurch();
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($house)))->post("/ccf/children/{$amara->id}/card-requests", ['reason' => 'lost'])
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($house)))->post("/ccf/nxtgen/serve/children/{$amara->id}/card-requests", ['reason' => 'lost'])
             ->assertNotFound();
 
         expect(CardRequest::query()->count())->toBe(0);
@@ -101,7 +101,7 @@ describe('filing a new card', function (): void {
         $parent = User::factory()->create();
         guardianOf($amara->family, $parent);
 
-        actingAs($parent)->post("/ccf/children/{$amara->id}/card-requests", ['reason' => 'lost'])->assertNotFound();
+        actingAs($parent)->post("/ccf/nxtgen/serve/children/{$amara->id}/card-requests", ['reason' => 'lost'])->assertNotFound();
 
         expect(CardRequest::query()->count())->toBe(0);
     });
@@ -109,7 +109,7 @@ describe('filing a new card', function (): void {
     it('refuses a first card, a reason it does not know, or a note longer than 200 letters @story#131', function (array $payload, string $field): void {
         ['dxb' => $dxb, 'amara' => $amara] = cardChurch();
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->post("/ccf/children/{$amara->id}/card-requests", $payload)
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->post("/ccf/nxtgen/serve/children/{$amara->id}/card-requests", $payload)
             ->assertSessionHasErrors($field);
 
         expect(CardRequest::query()->count())->toBe(0);
@@ -124,7 +124,7 @@ describe('filing a new card', function (): void {
         ['dxb' => $dxb, 'amara' => $amara] = cardChurch();
         $open = CardRequest::factory()->for($amara)->create(['step' => CardStepEnum::Approved, 'reason' => CardReasonEnum::Lost]);
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->post("/ccf/children/{$amara->id}/card-requests", ['reason' => 'damaged'])
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->post("/ccf/nxtgen/serve/children/{$amara->id}/card-requests", ['reason' => 'damaged'])
             ->assertRedirect()->assertSessionHas('error', 'Amara already has a new card on the way: Approved · not paid.');
 
         expect(CardRequest::query()->sole()->is($open))->toBeTrue();
@@ -141,7 +141,7 @@ describe('the family page', function (): void {
         $paid = CardRequest::factory()->for($ben)->create(['step' => CardStepEnum::Printed, 'paid_at' => now()]);
         $free = CardRequest::factory()->for($cy)->create(['reason' => CardReasonEnum::FirstCard, 'fee_minor' => 0]);
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->get("/ccf/families/{$amara->family_id}")
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->get("/ccf/nxtgen/serve/families/{$amara->family_id}")
             ->assertInertia(fn (AssertableInertia $p) => $p
                 ->where('card_requests', [
                     ['id' => $asked->id, 'child_id' => $amara->id, 'step' => 'asked', 'fee' => 'not_paid', 'summary' => 'Asked · not paid', 'moves' => []],
@@ -158,7 +158,7 @@ describe('the family page', function (): void {
         ['dxb' => $dxb, 'amara' => $amara] = cardChurch();
         CardRequest::factory()->for($amara)->create(['step' => CardStepEnum::Refused]);
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->get("/ccf/families/{$amara->family_id}")
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->get("/ccf/nxtgen/serve/families/{$amara->family_id}")
             ->assertInertia(fn (AssertableInertia $p) => $p->where('card_requests', []));
     });
 });

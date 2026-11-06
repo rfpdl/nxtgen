@@ -25,7 +25,7 @@ it('gives a staff member a poster whose QR code opens this church\'s registratio
     $user = User::factory()->create();
     grantRole($user, RoleEnum::Lifeshaper, atChurch($church));
 
-    actingAs($user)->get('/ccf/poster')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
+    actingAs($user)->get('/ccf/nxtgen/serve/poster')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
         ->component('Church/Poster')
         ->where('church.name', 'CCF')
         ->where('register_url', url('/ccf/register'))
@@ -39,7 +39,7 @@ it('is not found for a Guardian with no Role in the church @story#81', function 
     $guardian = User::factory()->create();
     guardianOf($family, $guardian);
 
-    actingAs($guardian)->get('/ccf/poster')->assertNotFound();
+    actingAs($guardian)->get('/ccf/nxtgen/serve/poster')->assertNotFound();
 });
 
 it('draws a different code for a different address', function (): void {

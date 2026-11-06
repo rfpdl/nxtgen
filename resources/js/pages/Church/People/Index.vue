@@ -17,7 +17,7 @@ defineProps<{
 const church = useChurch()
 
 function remove(roleId: number): void {
-    router.delete(route('church.people.roles.destroy', [church.value.slug, roleId]), {
+    router.delete(route('admin.people.roles.destroy', [church.value.slug, roleId]), {
         preserveScroll: true,
     })
 }
@@ -27,10 +27,7 @@ function remove(roleId: number): void {
     <Head title="People" />
     <ChurchShell>
         <PageHeader :title="`People who serve (${people.length})`" />
-        <AddStaffForm
-            :action="route('church.people.store', church.slug)"
-            :options="grant_options"
-        />
+        <AddStaffForm :action="route('admin.people.store', church.slug)" :options="grant_options" />
         <div class="grid gap-3 md:grid-cols-2">
             <StaffMemberCard
                 v-for="person in people"

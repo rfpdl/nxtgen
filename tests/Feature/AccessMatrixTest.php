@@ -80,6 +80,23 @@ function cells(string $route): array
 }
 
 /**
+ * A family page's cells in both NxtGen areas (Roy 2026-11-06): Serve's, then Admin's — the same row, admins only.
+ *
+ * @return array<string, array{0: string, 1: Actor, 2: string}>
+ */
+function bothAreas(string $name): array
+{
+    $cells = [];
+    foreach (['serve', 'admin'] as $area) {
+        foreach (cells("nxtgen.{$area}.{$name}") as $key => $cell) {
+            $cells["{$area}: {$key}"] = $cell;
+        }
+    }
+
+    return $cells;
+}
+
+/**
  * The request a route's cell makes — method, URL and a payload that passes validation.
  *
  * @return array{0: string, 1: string, 2: array<string, mixed>}
@@ -91,58 +108,85 @@ function requestFor(string $route, AccessWorld $w): array
     $photo = fn (): UploadedFile => new UploadedFile(base_path('tests/Fixtures/phone-photo-rotated-gps.jpg'), 'IMG_0001.jpg', 'image/jpeg', null, true);
     $newChild = ['first_name' => 'Baby', 'middle_name' => null, 'last_name' => 'Ramos', 'nickname' => 'Baby', 'gender' => 'girl', 'date_of_birth' => '2021-01-01', 'has_allergies' => false, 'allergies' => null];
 
-    return match ($route) {
-        'church.home' => ['GET', '/ccf', []],
-        'church.poster' => ['GET', '/ccf/poster', []],
-        'church.families.index' => ['GET', '/ccf/families', []],
-        'church.families.export' => ['GET', '/ccf/families/export', []],
-        'church.children.index' => ['GET', '/ccf/children', []],
-        'church.families.register' => ['GET', '/ccf/families/new?q=Amara', []],
-        'church.families.store' => ['POST', '/ccf/families', [
+    if ($route === 'church.home') {
+        return ['GET', '/ccf', []];
+    }
+    if (str_starts_with($route, 'family.') || $route === 'photos.child') {
+        return familyRequestFor($route, $w, $c, $photo, $newChild);
+    }
+    // The staff areas (Roy 2026-11-06): the same request under each area's address.
+    [$base, $name] = match (true) {
+        str_starts_with($route, 'nxtgen.admin.') => ['/ccf/nxtgen/admin', substr($route, 13)],
+        str_starts_with($route, 'nxtgen.serve.') => ['/ccf/nxtgen/serve', substr($route, 13)],
+        str_starts_with($route, 'admin.') => ['/ccf/admin', substr($route, 6)],
+        default => throw new LogicException("No request for {$route} — add it to requestFor()."),
+    };
+
+    return match ($name) {
+        'poster' => ['GET', "{$base}/poster", []],
+        'families.index' => ['GET', "{$base}/families", []],
+        'families.export' => ['GET', "{$base}/families/export", []],
+        'children.index' => ['GET', "{$base}/children", []],
+        'families.register' => ['GET', "{$base}/families/new?q=Amara", []],
+        'families.store' => ['POST', "{$base}/families", [
             'home_satellite_id' => $w->home->id, 'area_text' => 'Deira', 'privacy_consented' => true,
             'guardian' => ['first_name' => 'Mira', 'last_name' => 'Bonza', 'relationship' => 'mother', 'phone' => '0523508443', 'email' => 'mira@example.com'],
             'children' => [['first_name' => 'Clarion', 'middle_name' => null, 'last_name' => 'Bonza', 'nickname' => 'Clarion', 'gender' => 'boy', 'date_of_birth' => '2018-02-03', 'has_allergies' => false, 'allergies' => null]],
         ]],
-        'church.families.children.store' => ['POST', "/ccf/families/{$f}/children", $newChild],
-        'church.families.show' => ['GET', "/ccf/families/{$f}", []],
-        'church.families.update' => ['PUT', "/ccf/families/{$f}", familyEdit($w->home)],
-        'church.families.resend' => ['POST', "/ccf/families/{$f}/resend", []],
-        'church.families.email' => ['PUT', "/ccf/families/{$f}/email", ['email' => 'corrected@example.com']],
-        'church.children.update' => ['PUT', "/ccf/children/{$c}", childEdit()],
-        'church.children.status' => ['PUT', "/ccf/children/{$c}/status", ['status' => 'inactive']],
-        'church.children.level' => ['PUT', "/ccf/children/{$c}/level", ['level' => 3]],
-        'church.children.photo-consent' => ['PUT', "/ccf/children/{$c}/photo-consent", []],
-        'church.children.photo' => ['POST', "/ccf/children/{$c}/photo", ['photo' => $photo()]],
-        'church.card-requests.store' => ['POST', "/ccf/children/{$c}/card-requests", ['reason' => 'lost', 'note' => 'Lost at the park']],
-        'church.card-requests.index' => ['GET', '/ccf/card-requests?tab=asked', []],
-        'church.card-requests.print-lists.store' => ['POST', withApprovedCard($w, '/ccf/card-requests/print-lists'), ['q' => null]],
-        'church.card-requests.print-lists.show' => ['GET', '/ccf/card-requests/print-lists/'.printListOf($w)->id, []],
-        'church.card-requests.print-lists.mark-printed' => ['PUT', '/ccf/card-requests/print-lists/'.printListOf($w)->id.'/mark-printed', []],
-        'church.card-requests.mark-paid' => ['PUT', '/ccf/card-requests/'.cardAt($w, CardStepEnum::Asked, paid: false)->id.'/mark-paid', []],
-        'church.card-requests.approve' => ['PUT', '/ccf/card-requests/'.cardAt($w, CardStepEnum::Asked)->id.'/approve', []],
-        'church.card-requests.refuse' => ['PUT', '/ccf/card-requests/'.cardAt($w, CardStepEnum::Asked)->id.'/refuse', ['reason' => 'Found it at home']],
-        'church.card-requests.mark-printed' => ['PUT', '/ccf/card-requests/'.cardAt($w, CardStepEnum::Approved)->id.'/mark-printed', []],
-        'church.card-requests.give' => ['PUT', '/ccf/card-requests/'.cardAt($w, CardStepEnum::Printed)->id.'/give', []],
-        'church.duplicates.resolve' => ['PUT', "/ccf/duplicates/{$w->pair->id}", ['status' => 'dismissed']],
-        'church.people.index' => ['GET', '/ccf/people', []],
-        'church.people.store' => ['POST', '/ccf/people', ['name' => 'Leo Lifeshaper', 'email' => 'leo@example.com', 'role' => 'lifeshaper', 'scope_type' => 'satellite', 'scope_id' => $w->home->id]],
-        'church.people.roles.destroy' => ['DELETE', "/ccf/people/roles/{$w->assignment->id}", []],
-        'church.moving-up.index' => ['GET', '/ccf/moving-up', []],
-        'church.moving-up.store' => ['POST', '/ccf/moving-up', ['children' => [['child_id' => $c, 'level' => childAtLevel($w)]]]],
-        'church.moving-up.children.put-back' => ['PUT', '/ccf/moving-up/'.movingUpOf($w)->id."/children/{$c}/put-back", []],
-        'church.moving-up.put-back' => ['PUT', '/ccf/moving-up/'.movingUpOf($w)->id.'/put-back', []],
-        'church.schedules.index' => ['GET', '/ccf/classes', []],
-        'church.schedules.store' => ['POST', '/ccf/classes', ['satellite_id' => $w->home->id, 'name' => 'Special class', 'weekday' => null, 'starts_at' => null, 'ends_at' => null]],
-        'church.schedules.update' => ['PUT', "/ccf/classes/{$w->schedule->id}", ['name' => '1PM', 'weekday' => 'saturday', 'starts_at' => '13:30', 'ends_at' => '15:00']],
-        'church.schedules.retire' => ['PUT', "/ccf/classes/{$w->schedule->id}/retire", []],
-        'church.door.show' => ['GET', '/ccf/door?q=Amara', []],
-        'church.door.check-in' => ['POST', "/ccf/classes/{$w->schedule->id}/check-ins", ['children' => [['child_id' => $w->visitor->id, 'level' => 1, 'make_active' => false]]]],
-        'church.door.undo' => ['PUT', "/ccf/check-ins/{$w->checkIn->id}/undo", []],
-        'church.door.whos-in' => ['GET', '/ccf/door/whos-in', []],
-        'church.door.present' => ['PUT', "/ccf/check-ins/{$w->checkIn->id}/present", ['present' => true, 'revision' => $w->checkIn->revision]],
-        'church.door.head-count' => ['PUT', "/ccf/classes/{$w->schedule->id}/squads/{$w->checkIn->squad_id}/head-count", ['count' => 3]],
-        'church.attendance.show' => ['GET', "/ccf/attendance?class={$w->schedule->id}&date=2026-10-31", []],
-        'church.attendance.export' => ['GET', "/ccf/attendance/export?class={$w->schedule->id}&date=2026-10-31", []],
+        'families.children.store' => ['POST', "{$base}/families/{$f}/children", $newChild],
+        'families.show' => ['GET', "{$base}/families/{$f}", []],
+        'families.update' => ['PUT', "{$base}/families/{$f}", familyEdit($w->home)],
+        'families.resend' => ['POST', "{$base}/families/{$f}/resend", []],
+        'families.email' => ['PUT', "{$base}/families/{$f}/email", ['email' => 'corrected@example.com']],
+        'children.update' => ['PUT', "{$base}/children/{$c}", childEdit()],
+        'children.status' => ['PUT', "{$base}/children/{$c}/status", ['status' => 'inactive']],
+        'children.level' => ['PUT', "{$base}/children/{$c}/level", ['level' => 3]],
+        'children.photo-consent' => ['PUT', "{$base}/children/{$c}/photo-consent", []],
+        'children.photo' => ['POST', "{$base}/children/{$c}/photo", ['photo' => $photo()]],
+        'card-requests.store' => ['POST', "{$base}/children/{$c}/card-requests", ['reason' => 'lost', 'note' => 'Lost at the park']],
+        'card-requests.index' => ['GET', "{$base}/card-requests?tab=asked", []],
+        'card-requests.print-lists.store' => ['POST', withApprovedCard($w, "{$base}/card-requests/print-lists"), ['q' => null]],
+        'card-requests.print-lists.show' => ['GET', "{$base}/card-requests/print-lists/".printListOf($w)->id, []],
+        'card-requests.print-lists.mark-printed' => ['PUT', "{$base}/card-requests/print-lists/".printListOf($w)->id.'/mark-printed', []],
+        'card-requests.mark-paid' => ['PUT', "{$base}/card-requests/".cardAt($w, CardStepEnum::Asked, paid: false)->id.'/mark-paid', []],
+        'card-requests.approve' => ['PUT', "{$base}/card-requests/".cardAt($w, CardStepEnum::Asked)->id.'/approve', []],
+        'card-requests.refuse' => ['PUT', "{$base}/card-requests/".cardAt($w, CardStepEnum::Asked)->id.'/refuse', ['reason' => 'Found it at home']],
+        'card-requests.mark-printed' => ['PUT', "{$base}/card-requests/".cardAt($w, CardStepEnum::Approved)->id.'/mark-printed', []],
+        'card-requests.give' => ['PUT', "{$base}/card-requests/".cardAt($w, CardStepEnum::Printed)->id.'/give', []],
+        'duplicates.resolve' => ['PUT', "{$base}/duplicates/{$w->pair->id}", ['status' => 'dismissed']],
+        'people.index' => ['GET', "{$base}/people", []],
+        'people.store' => ['POST', "{$base}/people", ['name' => 'Leo Lifeshaper', 'email' => 'leo@example.com', 'role' => 'lifeshaper', 'scope_type' => 'satellite', 'scope_id' => $w->home->id]],
+        'people.roles.destroy' => ['DELETE', "{$base}/people/roles/{$w->assignment->id}", []],
+        'moving-up.index' => ['GET', "{$base}/moving-up", []],
+        'moving-up.store' => ['POST', "{$base}/moving-up", ['children' => [['child_id' => $c, 'level' => childAtLevel($w)]]]],
+        'moving-up.children.put-back' => ['PUT', "{$base}/moving-up/".movingUpOf($w)->id."/children/{$c}/put-back", []],
+        'moving-up.put-back' => ['PUT', "{$base}/moving-up/".movingUpOf($w)->id.'/put-back', []],
+        'schedules.index' => ['GET', "{$base}/classes", []],
+        'schedules.store' => ['POST', "{$base}/classes", ['satellite_id' => $w->home->id, 'name' => 'Special class', 'weekday' => null, 'starts_at' => null, 'ends_at' => null]],
+        'schedules.update' => ['PUT', "{$base}/classes/{$w->schedule->id}", ['name' => '1PM', 'weekday' => 'saturday', 'starts_at' => '13:30', 'ends_at' => '15:00']],
+        'schedules.retire' => ['PUT', "{$base}/classes/{$w->schedule->id}/retire", []],
+        'door.show' => ['GET', "{$base}/door?q=Amara", []],
+        'door.check-in' => ['POST', "{$base}/classes/{$w->schedule->id}/check-ins", ['children' => [['child_id' => $w->visitor->id, 'level' => 1, 'make_active' => false]]]],
+        'door.undo' => ['PUT', "{$base}/check-ins/{$w->checkIn->id}/undo", []],
+        'door.whos-in' => ['GET', "{$base}/door/whos-in", []],
+        'door.present' => ['PUT', "{$base}/check-ins/{$w->checkIn->id}/present", ['present' => true, 'revision' => $w->checkIn->revision]],
+        'door.head-count' => ['PUT', "{$base}/classes/{$w->schedule->id}/squads/{$w->checkIn->squad_id}/head-count", ['count' => 3]],
+        'attendance.show' => ['GET', "{$base}/attendance?class={$w->schedule->id}&date=2026-10-31", []],
+        'attendance.export' => ['GET', "{$base}/attendance/export?class={$w->schedule->id}&date=2026-10-31", []],
+        default => throw new LogicException("No request for {$route} — add it to requestFor()."),
+    };
+}
+
+/**
+ * A parent's request, or a photo's.
+ *
+ * @param  Closure(): UploadedFile  $photo
+ * @param  array<string, mixed>  $newChild
+ * @return array{0: string, 1: string, 2: array<string, mixed>}
+ */
+function familyRequestFor(string $route, AccessWorld $w, int $c, Closure $photo, array $newChild): array
+{
+    return match ($route) {
         'family.show' => ['GET', '/ccf/family', []],
         'family.update' => ['PUT', '/ccf/family', familyEdit($w->home)],
         'family.children.store' => ['POST', '/ccf/family/children', $newChild],
@@ -151,7 +195,7 @@ function requestFor(string $route, AccessWorld $w): array
         'family.children.photo-consent.give' => ['PUT', "/ccf/family/children/{$c}/photo-consent", []],
         'family.children.photo-consent' => ['DELETE', "/ccf/family/children/{$c}/photo-consent", []],
         'photos.child' => ['GET', URL::temporarySignedRoute('photos.child', now()->addMinutes(30), ['child' => $c]), []],
-        default => throw new LogicException("No request for {$route} — add it to requestFor()."),
+        default => throw new LogicException("No request for {$route} — add it to familyRequestFor()."),
     };
 }
 
@@ -216,8 +260,8 @@ function printListOf(AccessWorld $w): PrintList
 function quietChanges(): array
 {
     return [
-        'church.door.present' => fn (AccessWorld $w): bool => $w->checkIn->fresh()?->isPresent() === true,
-        'church.door.head-count' => fn (AccessWorld $w): bool => SquadHeadCount::query()->where('session_id', $w->checkIn->session_id)->where('squad_id', $w->checkIn->squad_id)->value('head_count') === 3,
+        'nxtgen.serve.door.present' => fn (AccessWorld $w): bool => $w->checkIn->fresh()?->isPresent() === true,
+        'nxtgen.serve.door.head-count' => fn (AccessWorld $w): bool => SquadHeadCount::query()->where('session_id', $w->checkIn->session_id)->where('squad_id', $w->checkIn->squad_id)->value('head_count') === 3,
     ];
 }
 
@@ -266,7 +310,7 @@ function expectCell(string $route, Actor $actor, string $expected): void
     Notification::fake();
     Storage::fake('photos');
     // The door is asked about on the Saturday its classes meet.
-    if (str_starts_with($route, 'church.door.')) {
+    if (str_starts_with($route, 'nxtgen.serve.door.')) {
         travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
     }
     $world = AccessWorld::make();
@@ -328,127 +372,127 @@ describe('the staff area', function (): void {
     it('opens the church home for any staff @story#42', cellTest())
         ->with(cells('church.home'));
     it('gives any staff the poster, and nobody else @story#80 @story#81', cellTest())
-        ->with(cells('church.poster'));
+        ->with(cells('nxtgen.serve.poster'));
 });
 
 describe('the registration lists', function (): void {
     it('shows the families list to any staff, and nothing to anyone else @story#43 @story#44', cellTest())
-        ->with(cells('church.families.index'));
-    it('downloads the families list for any staff @story#45', cellTest())
-        ->with(cells('church.families.export'));
-    it('shows the children list to any staff, and nothing to anyone else @story#58 @story#59', cellTest())
-        ->with(cells('church.children.index'));
+        ->with(bothAreas('families.index'));
+    it('downloads the families list for admins only @story#45', cellTest())
+        ->with(cells('nxtgen.admin.families.export'));
+    it('shows the children list to admins only, and nothing to anyone else @story#58 @story#59', cellTest())
+        ->with(cells('nxtgen.admin.children.index'));
 });
 
 describe('the door: search, register, add a child', function (): void {
     it('lets any staff search the whole church @story#46', cellTest())
-        ->with(cells('church.families.register'));
+        ->with(bothAreas('families.register'));
     it('lets any staff register a family @story#47', cellTest())
-        ->with(cells('church.families.store'));
+        ->with(bothAreas('families.store'));
     it('lets any staff add a child to a family found, at any satellite @story#48 @story#49', cellTest())
-        ->with(cells('church.families.children.store'));
+        ->with(bothAreas('families.children.store'));
 });
 
 describe('a family, for staff', function (): void {
     it('opens for staff who can see its satellite @story#50 @story#51', cellTest())
-        ->with(cells('church.families.show'));
+        ->with(bothAreas('families.show'));
     it('is edited only by an admin who may edit it @story#52 @story#53', cellTest())
-        ->with(cells('church.families.update'));
+        ->with(bothAreas('families.update'));
     it('has its link resent by any staff member in the church @story#54 @story#55', cellTest())
-        ->with(cells('church.families.resend'));
+        ->with(bothAreas('families.resend'));
     it('has its email corrected only by an admin who may edit it @story#56 @story#57', cellTest())
-        ->with(cells('church.families.email'));
+        ->with(cells('nxtgen.admin.families.email'));
 });
 
 describe('a child, for staff', function (): void {
     it('has its details fixed only by an admin who may edit the family @story#60 @story#61', cellTest())
-        ->with(cells('church.children.update'));
+        ->with(bothAreas('children.update'));
     it('has its status set only by an admin who may edit the family @story#62 @story#63', cellTest())
-        ->with(cells('church.children.status'));
+        ->with(cells('nxtgen.admin.children.status'));
     it('has its Level corrected only by a church admin @story#64 @story#65', cellTest())
-        ->with(cells('church.children.level'));
+        ->with(cells('nxtgen.admin.children.level'));
     it('has in-person consent recorded by staff who can see the family @story#66 @story#67', cellTest())
-        ->with(cells('church.children.photo-consent'));
+        ->with(bothAreas('children.photo-consent'));
     it('has its photo taken by staff who can see the family @story#68 @story#69', cellTest())
-        ->with(cells('church.children.photo'));
+        ->with(bothAreas('children.photo'));
     it('has a new name card asked for by staff who can see the family, never by a parent @story#130 @story#131', cellTest())
-        ->with(cells('church.card-requests.store'));
+        ->with(bothAreas('card-requests.store'));
     it('has a printed card given at the desk by staff who can see the family @story#146 @story#147', cellTest())
-        ->with(cells('church.card-requests.give'));
+        ->with(bothAreas('card-requests.give'));
 });
 
 describe('Cards, for admins', function (): void {
     it('opens Cards for admins only @story#134 @story#135', cellTest())
-        ->with(cells('church.card-requests.index'));
+        ->with(cells('nxtgen.admin.card-requests.index'));
     it('lets any admin make a print list of the approved cards they see @story#150 @story#151', cellTest())
-        ->with(cells('church.card-requests.print-lists.store'));
+        ->with(cells('nxtgen.admin.card-requests.print-lists.store'));
     it('downloads a print list holding a Home card only for an admin over Home @story#148 @story#149', cellTest())
-        ->with(cells('church.card-requests.print-lists.show'));
+        ->with(cells('nxtgen.admin.card-requests.print-lists.show'));
     it('marks a print list holding a Home card printed only for an admin over Home @story#144 @story#145', cellTest())
-        ->with(cells('church.card-requests.print-lists.mark-printed'));
+        ->with(cells('nxtgen.admin.card-requests.print-lists.mark-printed'));
     it('has a Home card marked paid only by an admin over Home @story#136 @story#137', cellTest())
-        ->with(cells('church.card-requests.mark-paid'));
+        ->with(cells('nxtgen.admin.card-requests.mark-paid'));
     it('has a Home card approved only by an admin over Home @story#138 @story#139', cellTest())
-        ->with(cells('church.card-requests.approve'));
+        ->with(cells('nxtgen.admin.card-requests.approve'));
     it('has a Home card refused only by an admin over Home @story#140 @story#141', cellTest())
-        ->with(cells('church.card-requests.refuse'));
+        ->with(cells('nxtgen.admin.card-requests.refuse'));
     it('has a Home card marked printed only by an admin over Home @story#142 @story#143', cellTest())
-        ->with(cells('church.card-requests.mark-printed'));
+        ->with(cells('nxtgen.admin.card-requests.mark-printed'));
 });
 
 describe('duplicates and People, for admins', function (): void {
     it('lets a pair be answered only by an admin of the new family @story#72 @story#73', cellTest())
-        ->with(cells('church.duplicates.resolve'));
+        ->with(cells('nxtgen.admin.duplicates.resolve'));
     it('opens People for admins only @story#74 @story#75', cellTest())
-        ->with(cells('church.people.index'));
+        ->with(cells('admin.people.index'));
     it('lets a home Lifeshaper be added only by an admin over that satellite @story#76 @story#77', cellTest())
-        ->with(cells('church.people.store'));
+        ->with(cells('admin.people.store'));
     it('lets a home Lifeshaper\'s role be removed only by an admin over that satellite @story#78 @story#79', cellTest())
-        ->with(cells('church.people.roles.destroy'));
+        ->with(cells('admin.people.roles.destroy'));
 });
 
 describe('Moving-Up, for a church admin', function (): void {
     it('opens Moving-Up for a church admin only @story#154 @story#155', cellTest())
-        ->with(cells('church.moving-up.index'));
+        ->with(cells('nxtgen.admin.moving-up.index'));
     it('moves children up only for a church admin @story#156 @story#157', cellTest())
-        ->with(cells('church.moving-up.store'));
+        ->with(cells('nxtgen.admin.moving-up.store'));
     it('puts one child back only for a church admin @story#158 @story#159', cellTest())
-        ->with(cells('church.moving-up.children.put-back'));
+        ->with(cells('nxtgen.admin.moving-up.children.put-back'));
     it('puts everyone back only for a church admin @story#160 @story#161', cellTest())
-        ->with(cells('church.moving-up.put-back'));
+        ->with(cells('nxtgen.admin.moving-up.put-back'));
 });
 
 describe('Classes, for admins', function (): void {
     it('opens Classes for admins only @story#95 @story#96', cellTest())
-        ->with(cells('church.schedules.index'));
+        ->with(cells('nxtgen.admin.schedules.index'));
     it('lets a class be added at Home only by an admin over Home @story#97 @story#98', cellTest())
-        ->with(cells('church.schedules.store'));
+        ->with(cells('nxtgen.admin.schedules.store'));
     it('lets a Home class be edited only by an admin over Home @story#99 @story#100', cellTest())
-        ->with(cells('church.schedules.update'));
+        ->with(cells('nxtgen.admin.schedules.update'));
     it('lets a Home class be retired only by an admin over Home @story#101 @story#102', cellTest())
-        ->with(cells('church.schedules.retire'));
+        ->with(cells('nxtgen.admin.schedules.retire'));
 });
 
 describe('the door, for staff', function (): void {
     it('opens the door for any staff, with their own satellites\' classes @story#103 @story#104', cellTest())
-        ->with(cells('church.door.show'));
+        ->with(cells('nxtgen.serve.door.show'));
     it('lets children be checked in at Home\'s class only by staff whose Role covers Home @story#106 @story#109', cellTest())
-        ->with(cells('church.door.check-in'));
+        ->with(cells('nxtgen.serve.door.check-in'));
     it('lets a Check-in at Home be undone only by staff whose Role covers Home @story#110 @story#111', cellTest())
-        ->with(cells('church.door.undo'));
+        ->with(cells('nxtgen.serve.door.undo'));
     it('opens Who\'s in for any staff, with their own satellites\' classes @story#117 @story#118', cellTest())
-        ->with(cells('church.door.whos-in'));
+        ->with(cells('nxtgen.serve.door.whos-in'));
     it('lets a child at Home\'s class be marked present only by staff whose Role covers Home @story#119 @story#120', cellTest())
-        ->with(cells('church.door.present'));
+        ->with(cells('nxtgen.serve.door.present'));
     it('lets a head count at Home\'s class be confirmed only by staff whose Role covers Home @story#121 @story#123', cellTest())
-        ->with(cells('church.door.head-count'));
+        ->with(cells('nxtgen.serve.door.head-count'));
 });
 
 describe('Attendance, for admins', function (): void {
     it('shows Home\'s Session only to an admin over Home @story#112 @story#113', cellTest())
-        ->with(cells('church.attendance.show'));
+        ->with(cells('nxtgen.admin.attendance.show'));
     it('downloads Home\'s Session only for an admin over Home @story#114 @story#115', cellTest())
-        ->with(cells('church.attendance.export'));
+        ->with(cells('nxtgen.admin.attendance.export'));
 });
 
 describe('the parent\'s own family', function (): void {
@@ -500,6 +544,6 @@ it('refuses another church\'s admin (a parent there too) who puts ccf\'s ids in 
         $answers["{$method} {$guessed}"] = outcomeOf(call($method, $guessed, $payload), $method);
     }
 
-    expect($answers)->toHaveCount(32)
+    expect($answers)->toHaveCount(41)
         ->and(array_unique(array_values($answers)))->toBe(['404'], (string) json_encode($answers, JSON_PRETTY_PRINT));
 });

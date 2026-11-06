@@ -12,7 +12,7 @@ import type { FamilySearchResult, SatelliteOption } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { Search } from 'lucide-vue-next'
 import { ref } from 'vue'
-import { route } from 'ziggy-js'
+import { areaRoute } from '@/composables/useArea'
 
 /**
  * Register a family (staff, plan §6 R1), search first: is the family already here (church-wide, masked — add a child
@@ -32,7 +32,7 @@ const showNew = ref(false)
 
 function search(): void {
     router.get(
-        route('church.families.register', church.value.slug),
+        areaRoute('families.register', church.value.slug),
         { q: q.value },
         { preserveState: true, preserveScroll: true },
     )
@@ -69,12 +69,12 @@ function search(): void {
             <template v-for="result in results" :key="result.id">
                 <FamilySearchResultCard
                     :result="result"
-                    :href="route('church.families.show', [church.slug, result.id])"
+                    :href="areaRoute('families.show', [church.slug, result.id])"
                     @add-child="addingTo = result.id"
                 />
                 <AddChildForm
                     v-if="addingTo === result.id"
-                    :action="route('church.families.children.store', [church.slug, result.id])"
+                    :action="areaRoute('families.children.store', [church.slug, result.id])"
                     start-open
                 />
             </template>
@@ -92,7 +92,7 @@ function search(): void {
             </AppButton>
             <RegisterFamilyForm
                 v-else
-                :action="route('church.families.store', church.slug)"
+                :action="areaRoute('families.store', church.slug)"
                 :satellites="satellites"
             />
         </section>

@@ -43,7 +43,7 @@ const query = computed(() => ({
 
 const exportHref = computed(
     () =>
-        route('church.attendance.export', church.value.slug) +
+        route('nxtgen.admin.attendance.export', church.value.slug) +
         '?' +
         new URLSearchParams({
             satellite: String(props.satellite_id ?? ''),
@@ -58,7 +58,7 @@ function pick(change: { satellite?: number; class?: number; date?: string }): vo
         change.satellite !== undefined
             ? { satellite: change.satellite, date: props.date }
             : { ...query.value, ...change }
-    router.get(route('church.attendance.show', church.value.slug), params, {
+    router.get(route('nxtgen.admin.attendance.show', church.value.slug), params, {
         preserveScroll: true,
     })
 }

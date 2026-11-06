@@ -1,8 +1,9 @@
 # Admin and Serve — the staff pages split by who uses them (TODO #31)
 
 Status: ready-for-agent
-Decided: Roy 2026-11-06 (DECISIONS): staff addresses grouped by service — **Admin** (`/ccf/admin/…`: manage people,
-families, children) and **Serve** (`/ccf/serve/…`: the everyday app — check-in and registration). Someone without
+Decided: Roy 2026-11-06 (DECISIONS): staff addresses grouped by area — **Admin** and **Serve** — under the ministry:
+`/ccf/nxtgen/admin/…` (manage families, children…) and `/ccf/nxtgen/serve/…` (the everyday app — check-in and
+registration); church-wide admin (People) at `/ccf/admin/…`. Path, not subdomain (one sign-in across churches). Someone without
 admin goes to Serve. A Lifeshaper can find, view, register and edit families in Serve — no exports, no merging
 duplicates, no deleting. The **QR poster** shows the registration QR plus the church's own links (a Facebook group, a
 WhatsApp group, or any link an admin names), each with its own QR; the admin sets the links.
@@ -13,25 +14,35 @@ WhatsApp group, or any link an admin names), each with its own QR; the admin set
 - **Link** (new, GLOSSARY): a church's own address shown on the QR poster — a label ("Parents' WhatsApp group") and an
   https address.
 
-## Addresses
+## Addresses (Roy: `/ccf/nxtgen/serve` — the ministry in the address now, so Elevate later is `/ccf/elevate/…`)
 
-| Today | Admin | Serve |
+| Today | Area | New |
 |---|---|---|
-| `/ccf` (→ families) | `/ccf/admin` → families | `/ccf/serve` → door |
-| `/ccf/door`, `/ccf/door/whos-in` | — | `/ccf/serve/door`, `/ccf/serve/door/whos-in` |
-| `/ccf/families` (+ export, `/{family}`) | `/ccf/admin/families` (+ export, `/{family}`) | `/ccf/serve/families` (find, no export), `/ccf/serve/families/{family}` |
-| `/ccf/families/new` | `/ccf/admin/families/new` | `/ccf/serve/families/new` |
-| `/ccf/children` | `/ccf/admin/children` | — (the door search finds children) |
-| `/ccf/people`, `/classes`, `/attendance`, `/card-requests`, `/moving-up` | `/ccf/admin/…` (same names) | — |
-| `/ccf/poster` | `/ccf/admin/links` (set the links) | `/ccf/serve/poster` (print it) |
-| `/ccf/register`, `/ccf/family` (public, parents) | unchanged | unchanged |
+| `/ccf` | — | → the person's area: Admin (any admin Role) else Serve |
+| `/ccf/people` (+ actions) | church Admin | `/ccf/admin/people` |
+| `/ccf/families` (+ export), `/ccf/families/{id}`, `/ccf/families/new` | NxtGen Admin | `/ccf/nxtgen/admin/families…` |
+| (the same, without export) | NxtGen Serve | `/ccf/nxtgen/serve/families…` |
+| `/ccf/children`, `/classes`, `/attendance`, `/card-requests`, `/moving-up` (+ actions) | NxtGen Admin | `/ccf/nxtgen/admin/…` |
+| `/ccf/door`, `/ccf/door/whos-in` (+ check-in actions) | NxtGen Serve | `/ccf/nxtgen/serve/door…` |
+| `/ccf/poster` | NxtGen Serve | `/ccf/nxtgen/serve/poster` |
+| `/ccf/register`, `/ccf/family` (public, parents) | — | unchanged (the printed QR keeps working) |
 
-- **Landing:** after sign-in, anyone with an admin Role goes to Admin; everyone else with a Role goes to Serve;
-  parents to their family, as now. An admin's menu has "Serve" (to work the door); Serve's menu has "Admin" for admins.
-- **Who:** Admin pages are for admins (church or satellite, as each page's row says today); a Lifeshaper gets 404 there.
-  Serve is for any staff Role. Actions (check in, give a card…) keep their rules; only their addresses move.
-- **No redirects from the old addresses:** nothing is live yet (TODO #23), and the printed poster's QR opens
-  `/ccf/register`, which does not move.
+- **Admin area = admins only.** Every `/admin/` address is 404 for anyone with no admin Role (church or satellite) —
+  on top of each page's own row. Serve is for any staff Role.
+- **An action is under each area whose pages use it**, so a page never leaves its area. In both: the families list,
+  register, the family, add a child, resend, edit (step 2 opens it to Lifeshapers), photo + consent, a Card request,
+  give a card. Admin only: Excel, correct the email, status, Level, duplicates, Children, Cards' moves, Moving-Up,
+  classes, attendance. Serve only: the door, Who's in, the poster. A Feature's redirect goes to the same area.
+- **Route names follow the address:** `admin.people.*`, `nxtgen.admin.*`, `nxtgen.serve.*`. Pages shown in both
+  areas (families list, family, register) get the area from a shared prop and build their links in it.
+- **Menus:** Admin — Families, Children, Classes, Attendance, Cards, People, then "Serve". Serve — Check in,
+  Families, QR poster, then "Admin" for admins. Password, Switch, Sign out in both.
+- **Landing:** after sign-in, an admin goes to NxtGen Admin (families); anyone else with a Role to Serve (the door);
+  parents to their family, as now.
+- Code stays in the Church service (it owns every staff address under `/{church}`); its routes file has the three
+  groups. No redirects from the old addresses: nothing is live yet (TODO #23).
+- **Behaviour change in step 1 (Roy):** a Lifeshaper loses the Children list and the families Excel (Admin only) and
+  keeps the families list in Serve.
 
 ## Lifeshaper in Serve (a permission change)
 - Find a family (the door's search, church-wide lite view — as today), **the families list of their own satellites**
@@ -49,10 +60,18 @@ WhatsApp group, or any link an admin names), each with its own QR; the admin set
   (as today), sent as images.
 
 ## Order of work
-1. **Move the addresses** (no behaviour change): two services, Admin and Serve, from today's Church service; menus;
-   landing; every test's addresses. Gate green.
+1. **Move the addresses** — **done 2026-11-06**: the three groups in the Church service's routes, RequireAdminArea,
+   RouteArea (+ `areaRoute` on the screens), a menu per area, the church address opening the person's area, every
+   test's addresses; the access matrix has both areas' rows; `staff/areas.spec.ts`.
 2. **Lifeshaper edits families** in Serve: the access row, the matrix, tests first.
 3. **Links + poster**: migration, admin page, the poster's QRs.
+
+## Answered (Roy 2026-11-06, before the overnight run)
+4. A Lifeshaper edits in Serve: **the family's details, guardians and children** (names, phone, allergies, notes) —
+   for families of the satellites they serve (the ones they can open). Not the email, status or Level.
+5. The poster: **a satellite you are assigned to is a satellite you work in** — "assign you to satellite A, you can
+   only do stuff in satellite A". Someone in A and B picks between those two; a church-wide Role, every satellite.
+   The same rule for managing a satellite's Links (admins of that satellite; church admin: all).
 
 ## Answered (Roy 2026-11-06)
 1. Links: **per satellite**.

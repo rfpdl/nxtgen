@@ -10,8 +10,13 @@ for (const role of Object.keys(STAFF) as StaffRole[]) {
     setup(`sign in as ${role}`, async ({ page }) => {
         await signInByEmail(page, STAFF[role])
 
-        // Staff with one church land straight on its families list.
-        await expect(page).toHaveURL(new RegExp(`/${CHURCH}/families`))
+        // Staff with one church land straight in their area (Roy 2026-11-06): an admin on Admin's families list,
+        // a Lifeshaper at Serve's door.
+        await expect(page).toHaveURL(
+            new RegExp(
+                `/${CHURCH}/nxtgen/${role === 'lifeshaper' ? 'serve/door' : 'admin/families'}`,
+            ),
+        )
         await page.context().storageState({ path: sessionFile(role) })
     })
 }

@@ -56,8 +56,8 @@ final class RegisterFamilyFeature extends BaseChurchFeature
         $family = $result->outcome === RegistrationOutcomeEnum::AlreadyRegistered ? null : $result->family;
 
         return ($family !== null && $this->scope()->canSeeFamily($family)
-            ? redirect()->route('church.families.show', [$church, $family])
-            : redirect()->route('church.families.register', $church)
+            ? $this->toArea('families.show', [$church, $family])
+            : $this->toArea('families.register', $church)
         )->with('success', $message);
     }
 }

@@ -59,6 +59,24 @@ enum Actor: string
         return [self::ChurchAdmin, self::HomeAdmin];
     }
 
+    /** @return list<self> anyone with an active admin Role in the world's church — who may open the Admin areas */
+    public static function admins(): array
+    {
+        return [self::ChurchAdmin, self::HomeAdmin, self::AwayAdmin];
+    }
+
+    /**
+     * Those of `$actors` who may open the Admin areas (Roy 2026-11-06): an Admin address is 404 for everyone else, on
+     * top of its own row.
+     *
+     * @param  list<self>  $actors
+     * @return list<self>
+     */
+    public static function inAdmin(array $actors): array
+    {
+        return array_values(array_filter($actors, fn (self $a): bool => in_array($a, self::admins(), true)));
+    }
+
     /** @return list<self> parents in the world's church, each with a family of their own */
     public static function parents(): array
     {

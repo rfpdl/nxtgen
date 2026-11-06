@@ -8,7 +8,7 @@ import { useEnum } from '@/composables/useEnum'
 import type { CardFee, CardRequest, CardRequestInput, Draft } from '@/types'
 import { useForm } from '@inertiajs/vue3'
 import { computed, ref, useId } from 'vue'
-import { route } from 'ziggy-js'
+import { areaRoute } from '@/composables/useArea'
 
 /**
  * A child's name card on the staff family page (name cards issue 01, DECISIONS 2026-10-29). With an open Card request
@@ -59,7 +59,7 @@ function submit(): void {
             >
             <AppButton
                 v-if="request.moves.includes('give')"
-                :href="route('church.card-requests.give', [church.slug, request.id])"
+                :href="areaRoute('card-requests.give', [church.slug, request.id])"
                 method="put"
                 :preserve-scroll="true"
                 data-testid="card-given"

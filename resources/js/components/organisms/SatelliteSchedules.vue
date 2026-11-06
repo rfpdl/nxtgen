@@ -23,7 +23,7 @@ const adding = ref(false)
 
 function retire(scheduleId: number): void {
     router.put(
-        route('church.schedules.retire', [church.value.slug, scheduleId]),
+        route('nxtgen.admin.schedules.retire', [church.value.slug, scheduleId]),
         {},
         { preserveScroll: true },
     )
@@ -39,7 +39,7 @@ function retire(scheduleId: number): void {
         <template v-for="schedule in satellite.schedules" :key="schedule.id">
             <div v-if="editing === schedule.id" data-testid="edit-schedule-form">
                 <ScheduleForm
-                    :action="route('church.schedules.update', [church.slug, schedule.id])"
+                    :action="route('nxtgen.admin.schedules.update', [church.slug, schedule.id])"
                     :schedule="schedule"
                     submit-label="Save"
                     @done="editing = null"
@@ -55,7 +55,7 @@ function retire(scheduleId: number): void {
         <div v-if="adding" class="flex flex-col gap-2" data-testid="add-schedule">
             <SectionHeading level="3">Add a class at {{ satellite.name }}</SectionHeading>
             <ScheduleForm
-                :action="route('church.schedules.store', [church.slug])"
+                :action="route('nxtgen.admin.schedules.store', [church.slug])"
                 :satellite-id="satellite.id"
                 submit-label="Add class"
                 @done="adding = false"

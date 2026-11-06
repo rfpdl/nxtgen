@@ -12,7 +12,9 @@ use App\Domains\Church\DataObjects\AccessScope;
 use App\Domains\Family\Jobs\GetChurchChildJob;
 use App\Domains\Family\Jobs\GetFamilyByIdJob;
 use App\Foundation\Support\RequestContext;
+use App\Foundation\Support\RouteArea;
 use Closure;
+use Illuminate\Http\RedirectResponse;
 use Lucid\Units\Feature;
 
 /**
@@ -42,6 +44,17 @@ abstract class BaseChurchFeature extends Feature
         abort_unless($scope instanceof AccessScope, 404);
 
         return $scope;
+    }
+
+    /**
+     * A redirect to `$name` (e.g. `families.show`) in the area this request is in (RouteArea), so a page shown in both
+     * Admin and Serve stays where it was.
+     *
+     * @param  array<int, mixed>|mixed  $parameters
+     */
+    protected function toArea(string $name, mixed $parameters): RedirectResponse
+    {
+        return redirect()->route(RouteArea::name(request(), $name), $parameters);
     }
 
     protected function staff(): User

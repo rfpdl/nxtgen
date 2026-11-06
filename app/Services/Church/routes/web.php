@@ -7,9 +7,12 @@ declare(strict_types=1);
 | Church — the church's staff pages (prefix /{church}, RequireAssignment)
 |--------------------------------------------------------------------------
 |
-| For EVERY staff member, not only admins: a Lifeshaper uses these too (registration now, check-in in R2).
-| What each person may do is decided by AccessScope (plan §3.2), never by the URL. Ids in the URL are looked
-| up within this church only. The door (R2) is /{church}/door; its class picker names the satellite.
+| By area (Roy 2026-11-06, tasks/2026-11-06-admin-serve): /{church}/admin (church-wide: People), and the ministry's
+| two — /{church}/nxtgen/admin (managing families, children, classes, cards…) and /{church}/nxtgen/serve (the
+| everyday app: the door, registering). Every admin address is 404 for anyone without an admin Role
+| (RequireAdminArea); what each person may do inside is still AccessScope's (plan §3.2), never the URL's. An action
+| is under each area whose pages use it, so a page never leaves its area; route names follow the address. Ids in
+| the URL are looked up within this church only.
 */
 
 use App\Services\Church\Http\Controllers\Attendance\Controller as AttendanceController;
@@ -23,68 +26,89 @@ use App\Services\Church\Http\Controllers\MovingUp\Controller as MovingUpControll
 use App\Services\Church\Http\Controllers\People\Controller as PeopleController;
 use App\Services\Church\Http\Controllers\Poster\Controller as PosterController;
 use App\Services\Church\Http\Controllers\Schedule\Controller as ScheduleController;
+use App\Services\Church\Http\Middleware\RequireAdminArea;
 use Illuminate\Support\Facades\Route;
 
+// The person's area: Admin for an admin, else Serve.
 Route::get('/', [HomeController::class, 'show'])->name('church.home');
 
-Route::get('/families', [FamilyController::class, 'index'])->name('church.families.index');
-Route::get('/families/export', [FamilyController::class, 'export'])->name('church.families.export');
-Route::get('/families/new', [FamilyController::class, 'register'])->name('church.families.register');
-Route::post('/families', [FamilyController::class, 'store'])->name('church.families.store');
-Route::get('/families/{family}', [FamilyController::class, 'show'])->whereNumber('family')->name('church.families.show');
-Route::put('/families/{family}', [FamilyController::class, 'update'])->whereNumber('family')->name('church.families.update');
-Route::post('/families/{family}/children', [FamilyController::class, 'addChild'])->whereNumber('family')->name('church.families.children.store');
-Route::post('/families/{family}/resend', [FamilyController::class, 'resend'])->whereNumber('family')->middleware('throttle:10,1')->name('church.families.resend');
-Route::put('/families/{family}/email', [FamilyController::class, 'correctEmail'])->whereNumber('family')->name('church.families.email');
-Route::get('/children', [ChildController::class, 'index'])->name('church.children.index');
-Route::put('/children/{child}/level', [ChildController::class, 'updateLevel'])->whereNumber('child')->name('church.children.level');
-Route::put('/children/{child}', [ChildController::class, 'update'])->whereNumber('child')->name('church.children.update');
-Route::put('/children/{child}/photo-consent', [ChildController::class, 'recordPhotoConsent'])->whereNumber('child')->name('church.children.photo-consent');
-Route::post('/children/{child}/photo', [ChildController::class, 'addPhoto'])->whereNumber('child')->name('church.children.photo');
-Route::put('/children/{child}/status', [ChildController::class, 'updateStatus'])->whereNumber('child')->name('church.children.status');
-// Name cards (DECISIONS 2026-10-29): staff who may open the family ask for a new card for a child (lost or damaged).
-Route::post('/children/{child}/card-requests', [CardRequestController::class, 'store'])->whereNumber('child')->name('church.card-requests.store');
-// Cards (name cards 03): admins see and move the requests by step; anyone who may open the family gives a printed one.
-Route::get('/card-requests', [CardRequestController::class, 'index'])->name('church.card-requests.index');
-// Print lists (name cards 04, GLOSSARY "Print list"): the approved cards the tab shows, kept; downloaded, marked printed.
-Route::post('/card-requests/print-lists', [CardRequestController::class, 'makePrintList'])->name('church.card-requests.print-lists.store');
-Route::get('/card-requests/print-lists/{printList}', [CardRequestController::class, 'downloadPrintList'])->whereNumber('printList')->name('church.card-requests.print-lists.show');
-Route::put('/card-requests/print-lists/{printList}/mark-printed', [CardRequestController::class, 'markPrintListPrinted'])->whereNumber('printList')->name('church.card-requests.print-lists.mark-printed');
-Route::put('/card-requests/{cardRequest}/mark-paid', [CardRequestController::class, 'markPaid'])->whereNumber('cardRequest')->name('church.card-requests.mark-paid');
-Route::put('/card-requests/{cardRequest}/approve', [CardRequestController::class, 'approve'])->whereNumber('cardRequest')->name('church.card-requests.approve');
-Route::put('/card-requests/{cardRequest}/refuse', [CardRequestController::class, 'refuse'])->whereNumber('cardRequest')->name('church.card-requests.refuse');
-Route::put('/card-requests/{cardRequest}/mark-printed', [CardRequestController::class, 'markPrinted'])->whereNumber('cardRequest')->name('church.card-requests.mark-printed');
-Route::put('/card-requests/{cardRequest}/give', [CardRequestController::class, 'give'])->whereNumber('cardRequest')->name('church.card-requests.give');
+/** The family pages and actions both areas use: registering, the list, one family, its children's details. */
+$familyPages = function (bool $withExport): void {
+    Route::get('/families', [FamilyController::class, 'index'])->name('families.index');
+    if ($withExport) {
+        Route::get('/families/export', [FamilyController::class, 'export'])->name('families.export');
+    }
+    Route::get('/families/new', [FamilyController::class, 'register'])->name('families.register');
+    Route::post('/families', [FamilyController::class, 'store'])->name('families.store');
+    Route::get('/families/{family}', [FamilyController::class, 'show'])->whereNumber('family')->name('families.show');
+    Route::put('/families/{family}', [FamilyController::class, 'update'])->whereNumber('family')->name('families.update');
+    Route::post('/families/{family}/children', [FamilyController::class, 'addChild'])->whereNumber('family')->name('families.children.store');
+    Route::post('/families/{family}/resend', [FamilyController::class, 'resend'])->whereNumber('family')->middleware('throttle:10,1')->name('families.resend');
+    Route::put('/children/{child}', [ChildController::class, 'update'])->whereNumber('child')->name('children.update');
+    Route::put('/children/{child}/photo-consent', [ChildController::class, 'recordPhotoConsent'])->whereNumber('child')->name('children.photo-consent');
+    Route::post('/children/{child}/photo', [ChildController::class, 'addPhoto'])->whereNumber('child')->name('children.photo');
+    // Name cards (DECISIONS 2026-10-29): staff who may open the family ask for a new card (lost or damaged), and give a
+    // printed one at the desk.
+    Route::post('/children/{child}/card-requests', [CardRequestController::class, 'store'])->whereNumber('child')->name('card-requests.store');
+    Route::put('/card-requests/{cardRequest}/give', [CardRequestController::class, 'give'])->whereNumber('cardRequest')->name('card-requests.give');
+};
 
-// Moving-Up (TODO #27): the yearly step to the next Level, and putting the last one back — church admin only.
-Route::get('/moving-up', [MovingUpController::class, 'index'])->name('church.moving-up.index');
-Route::post('/moving-up', [MovingUpController::class, 'store'])->name('church.moving-up.store');
-Route::put('/moving-up/{movingUp}/children/{child}/put-back', [MovingUpController::class, 'putBackChild'])->whereNumber(['movingUp', 'child'])->name('church.moving-up.children.put-back');
-Route::put('/moving-up/{movingUp}/put-back', [MovingUpController::class, 'putBackEveryone'])->whereNumber('movingUp')->name('church.moving-up.put-back');
+// ── Church-wide admin ────────────────────────────────────────────────────────────────────────────────────────────
+Route::prefix('admin')->name('admin.')->middleware(RequireAdminArea::class)->group(function (): void {
+    Route::get('/people', [PeopleController::class, 'index'])->name('people.index');
+    Route::post('/people', [PeopleController::class, 'store'])->middleware('throttle:per-device')->name('people.store');
+    Route::delete('/people/roles/{assignment}', [PeopleController::class, 'removeRole'])->whereNumber('assignment')->name('people.roles.destroy');
+});
 
-Route::get('/people', [PeopleController::class, 'index'])->name('church.people.index');
-Route::post('/people', [PeopleController::class, 'store'])->middleware('throttle:per-device')->name('church.people.store');
-Route::delete('/people/roles/{assignment}', [PeopleController::class, 'removeRole'])->whereNumber('assignment')->name('church.people.roles.destroy');
+// ── NxtGen Admin ─────────────────────────────────────────────────────────────────────────────────────────────────
+Route::prefix('nxtgen/admin')->name('nxtgen.admin.')->middleware(RequireAdminArea::class)->group(function () use ($familyPages): void {
+    $familyPages(true);
+    Route::put('/families/{family}/email', [FamilyController::class, 'correctEmail'])->whereNumber('family')->name('families.email');
+    Route::get('/children', [ChildController::class, 'index'])->name('children.index');
+    Route::put('/children/{child}/level', [ChildController::class, 'updateLevel'])->whereNumber('child')->name('children.level');
+    Route::put('/children/{child}/status', [ChildController::class, 'updateStatus'])->whereNumber('child')->name('children.status');
+    Route::put('/duplicates/{pair}', [DuplicateController::class, 'resolve'])->whereNumber('pair')->name('duplicates.resolve');
 
-// Classes (GLOSSARY "Schedule"): admins make a satellite's classes (DECISIONS 2026-10-26).
-Route::get('/classes', [ScheduleController::class, 'index'])->name('church.schedules.index');
-Route::post('/classes', [ScheduleController::class, 'store'])->name('church.schedules.store');
-Route::put('/classes/{schedule}', [ScheduleController::class, 'update'])->whereNumber('schedule')->name('church.schedules.update');
-Route::put('/classes/{schedule}/retire', [ScheduleController::class, 'retire'])->whereNumber('schedule')->name('church.schedules.retire');
+    // Cards (name cards 03): admins see and move the requests by step. Print lists (name cards 04, GLOSSARY "Print
+    // list"): the approved cards the tab shows, kept; downloaded, marked printed.
+    Route::get('/card-requests', [CardRequestController::class, 'index'])->name('card-requests.index');
+    Route::post('/card-requests/print-lists', [CardRequestController::class, 'makePrintList'])->name('card-requests.print-lists.store');
+    Route::get('/card-requests/print-lists/{printList}', [CardRequestController::class, 'downloadPrintList'])->whereNumber('printList')->name('card-requests.print-lists.show');
+    Route::put('/card-requests/print-lists/{printList}/mark-printed', [CardRequestController::class, 'markPrintListPrinted'])->whereNumber('printList')->name('card-requests.print-lists.mark-printed');
+    Route::put('/card-requests/{cardRequest}/mark-paid', [CardRequestController::class, 'markPaid'])->whereNumber('cardRequest')->name('card-requests.mark-paid');
+    Route::put('/card-requests/{cardRequest}/approve', [CardRequestController::class, 'approve'])->whereNumber('cardRequest')->name('card-requests.approve');
+    Route::put('/card-requests/{cardRequest}/refuse', [CardRequestController::class, 'refuse'])->whereNumber('cardRequest')->name('card-requests.refuse');
+    Route::put('/card-requests/{cardRequest}/mark-printed', [CardRequestController::class, 'markPrinted'])->whereNumber('cardRequest')->name('card-requests.mark-printed');
 
-// The door (DECISIONS 2026-10-26): pick today's class, find a family, check children in; undo a mistake.
-Route::get('/door', [DoorController::class, 'show'])->name('church.door.show');
-Route::post('/classes/{schedule}/check-ins', [DoorController::class, 'checkIn'])->whereNumber('schedule')->name('church.door.check-in');
-Route::put('/check-ins/{checkIn}/undo', [DoorController::class, 'undo'])->whereNumber('checkIn')->name('church.door.undo');
-// Its Who's in tab (DECISIONS 2026-10-28 — roll call): today's class by Squad; tap a child present; confirm a head count.
-Route::get('/door/whos-in', [DoorController::class, 'whosIn'])->name('church.door.whos-in');
-Route::put('/check-ins/{checkIn}/present', [DoorController::class, 'present'])->whereNumber('checkIn')->name('church.door.present');
-Route::put('/classes/{schedule}/squads/{squad}/head-count', [DoorController::class, 'headCount'])->whereNumber(['schedule', 'squad'])->name('church.door.head-count');
+    // Moving-Up (TODO #27): the yearly step to the next Level, and putting the last one back — church admin only.
+    Route::get('/moving-up', [MovingUpController::class, 'index'])->name('moving-up.index');
+    Route::post('/moving-up', [MovingUpController::class, 'store'])->name('moving-up.store');
+    Route::put('/moving-up/{movingUp}/children/{child}/put-back', [MovingUpController::class, 'putBackChild'])->whereNumber(['movingUp', 'child'])->name('moving-up.children.put-back');
+    Route::put('/moving-up/{movingUp}/put-back', [MovingUpController::class, 'putBackEveryone'])->whereNumber('movingUp')->name('moving-up.put-back');
 
-// Attendance (DECISIONS 2026-10-26: reports are admins only): ?satellite=&class=&date= picks the Session.
-Route::get('/attendance', [AttendanceController::class, 'show'])->name('church.attendance.show');
-Route::get('/attendance/export', [AttendanceController::class, 'export'])->name('church.attendance.export');
+    // Classes (GLOSSARY "Schedule"): admins make a satellite's classes (DECISIONS 2026-10-26).
+    Route::get('/classes', [ScheduleController::class, 'index'])->name('schedules.index');
+    Route::post('/classes', [ScheduleController::class, 'store'])->name('schedules.store');
+    Route::put('/classes/{schedule}', [ScheduleController::class, 'update'])->whereNumber('schedule')->name('schedules.update');
+    Route::put('/classes/{schedule}/retire', [ScheduleController::class, 'retire'])->whereNumber('schedule')->name('schedules.retire');
 
-Route::put('/duplicates/{pair}', [DuplicateController::class, 'resolve'])->whereNumber('pair')->name('church.duplicates.resolve');
+    // Attendance (DECISIONS 2026-10-26: reports are admins only): ?satellite=&class=&date= picks the Session.
+    Route::get('/attendance', [AttendanceController::class, 'show'])->name('attendance.show');
+    Route::get('/attendance/export', [AttendanceController::class, 'export'])->name('attendance.export');
+});
 
-Route::get('/poster', [PosterController::class, 'show'])->name('church.poster');
+// ── NxtGen Serve ─────────────────────────────────────────────────────────────────────────────────────────────────
+Route::prefix('nxtgen/serve')->name('nxtgen.serve.')->group(function () use ($familyPages): void {
+    // The door (DECISIONS 2026-10-26): pick today's class, find a family, check children in; undo a mistake.
+    Route::get('/door', [DoorController::class, 'show'])->name('door.show');
+    Route::post('/classes/{schedule}/check-ins', [DoorController::class, 'checkIn'])->whereNumber('schedule')->name('door.check-in');
+    Route::put('/check-ins/{checkIn}/undo', [DoorController::class, 'undo'])->whereNumber('checkIn')->name('door.undo');
+    // Its Who's in tab (DECISIONS 2026-10-28 — roll call): today's class by Squad; tap a child present; confirm a head count.
+    Route::get('/door/whos-in', [DoorController::class, 'whosIn'])->name('door.whos-in');
+    Route::put('/check-ins/{checkIn}/present', [DoorController::class, 'present'])->whereNumber('checkIn')->name('door.present');
+    Route::put('/classes/{schedule}/squads/{squad}/head-count', [DoorController::class, 'headCount'])->whereNumber(['schedule', 'squad'])->name('door.head-count');
+
+    $familyPages(false);
+
+    Route::get('/poster', [PosterController::class, 'show'])->name('poster');
+});

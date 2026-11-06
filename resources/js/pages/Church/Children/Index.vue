@@ -18,6 +18,7 @@ import type {
 } from '@/types'
 import { Head, router, usePage } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
+import { areaRoute } from '@/composables/useArea'
 
 /**
  * The children list (plan §6): every child in the satellites the viewer can see — Level, age, status, an allergy
@@ -39,11 +40,13 @@ const nav = usePage<SharedProps>().props.church_nav
 /** Another page of the same filtered list: the filters stay in the address. */
 function goTo(page: number): void {
     const current = Object.fromEntries(new URLSearchParams(window.location.search))
-    router.get(route('church.children.index', church.value.slug), { ...current, page })
+    router.get(route('nxtgen.admin.children.index', church.value.slug), { ...current, page })
 }
 
 function apply(params: Record<string, string | number>): void {
-    router.get(route('church.children.index', church.value.slug), params, { preserveScroll: true })
+    router.get(route('nxtgen.admin.children.index', church.value.slug), params, {
+        preserveScroll: true,
+    })
 }
 </script>
 
@@ -54,7 +57,7 @@ function apply(params: Record<string, string | number>): void {
             <template v-if="nav?.can_move_up" #actions>
                 <AppButton
                     variant="secondary"
-                    :href="route('church.moving-up.index', church.slug)"
+                    :href="route('nxtgen.admin.moving-up.index', church.slug)"
                     data-testid="children-moving-up"
                     >Moving-Up</AppButton
                 >
@@ -70,7 +73,7 @@ function apply(params: Record<string, string | number>): void {
             v-if="children.length > 0"
             :items="children"
             :item-key="(c) => c.id"
-            :href="(c) => route('church.families.show', [church.slug, c.family_id])"
+            :href="(c) => areaRoute('families.show', [church.slug, c.family_id])"
             row-testid="child-row"
         >
             <template #default="{ item: child }">

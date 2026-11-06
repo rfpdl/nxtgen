@@ -34,7 +34,7 @@ test("staff see a child's attendance on the family page; the parent never does @
     // A Lifeshaper checks Amara in at 1PM and ticks her present on Who's in.
     const staff = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const door = await staff.newPage()
-    await door.goto(`/${CHURCH}/door`)
+    await door.goto(`/${CHURCH}/nxtgen/serve/door`)
     await door.getByTestId('door-class').getByRole('radio', { name: CLASSES.onePm.name }).click()
     await door.getByTestId('door-search').fill(surname)
     await door.getByTestId('door-search').press('Enter')
@@ -52,7 +52,7 @@ test("staff see a child's attendance on the family page; the parent never does @
     ])
 
     // Her family page shows the line, under Amara.
-    await door.goto(`/${CHURCH}/families?q=${surname}`)
+    await door.goto(`/${CHURCH}/nxtgen/serve/families?q=${surname}`)
     await door.getByTestId('family-row').getByRole('link').click()
     const history = door
         .getByTestId('family-child')
@@ -69,7 +69,7 @@ test("staff see a child's attendance on the family page; the parent never does @
 
     // Undone at the door: the line is gone.
     const familyPage = door.url()
-    await door.goto(`/${CHURCH}/door`)
+    await door.goto(`/${CHURCH}/nxtgen/serve/door`)
     await door.getByTestId('door-class').getByRole('radio', { name: CLASSES.onePm.name }).click()
     await door.getByTestId('door-search').fill(surname)
     await door.getByTestId('door-search').press('Enter')

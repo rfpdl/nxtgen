@@ -23,71 +23,83 @@ final class AccessMatrix
      */
     public static function rows(): array
     {
-        return [
-            'church.home' => [AccessRowEnum::StaffArea, Actor::staff()],
-            'church.poster' => [AccessRowEnum::StaffArea, Actor::staff()],
-            'church.families.index' => [AccessRowEnum::FamilyList, Actor::staff()],
-            'church.families.export' => [AccessRowEnum::FamilyList, Actor::staff()],
-            'church.children.index' => [AccessRowEnum::FamilyList, Actor::staff()],
-            'church.families.register' => [AccessRowEnum::DoorSearch, Actor::staff()],
-            'church.families.store' => [AccessRowEnum::RegisterFamily, Actor::staff()],
-            'church.families.children.store' => [AccessRowEnum::AddChild, Actor::staff()],
-            'church.families.show' => [AccessRowEnum::ViewFamily, Actor::seeingFamily()],
-            'church.families.update' => [AccessRowEnum::EditFamily, Actor::editingFamily()],
-            'church.children.update' => [AccessRowEnum::EditFamily, Actor::editingFamily()],
+        // The family pages both NxtGen areas serve (Roy 2026-11-06): the same rows, and in Admin only for admins.
+        $familyPages = [
+            'families.index' => [AccessRowEnum::FamilyList, Actor::staff()],
+            'families.register' => [AccessRowEnum::DoorSearch, Actor::staff()],
+            'families.store' => [AccessRowEnum::RegisterFamily, Actor::staff()],
+            'families.children.store' => [AccessRowEnum::AddChild, Actor::staff()],
+            'families.show' => [AccessRowEnum::ViewFamily, Actor::seeingFamily()],
+            'families.update' => [AccessRowEnum::EditFamily, Actor::editingFamily()],
+            'children.update' => [AccessRowEnum::EditFamily, Actor::editingFamily()],
             // Anyone with a staff role in the church (DECISIONS 2026-10-17, later still — Roy): a Lifeshaper at the door
             // helps a visiting family, so the other satellite's staff may too; revoked roles and parents may not.
-            'church.families.resend' => [AccessRowEnum::ResendLink, Actor::staff()],
-            'church.families.email' => [AccessRowEnum::CorrectContact, Actor::editingFamily()],
-            'church.children.status' => [AccessRowEnum::SetChildStatus, Actor::editingFamily()],
-            'church.children.level' => [AccessRowEnum::SetChildLevel, [Actor::ChurchAdmin]],
-            'church.children.photo-consent' => [AccessRowEnum::ChildPhoto, Actor::seeingFamily()],
-            'church.children.photo' => [AccessRowEnum::ChildPhoto, Actor::seeingFamily()],
-            // Name cards (DECISIONS 2026-10-29): staff who may open the family file a new card; parents tell a Lifeshaper.
-            'church.card-requests.store' => [AccessRowEnum::CardRequest, Actor::seeingFamily()],
+            'families.resend' => [AccessRowEnum::ResendLink, Actor::staff()],
+            'children.photo-consent' => [AccessRowEnum::ChildPhoto, Actor::seeingFamily()],
+            'children.photo' => [AccessRowEnum::ChildPhoto, Actor::seeingFamily()],
+            // Name cards (DECISIONS 2026-10-29): staff who may open the family file a new card, and give a printed one.
+            'card-requests.store' => [AccessRowEnum::CardRequest, Actor::seeingFamily()],
+            'card-requests.give' => [AccessRowEnum::CardRequest, Actor::seeingFamily()],
+        ];
+        $rows = ['church.home' => [AccessRowEnum::StaffArea, Actor::staff()]];
+        foreach ($familyPages as $name => [$row, $actors]) {
+            $rows["nxtgen.admin.{$name}"] = [$row, Actor::inAdmin($actors)];
+            $rows["nxtgen.serve.{$name}"] = [$row, $actors];
+        }
+
+        return [
+            ...$rows,
+            // ── NxtGen Admin: admins only ──
+            'nxtgen.admin.families.export' => [AccessRowEnum::FamilyList, Actor::admins()],
+            'nxtgen.admin.children.index' => [AccessRowEnum::FamilyList, Actor::admins()],
+            'nxtgen.admin.families.email' => [AccessRowEnum::CorrectContact, Actor::editingFamily()],
+            'nxtgen.admin.children.status' => [AccessRowEnum::SetChildStatus, Actor::editingFamily()],
+            'nxtgen.admin.children.level' => [AccessRowEnum::SetChildLevel, [Actor::ChurchAdmin]],
             // Cards (name cards 03): the page for every admin (their own satellites' requests); moving Home's request needs
-            // an admin over Home; giving a printed card, anyone who may open the family.
-            'church.card-requests.index' => [AccessRowEnum::Cards, [Actor::ChurchAdmin, Actor::HomeAdmin, Actor::AwayAdmin]],
+            // an admin over Home.
+            'nxtgen.admin.card-requests.index' => [AccessRowEnum::Cards, Actor::admins()],
             // Print lists (name cards 04): any admin makes one of the cards they see; Home's card on a list is downloaded and
             // marked printed only by an admin over Home (a list with none of theirs is not found).
-            'church.card-requests.print-lists.store' => [AccessRowEnum::Cards, [Actor::ChurchAdmin, Actor::HomeAdmin, Actor::AwayAdmin]],
-            'church.card-requests.print-lists.show' => [AccessRowEnum::Cards, Actor::editingFamily()],
-            'church.card-requests.print-lists.mark-printed' => [AccessRowEnum::Cards, Actor::editingFamily()],
-            'church.card-requests.mark-paid' => [AccessRowEnum::Cards, Actor::editingFamily()],
-            'church.card-requests.approve' => [AccessRowEnum::Cards, Actor::editingFamily()],
-            'church.card-requests.refuse' => [AccessRowEnum::Cards, Actor::editingFamily()],
-            'church.card-requests.mark-printed' => [AccessRowEnum::Cards, Actor::editingFamily()],
-            'church.card-requests.give' => [AccessRowEnum::CardRequest, Actor::seeingFamily()],
+            'nxtgen.admin.card-requests.print-lists.store' => [AccessRowEnum::Cards, Actor::admins()],
+            'nxtgen.admin.card-requests.print-lists.show' => [AccessRowEnum::Cards, Actor::editingFamily()],
+            'nxtgen.admin.card-requests.print-lists.mark-printed' => [AccessRowEnum::Cards, Actor::editingFamily()],
+            'nxtgen.admin.card-requests.mark-paid' => [AccessRowEnum::Cards, Actor::editingFamily()],
+            'nxtgen.admin.card-requests.approve' => [AccessRowEnum::Cards, Actor::editingFamily()],
+            'nxtgen.admin.card-requests.refuse' => [AccessRowEnum::Cards, Actor::editingFamily()],
+            'nxtgen.admin.card-requests.mark-printed' => [AccessRowEnum::Cards, Actor::editingFamily()],
             // Answered from either family's page (there is no Duplicates page — DECISIONS 2026-10-17, after first look);
             // answering needs the new family.
-            'church.duplicates.resolve' => [AccessRowEnum::ReviewDuplicates, Actor::editingFamily()],
-            // People opens for every admin; adding or removing a home Lifeshaper needs the home satellite.
-            'church.people.index' => [AccessRowEnum::GrantRoles, [Actor::ChurchAdmin, Actor::HomeAdmin, Actor::AwayAdmin]],
-            'church.people.store' => [AccessRowEnum::GrantRoles, Actor::editingFamily()],
-            'church.people.roles.destroy' => [AccessRowEnum::GrantRoles, Actor::editingFamily()],
+            'nxtgen.admin.duplicates.resolve' => [AccessRowEnum::ReviewDuplicates, Actor::editingFamily()],
             // Moving-Up (DECISIONS 2026-11-06): the whole church at once, so a church admin only — no satellite admin.
-            'church.moving-up.index' => [AccessRowEnum::MovingUp, [Actor::ChurchAdmin]],
-            'church.moving-up.store' => [AccessRowEnum::MovingUp, [Actor::ChurchAdmin]],
-            'church.moving-up.children.put-back' => [AccessRowEnum::MovingUp, [Actor::ChurchAdmin]],
-            'church.moving-up.put-back' => [AccessRowEnum::MovingUp, [Actor::ChurchAdmin]],
+            'nxtgen.admin.moving-up.index' => [AccessRowEnum::MovingUp, [Actor::ChurchAdmin]],
+            'nxtgen.admin.moving-up.store' => [AccessRowEnum::MovingUp, [Actor::ChurchAdmin]],
+            'nxtgen.admin.moving-up.children.put-back' => [AccessRowEnum::MovingUp, [Actor::ChurchAdmin]],
+            'nxtgen.admin.moving-up.put-back' => [AccessRowEnum::MovingUp, [Actor::ChurchAdmin]],
             // Classes (DECISIONS 2026-10-26): the page opens for every admin; Home's class is changed only by an admin
             // over Home.
-            'church.schedules.index' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin, Actor::AwayAdmin]],
-            'church.schedules.store' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin]],
-            'church.schedules.update' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin]],
-            'church.schedules.retire' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin]],
+            'nxtgen.admin.schedules.index' => [AccessRowEnum::ManageClasses, Actor::admins()],
+            'nxtgen.admin.schedules.store' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin]],
+            'nxtgen.admin.schedules.update' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin]],
+            'nxtgen.admin.schedules.retire' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin]],
+            // Attendance (DECISIONS 2026-10-26: reports are admins only): Home's class, only for an admin over Home.
+            'nxtgen.admin.attendance.show' => [AccessRowEnum::Attendance, [Actor::ChurchAdmin, Actor::HomeAdmin]],
+            'nxtgen.admin.attendance.export' => [AccessRowEnum::Attendance, [Actor::ChurchAdmin, Actor::HomeAdmin]],
+            // ── Church-wide Admin ──
+            // People opens for every admin; adding or removing a home Lifeshaper needs the home satellite.
+            'admin.people.index' => [AccessRowEnum::GrantRoles, Actor::admins()],
+            'admin.people.store' => [AccessRowEnum::GrantRoles, Actor::editingFamily()],
+            'admin.people.roles.destroy' => [AccessRowEnum::GrantRoles, Actor::editingFamily()],
+            // ── NxtGen Serve: any staff ──
+            'nxtgen.serve.poster' => [AccessRowEnum::StaffArea, Actor::staff()],
             // The door (DECISIONS 2026-10-26): every staff member opens it (their own satellites' classes); checking in at
             // Home's class, and undoing it, needs a Role covering Home.
-            'church.door.show' => [AccessRowEnum::CheckIn, Actor::staff()],
-            'church.door.check-in' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
-            'church.door.undo' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
+            'nxtgen.serve.door.show' => [AccessRowEnum::CheckIn, Actor::staff()],
+            'nxtgen.serve.door.check-in' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
+            'nxtgen.serve.door.undo' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
             // Who's in (DECISIONS 2026-10-28): the door's people; marking a Home child present, as Undo.
-            'church.door.whos-in' => [AccessRowEnum::CheckIn, Actor::staff()],
-            'church.door.present' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
-            'church.door.head-count' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
-            // Attendance (DECISIONS 2026-10-26: reports are admins only): Home's class, only for an admin over Home.
-            'church.attendance.show' => [AccessRowEnum::Attendance, [Actor::ChurchAdmin, Actor::HomeAdmin]],
-            'church.attendance.export' => [AccessRowEnum::Attendance, [Actor::ChurchAdmin, Actor::HomeAdmin]],
+            'nxtgen.serve.door.whos-in' => [AccessRowEnum::CheckIn, Actor::staff()],
+            'nxtgen.serve.door.present' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
+            'nxtgen.serve.door.head-count' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
             'family.show' => [AccessRowEnum::OwnFamily, Actor::parents()],
             'family.update' => [AccessRowEnum::OwnFamily, Actor::parents()],
             'family.children.store' => [AccessRowEnum::OwnFamily, Actor::parents()],

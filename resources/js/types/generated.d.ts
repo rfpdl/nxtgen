@@ -152,6 +152,8 @@ declare namespace App {
                     slug: string
                 }
                 export type ChurchNavData = {
+                    area: string | null
+                    can_use_admin: boolean
                     can_manage_people: boolean
                     can_manage_classes: boolean
                     can_see_attendance: boolean

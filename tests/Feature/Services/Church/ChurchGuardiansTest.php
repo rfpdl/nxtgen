@@ -50,14 +50,14 @@ function otherRow(string $first, ?int $id = null, string $relationship = 'grandp
 it('gives the family\'s editor its other guardians to edit — never the primary, who is edited as before @story#89', function (): void {
     ['satellite' => $satellite, 'family' => $family, 'lola' => $lola] = guardianFamily();
 
-    actingAs(staffMember(RoleEnum::Admin, atSatellite($satellite)))->get("/ccf/families/{$family->id}")
+    actingAs(staffMember(RoleEnum::Admin, atSatellite($satellite)))->get("/ccf/nxtgen/serve/families/{$family->id}")
         ->assertInertia(fn (AssertableInertia $p) => $p
             ->where('primary.first_name', 'Janice')
             ->has('other_guardians', 1)
             ->where('other_guardians.0.id', $lola->id)
             ->where('other_guardians.0.first_name', 'Lola')
             ->where('other_guardians.0.relationship', 'grandparent'));
-    actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($satellite)))->get("/ccf/families/{$family->id}")
+    actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($satellite)))->get("/ccf/nxtgen/serve/families/{$family->id}")
         ->assertInertia(fn (AssertableInertia $p) => $p->has('other_guardians', 0)->has('family.guardians', 2));
 });
 
@@ -66,7 +66,7 @@ it('lets an admin add, change and remove the other guardians, each change on the
     $jun = otherGuardianOf($family, ['first_name' => 'Jun', 'last_name' => 'Ramos', 'relationship' => RelationshipEnum::Father]);
     $admin = staffMember(RoleEnum::Admin, atSatellite($satellite));
 
-    actingAs($admin)->put("/ccf/families/{$family->id}", familyEdit($satellite, [
+    actingAs($admin)->put("/ccf/nxtgen/serve/families/{$family->id}", familyEdit($satellite, [
         'guardians' => [otherRow('Lola', $lola->id, phone: '0503334444'), otherRow('Tita', relationship: 'aunt_uncle')],
         'removed_guardian_ids' => [$jun->id],
     ]))->assertRedirect()->assertSessionHas('success', 'Family details saved.');
@@ -88,7 +88,7 @@ it('keeps a guardian added since the form was opened: only the ones it removed g
     // Another admin adds Jun while this page still shows only Lola.
     $jun = otherGuardianOf($family, ['first_name' => 'Jun']);
 
-    actingAs($admin)->put("/ccf/families/{$family->id}", familyEdit($satellite, ['guardians' => [otherRow('Lola', $lola->id)]]))->assertSessionHas('success');
+    actingAs($admin)->put("/ccf/nxtgen/serve/families/{$family->id}", familyEdit($satellite, ['guardians' => [otherRow('Lola', $lola->id)]]))->assertSessionHas('success');
 
     expect($jun->fresh())->not->toBeNull();
 });
@@ -98,7 +98,7 @@ it('flags a possible duplicate when a guardian\'s phone comes in or changes — 
     $newer = familyAt($satellite);
     guardianOf($newer, User::factory()->create(), ['phone' => '+971 55 777 8888']);
 
-    actingAs(staffMember(RoleEnum::Admin, atChurch($satellite->church()->firstOrFail())))->put("/ccf/families/{$family->id}", familyEdit($satellite, [
+    actingAs(staffMember(RoleEnum::Admin, atChurch($satellite->church()->firstOrFail())))->put("/ccf/nxtgen/serve/families/{$family->id}", familyEdit($satellite, [
         'guardians' => [otherRow('Lola', $lola->id), otherRow('Tito', relationship: 'aunt_uncle', phone: '0557778888')],
     ]))->assertSessionHas('success');
 
@@ -113,20 +113,20 @@ it('checks for possible duplicates again only when a phone came in or changed @s
     $primary->forceFill(['phone' => '0559998888'])->save();
     $admin = staffMember(RoleEnum::Admin, atSatellite($satellite));
 
-    actingAs($admin)->put("/ccf/families/{$family->id}", familyEdit($satellite, [
+    actingAs($admin)->put("/ccf/nxtgen/serve/families/{$family->id}", familyEdit($satellite, [
         'area_text' => 'Karama', 'guardians' => [otherRow('Lolita', $lola->id)],
     ]))->assertSessionHas('success');
     expect(DuplicateCandidate::query()->count())->toBe(0);
 
     // The primary's own phone changed (to the same number, typed differently): checked again.
-    actingAs($admin)->put("/ccf/families/{$family->id}", familyEdit($satellite, ['guardian' => ['phone' => '055 999 8888']]))->assertSessionHas('success');
+    actingAs($admin)->put("/ccf/nxtgen/serve/families/{$family->id}", familyEdit($satellite, ['guardian' => ['phone' => '055 999 8888']]))->assertSessionHas('success');
     expect(DuplicateCandidate::query()->count())->toBe(1);
 });
 
 it('leaves the other guardians alone when the form sends none @story#89', function (): void {
     ['satellite' => $satellite, 'family' => $family] = guardianFamily();
 
-    actingAs(staffMember(RoleEnum::Admin, atSatellite($satellite)))->put("/ccf/families/{$family->id}", familyEdit($satellite))->assertSessionHas('success');
+    actingAs(staffMember(RoleEnum::Admin, atSatellite($satellite)))->put("/ccf/nxtgen/serve/families/{$family->id}", familyEdit($satellite))->assertSessionHas('success');
 
     expect(Guardian::query()->where('family_id', $family->id)->count())->toBe(2)
         ->and(Note::query()->count())->toBe(0);
@@ -137,7 +137,7 @@ it('refuses to change or remove the primary guardian or another family\'s, and c
     $stranger = otherGuardianOf(familyAt($satellite), ['first_name' => 'Stranger']);
     $id = $whose === 'primary' ? $primary->id : $stranger->id;
 
-    actingAs(staffMember(RoleEnum::Admin, atSatellite($satellite)))->put("/ccf/families/{$family->id}", familyEdit($satellite, [
+    actingAs(staffMember(RoleEnum::Admin, atSatellite($satellite)))->put("/ccf/nxtgen/serve/families/{$family->id}", familyEdit($satellite, [
         'area_text' => 'Changed',
         ...($remove ? ['removed_guardian_ids' => [$id]] : ['guardians' => [otherRow('Hacked', $id)]]),
     ]))->assertNotFound();

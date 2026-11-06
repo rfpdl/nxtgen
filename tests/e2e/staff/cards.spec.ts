@@ -31,7 +31,7 @@ test('a newly registered child has a free first card asked for; staff ask for a 
         const desk = await staff.newPage()
 
         // Issue 02: Amara's first card, asked for when she was registered.
-        await desk.goto(`/${CHURCH}/families?q=${surname}`)
+        await desk.goto(`/${CHURCH}/nxtgen/serve/families?q=${surname}`)
         await desk.getByTestId('family-row').getByRole('link').click()
         const amara = desk.getByTestId('family-child').filter({ hasText: 'Amara' })
         await expect(amara.getByTestId('card-request-step')).toHaveText('Card: Asked · free')

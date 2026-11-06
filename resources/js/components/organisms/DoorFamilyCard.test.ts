@@ -98,7 +98,7 @@ describe('DoorFamilyCard', () => {
         await button.trigger('click')
 
         expect(routerPost).toHaveBeenCalledWith(
-            'church.door.check-in:["ccf",5]',
+            'nxtgen.serve.door.check-in:["ccf",5]',
             { children: [{ child_id: 1, level: null, make_active: false }] },
             expect.objectContaining({ preserveScroll: true }),
         )
@@ -116,7 +116,7 @@ describe('DoorFamilyCard', () => {
         await button.trigger('click')
 
         expect(routerPost).toHaveBeenCalledWith(
-            'church.door.check-in:["ccf",5]',
+            'nxtgen.serve.door.check-in:["ccf",5]',
             { children: [{ child_id: 1, level: null, make_active: false }] },
             expect.objectContaining({ preserveScroll: true }),
         )
@@ -190,7 +190,7 @@ describe('DoorFamilyCard', () => {
 
         await wrapper.find('[data-testid="undo"]').trigger('click')
         expect(routerPut).toHaveBeenCalledWith(
-            'church.door.undo:["ccf",40]',
+            'nxtgen.serve.door.undo:["ccf",40]',
             {},
             expect.objectContaining({ preserveScroll: true }),
         )
@@ -210,7 +210,7 @@ describe('DoorFamilyCard', () => {
         const may = card(5, { ...cruz, can_open: true })
         await may.find('[data-testid="child-expand"]').trigger('click')
         expect(may.find('[data-testid="open-family"]').attributes('href')).toBe(
-            'church.families.show:["ccf",7]',
+            'nxtgen.serve.families.show:["ccf",7]',
         )
 
         const mayNot = card()

@@ -17,10 +17,10 @@ test('a church admin moves two children up — one graduates — then puts one b
     const row = (name: string) => page.getByTestId('moving-up-child').filter({ hasText: name })
     const moved = (name: string) => page.getByTestId('moved-child').filter({ hasText: name })
 
-    await page.goto(`/${CHURCH}/families`)
+    await page.goto(`/${CHURCH}/nxtgen/admin/families`)
     await navTo(page, 'Children')
     await page.getByTestId('children-moving-up').click()
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/moving-up$`))
+    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/admin/moving-up$`))
 
     // A retry after a failure part-way (CI retries once) first puts back what the failed try moved.
     for (const name of [mika, theo]) {

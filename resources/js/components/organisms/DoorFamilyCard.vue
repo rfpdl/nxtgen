@@ -7,6 +7,7 @@ import type { CheckInInput, ChildHealth, DoorFamily, LevelOption } from '@/types
 import { router } from '@inertiajs/vue3'
 import { computed, reactive, ref } from 'vue'
 import { route } from 'ziggy-js'
+import { areaRoute } from '@/composables/useArea'
 
 /**
  * A family found at the door (DECISIONS 2026-10-26): "Cruz family", the parent and their satellite, each child
@@ -54,9 +55,7 @@ const picks = reactive<Record<number, Pick>>(
 )
 const sending = ref(false)
 const familyHref = computed(() =>
-    props.family.can_open
-        ? route('church.families.show', [church.value.slug, props.family.id])
-        : null,
+    props.family.can_open ? areaRoute('families.show', [church.value.slug, props.family.id]) : null,
 )
 
 const ticked = computed(() => props.family.children.filter((c) => picks[c.id]?.ticked === true))
@@ -89,7 +88,7 @@ function checkIn(): void {
         })),
     }
     sending.value = true
-    router.post(route('church.door.check-in', [church.value.slug, props.classId]), payload, {
+    router.post(route('nxtgen.serve.door.check-in', [church.value.slug, props.classId]), payload, {
         preserveScroll: true,
         onSuccess: () => {
             for (const pick of Object.values(picks)) {
@@ -104,7 +103,7 @@ function checkIn(): void {
 
 function undo(checkInId: number): void {
     router.put(
-        route('church.door.undo', [church.value.slug, checkInId]),
+        route('nxtgen.serve.door.undo', [church.value.slug, checkInId]),
         {},
         { preserveScroll: true },
     )

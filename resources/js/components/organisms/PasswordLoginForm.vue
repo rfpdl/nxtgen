@@ -5,16 +5,14 @@ import SectionHeading from '@/components/atoms/SectionHeading.vue'
 import TextField from '@/components/atoms/TextField.vue'
 import type { PasswordLoginInput } from '@/types'
 import { useForm } from '@inertiajs/vue3'
-import { ref } from 'vue'
 
 /**
- * "Use a password instead" — the staff backup (plan D7) for a morning the email is slow. Collapsed by default:
- * the email link is how everyone signs in; parents have no password at all. On the kit (the Bold look): a Card with
- * two TextFields and one big button. Already open on /loginp.
+ * The staff backup password (plan D7) for a morning the email is slow — on its own page, /loginp, never on /login
+ * (Roy 2026-11-06): the email link is how everyone signs in; parents have no password at all. On the kit (the Bold
+ * look): a Card with two TextFields and one big button.
  */
-const props = defineProps<{ action: string; open?: boolean }>()
+const props = defineProps<{ action: string }>()
 
-const open = ref(props.open)
 const form = useForm<PasswordLoginInput>({ email: '', password: '' })
 
 function submit(): void {
@@ -23,16 +21,7 @@ function submit(): void {
 </script>
 
 <template>
-    <AppButton
-        v-if="!open"
-        variant="link"
-        class="self-start"
-        data-testid="use-password"
-        @click="open = true"
-    >
-        Volunteer with a password? Use it instead
-    </AppButton>
-    <Card v-else>
+    <Card>
         <form class="flex flex-col gap-4" @submit.prevent="submit">
             <SectionHeading>Volunteer password</SectionHeading>
             <TextField

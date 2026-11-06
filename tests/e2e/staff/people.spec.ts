@@ -18,7 +18,7 @@ test('an admin adds a Lifeshaper who then signs in from the email @story#76', as
 
     const admin = await browser.newContext({ storageState: sessionFile('churchAdmin') })
     const adminPage = await admin.newPage()
-    await adminPage.goto(`/${CHURCH}/people`)
+    await adminPage.goto(`/${CHURCH}/admin/people`)
     await adminPage.getByTestId('staff-name').fill('Nina New')
     await adminPage.getByTestId('staff-email').fill(email)
     await adminPage.getByTestId('staff-role').selectOption({ label: 'Lifeshaper · House Church' })
@@ -36,7 +36,7 @@ test('an admin adds a Lifeshaper who then signs in from the email @story#76', as
 
     // Nina, on her own device.
     await openEmailedLink(page, email, before)
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/families`))
+    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/serve/door`))
 
     // The admin takes the role away; Nina loses access on her next page.
     await adminPage
@@ -46,7 +46,7 @@ test('an admin adds a Lifeshaper who then signs in from the email @story#76', as
         .click()
     await expect(adminPage.getByTestId('flash-success')).toContainText('Role removed')
 
-    const gone = await page.goto(`/${CHURCH}/families`)
+    const gone = await page.goto(`/${CHURCH}/nxtgen/serve/door`)
     expect(gone?.status()).toBe(404)
 
     // Signing in again, with no family and no role left, she is told plainly there is nothing here yet.
@@ -70,7 +70,7 @@ test('a Lifeshaper who registers their own family can reach both, from one login
 
     const admin = await browser.newContext({ storageState: sessionFile('churchAdmin') })
     const adminPage = await admin.newPage()
-    await adminPage.goto(`/${CHURCH}/people`)
+    await adminPage.goto(`/${CHURCH}/admin/people`)
     await adminPage.getByTestId('staff-name').fill(`Ben ${surname}`)
     await adminPage.getByTestId('staff-email').fill(email)
     await adminPage.getByTestId('staff-role').selectOption({ label: 'Lifeshaper · CCF DXB' })
@@ -106,7 +106,7 @@ test('a Lifeshaper who registers their own family can reach both, from one login
     // …and "Switch" asks again.
     await (await menuOf(page)).getByTestId('switch-place').click()
     await page.getByTestId('landing-option').filter({ hasText: 'Serve' }).click()
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/families`))
+    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/serve/door`))
     await page.goto('/home')
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/families`))
+    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/serve/door`))
 })

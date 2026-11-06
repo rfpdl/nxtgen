@@ -81,9 +81,13 @@ export function useRollCall(slug: () => string) {
     function mark(checkInId: number, present: boolean, revision: number): void {
         pending[checkInId] = present
         waiting.set(checkInId, (waiting.get(checkInId) ?? 0) + 1)
-        enqueue(route('church.door.present', [slug(), checkInId]), { present, revision }, () => {
-            if (answered(waiting, checkInId)) delete pending[checkInId]
-        })
+        enqueue(
+            route('nxtgen.serve.door.present', [slug(), checkInId]),
+            { present, revision },
+            () => {
+                if (answered(waiting, checkInId)) delete pending[checkInId]
+            },
+        )
     }
 
     function confirm(classId: number, squadId: number, count: number): void {
@@ -91,7 +95,7 @@ export function useRollCall(slug: () => string) {
         counting.set(squadId, (counting.get(squadId) ?? 0) + 1)
         delete countErrors[squadId]
         enqueue(
-            route('church.door.head-count', [slug(), classId, squadId]),
+            route('nxtgen.serve.door.head-count', [slug(), classId, squadId]),
             { count },
             () => {
                 if (answered(counting, squadId)) delete confirming[squadId]

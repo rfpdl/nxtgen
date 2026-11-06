@@ -24,6 +24,7 @@ use App\Enums\ChildStatusEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
 use App\Foundation\Support\FamilyFormEnums;
+use App\Foundation\Support\RouteArea;
 use App\Services\Church\Features\BaseChurchFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -34,7 +35,8 @@ use Inertia\Response;
  * someone who may answer them (an admin who may edit the newer family), now that there is no Duplicates tab
  * (DECISIONS 2026-10-17, after first look); each side in the church-wide lite view. Each child's attendance, newest
  * first (slice 3) — for staff only. Each child's open Card request, and the reasons staff may pick for a new
- * card (name cards issue 01) — staff only too.
+ * card (name cards issue 01) — staff only too. The admin-only controls — correct the email, status, Level, the
+ * duplicates — only in the Admin area (`admin_controls`; Roy 2026-11-06, Astra): Serve shows the family without them.
  *
  * @extends BaseChurchFeature<Response>
  */
@@ -65,6 +67,8 @@ final class ShowFamilyFeature extends BaseChurchFeature
         $scope = $this->scope();
         $family = $this->scopedFamily($this->familyId, $scope->canSeeFamily(...));
         $canEdit = $scope->canEditFamily($family);
+        $inAdmin = RouteArea::of(request()) === 'nxtgen.admin';
+        $canSetLevel = $inAdmin && $scope->canSetLevel();
         $primary = $family->primaryGuardian;
 
         return Inertia::render('Church/Families/Show', [
@@ -78,7 +82,7 @@ final class ShowFamilyFeature extends BaseChurchFeature
             // Each child's open Card request (name cards): staff only, as attendance.
             'card_requests' => array_map(CardRequestData::fromModel(...), $this->run(new GetFamilyOpenCardRequestsJob(family: $family))),
             'notes' => $this->run(new GetFamilyNotesJob(family: $family)),
-            'duplicates' => $scope->canReviewDuplicates() ? array_values($this->run(new GetFamilyOpenDuplicatesJob(family: $family))
+            'duplicates' => $inAdmin && $scope->canReviewDuplicates() ? array_values($this->run(new GetFamilyOpenDuplicatesJob(family: $family))
                 ->filter(fn (DuplicateCandidate $p): bool => $scope->canEditFamily(DuplicateCandidate::familyOf($p->subject)))
                 ->map(fn (DuplicateCandidate $p): DuplicatePairData => DuplicatePairData::fromModel(
                     $p,
@@ -89,8 +93,10 @@ final class ShowFamilyFeature extends BaseChurchFeature
             'primary' => $canEdit && $primary !== null ? GuardianEditData::fromModel($primary) : null,
             'other_guardians' => $canEdit ? GuardianEditData::othersOf($family) : [],
             'satellites' => $canEdit ? $this->run(new GetSatellitesJob(church: $church)) : [],
-            'can_set_level' => $scope->canSetLevel(),
-            'levels' => $scope->canSetLevel() ? $this->run(new GetLevelsJob) : [],
+            // Correct the email, set a child's status: an editor, in Admin.
+            'admin_controls' => $inAdmin && $canEdit,
+            'can_set_level' => $canSetLevel,
+            'levels' => $canSetLevel ? $this->run(new GetLevelsJob) : [],
             'enums' => [...FamilyFormEnums::toFrontend(), 'child_status' => ChildStatusEnum::toFrontend(), 'card_reason' => CardReasonEnum::toFrontend(CardReasonEnum::staffChoices())],
         ]);
     }

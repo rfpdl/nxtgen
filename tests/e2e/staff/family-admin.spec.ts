@@ -23,7 +23,7 @@ test('register for a parent, resend, correct the email, set a status @story#47 @
     const surname = uniqueSurname('Garcia')
 
     // No Register tab: the Families list's button opens the search-first page.
-    await page.goto(`/${CHURCH}/families`)
+    await page.goto(`/${CHURCH}/nxtgen/admin/families`)
     for (const nav of await allNavigation(page))
         await expect(nav).not.toContainText('Register a family')
     await closeMenu(page)
@@ -43,12 +43,12 @@ test('register for a parent, resend, correct the email, set a status @story#47 @
     )
     await page.getByTestId('register-submit').click()
     // Straight to the new family's page, with the message.
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/families/\\d+$`))
+    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/admin/families/\\d+$`))
     await expect(page.getByRole('heading', { name: `Lea ${surname}` })).toBeVisible()
     await expect(page.getByTestId('flash-success')).toContainText('Registered.')
 
     // The "not confirmed" filter finds them; open the family.
-    await page.goto(`/${CHURCH}/families`)
+    await page.goto(`/${CHURCH}/nxtgen/admin/families`)
     await page.getByTestId('filter-unconfirmed').check()
     await expect(page).toHaveURL(/unconfirmed=1/)
     // Search narrows further, and the filters stay in the address.
@@ -118,7 +118,7 @@ test("adds, changes and removes a family's other parents and guardians @story#88
     page,
 }) => {
     const surname = uniqueSurname('Aquino')
-    await page.goto(`/${CHURCH}/families/new`)
+    await page.goto(`/${CHURCH}/nxtgen/admin/families/new`)
     await page.getByTestId('register-new').click()
     await fillFamily(
         page,
@@ -176,7 +176,7 @@ test("adds, changes and removes a family's other parents and guardians @story#88
 })
 
 test('downloads the families list as Excel — what the filters show @story#45', async ({ page }) => {
-    await page.goto(`/${CHURCH}/families?unconfirmed=1`)
+    await page.goto(`/${CHURCH}/nxtgen/admin/families?unconfirmed=1`)
     await expect(page.getByTestId('export')).toHaveAttribute('href', /unconfirmed=1/)
 
     const [download] = await Promise.all([

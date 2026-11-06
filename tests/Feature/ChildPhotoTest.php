@@ -135,7 +135,7 @@ describe('the consent history', function (): void {
 
         $request = fn () => $who === 'parent'
             ? actingAs($guardian)->put("/ccf/family/children/{$child->id}/photo-consent")
-            : actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->put("/ccf/children/{$child->id}/photo-consent");
+            : actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->put("/ccf/nxtgen/serve/children/{$child->id}/photo-consent");
 
         expect($request)->toThrow(RuntimeException::class, 'note store down');
         expect($child->fresh()?->photo_consent_at)->toBeNull();
@@ -160,7 +160,7 @@ describe('consent first, photo later', function (): void {
         expect($child->fresh()?->photo_consent_by)->toBe($guardian->id)->and($child->fresh()?->photo_path)->toBeNull();
 
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))
-            ->post("/ccf/children/{$child->id}/photo", ['photo' => photoFile()])->assertSessionHas('success');
+            ->post("/ccf/nxtgen/serve/children/{$child->id}/photo", ['photo' => photoFile()])->assertSessionHas('success');
         expect($child->fresh()?->photo_path)->not->toBeNull();
     });
 
@@ -182,7 +182,7 @@ describe('a Lifeshaper', function (): void {
         $child->forceFill(['photo_consent_at' => now(), 'photo_consent_by' => $guardian->id])->save();
 
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))
-            ->post("/ccf/children/{$child->id}/photo", ['photo' => photoFile()])->assertSessionHas('success');
+            ->post("/ccf/nxtgen/serve/children/{$child->id}/photo", ['photo' => photoFile()])->assertSessionHas('success');
 
         expect($child->fresh()?->photo_path)->not->toBeNull();
     });
@@ -191,7 +191,7 @@ describe('a Lifeshaper', function (): void {
         ['church' => $church, 'htc' => $htc, 'child' => $child] = photoFamily();
 
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))
-            ->post("/ccf/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true])
+            ->post("/ccf/nxtgen/serve/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true])
             ->assertSessionHas('error', 'The parent has not agreed to a photo yet. If they say yes to you, record it first.');
 
         expect($child->fresh()?->photo_path)->toBeNull()->and($child->fresh()?->photo_consent_at)->toBeNull();
@@ -203,8 +203,8 @@ describe('a Lifeshaper', function (): void {
         $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
         $lifeshaper->forceFill(['name' => 'Leo Lifeshaper'])->save();
 
-        actingAs($lifeshaper)->put("/ccf/children/{$child->id}/photo-consent")->assertSessionHas('success');
-        actingAs($lifeshaper)->post("/ccf/children/{$child->id}/photo", ['photo' => photoFile()])->assertSessionHas('success');
+        actingAs($lifeshaper)->put("/ccf/nxtgen/serve/children/{$child->id}/photo-consent")->assertSessionHas('success');
+        actingAs($lifeshaper)->post("/ccf/nxtgen/serve/children/{$child->id}/photo", ['photo' => photoFile()])->assertSessionHas('success');
 
         $child->refresh();
         expect($child->photo_consent_by)->toBe($lifeshaper->id)
@@ -217,7 +217,7 @@ describe('a Lifeshaper', function (): void {
         ['church' => $church, 'house' => $house, 'child' => $child] = photoFamily();
 
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($house)))
-            ->put("/ccf/children/{$child->id}/photo-consent")->assertNotFound();
+            ->put("/ccf/nxtgen/serve/children/{$child->id}/photo-consent")->assertNotFound();
 
         expect($child->fresh()?->photo_consent_at)->toBeNull();
     });
@@ -227,7 +227,7 @@ describe('a Lifeshaper', function (): void {
         $child->forceFill(['photo_consent_at' => now(), 'photo_consent_by' => $guardian->id])->save();
 
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($house)))
-            ->post("/ccf/children/{$child->id}/photo", ['photo' => photoFile()])->assertNotFound();
+            ->post("/ccf/nxtgen/serve/children/{$child->id}/photo", ['photo' => photoFile()])->assertNotFound();
     });
 });
 

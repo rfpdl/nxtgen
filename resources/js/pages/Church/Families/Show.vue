@@ -38,6 +38,7 @@ import type {
 import { Head, router, usePage } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import { route } from 'ziggy-js'
+import { areaRoute } from '@/composables/useArea'
 
 const props = defineProps<{
     family: FamilyAdmin
@@ -54,7 +55,9 @@ const props = defineProps<{
     primary: GuardianEdit | null
     other_guardians: GuardianEdit[]
     satellites: SatelliteOption[]
-    /** Church admins only (plan §3.2): correct a child's Level outside Moving-Up. */
+    /** Correct the email, set a child's status: an editor, in the Admin area only (Roy 2026-11-06). */
+    admin_controls: boolean
+    /** Church admins only (plan §3.2), in the Admin area: correct a child's Level outside Moving-Up. */
     can_set_level: boolean
     levels: LevelOption[]
 }>()
@@ -86,21 +89,21 @@ const lastLevelChild = ref<number | null>(null)
 function setLevel(childId: number, level: number): void {
     lastLevelChild.value = childId
     const body: UpdateChildLevelInput = { level }
-    router.put(route('church.children.level', [church.value.slug, childId]), body, {
+    router.put(route('nxtgen.admin.children.level', [church.value.slug, childId]), body, {
         preserveScroll: true,
     })
 }
 
 function answerDuplicate(pairId: number, status: Exclude<DuplicateStatus, 'open'>): void {
     const body: ResolveDuplicateInput = { status }
-    router.put(route('church.duplicates.resolve', [church.value.slug, pairId]), body, {
+    router.put(route('nxtgen.admin.duplicates.resolve', [church.value.slug, pairId]), body, {
         preserveScroll: true,
     })
 }
 
 function setStatus(childId: number, status: ChildStatus): void {
     const body: UpdateChildStatusInput = { status }
-    router.put(route('church.children.status', [church.value.slug, childId]), body, {
+    router.put(route('nxtgen.admin.children.status', [church.value.slug, childId]), body, {
         preserveScroll: true,
     })
 }
@@ -117,8 +120,8 @@ function setStatus(childId: number, status: ChildStatus): void {
             </p>
             <ResendLinkButton v-if="!family.email_confirmed" :family-id="family.id" />
             <CorrectEmailForm
-                v-if="family.can_edit && !family.email_confirmed"
-                :action="route('church.families.email', [church.slug, family.id])"
+                v-if="admin_controls && !family.email_confirmed"
+                :action="route('nxtgen.admin.families.email', [church.slug, family.id])"
             />
         </Card>
         <section v-if="duplicates.length > 0" class="flex flex-col gap-3">
@@ -142,7 +145,7 @@ function setStatus(childId: number, status: ChildStatus): void {
             </RowList>
             <FamilyDetailsForm
                 v-if="details && primary"
-                :action="route('church.families.update', [church.slug, family.id])"
+                :action="areaRoute('families.update', [church.slug, family.id])"
                 :details="details"
                 :guardian="primary"
                 :others="other_guardians"
@@ -155,11 +158,11 @@ function setStatus(childId: number, status: ChildStatus): void {
                 <ChildAttendanceList :check-ins="checkInsOf(child.id)" />
                 <ChildCardRequest
                     :request="cardRequestOf(child.id)"
-                    :action="route('church.card-requests.store', [church.slug, child.id])"
+                    :action="areaRoute('card-requests.store', [church.slug, child.id])"
                 />
                 <ChildAdminControls
                     :child="child"
-                    :can-set-status="family.can_edit"
+                    :can-set-status="admin_controls"
                     :can-set-level="can_set_level"
                     :levels="levels"
                     :level-error="lastLevelChild === child.id ? page.props.errors.level : undefined"
@@ -169,19 +172,17 @@ function setStatus(childId: number, status: ChildStatus): void {
                 <ChildPhotoForm
                     :child="child"
                     who="staff"
-                    :action="route('church.children.photo', [church.slug, child.id])"
-                    :consent-action="
-                        route('church.children.photo-consent', [church.slug, child.id])
-                    "
+                    :action="areaRoute('children.photo', [church.slug, child.id])"
+                    :consent-action="areaRoute('children.photo-consent', [church.slug, child.id])"
                 />
                 <EditChildForm
                     v-if="family.can_edit"
-                    :action="route('church.children.update', [church.slug, child.id])"
+                    :action="areaRoute('children.update', [church.slug, child.id])"
                     :child="child"
                 />
             </FamilyChildCard>
             <AddChildForm
-                :action="route('church.families.children.store', [church.slug, family.id])"
+                :action="areaRoute('families.children.store', [church.slug, family.id])"
             />
         </section>
         <section v-if="notes.length > 0" class="flex flex-col gap-3" data-testid="history">

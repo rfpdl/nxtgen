@@ -115,7 +115,7 @@ describe('signing in with it', function (): void {
         assertGuest();
     });
 
-    it('offers the password form on the sign-in page @story#8', function (): void {
+    it('opens the sign-in page, which offers the emailed link — the password form is on /loginp only @story#8', function (): void {
         get('/login')->assertInertia(fn (AssertableInertia $p) => $p->component('Auth/Login'));
     });
 });

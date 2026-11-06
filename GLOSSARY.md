@@ -14,8 +14,19 @@ One place where a Church meets (e.g. CCF Dxb). Each Satellite keeps its own Squa
 _Avoid_: Branch, campus, site
 
 **Ministry**:
-A part of the Church with its own people and classes (e.g. NxtGen kids). Planned: today there is only one.
+A part of the Church with its own people and classes (e.g. NxtGen kids). Planned: today there is only one. Its
+pages sit under its name in the address: `/ccf/nxtgen/…`.
 _Avoid_: Department, program
+
+**Serve** (area):
+The everyday pages for everyone who serves — the door, Who's in, Families, the QR poster (`/ccf/nxtgen/serve/…`).
+Where anyone without an Admin Role lands.
+_Avoid_: client, front desk, app
+
+**Admin** (area):
+The pages for managing — families, children, classes, Attendance, Cards, Moving-Up (`/ccf/nxtgen/admin/…`), and
+the church-wide People (`/ccf/admin/…`). Only for someone with an Admin Role.
+_Avoid_: back office, dashboard
 
 ## Families
 

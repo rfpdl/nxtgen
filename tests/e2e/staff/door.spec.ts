@@ -23,7 +23,7 @@ function guardian(project: string): string {
 }
 
 async function openDoor(page: Page): Promise<void> {
-    await page.goto(`/${CHURCH}/door`)
+    await page.goto(`/${CHURCH}/nxtgen/serve/door`)
     // The class picker is a row of chips, a radio group (the Bold look): pick 1PM.
     const chip = page.getByTestId('door-class').getByRole('radio', { name: CLASSES.onePm.name })
     await chip.click()

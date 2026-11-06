@@ -45,7 +45,7 @@ final class AddChildFeature extends BaseChurchFeature
         $message = "{$child->displayName()} is added to the family.";
 
         return ($this->scope()->canSeeFamily($family)
-            ? redirect()->route('church.families.show', [$this->church(), $family])
+            ? $this->toArea('families.show', [$this->church(), $family])
             : back()
         )->with('success', $message);
     }

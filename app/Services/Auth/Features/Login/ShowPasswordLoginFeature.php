@@ -10,8 +10,8 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * /loginp (Roy, 2026-11-06): the backup password on its own page, already open — the same form and the same rule
- * (only someone who serves) as the one folded under the email link on /login.
+ * /loginp (Roy, 2026-11-06): the backup password's only page — /login offers the emailed link alone. Only someone
+ * who serves signs in with it (PasswordLoginFeature).
  *
  * @extends BaseAuthFeature<Response>
  */

@@ -93,7 +93,7 @@ describe('the door page', function (): void {
         checkedIn($session, $amara);
         checkedIn($session, $ben, ['undone_at' => now()]);
 
-        actingAs($lifeshaper)->get('/ccf/door')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($lifeshaper)->get('/ccf/nxtgen/serve/door')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
             ->component('Church/Door/Index')
             ->where('today', 'Sat 31 Oct')
             ->has('classes', 2)
@@ -109,7 +109,7 @@ describe('the door page', function (): void {
     it('gives a church-wide Role every satellite\'s classes for today @story#103', function (): void {
         ['church' => $church] = doorChurch();
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get('/ccf/door')->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get('/ccf/nxtgen/serve/door')->assertInertia(fn (AssertableInertia $page) => $page
             ->has('classes', 3)
             ->where('classes.0.satellite', 'CCF DXB')
             ->where('classes.2.name', '10AM'));
@@ -123,7 +123,7 @@ describe('the door page', function (): void {
         checkedIn($session, $ben, ['undone_at' => now()]);
         checkedIn(sessionOf(Schedule::query()->where('name', '7PM')->sole()), $ben);
 
-        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}")->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($lifeshaper)->get("/ccf/nxtgen/serve/door?class={$onePm->id}")->assertInertia(fn (AssertableInertia $page) => $page
             ->where('checked_in', [
                 ['id' => $beaIn->id, 'nickname' => 'Bea', 'squad' => 'Level 3 Girls', 'level' => ['number' => 3, 'name' => 'Level 3'], 'checked_in_at' => '08:55'],
                 ['id' => $amaraIn->id, 'nickname' => 'Amara', 'squad' => 'Level 2 Girls', 'level' => ['number' => 2, 'name' => 'Level 2'], 'checked_in_at' => '08:40'],
@@ -137,7 +137,7 @@ describe('the door page', function (): void {
         $count = function () use ($lifeshaper, $onePm): int {
             DB::flushQueryLog();
             DB::enableQueryLog();
-            actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=Cruz")->assertOk();
+            actingAs($lifeshaper)->get("/ccf/nxtgen/serve/door?class={$onePm->id}&q=Cruz")->assertOk();
             DB::disableQueryLog();
 
             return count(DB::getQueryLog());
@@ -156,7 +156,7 @@ describe('the door page', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'amara' => $amara, 'ben' => $ben, 'lola' => $lola] = doorChurch();
         $in = checkedIn(sessionOf($onePm), $ben);
 
-        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=Maria")->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($lifeshaper)->get("/ccf/nxtgen/serve/door?class={$onePm->id}&q=Maria")->assertInertia(fn (AssertableInertia $page) => $page
             ->where('query', 'Maria')
             ->has('families', 1)
             ->where('families.0.name', 'Cruz family')
@@ -182,7 +182,7 @@ describe('the door page', function (): void {
     it('finds a visiting family from another satellite, in this satellite\'s Squads @story#103', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper] = doorChurch();
 
-        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=Santos")->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($lifeshaper)->get("/ccf/nxtgen/serve/door?class={$onePm->id}&q=Santos")->assertInertia(fn (AssertableInertia $page) => $page
             ->where('families.0.satellite', 'House Church')
             ->where('families.0.children.0.nickname', 'Bea')
             ->where('families.0.children.0.squad', 'Level 3 Girls'));
@@ -191,23 +191,23 @@ describe('the door page', function (): void {
     it('says which found families the viewer may open — their own satellite\'s, not a visitor\'s @story#103', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'church' => $church] = doorChurch();
 
-        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=Cruz")->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($lifeshaper)->get("/ccf/nxtgen/serve/door?class={$onePm->id}&q=Cruz")->assertInertia(fn (AssertableInertia $page) => $page
             ->where('families.0.name', 'Cruz family')
             ->where('families.0.can_open', true));
-        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=Santos")->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($lifeshaper)->get("/ccf/nxtgen/serve/door?class={$onePm->id}&q=Santos")->assertInertia(fn (AssertableInertia $page) => $page
             ->where('families.0.satellite', 'House Church')
             ->where('families.0.can_open', false));
-        actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get("/ccf/door?class={$onePm->id}&q=Santos")
+        actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get("/ccf/nxtgen/serve/door?class={$onePm->id}&q=Santos")
             ->assertInertia(fn (AssertableInertia $page) => $page->where('families.0.can_open', true));
     });
 
     it('shows a child\'s health details only when their row is opened @story#105', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'amara' => $amara] = doorChurch();
 
-        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=Maria")
+        actingAs($lifeshaper)->get("/ccf/nxtgen/serve/door?class={$onePm->id}&q=Maria")
             ->assertInertia(fn (AssertableInertia $page) => $page->missing('health'));
 
-        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=Maria&health={$amara->id}", [
+        actingAs($lifeshaper)->get("/ccf/nxtgen/serve/door?class={$onePm->id}&q=Maria&health={$amara->id}", [
             'X-Inertia' => 'true',
             'X-Inertia-Version' => (string) app(HandleInertiaRequests::class)->version(request()),
             'X-Inertia-Partial-Component' => 'Church/Door/Index',
@@ -221,7 +221,7 @@ describe('the door page', function (): void {
         ['lifeshaper' => $lifeshaper] = doorChurch();
         travelTo(CarbonImmutable::parse('2026-11-02 09:00:00', 'Asia/Dubai'));   // a Monday
 
-        actingAs($lifeshaper)->get('/ccf/door')->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($lifeshaper)->get('/ccf/nxtgen/serve/door')->assertInertia(fn (AssertableInertia $page) => $page
             ->where('today', 'Mon 2 Nov')->where('classes', [])->where('class_id', null)->where('checked_in', []));
     });
 
@@ -232,14 +232,14 @@ describe('the door page', function (): void {
         $houseClass = Schedule::query()->where('satellite_id', $house->id)->sole();
 
         foreach ([$houseClass, $theirs, $sunday] as $class) {
-            actingAs($lifeshaper)->get("/ccf/door?class={$class->id}")->assertNotFound();
+            actingAs($lifeshaper)->get("/ccf/nxtgen/serve/door?class={$class->id}")->assertNotFound();
         }
     });
 
     it('never sends a photo, a phone number or a health detail with the search @story#104', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper] = doorChurch();
 
-        $json = (string) json_encode(actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=Maria")->viewData('page'));
+        $json = (string) json_encode(actingAs($lifeshaper)->get("/ccf/nxtgen/serve/door?class={$onePm->id}&q=Maria")->viewData('page'));
 
         expect(preg_match('/Peanuts|Asthma|0501234567|photo/', $json))->toBe(0);
     });
@@ -248,9 +248,9 @@ describe('the door page', function (): void {
         doorChurch();
         $parent = User::query()->whereHas('guardians')->firstOrFail();
 
-        actingAs($parent)->get('/ccf/door')->assertNotFound();
+        actingAs($parent)->get('/ccf/nxtgen/serve/door')->assertNotFound();
         auth()->logout();
-        get('/ccf/door')->assertRedirect('/login');
+        get('/ccf/nxtgen/serve/door')->assertRedirect('/login');
     });
 });
 
@@ -259,7 +259,7 @@ describe('a name card at the door', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'amara' => $amara] = doorChurch();
         $amara->forceFill(['middle_name' => 'Joy'])->save();
 
-        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&{$query}")->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($lifeshaper)->get("/ccf/nxtgen/serve/door?class={$onePm->id}&{$query}")->assertInertia(fn (AssertableInertia $page) => $page
             ->has('families', 1)
             ->where('families.0.primary_name', 'Maria Cruz')
             ->has('families.0.children', 4)
@@ -275,7 +275,7 @@ describe('a name card at the door', function (): void {
         $amara->forceFill(['middle_name' => 'Joy'])->save();
         childOf(familyAt($dxb), ['first_name' => 'Amara', 'middle_name' => 'Joy', 'last_name' => 'Cruz', 'level' => 2]);
 
-        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=AMARAJOYCRUZ")->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($lifeshaper)->get("/ccf/nxtgen/serve/door?class={$onePm->id}&q=AMARAJOYCRUZ")->assertInertia(fn (AssertableInertia $page) => $page
             ->has('families', 2)
             ->where('scan.match', 'several')
             ->where('scan.child_ids', [])
@@ -286,7 +286,7 @@ describe('a name card at the door', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper] = doorChurch();
 
         // Amara Cruz has no middle name in the app; her card has one.
-        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=AMARAJOYCRUZ&card=1")->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($lifeshaper)->get("/ccf/nxtgen/serve/door?class={$onePm->id}&q=AMARAJOYCRUZ&card=1")->assertInertia(fn (AssertableInertia $page) => $page
             ->has('families', 1)
             ->where('scan.match', 'close')
             ->where('scan.child_ids', [])
@@ -296,22 +296,22 @@ describe('a name card at the door', function (): void {
     it('says when no child matches a card — a camera read finds nothing else; a typed word is an ordinary search, saying so only when nothing is found @story#129', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper] = doorChurch();
 
-        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=NOBODYHEREATALL&card=1")->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($lifeshaper)->get("/ccf/nxtgen/serve/door?class={$onePm->id}&q=NOBODYHEREATALL&card=1")->assertInertia(fn (AssertableInertia $page) => $page
             ->where('families', [])
             ->where('scan', ['code' => 'NOBODYHEREATALL', 'match' => 'none', 'child_ids' => [], 'note' => 'No child matches this card: NOBODYHEREATALL']));
         // Typed in capitals, it is a surname: the families, and no card note.
-        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=SANTOS")->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($lifeshaper)->get("/ccf/nxtgen/serve/door?class={$onePm->id}&q=SANTOS")->assertInertia(fn (AssertableInertia $page) => $page
             ->has('families', 1)
             ->where('families.0.primary_name', 'Grace Santos')
             ->where('scan', null));
         // Typed, matching no card and no family: then it says so.
-        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=NOBODYHEREATALL")->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($lifeshaper)->get("/ccf/nxtgen/serve/door?class={$onePm->id}&q=NOBODYHEREATALL")->assertInertia(fn (AssertableInertia $page) => $page
             ->where('families', [])
             ->where('scan.note', 'No child matches this card: NOBODYHEREATALL'));
-        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=Maria Cruz")->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($lifeshaper)->get("/ccf/nxtgen/serve/door?class={$onePm->id}&q=Maria Cruz")->assertInertia(fn (AssertableInertia $page) => $page
             ->has('families', 1)
             ->where('scan', null));
-        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=&card=1")->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($lifeshaper)->get("/ccf/nxtgen/serve/door?class={$onePm->id}&q=&card=1")->assertInertia(fn (AssertableInertia $page) => $page
             ->where('scan', null));
     });
 
@@ -319,7 +319,7 @@ describe('a name card at the door', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper] = doorChurch();
         childOf(familyAt(Satellite::factory()->for(church(['slug' => 'other']))->create()), ['first_name' => 'Zed', 'middle_name' => null, 'last_name' => 'Elsewhere', 'level' => 1]);
 
-        actingAs($lifeshaper)->get("/ccf/door?class={$onePm->id}&q=ZEDELSEWHERE&card=1")->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($lifeshaper)->get("/ccf/nxtgen/serve/door?class={$onePm->id}&q=ZEDELSEWHERE&card=1")->assertInertia(fn (AssertableInertia $page) => $page
             ->where('families', [])
             ->where('scan.match', 'none'));
     });
@@ -329,7 +329,7 @@ describe('checking children in', function (): void {
     it('checks a family\'s children in to today\'s class, making the Session, each in this satellite\'s Squad @story#106', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'amara' => $amara, 'ben' => $ben] = doorChurch();
 
-        actingAs($lifeshaper)->post("/ccf/classes/{$onePm->id}/check-ins", ticked([[$amara], [$ben]]))
+        actingAs($lifeshaper)->post("/ccf/nxtgen/serve/classes/{$onePm->id}/check-ins", ticked([[$amara], [$ben]]))
             ->assertRedirect()->assertSessionHas('success', 'Checked in Amara and Ben.')->assertSessionMissing('error');
 
         $session = Session::query()->sole();
@@ -341,7 +341,7 @@ describe('checking children in', function (): void {
     it('checks a visiting child from another satellite in, in THIS satellite\'s Squad @story#106', function (): void {
         ['dxb' => $dxb, 'onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'visitor' => $visitor] = doorChurch();
 
-        actingAs($lifeshaper)->post("/ccf/classes/{$onePm->id}/check-ins", ticked([[$visitor]]))->assertSessionHas('success', 'Checked in Bea.');
+        actingAs($lifeshaper)->post("/ccf/nxtgen/serve/classes/{$onePm->id}/check-ins", ticked([[$visitor]]))->assertSessionHas('success', 'Checked in Bea.');
 
         $in = CheckIn::query()->with('squad')->sole();
         expect([$in->squad->satellite_id, $in->squad->name()])->toBe([$dxb->id, 'Level 3 Girls']);
@@ -351,7 +351,7 @@ describe('checking children in', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'amara' => $amara] = doorChurch();
         checkedIn(sessionOf($onePm), $amara);
 
-        actingAs($lifeshaper)->post("/ccf/classes/{$onePm->id}/check-ins", ticked([[$amara]]))->assertSessionHas('success', 'Amara was already checked in.');
+        actingAs($lifeshaper)->post("/ccf/nxtgen/serve/classes/{$onePm->id}/check-ins", ticked([[$amara]]))->assertSessionHas('success', 'Amara was already checked in.');
 
         expect(CheckIn::query()->count())->toBe(1);
     });
@@ -359,7 +359,7 @@ describe('checking children in', function (): void {
     it('makes an inactive child active again, noted, and checks them in @story#107', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'noah' => $noah] = doorChurch();
 
-        actingAs($lifeshaper)->post("/ccf/classes/{$onePm->id}/check-ins", ticked([[$noah, null, true]]))->assertSessionHas('success', 'Checked in Noah.');
+        actingAs($lifeshaper)->post("/ccf/nxtgen/serve/classes/{$onePm->id}/check-ins", ticked([[$noah, null, true]]))->assertSessionHas('success', 'Checked in Noah.');
 
         expect($noah->fresh()?->status)->toBe(ChildStatusEnum::Active)
             ->and(Note::query()->where('noteable_id', $noah->id)->sole()->body)->toBe('Noah: status changed from Inactive to Active.')
@@ -369,7 +369,7 @@ describe('checking children in', function (): void {
     it('saves the Level picked at the door for a child with none, notes it, and checks them in @story#107', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'lola' => $lola] = doorChurch();
 
-        actingAs($lifeshaper)->post("/ccf/classes/{$onePm->id}/check-ins", ticked([[$lola, 3]]))->assertSessionHas('success', 'Checked in Lola.');
+        actingAs($lifeshaper)->post("/ccf/nxtgen/serve/classes/{$onePm->id}/check-ins", ticked([[$lola, 3]]))->assertSessionHas('success', 'Checked in Lola.');
 
         $child = $lola->fresh();
         expect([$child?->level, $child?->level_set_by])->toBe([3, $lifeshaper->id])
@@ -380,7 +380,7 @@ describe('checking children in', function (): void {
     it('never changes a Level the child already has at the door @story#107', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'amara' => $amara] = doorChurch();
 
-        actingAs($lifeshaper)->post("/ccf/classes/{$onePm->id}/check-ins", ticked([[$amara, 4]]))->assertSessionHas('success');
+        actingAs($lifeshaper)->post("/ccf/nxtgen/serve/classes/{$onePm->id}/check-ins", ticked([[$amara, 4]]))->assertSessionHas('success');
 
         expect($amara->fresh()?->level)->toBe(2)->and(Note::query()->count())->toBe(0);
     });
@@ -389,7 +389,7 @@ describe('checking children in', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'amara' => $amara, 'noah' => $noah, 'lola' => $lola, 'ben' => $ben] = doorChurch();
         $ben->forceFill(['status' => ChildStatusEnum::Graduated])->save();
 
-        actingAs($lifeshaper)->post("/ccf/classes/{$onePm->id}/check-ins", ticked([[$amara], [$ben, null, true], [$noah], [$lola]]))
+        actingAs($lifeshaper)->post("/ccf/nxtgen/serve/classes/{$onePm->id}/check-ins", ticked([[$amara], [$ben, null, true], [$noah], [$lola]]))
             ->assertSessionHas('success', 'Checked in Amara.')
             ->assertSessionHas('error', 'Not checked in: Ben has Graduated from NxtGen; Noah is inactive — make them active again first; Lola needs a Level first.');
 
@@ -404,9 +404,9 @@ describe('checking children in', function (): void {
         $sunday = Schedule::query()->where('name', 'Sunday school')->sole();
         $otherChild = childOf(familyAt(Satellite::factory()->for(church())->create()), ['level' => 1]);
 
-        actingAs($lifeshaper)->post("/ccf/classes/{$houseClass->id}/check-ins", ticked([[$amara]]))->assertNotFound();
-        actingAs($lifeshaper)->post("/ccf/classes/{$sunday->id}/check-ins", ticked([[$amara]]))->assertNotFound();
-        actingAs($lifeshaper)->post("/ccf/classes/{$onePm->id}/check-ins", ticked([[$amara], [$otherChild]]))->assertNotFound();
+        actingAs($lifeshaper)->post("/ccf/nxtgen/serve/classes/{$houseClass->id}/check-ins", ticked([[$amara]]))->assertNotFound();
+        actingAs($lifeshaper)->post("/ccf/nxtgen/serve/classes/{$sunday->id}/check-ins", ticked([[$amara]]))->assertNotFound();
+        actingAs($lifeshaper)->post("/ccf/nxtgen/serve/classes/{$onePm->id}/check-ins", ticked([[$amara], [$otherChild]]))->assertNotFound();
 
         expect(CheckIn::query()->count())->toBe(0)->and(Session::query()->count())->toBe(0);
     });
@@ -414,8 +414,8 @@ describe('checking children in', function (): void {
     it('needs at least one ticked child, and a Level from the chart @story#109', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'lola' => $lola] = doorChurch();
 
-        actingAs($lifeshaper)->post("/ccf/classes/{$onePm->id}/check-ins", ['children' => []])->assertSessionHasErrors('children');
-        actingAs($lifeshaper)->post("/ccf/classes/{$onePm->id}/check-ins", ticked([[$lola, 9]]))->assertSessionHasErrors('children.0.level');
+        actingAs($lifeshaper)->post("/ccf/nxtgen/serve/classes/{$onePm->id}/check-ins", ['children' => []])->assertSessionHasErrors('children');
+        actingAs($lifeshaper)->post("/ccf/nxtgen/serve/classes/{$onePm->id}/check-ins", ticked([[$lola, 9]]))->assertSessionHasErrors('children.0.level');
     });
 });
 
@@ -424,10 +424,10 @@ describe('undoing a Check-in', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'ben' => $ben] = doorChurch();
         $in = checkedIn(sessionOf($onePm), $ben);
 
-        actingAs($lifeshaper)->put("/ccf/check-ins/{$in->id}/undo")->assertRedirect()->assertSessionHas('success', 'Undid Ben\'s check-in.');
+        actingAs($lifeshaper)->put("/ccf/nxtgen/serve/check-ins/{$in->id}/undo")->assertRedirect()->assertSessionHas('success', 'Undid Ben\'s check-in.');
         expect([$in->fresh()?->isIn(), $in->fresh()?->undone_by])->toBe([false, $lifeshaper->id]);
 
-        actingAs($lifeshaper)->post("/ccf/classes/{$onePm->id}/check-ins", ticked([[$ben]]))->assertSessionHas('success', 'Checked in Ben.');
+        actingAs($lifeshaper)->post("/ccf/nxtgen/serve/classes/{$onePm->id}/check-ins", ticked([[$ben]]))->assertSessionHas('success', 'Checked in Ben.');
         expect(CheckIn::query()->sole()->isIn())->toBeTrue();
     });
 
@@ -436,9 +436,9 @@ describe('undoing a Check-in', function (): void {
         $atHouse = checkedIn(sessionOf(Schedule::query()->where('satellite_id', $house->id)->sole()), $visitor);
         $lastWeek = checkedIn(sessionOf($onePm, '2026-10-24'), $amara);
 
-        actingAs($lifeshaper)->put("/ccf/check-ins/{$atHouse->id}/undo")->assertNotFound();
-        actingAs($lifeshaper)->put("/ccf/check-ins/{$lastWeek->id}/undo")->assertNotFound();
-        actingAs(staffMember(RoleEnum::Admin, atChurch(church(['slug' => 'other']))))->put("/other/check-ins/{$atHouse->id}/undo")->assertNotFound();
+        actingAs($lifeshaper)->put("/ccf/nxtgen/serve/check-ins/{$atHouse->id}/undo")->assertNotFound();
+        actingAs($lifeshaper)->put("/ccf/nxtgen/serve/check-ins/{$lastWeek->id}/undo")->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atChurch(church(['slug' => 'other']))))->put("/other/nxtgen/serve/check-ins/{$atHouse->id}/undo")->assertNotFound();
 
         expect([$atHouse->fresh()?->isIn(), $lastWeek->fresh()?->isIn()])->toBe([true, true]);
     });

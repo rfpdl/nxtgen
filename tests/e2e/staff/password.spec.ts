@@ -11,7 +11,7 @@ import { CHURCH, volunteer } from '../support/world'
  */
 test.use({ storageState: { cookies: [], origins: [] } })
 
-test('a staff member sets a backup password, signs in with it on /loginp, and clears the device on /loginc @story#16 @story#21 @story#162 @story#163', async ({
+test('a staff member sets a backup password, signs in with it on /loginp — never offered on /login — and clears the device on /loginc @story#8 @story#16 @story#21 @story#162 @story#163', async ({
     page,
     browser,
 }, info) => {
@@ -19,7 +19,7 @@ test('a staff member sets a backup password, signs in with it on /loginp, and cl
     const password = `church-morning-${Date.now()}`
 
     await signInByEmail(page, email)
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/families`))
+    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/serve/door`))
     await (await menuOf(page)).getByTestId('backup-password').click()
     await page.getByTestId('new-password').fill(password)
     await page.getByTestId('new-password-confirm').fill(password)
@@ -28,26 +28,27 @@ test('a staff member sets a backup password, signs in with it on /loginp, and cl
 
     const other = await browser.newContext({ storageState: { cookies: [], origins: [] } })
     const phone = await other.newPage()
+    // /login is the email link alone (Roy 2026-11-06); the password is on /loginp.
     await phone.goto('/login')
-    await phone.getByTestId('use-password').click()
+    await expect(phone.getByTestId('login-email')).toBeVisible()
+    await expect(phone.getByTestId('password-password')).toHaveCount(0)
+
+    await phone.goto('/loginp')
     await phone.getByTestId('password-email').fill(email)
     await phone.getByTestId('password-password').fill('not-the-password')
     await phone.getByTestId('password-submit').click()
     await expect(phone.getByText('That email and password do not match')).toBeVisible()
 
-    await phone.goto('/loginp')
-    await expect(phone.getByTestId('use-password')).toHaveCount(0)
-    await phone.getByTestId('password-email').fill(email)
     await phone.getByTestId('password-password').fill(password)
     await phone.getByTestId('password-submit').click()
-    await expect(phone).toHaveURL(new RegExp(`/${CHURCH}/families`))
+    await expect(phone).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/serve/door`))
 
     await phone.goto('/loginc')
     await expect(phone).toHaveURL(/\/login$/)
     await expect(phone.getByTestId('flash-success')).toHaveText(
         'Signed out. This device is cleared.',
     )
-    await phone.goto(`/${CHURCH}/families`)
+    await phone.goto(`/${CHURCH}/nxtgen/serve/door`)
     await expect(phone).toHaveURL(/\/login$/)
     await other.close()
 })

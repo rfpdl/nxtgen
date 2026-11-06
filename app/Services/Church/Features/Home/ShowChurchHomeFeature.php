@@ -11,20 +11,23 @@ use App\Services\Church\Features\BaseChurchFeature;
 use Illuminate\Http\RedirectResponse;
 
 /**
- * Release 1's dashboard is the registration list.
+ * The church's address opens the person's area (Roy 2026-11-06): an admin's is NxtGen Admin (the families list),
+ * everyone else's NxtGen Serve (the door).
  *
  * @extends BaseChurchFeature<RedirectResponse>
  */
 #[UserStory(
     title: 'Open the church home',
     persona: 'staff',
-    happyPaths: ['story#42' => 'The church home opens on the families list'],
+    happyPaths: ['story#42' => 'The church home opens an admin\'s Admin area and everyone else\'s Serve area'],
 )]
 #[AccessRow(AccessRowEnum::StaffArea)]
 final class ShowChurchHomeFeature extends BaseChurchFeature
 {
     public function handle(): RedirectResponse
     {
-        return redirect()->route('church.families.index', $this->church());
+        return $this->scope()->canUseAdmin()
+            ? redirect()->route('nxtgen.admin.families.index', $this->church())
+            : redirect()->route('nxtgen.serve.door.show', $this->church());
     }
 }

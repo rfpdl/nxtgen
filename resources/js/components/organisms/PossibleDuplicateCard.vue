@@ -4,7 +4,7 @@ import Card from '@/components/atoms/Card.vue'
 import FamilySearchResultCard from '@/components/molecules/FamilySearchResultCard.vue'
 import { useChurch } from '@/composables/useChurch'
 import type { DuplicatePair, DuplicateStatus } from '@/types'
-import { route } from 'ziggy-js'
+import { areaRoute } from '@/composables/useArea'
 
 /**
  * One possible duplicate on a family's page (plan §6): the newer record's family beside the earlier one — a pair is
@@ -18,7 +18,7 @@ const emit = defineEmits<{ answer: [pairId: number, status: Exclude<DuplicateSta
 
 const church = useChurch()
 
-const familyHref = (id: number): string => route('church.families.show', [church.value.slug, id])
+const familyHref = (id: number): string => areaRoute('families.show', [church.value.slug, id])
 </script>
 
 <template>

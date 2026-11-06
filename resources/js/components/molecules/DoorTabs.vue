@@ -18,12 +18,12 @@ const tabs = computed(() => {
         {
             key: 'check-in',
             label: 'Check in',
-            href: route('church.door.show', { church: church.value.slug, ...query }),
+            href: route('nxtgen.serve.door.show', { church: church.value.slug, ...query }),
         },
         {
             key: 'whos-in',
             label: "Who's in",
-            href: route('church.door.whos-in', { church: church.value.slug, ...query }),
+            href: route('nxtgen.serve.door.whos-in', { church: church.value.slug, ...query }),
         },
     ]
 })

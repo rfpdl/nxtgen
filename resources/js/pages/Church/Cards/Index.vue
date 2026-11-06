@@ -45,7 +45,10 @@ const tabs = computed(() =>
     options.value.map((t) => ({
         key: t.value,
         label: t.label,
-        href: route('church.card-requests.index', { church: church.value.slug, ...where(t.value) }),
+        href: route('nxtgen.admin.card-requests.index', {
+            church: church.value.slug,
+            ...where(t.value),
+        }),
     })),
 )
 
@@ -66,7 +69,7 @@ const search = ref(props.q ?? '')
 function find(): void {
     const q = search.value.trim()
     router.get(
-        route('church.card-requests.index', church.value.slug),
+        route('nxtgen.admin.card-requests.index', church.value.slug),
         q ? { tab: props.tab, q } : { tab: props.tab },
     )
 }
@@ -74,13 +77,13 @@ function find(): void {
 /** "Make print list": the approved cards this tab shows — its search — kept as a list (name cards 04). */
 function makePrintList(): void {
     const body: MakePrintListInput = { q: props.q }
-    router.post(route('church.card-requests.print-lists.store', church.value.slug), body, {
+    router.post(route('nxtgen.admin.card-requests.print-lists.store', church.value.slug), body, {
         preserveScroll: true,
     })
 }
 
 function goTo(page: number): void {
-    router.get(route('church.card-requests.index', church.value.slug), {
+    router.get(route('nxtgen.admin.card-requests.index', church.value.slug), {
         ...where(props.tab),
         page,
     })

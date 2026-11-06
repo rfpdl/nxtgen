@@ -54,7 +54,7 @@ describe('the Cards page', function (): void {
         CardRequest::factory()->for(childOf(familyAt($dxb)))->create(['step' => CardStepEnum::Approved]);
         CardRequest::factory()->for(childOf(familyAt($house)))->create();
 
-        actingAs($admin)->get('/ccf/card-requests')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
+        actingAs($admin)->get('/ccf/nxtgen/admin/card-requests')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
             ->component('Church/Cards/Index')
             ->where('tab', 'asked')
             ->where('pagination.total', 1)
@@ -65,8 +65,8 @@ describe('the Cards page', function (): void {
             ->where('requests.0.fee_label', 'AED 10 · not paid')
             ->where('requests.0.moves', ['mark_paid', 'refuse'])
             ->where('enums.card_tab.3.label', 'Given or refused'));
-        actingAs($admin)->get('/ccf/card-requests?tab=approved')->assertInertia(fn (AssertableInertia $p) => $p->where('tab', 'approved')->where('pagination.total', 1));
-        actingAs($admin)->get('/ccf/card-requests?tab=nonsense')->assertInertia(fn (AssertableInertia $p) => $p->where('tab', 'asked'));
+        actingAs($admin)->get('/ccf/nxtgen/admin/card-requests?tab=approved')->assertInertia(fn (AssertableInertia $p) => $p->where('tab', 'approved')->where('pagination.total', 1));
+        actingAs($admin)->get('/ccf/nxtgen/admin/card-requests?tab=nonsense')->assertInertia(fn (AssertableInertia $p) => $p->where('tab', 'asked'));
     });
 
     it('shows a church admin every satellite\'s requests, a satellite admin only their own; a Lifeshaper has no page @story#135', function (): void {
@@ -74,12 +74,12 @@ describe('the Cards page', function (): void {
         $dxbRequest = CardRequest::factory()->for($amara)->create();
         $houseRequest = CardRequest::factory()->for(childOf(familyAt($house)))->create();
 
-        $lists = fn (User $who, array $ids) => actingAs($who)->get('/ccf/card-requests')->assertInertia(fn (AssertableInertia $p) => $p
+        $lists = fn (User $who, array $ids) => actingAs($who)->get('/ccf/nxtgen/admin/card-requests')->assertInertia(fn (AssertableInertia $p) => $p
             ->where('requests', fn (Collection $rows): bool => $rows->pluck('id')->all() === $ids));
 
         $lists(staffMember(RoleEnum::Admin, atChurch($church)), [$dxbRequest->id, $houseRequest->id]);
         $lists(staffMember(RoleEnum::Admin, atSatellite($house)), [$houseRequest->id]);
-        actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get('/ccf/card-requests')->assertNotFound();
+        actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get('/ccf/nxtgen/admin/card-requests')->assertNotFound();
     });
 });
 
@@ -90,11 +90,11 @@ describe('searching Cards', function (): void {
         CardRequest::factory()->for(childOf(familyAt($dxb), ['first_name' => 'Amara', 'last_name' => 'Cruz', 'nickname' => 'Ams']))->create();
         CardRequest::factory()->for(childOf(familyAt($dxb), ['first_name' => 'Ben', 'last_name' => 'Reyes', 'nickname' => 'Ben']))->create();
 
-        actingAs($admin)->get('/ccf/card-requests?tab=asked&q=amara+reyes')->assertInertia(fn (AssertableInertia $p) => $p
+        actingAs($admin)->get('/ccf/nxtgen/admin/card-requests?tab=asked&q=amara+reyes')->assertInertia(fn (AssertableInertia $p) => $p
             ->where('q', 'amara reyes')
             ->where('pagination.total', 1)
             ->where('requests.0.id', $hers->id));
-        actingAs($admin)->get('/ccf/card-requests?tab=approved&q=amara')->assertInertia(fn (AssertableInertia $p) => $p->where('pagination.total', 0));
+        actingAs($admin)->get('/ccf/nxtgen/admin/card-requests?tab=approved&q=amara')->assertInertia(fn (AssertableInertia $p) => $p->where('pagination.total', 0));
     });
 });
 
@@ -103,7 +103,7 @@ describe('moving a request', function (): void {
         ['amara' => $amara, 'admin' => $admin] = cardsChurch();
         $request = CardRequest::factory()->for($amara)->create(['reason' => CardReasonEnum::FirstCard, 'fee_minor' => 0]);
 
-        actingAs($admin)->put("/ccf/card-requests/{$request->id}/mark-paid")->assertSessionHas('error', "Amara's first card is free — nothing to pay.");
+        actingAs($admin)->put("/ccf/nxtgen/admin/card-requests/{$request->id}/mark-paid")->assertSessionHas('error', "Amara's first card is free — nothing to pay.");
 
         expect($request->fresh()?->paid_at)->toBeNull();
     });
@@ -112,7 +112,7 @@ describe('moving a request', function (): void {
         ['amara' => $amara, 'admin' => $admin] = cardsChurch();
         $request = CardRequest::factory()->for($amara)->create(['step' => CardStepEnum::Approved, 'paid_at' => now()]);
 
-        actingAs($admin)->put("/ccf/card-requests/{$request->id}/refuse", ['reason' => 'Parent found it'])->assertSessionHas('success', "Amara's card is refused.");
+        actingAs($admin)->put("/ccf/nxtgen/admin/card-requests/{$request->id}/refuse", ['reason' => 'Parent found it'])->assertSessionHas('success', "Amara's card is refused.");
 
         expect([$request->fresh()?->step, $request->fresh()?->refused_reason])->toBe([CardStepEnum::Refused, 'Parent found it']);
     });
@@ -121,7 +121,7 @@ describe('moving a request', function (): void {
         ['amara' => $amara, 'admin' => $admin] = cardsChurch();
         $request = CardRequest::factory()->for($amara)->create();
 
-        actingAs($admin)->put("/ccf/card-requests/{$request->id}/mark-paid")->assertSessionHas('success', "Amara's card is marked paid.");
+        actingAs($admin)->put("/ccf/nxtgen/admin/card-requests/{$request->id}/mark-paid")->assertSessionHas('success', "Amara's card is marked paid.");
 
         expect($request->fresh()?->paid_by)->toBe($admin->id);
     });
@@ -130,7 +130,7 @@ describe('moving a request', function (): void {
         ['amara' => $amara, 'admin' => $admin] = cardsChurch();
         $request = CardRequest::factory()->for($amara)->create(['paid_at' => now(), 'step' => CardStepEnum::Approved]);
 
-        actingAs($admin)->put("/ccf/card-requests/{$request->id}/mark-paid")->assertSessionHas('error', "Amara's card has already moved on: Approved · paid.");
+        actingAs($admin)->put("/ccf/nxtgen/admin/card-requests/{$request->id}/mark-paid")->assertSessionHas('error', "Amara's card has already moved on: Approved · paid.");
     });
 
     it('approves a paid or free request for printing @story#138', function (array $state): void {
@@ -138,7 +138,7 @@ describe('moving a request', function (): void {
         ['amara' => $amara, 'admin' => $admin] = cardsChurch();
         $request = CardRequest::factory()->for($amara)->create($state);
 
-        actingAs($admin)->put("/ccf/card-requests/{$request->id}/approve")->assertSessionHas('success', "Amara's card is approved for printing.");
+        actingAs($admin)->put("/ccf/nxtgen/admin/card-requests/{$request->id}/approve")->assertSessionHas('success', "Amara's card is approved for printing.");
 
         expect($request->fresh()?->step)->toBe(CardStepEnum::Approved);
     })->with([
@@ -150,21 +150,21 @@ describe('moving a request', function (): void {
         ['amara' => $amara, 'admin' => $admin] = cardsChurch();
         $request = CardRequest::factory()->for($amara)->create();
 
-        actingAs($admin)->put("/ccf/card-requests/{$request->id}/approve")->assertSessionHas('error', "Amara's card is not paid yet: mark the AED 10 paid first.");
+        actingAs($admin)->put("/ccf/nxtgen/admin/card-requests/{$request->id}/approve")->assertSessionHas('error', "Amara's card is not paid yet: mark the AED 10 paid first.");
         expect($request->fresh()?->step)->toBe(CardStepEnum::Asked);
 
         $request->forceFill(['paid_at' => now(), 'step' => CardStepEnum::Approved])->save();
-        actingAs($admin)->put("/ccf/card-requests/{$request->id}/approve")->assertSessionHas('error', "Amara's card has already moved on: Approved · paid.");
+        actingAs($admin)->put("/ccf/nxtgen/admin/card-requests/{$request->id}/approve")->assertSessionHas('error', "Amara's card has already moved on: Approved · paid.");
     });
 
     it('refuses with a reason, freeing the child for a new request @story#140', function (): void {
         ['dxb' => $dxb, 'amara' => $amara, 'admin' => $admin] = cardsChurch();
         $request = CardRequest::factory()->for($amara)->create();
 
-        actingAs($admin)->put("/ccf/card-requests/{$request->id}/refuse", ['reason' => '  Found it at home  '])->assertSessionHas('success', "Amara's card is refused.");
+        actingAs($admin)->put("/ccf/nxtgen/admin/card-requests/{$request->id}/refuse", ['reason' => '  Found it at home  '])->assertSessionHas('success', "Amara's card is refused.");
         expect([$request->fresh()?->step, $request->fresh()?->refused_reason])->toBe([CardStepEnum::Refused, 'Found it at home']);
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->post("/ccf/children/{$amara->id}/card-requests", ['reason' => 'damaged'])->assertSessionHas('success');
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->post("/ccf/nxtgen/serve/children/{$amara->id}/card-requests", ['reason' => 'damaged'])->assertSessionHas('success');
         expect(CardRequest::query()->where('child_id', $amara->id)->count())->toBe(2);
     });
 
@@ -172,9 +172,9 @@ describe('moving a request', function (): void {
         ['amara' => $amara, 'admin' => $admin] = cardsChurch();
         $request = CardRequest::factory()->for($amara)->create();
 
-        actingAs($admin)->put("/ccf/card-requests/{$request->id}/refuse", ['reason' => '   '])->assertSessionHasErrors(['reason' => 'Please say why, in a few words.']);
+        actingAs($admin)->put("/ccf/nxtgen/admin/card-requests/{$request->id}/refuse", ['reason' => '   '])->assertSessionHasErrors(['reason' => 'Please say why, in a few words.']);
         $request->forceFill(['step' => CardStepEnum::Printed])->save();
-        actingAs($admin)->put("/ccf/card-requests/{$request->id}/refuse", ['reason' => 'Late'])->assertSessionHas('error', "Amara's card has already moved on: Printed · not paid.");
+        actingAs($admin)->put("/ccf/nxtgen/admin/card-requests/{$request->id}/refuse", ['reason' => 'Late'])->assertSessionHas('error', "Amara's card has already moved on: Printed · not paid.");
 
         expect($request->fresh()?->step)->toBe(CardStepEnum::Printed);
     });
@@ -183,7 +183,7 @@ describe('moving a request', function (): void {
         ['amara' => $amara, 'admin' => $admin] = cardsChurch();
         $request = CardRequest::factory()->for($amara)->create(['step' => CardStepEnum::Approved, 'paid_at' => now()]);
 
-        actingAs($admin)->put("/ccf/card-requests/{$request->id}/mark-printed")->assertSessionHas('success', "Amara's card is marked printed.");
+        actingAs($admin)->put("/ccf/nxtgen/admin/card-requests/{$request->id}/mark-printed")->assertSessionHas('success', "Amara's card is marked printed.");
 
         expect($request->fresh()?->step)->toBe(CardStepEnum::Printed);
     });
@@ -192,7 +192,7 @@ describe('moving a request', function (): void {
         ['amara' => $amara, 'admin' => $admin] = cardsChurch();
         $request = CardRequest::factory()->for($amara)->create();
 
-        actingAs($admin)->put("/ccf/card-requests/{$request->id}/mark-printed")->assertSessionHas('error', "Amara's card has already moved on: Asked · not paid.");
+        actingAs($admin)->put("/ccf/nxtgen/admin/card-requests/{$request->id}/mark-printed")->assertSessionHas('error', "Amara's card has already moved on: Asked · not paid.");
     });
 });
 
@@ -204,19 +204,19 @@ describe('print lists', function (): void {
         CardRequest::factory()->for(childOf(familyAt($house), ['first_name' => 'Amara', 'last_name' => 'Villa']))->create(['step' => CardStepEnum::Approved]);
         travelTo(CarbonImmutable::parse('2026-10-31 10:31:00', 'Asia/Dubai'));
 
-        actingAs($admin)->post('/ccf/card-requests/print-lists', ['q' => 'amara'])->assertSessionHas('success', 'Print list made: 1 card.');
+        actingAs($admin)->post('/ccf/nxtgen/admin/card-requests/print-lists', ['q' => 'amara'])->assertSessionHas('success', 'Print list made: 1 card.');
 
         $list = PrintList::query()->sole();
         expect([$list->made_by, $list->cards()->pluck('card_requests.id')->all()])->toBe([$admin->id, [$hers->id]]);
-        actingAs($admin)->get('/ccf/card-requests?tab=approved')->assertInertia(fn (AssertableInertia $p) => $p
+        actingAs($admin)->get('/ccf/nxtgen/admin/card-requests?tab=approved')->assertInertia(fn (AssertableInertia $p) => $p
             ->where('print_lists', [['id' => $list->id, 'made' => 'Sat 31 Oct 10:31', 'made_by' => $admin->name, 'cards' => 1, 'to_print' => 1]]));
-        actingAs($admin)->get('/ccf/card-requests?tab=asked')->assertInertia(fn (AssertableInertia $p) => $p->where('print_lists', []));
+        actingAs($admin)->get('/ccf/nxtgen/admin/card-requests?tab=asked')->assertInertia(fn (AssertableInertia $p) => $p->where('print_lists', []));
     });
 
     it('makes no print list when nothing approved is shown — and says so @story#151', function (): void {
         ['admin' => $admin] = cardsChurch();
 
-        actingAs($admin)->post('/ccf/card-requests/print-lists', ['q' => 'nobody'])->assertSessionHas('success', 'There were no approved cards to put on a print list.');
+        actingAs($admin)->post('/ccf/nxtgen/admin/card-requests/print-lists', ['q' => 'nobody'])->assertSessionHas('success', 'There were no approved cards to put on a print list.');
 
         expect(PrintList::query()->count())->toBe(0);
     });
@@ -229,7 +229,7 @@ describe('print lists', function (): void {
         $list->cards()->attach([$hers->id]);
         CardRequest::factory()->for(childOf(familyAt($dxb), ['first_name' => 'Amara', 'last_name' => 'Later']))->create(['step' => CardStepEnum::Approved]);
 
-        $response = actingAs($admin)->get("/ccf/card-requests/print-lists/{$list->id}")->assertOk();
+        $response = actingAs($admin)->get("/ccf/nxtgen/admin/card-requests/print-lists/{$list->id}")->assertOk();
 
         expect(exportedRows($response))->toBe([
             'Full name|Nickname|Level|Squad|Barcode',
@@ -237,7 +237,7 @@ describe('print lists', function (): void {
         ])->and(explode('|', exportedRows($response)[1])[4])->toBe($amara->fresh()?->name_key)
             ->and($response->headers->get('content-disposition'))->toContain("nxtgen-print-list-{$list->id}-")
             ->and($hers->fresh()?->step)->toBe(CardStepEnum::Approved);
-        actingAs($admin)->get("/ccf/card-requests/print-lists/{$list->id}")->assertOk();
+        actingAs($admin)->get("/ccf/nxtgen/admin/card-requests/print-lists/{$list->id}")->assertOk();
     });
 
     it('shows a viewer only the cards on a list they may see; a list with none of theirs, or another church\'s, is not found @story#149', function (): void {
@@ -250,11 +250,11 @@ describe('print lists', function (): void {
         $houseOnly->cards()->attach([$pia->id]);
         $elsewhere = PrintList::factory()->for(church())->create();
 
-        expect(exportedRows(actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->get("/ccf/card-requests/print-lists/{$both->id}")))
+        expect(exportedRows(actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->get("/ccf/nxtgen/admin/card-requests/print-lists/{$both->id}")))
             ->toBe(['Full name|Nickname|Level|Squad|Barcode', 'Pia Villa|Pia|||PIAVILLA']);
-        actingAs($dxbAdmin)->get("/ccf/card-requests/print-lists/{$houseOnly->id}")->assertNotFound();
-        actingAs($dxbAdmin)->get("/ccf/card-requests/print-lists/{$elsewhere->id}")->assertNotFound();
-        actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get("/ccf/card-requests/print-lists/{$both->id}")->assertNotFound();
+        actingAs($dxbAdmin)->get("/ccf/nxtgen/admin/card-requests/print-lists/{$houseOnly->id}")->assertNotFound();
+        actingAs($dxbAdmin)->get("/ccf/nxtgen/admin/card-requests/print-lists/{$elsewhere->id}")->assertNotFound();
+        actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get("/ccf/nxtgen/admin/card-requests/print-lists/{$both->id}")->assertNotFound();
     });
 
     it('marks a print list\'s still-approved cards printed, and says how many had already moved on @story#144', function (): void {
@@ -265,10 +265,10 @@ describe('print lists', function (): void {
         $list->cards()->attach([$hers->id, $refused->id]);
         $later = CardRequest::factory()->for(childOf(familyAt($dxb), ['first_name' => 'Amara']))->create(['step' => CardStepEnum::Approved]);
 
-        actingAs($admin)->put("/ccf/card-requests/print-lists/{$list->id}/mark-printed")->assertSessionHas('success', '1 marked printed; 1 had already moved on.');
+        actingAs($admin)->put("/ccf/nxtgen/admin/card-requests/print-lists/{$list->id}/mark-printed")->assertSessionHas('success', '1 marked printed; 1 had already moved on.');
 
         expect([$hers->fresh()?->step, $refused->fresh()?->step, $later->fresh()?->step])->toBe([CardStepEnum::Printed, CardStepEnum::Refused, CardStepEnum::Approved]);
-        actingAs($admin)->get('/ccf/card-requests?tab=approved')->assertInertia(fn (AssertableInertia $p) => $p->where('print_lists', []));
+        actingAs($admin)->get('/ccf/nxtgen/admin/card-requests?tab=approved')->assertInertia(fn (AssertableInertia $p) => $p->where('print_lists', []));
     });
 
     it('marks only the acting admin\'s cards on a list; a list with none of theirs is not found @story#145', function (): void {
@@ -280,8 +280,8 @@ describe('print lists', function (): void {
         $houseOnly = PrintList::factory()->for($church)->create();
         $houseOnly->cards()->attach([$pia->id]);
 
-        actingAs($dxbAdmin)->put("/ccf/card-requests/print-lists/{$both->id}/mark-printed")->assertSessionHas('success', '1 marked printed.');
-        actingAs($dxbAdmin)->put("/ccf/card-requests/print-lists/{$houseOnly->id}/mark-printed")->assertNotFound();
+        actingAs($dxbAdmin)->put("/ccf/nxtgen/admin/card-requests/print-lists/{$both->id}/mark-printed")->assertSessionHas('success', '1 marked printed.');
+        actingAs($dxbAdmin)->put("/ccf/nxtgen/admin/card-requests/print-lists/{$houseOnly->id}/mark-printed")->assertNotFound();
 
         expect([$hers->fresh()?->step, $pia->fresh()?->step])->toBe([CardStepEnum::Printed, CardStepEnum::Approved]);
     });
@@ -298,7 +298,7 @@ describe('print lists, across satellites and churches', function (): void {
         $list = PrintList::factory()->for($church)->create();
         $list->cards()->attach([$approved->id, $printed->id, $given->id, $refused->id, $foreign->id]);
 
-        $names = array_map(fn (string $r): string => explode('|', $r)[0], exportedRows(actingAs($admin)->get("/ccf/card-requests/print-lists/{$list->id}")));
+        $names = array_map(fn (string $r): string => explode('|', $r)[0], exportedRows(actingAs($admin)->get("/ccf/nxtgen/admin/card-requests/print-lists/{$list->id}")));
 
         expect($names)->toBe(['Full name', 'Amara Reyes', 'Ben Cruz']);
     });
@@ -310,7 +310,7 @@ describe('print lists, across satellites and churches', function (): void {
         $list = PrintList::factory()->for($church)->create();
         $list->cards()->attach([$mine->id, $foreign->id]);
 
-        actingAs($admin)->put("/ccf/card-requests/print-lists/{$list->id}/mark-printed")->assertSessionHas('success', '1 marked printed.');
+        actingAs($admin)->put("/ccf/nxtgen/admin/card-requests/print-lists/{$list->id}/mark-printed")->assertSessionHas('success', '1 marked printed.');
 
         expect($foreign->fresh()?->step)->toBe(CardStepEnum::Approved);
     });
@@ -322,9 +322,9 @@ describe('print lists, across satellites and churches', function (): void {
         $list = PrintList::factory()->for($church)->create();
         $list->cards()->attach([$hers->id, $pia->id]);
 
-        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->put("/ccf/card-requests/print-lists/{$list->id}/mark-printed")->assertSessionHas('success', '1 marked printed.');
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->put("/ccf/nxtgen/admin/card-requests/print-lists/{$list->id}/mark-printed")->assertSessionHas('success', '1 marked printed.');
 
-        actingAs($dxbAdmin)->get('/ccf/card-requests?tab=approved')->assertInertia(fn (AssertableInertia $p) => $p
+        actingAs($dxbAdmin)->get('/ccf/nxtgen/admin/card-requests?tab=approved')->assertInertia(fn (AssertableInertia $p) => $p
             ->where('print_lists.0.id', $list->id)->where('print_lists.0.cards', 1)->where('print_lists.0.to_print', 1));
     });
 
@@ -333,7 +333,7 @@ describe('print lists, across satellites and churches', function (): void {
         $hers = CardRequest::factory()->for($amara)->create(['step' => CardStepEnum::Approved]);
         CardRequest::factory()->for(childOf(familyAt($house)))->create(['step' => CardStepEnum::Approved]);
 
-        actingAs($dxbAdmin)->post('/ccf/card-requests/print-lists', [])->assertSessionHas('success', 'Print list made: 1 card.');
+        actingAs($dxbAdmin)->post('/ccf/nxtgen/admin/card-requests/print-lists', [])->assertSessionHas('success', 'Print list made: 1 card.');
 
         expect(PrintList::query()->sole()->cards()->pluck('card_requests.id')->all())->toBe([$hers->id]);
     });
@@ -342,7 +342,7 @@ describe('print lists, across satellites and churches', function (): void {
         ['amara' => $amara, 'admin' => $admin] = cardsChurch();
         CardRequest::factory()->for($amara)->create();
 
-        actingAs($admin)->get('/ccf/card-requests?tab=asked&page=abc&q='.str_repeat('a', 300))->assertOk()
+        actingAs($admin)->get('/ccf/nxtgen/admin/card-requests?tab=asked&page=abc&q='.str_repeat('a', 300))->assertOk()
             ->assertInertia(fn (AssertableInertia $p) => $p->where('pagination.page', 1)->where('q', str_repeat('a', 200)));
     });
 });
@@ -353,10 +353,10 @@ describe('giving a printed card at the desk', function (): void {
         $request = CardRequest::factory()->for($amara)->create(['step' => CardStepEnum::Printed]);
         $joy = staffMember(RoleEnum::Lifeshaper, atSatellite($dxb));
 
-        actingAs($joy)->put("/ccf/card-requests/{$request->id}/give")->assertSessionHas('success', "Amara's new card is given.");
+        actingAs($joy)->put("/ccf/nxtgen/serve/card-requests/{$request->id}/give")->assertSessionHas('success', "Amara's new card is given.");
 
         expect([$request->fresh()?->step, $request->fresh()?->given_by])->toBe([CardStepEnum::Given, $joy->id]);
-        actingAs($joy)->get("/ccf/families/{$amara->family_id}")->assertInertia(fn (AssertableInertia $p) => $p->where('card_requests', []));
+        actingAs($joy)->get("/ccf/nxtgen/serve/families/{$amara->family_id}")->assertInertia(fn (AssertableInertia $p) => $p->where('card_requests', []));
     });
 
     it('gives nothing not yet printed, nor twice; a parent cannot @story#147', function (): void {
@@ -365,9 +365,9 @@ describe('giving a printed card at the desk', function (): void {
         $parent = User::factory()->create();
         guardianOf($amara->family, $parent);
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->put("/ccf/card-requests/{$request->id}/give")
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->put("/ccf/nxtgen/serve/card-requests/{$request->id}/give")
             ->assertSessionHas('error', "Amara's card has already moved on: Approved · not paid.");
-        actingAs($parent)->put("/ccf/card-requests/{$request->id}/give")->assertNotFound();
+        actingAs($parent)->put("/ccf/nxtgen/serve/card-requests/{$request->id}/give")->assertNotFound();
 
         expect($request->fresh()?->step)->toBe(CardStepEnum::Approved);
     });

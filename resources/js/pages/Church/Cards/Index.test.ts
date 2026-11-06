@@ -77,7 +77,7 @@ describe('Cards', () => {
 
         expect(posts).toEqual([
             {
-                url: 'church.card-requests.print-lists.store:"ccf"',
+                url: 'nxtgen.admin.card-requests.print-lists.store:"ccf"',
                 data: { q: 'jon' },
                 options: expect.objectContaining({ preserveScroll: true }),
             },
@@ -111,7 +111,7 @@ describe('Cards', () => {
         ])
         expect(tabs[2]?.attributes('aria-current')).toBe('page')
         expect(tabs[0]?.attributes('href')).toBe(
-            'church.card-requests.index:{"church":"ccf","tab":"asked","q":"amara"}',
+            'nxtgen.admin.card-requests.index:{"church":"ccf","tab":"asked","q":"amara"}',
         )
     })
 
@@ -122,7 +122,10 @@ describe('Cards', () => {
         await wrapper.find('form[role="search"]').trigger('submit')
 
         expect(gets).toEqual([
-            { url: 'church.card-requests.index:"ccf"', data: { tab: 'approved', q: 'Jon Ocampo' } },
+            {
+                url: 'nxtgen.admin.card-requests.index:"ccf"',
+                data: { tab: 'approved', q: 'Jon Ocampo' },
+            },
         ])
     })
 
@@ -132,7 +135,10 @@ describe('Cards', () => {
         await wrapper.find('[data-testid="page-next"]').trigger('click')
 
         expect(gets).toEqual([
-            { url: 'church.card-requests.index:"ccf"', data: { tab: 'closed', q: 'jon', page: 2 } },
+            {
+                url: 'nxtgen.admin.card-requests.index:"ccf"',
+                data: { tab: 'closed', q: 'jon', page: 2 },
+            },
         ])
     })
 
