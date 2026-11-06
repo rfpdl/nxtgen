@@ -6,6 +6,19 @@ describes the design; this records the choices that shaped or changed it.
 
 ## 2026-11-06 (iPad at the door — Roy)
 
+- **Staff pages split by service (Roy, TODO #31):** `/ccf/admin/…` for managing people, families and children;
+  `/ccf/serve/…` for the everyday app (check-in, registration) — where anyone without admin lands. A Lifeshaper can
+  find, view, register and edit families in Serve (no exports, merging or deleting). The QR poster shows the
+  registration QR plus the church's own Links (Facebook group, WhatsApp group, or any link an admin names). Plan:
+  `tasks/2026-11-06-admin-serve/spec.md`.
+
+- **Two short sign-in addresses (Roy):** **/loginp** opens the volunteers' backup password on its own page, already
+  open — same form, same rule (only someone who serves; parents use the email link). **/loginc** clears this
+  device's sign-in: signed out (the remember-me cookie too), the remembered landing page forgotten, then back to
+  /login. Claude: /loginc is a plain GET so typing it is enough; the cost is that a link to it can sign someone out
+  (SECURITY #22). The e2e password journey now uses a volunteer of each browser's own (E2ESeeder::VOLUNTEER_EMAIL): 15
+  browsers sharing one account overwrote each other's password and hit the 5-tries-a-minute limit.
+
 - **Moving-Up (TODO #27), Roy's answers:** only a **church admin** runs it, never automatic. Each child moves up one
   Level; from Level 4 the child becomes Graduated. Before it runs, the admin sees every child with their new Level and
   can **untick** anyone who stays. It remembers each child's old Level and status, so on the Moving-Up page the last
