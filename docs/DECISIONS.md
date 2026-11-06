@@ -6,6 +6,9 @@ describes the design; this records the choices that shaped or changed it.
 
 ## 2026-11-06 (iPad at the door — Roy)
 
+- **Lifeshapers edit families in Serve (TODO #31 step 2, built).** Claude, low-stakes, for Roy to confirm: moving a
+  family to another satellite stays an admin's (a Lifeshaper could otherwise move a family out of their own reach,
+  or into another satellite's); a Lifeshaper who edits still sees the email masked (correcting it is an admin's).
 - **Overnight answers (Roy):** a Lifeshaper edits a family's details, guardians and children in Serve for the
   satellites they serve — not the email, status or Level. A satellite you are assigned to is the satellite you work
   in: the poster (and its Links) for someone in A and B is A's or B's, picked; a church-wide Role sees every

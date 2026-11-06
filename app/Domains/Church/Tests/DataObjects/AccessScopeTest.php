@@ -76,6 +76,35 @@ it('lets a Lifeshaper see their satellite\'s families but not edit them', functi
         ->and($scope->canRegisterFamilies())->toBeTrue();
 });
 
+it('lets a Lifeshaper edit the details of the families they can open — their satellites\' — and no admin edit (Roy 2026-11-06)', function (): void {
+    ['church' => $church, 'htc' => $htc, 'house' => $house] = fx();
+    $user = User::factory()->create();
+    grantRole($user, RoleEnum::Lifeshaper, atSatellite($htc));
+    $churchWide = User::factory()->create();
+    grantRole($churchWide, RoleEnum::Lifeshaper, atChurch($church));
+
+    $scope = (new GetAccessScopeJob(user: $user, church: $church))->handle();
+    $wide = (new GetAccessScopeJob(user: $churchWide, church: $church))->handle();
+
+    expect($scope->canEditFamilyDetails(familyAt($htc)))->toBeTrue()
+        ->and($scope->canEditFamilyDetails(familyAt($house)))->toBeFalse()
+        ->and($scope->canEditFamily(familyAt($htc)))->toBeFalse()
+        ->and($wide->canEditFamilyDetails(familyAt($house)))->toBeTrue()
+        ->and($wide->canEditFamily(familyAt($house)))->toBeFalse()
+        ->and($scope->canEditFamilyDetails(familyAt(satelliteOf(church()))))->toBeFalse();
+});
+
+it('gives an admin the details edit wherever they may edit the family', function (): void {
+    ['church' => $church, 'htc' => $htc, 'house' => $house] = fx();
+    $user = User::factory()->create();
+    grantRole($user, RoleEnum::Admin, atSatellite($htc));
+
+    $scope = (new GetAccessScopeJob(user: $user, church: $church))->handle();
+
+    expect($scope->canEditFamilyDetails(familyAt($htc)))->toBeTrue()
+        ->and($scope->canEditFamilyDetails(familyAt($house)))->toBeFalse();
+});
+
 it('combines several satellites', function (): void {
     ['church' => $church, 'htc' => $htc, 'house' => $house] = fx();
     $user = User::factory()->create();

@@ -57,8 +57,11 @@ it('gives the family\'s editor its other guardians to edit — never the primary
             ->where('other_guardians.0.id', $lola->id)
             ->where('other_guardians.0.first_name', 'Lola')
             ->where('other_guardians.0.relationship', 'grandparent'));
+    // A Lifeshaper of the satellite edits them too (Roy 2026-11-06); a Lifeshaper of another satellite cannot open it.
     actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($satellite)))->get("/ccf/nxtgen/serve/families/{$family->id}")
-        ->assertInertia(fn (AssertableInertia $p) => $p->has('other_guardians', 0)->has('family.guardians', 2));
+        ->assertInertia(fn (AssertableInertia $p) => $p->has('other_guardians', 1)->has('family.guardians', 2));
+    actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite(satelliteOf($family->church))))->get("/ccf/nxtgen/serve/families/{$family->id}")
+        ->assertNotFound();
 });
 
 it('lets an admin add, change and remove the other guardians, each change on the family\'s history @story#89', function (): void {

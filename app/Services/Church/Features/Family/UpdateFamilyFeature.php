@@ -15,24 +15,26 @@ use App\Foundation\Inputs\FamilyDetailsInput;
 use App\Services\Church\Features\BaseChurchFeature;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
- * Staff edit a family's details and its main parent's details (plan §3.2: church admin; satellite admin of the
- * family's home satellite). The same input and Jobs as the parent's own edit; the email has its own flow. The
- * family's other guardians are changed as the form says, and a phone that came in or changed is checked for possible
- * duplicates.
+ * Staff edit a family's details and its main parent's details (plan §3.2; Roy 2026-11-06: staff who can open the
+ * family — its admins, and a Lifeshaper of its satellite). The same input and Jobs as the parent's own edit; the email
+ * has its own flow. Moving the family to another satellite is an admin's (canEditFamily): a Lifeshaper's edit that
+ * moves it is refused. The family's other guardians are changed as the form says, and a phone that came in or changed
+ * is checked for possible duplicates.
  *
  * @extends BaseChurchFeature<RedirectResponse>
  */
 #[UserStory(
     title: 'Edit a family',
-    persona: 'church admin or satellite admin',
+    persona: 'staff who can open the family',
     happyPaths: [
-        'story#52' => 'An Admin who may edit the Family edits it and its parent',
+        'story#52' => 'Staff who can open the Family — its Admins, a Lifeshaper of its Satellite — edit it and its parent',
         'story#89' => 'An Admin adds, changes and removes the Family\'s other Guardians, each change on its history',
     ],
     unhappyPaths: [
-        'story#53' => 'A Lifeshaper or another Satellite\'s Admin cannot',
+        'story#53' => 'Another Satellite\'s staff cannot; a Lifeshaper cannot move the Family to another Satellite',
         'story#90' => 'The primary Guardian, or another Family\'s, is never changed through the list',
     ],
 )]
@@ -43,9 +45,13 @@ final class UpdateFamilyFeature extends BaseChurchFeature
 
     public function handle(FamilyDetailsInput $input): RedirectResponse
     {
-        $family = $this->scopedFamily($this->familyId, $this->scope()->canEditFamily(...));
+        $scope = $this->scope();
+        $family = $this->scopedFamily($this->familyId, $scope->canEditFamilyDetails(...));
         $primary = $family->primaryGuardian;
         abort_if($primary === null, 404);
+        if ($input->home_satellite_id !== $family->home_satellite_id && ! $scope->canEditFamily($family)) {
+            throw ValidationException::withMessages(['home_satellite_id' => 'Only an admin can move a family to another satellite.']);
+        }
 
         DB::transaction(function () use ($family, $primary, $input): void {
             $this->run(new UpdateFamilyDetailsJob(family: $family, details: $input->toDetails()));

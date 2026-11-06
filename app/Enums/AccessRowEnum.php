@@ -51,7 +51,7 @@ enum AccessRowEnum: string implements HasEnumMetadata
             self::AddChild => 'Add a child to a family found by search: any staff',
             self::FamilyList => 'Registration lists (families, children) + Excel: own satellites (church-wide roles: all)',
             self::ViewFamily => 'Open a family: staff who can see its home satellite',
-            self::EditFamily => 'Edit family/guardian/child details: church admin; admin of the home satellite',
+            self::EditFamily => 'Edit family/guardian/child details: staff who can open the family (church admin; the home satellite\'s admin and Lifeshapers); moving it to another satellite, admins only',
             self::ResendLink => 'Resend confirmation link: anyone with a staff role in the church',
             self::CorrectContact => 'Correct family contact (§4.4): church admin; home-satellite admin',
             self::SetChildStatus => 'Set child status: church admin; home-satellite admin',

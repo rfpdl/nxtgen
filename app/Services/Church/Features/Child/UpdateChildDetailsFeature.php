@@ -21,7 +21,7 @@ use Illuminate\Http\RedirectResponse;
 #[UserStory(
     title: 'Fix a child\'s details',
     persona: 'staff',
-    happyPaths: ['story#60' => 'Staff who may edit fix a Child\'s details, but not the status'],
+    happyPaths: ['story#60' => 'Staff who can open the Family — a Lifeshaper of its Satellite too — fix a Child\'s details, but not the status'],
     unhappyPaths: ['story#61' => 'A Child outside the editor\'s Satellites is refused'],
 )]
 #[AccessRow(AccessRowEnum::EditFamily)]
@@ -31,7 +31,7 @@ final class UpdateChildDetailsFeature extends BaseChurchFeature
 
     public function handle(ChildInput $input): RedirectResponse
     {
-        $child = $this->scopedChild($this->childId, $this->scope()->canEditFamily(...));
+        $child = $this->scopedChild($this->childId, $this->scope()->canEditFamilyDetails(...));
 
         $this->run(new UpdateChildDetailsJob(child: $child, details: $input->toDetails()));
 

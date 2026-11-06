@@ -149,8 +149,9 @@ it('says honestly when the corrected email could not be sent because of the per-
 });
 
 /*
- * Staff editing a family (plan §3.2 "Edit family/guardian/child details": church admin; satellite admin for
- * families whose home satellite is theirs; not Lifeshapers). Status stays its own action; email its own flow.
+ * Staff editing a family (plan §3.2 "Edit family/guardian/child details"; Roy 2026-11-06: staff who can open the
+ * family — church admin, the home satellite's admin, a Lifeshaper of that satellite). Status stays its own action
+ * (admins); email its own flow (admins); moving the family to another satellite, an admin's.
  */
 
 it('lets a satellite admin edit a family of their satellite, and its parent @story#52', function (): void {
@@ -164,26 +165,47 @@ it('lets a satellite admin edit a family of their satellite, and its parent @sto
         ->and(Guardian::query()->findOrFail($family->primary_guardian_id)->last_name)->toBe('Ramos-Lee');
 });
 
-it('gives the staff page the edit details only to someone who may edit', function (): void {
+it('lets a Lifeshaper of the satellite edit the family and its parent in Serve (Roy 2026-11-06) @story#52', function (): void {
+    ['church' => $church, 'htc' => $htc, 'family' => $family] = correctionChurch();
+
+    actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))
+        ->put("/ccf/nxtgen/serve/families/{$family->id}", familyEdit($htc, ['area_text' => 'Karama']))
+        ->assertRedirect()->assertSessionHas('success');
+
+    expect($family->fresh()?->area_text)->toBe('Karama')
+        ->and(Guardian::query()->findOrFail($family->primary_guardian_id)->last_name)->toBe('Ramos-Lee');
+});
+
+it('leaves moving a family to another satellite to an admin: a Lifeshaper\'s edit that moves it is refused, and nothing changes @story#53', function (): void {
+    ['church' => $church, 'htc' => $htc, 'house' => $house, 'family' => $family] = correctionChurch();
+
+    actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))
+        ->put("/ccf/nxtgen/serve/families/{$family->id}", familyEdit($house, ['area_text' => 'Moved']))
+        ->assertSessionHasErrors(['home_satellite_id' => 'Only an admin can move a family to another satellite.']);
+
+    expect([$family->fresh()?->home_satellite_id, $family->fresh()?->area_text])->toBe([$htc->id, $family->area_text]);
+});
+
+it('gives the edit details to someone who may edit — a Lifeshaper\'s satellite list only the family\'s own, and the email still masked', function (): void {
     ['church' => $church, 'htc' => $htc, 'family' => $family] = correctionChurch();
 
     actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->get("/ccf/nxtgen/serve/families/{$family->id}")
-        ->assertInertia(fn (AssertableInertia $p) => $p->where('family.can_edit', true)->has('details')->has('primary'));
+        ->assertInertia(fn (AssertableInertia $p) => $p->where('family.can_edit', true)->has('details')->has('primary')->has('satellites', 2));
     actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get("/ccf/nxtgen/serve/families/{$family->id}")
-        ->assertInertia(fn (AssertableInertia $p) => $p->where('family.can_edit', false)->where('details', null)->where('primary', null));
+        ->assertInertia(fn (AssertableInertia $p) => $p->where('family.can_edit', true)->has('details')->has('primary')
+            ->has('satellites', 1)->where('satellites.0.id', $htc->id)->where('family.email', fn (string $e): bool => str_contains($e, '•')));
 });
 
-it('refuses a Lifeshaper and an admin of another satellite @story#53', function (RoleEnum $role, string $where): void {
+it('refuses staff of another satellite, Lifeshaper or admin @story#53', function (RoleEnum $role): void {
     ['church' => $church, 'htc' => $htc, 'house' => $house, 'family' => $family] = correctionChurch();
-    $satellite = $where === 'own' ? $htc : $house;
 
-    actingAs(staffMember($role, atSatellite($satellite)))
+    actingAs(staffMember($role, atSatellite($house)))
         ->put("/ccf/nxtgen/serve/families/{$family->id}", familyEdit($htc, ['area_text' => 'Nope']))->assertNotFound();
 
     expect($family->fresh()?->area_text)->not->toBe('Nope');
 })->with([
-    'Lifeshaper of the satellite' => [RoleEnum::Lifeshaper, 'own'],
-    'admin of another satellite' => [RoleEnum::Admin, 'other'],
+    'Lifeshaper of another satellite' => [RoleEnum::Lifeshaper],
+    'admin of another satellite' => [RoleEnum::Admin],
 ]);
 
 it('lets staff who may edit fix a child\'s details, not the status @story#60', function (): void {
@@ -198,15 +220,28 @@ it('lets staff who may edit fix a child\'s details, not the status @story#60', f
     expect($child->nickname)->toBe('Caloy')->and($child->status)->toBe($status);
 });
 
-it('refuses a child edit outside the editor\'s satellite @story#61', function (): void {
+it('lets a Lifeshaper of the satellite fix a child\'s details (Roy 2026-11-06) @story#60', function (): void {
+    ['church' => $church, 'htc' => $htc, 'family' => $family] = correctionChurch();
+    $child = childOf($family, []);
+
+    actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))
+        ->put("/ccf/nxtgen/serve/children/{$child->id}", childEdit())->assertRedirect()->assertSessionHas('success');
+
+    expect($child->fresh()?->nickname)->toBe('Caloy');
+});
+
+it('refuses a child edit outside the editor\'s satellite @story#61', function (RoleEnum $role): void {
     ['church' => $church, 'house' => $house, 'family' => $family] = correctionChurch();
     $child = childOf($family, ['nickname' => 'Kept']);
 
-    actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))
+    actingAs(staffMember($role, atSatellite($house)))
         ->put("/ccf/nxtgen/serve/children/{$child->id}", childEdit())->assertNotFound();
 
     expect($child->fresh()?->nickname)->toBe('Kept');
-});
+})->with([
+    'admin of another satellite' => [RoleEnum::Admin],
+    'Lifeshaper of another satellite' => [RoleEnum::Lifeshaper],
+]);
 
 /*
  * System notes (plan §4.4 "audited as a system note", §6 "family system notes shown"): what staff changed on a

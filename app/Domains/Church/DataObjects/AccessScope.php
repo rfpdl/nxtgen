@@ -74,6 +74,16 @@ final readonly class AccessScope
             && ($this->isChurchAdmin || in_array($family->home_satellite_id, $this->adminSatelliteIds, true));
     }
 
+    /**
+     * Edit a family's details, its guardians and its children's details (Roy 2026-11-06): staff who can open the
+     * family — a Lifeshaper of its satellite as well as its admins. Everything else an editor does (the email, a
+     * child's status, Cards' moves, duplicates, moving the family to another satellite) stays canEditFamily's.
+     */
+    public function canEditFamilyDetails(Family $family): bool
+    {
+        return $this->canSeeFamily($family);
+    }
+
     /** Registering and adding a child are church-wide acts for any staff (same umbrella, plan §3.2). */
     public function canRegisterFamilies(): bool
     {

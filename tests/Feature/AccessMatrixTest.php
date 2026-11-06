@@ -396,7 +396,7 @@ describe('the door: search, register, add a child', function (): void {
 describe('a family, for staff', function (): void {
     it('opens for staff who can see its satellite @story#50 @story#51', cellTest())
         ->with(bothAreas('families.show'));
-    it('is edited only by an admin who may edit it @story#52 @story#53', cellTest())
+    it('is edited by staff who can open it — a Lifeshaper of its satellite too @story#52 @story#53', cellTest())
         ->with(bothAreas('families.update'));
     it('has its link resent by any staff member in the church @story#54 @story#55', cellTest())
         ->with(bothAreas('families.resend'));
@@ -405,7 +405,7 @@ describe('a family, for staff', function (): void {
 });
 
 describe('a child, for staff', function (): void {
-    it('has its details fixed only by an admin who may edit the family @story#60 @story#61', cellTest())
+    it('has its details fixed by staff who can open the family @story#60 @story#61', cellTest())
         ->with(bothAreas('children.update'));
     it('has its status set only by an admin who may edit the family @story#62 @story#63', cellTest())
         ->with(cells('nxtgen.admin.children.status'));

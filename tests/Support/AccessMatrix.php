@@ -30,8 +30,9 @@ final class AccessMatrix
             'families.store' => [AccessRowEnum::RegisterFamily, Actor::staff()],
             'families.children.store' => [AccessRowEnum::AddChild, Actor::staff()],
             'families.show' => [AccessRowEnum::ViewFamily, Actor::seeingFamily()],
-            'families.update' => [AccessRowEnum::EditFamily, Actor::editingFamily()],
-            'children.update' => [AccessRowEnum::EditFamily, Actor::editingFamily()],
+            // Staff who can open the family edit its details (Roy 2026-11-06): a Lifeshaper of its satellite too.
+            'families.update' => [AccessRowEnum::EditFamily, Actor::seeingFamily()],
+            'children.update' => [AccessRowEnum::EditFamily, Actor::seeingFamily()],
             // Anyone with a staff role in the church (DECISIONS 2026-10-17, later still — Roy): a Lifeshaper at the door
             // helps a visiting family, so the other satellite's staff may too; revoked roles and parents may not.
             'families.resend' => [AccessRowEnum::ResendLink, Actor::staff()],

@@ -59,12 +59,29 @@ WhatsApp group, or any link an admin names), each with its own QR; the admin set
 - The poster: the registration QR first, then a QR for each Link with its label under it. QR codes made on the server
   (as today), sent as images.
 
+## Step 3 design (Claude, from Roy's answers)
+- **Table** `satellite_links`: church_id, satellite_id, label (≤ 60), url (https only, ≤ 500), position; up to 6 per
+  satellite. Model `SatelliteLink` (tenancy list).
+- **Admin page** `/ccf/nxtgen/admin/links?satellite=` — "Links" in the Admin menu: a satellite picker (the
+  satellites the admin's Role covers; church admin: all), that satellite's Links in order; add (Facebook group and
+  WhatsApp group offered as labels), rename / change the address, move up or down, remove. Access row `ManageLinks`:
+  church admin at any satellite; satellite admin at their own (as Classes).
+- **The poster** `/ccf/nxtgen/serve/poster?satellite=` — the satellites the person is assigned to (Roy: "assign you to
+  satellite A, you can only do stuff in satellite A"; church-wide: all); a picker only when there is more than one.
+  The registration QR, then each Link's QR with its label. QR codes made on the server, sent as images.
+- **Safety:** a Link's address must start with `https://` (no `javascript:`, no plain http); shown as text and a QR,
+  never as raw HTML.
+
 ## Order of work
 1. **Move the addresses** — **done 2026-11-06**: the three groups in the Church service's routes, RequireAdminArea,
    RouteArea (+ `areaRoute` on the screens), a menu per area, the church address opening the person's area, every
    test's addresses; the access matrix has both areas' rows; `staff/areas.spec.ts`.
-2. **Lifeshaper edits families** in Serve: the access row, the matrix, tests first.
-3. **Links + poster**: migration, admin page, the poster's QRs.
+2. **Lifeshaper edits families** — **done 2026-11-06**: `AccessScope::canEditFamilyDetails` (= can open the family)
+   for the family's details, guardians and children's details; everything else an editor does stays
+   `canEditFamily` (admins). Claude, low-stakes: moving a family to another satellite stays an admin's (a
+   Lifeshaper's form offers only the family's own satellite, and the server refuses a move); the email stays masked
+   for a Lifeshaper.
+3. **Links + poster**: migration, admin page, the poster's QRs (design above).
 
 ## Answered (Roy 2026-11-06, before the overnight run)
 4. A Lifeshaper edits in Serve: **the family's details, guardians and children** (names, phone, allergies, notes) —

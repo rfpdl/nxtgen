@@ -30,14 +30,15 @@ final class FamilyAdminData extends Data
         public bool $can_edit,
     ) {}
 
-    public static function fromModel(Family $family, bool $canEdit): self
+    /** `$fullEmail`: the email unmasked — an admin who may edit the family (a Lifeshaper who edits its details sees it masked). */
+    public static function fromModel(Family $family, bool $canEdit, bool $fullEmail): self
     {
         $email = $family->contactEmail();
 
         return new self(
             id: $family->id,
             primary_name: $family->contactName(),
-            email: $canEdit ? $email : EmailMask::mask($email),
+            email: $fullEmail ? $email : EmailMask::mask($email),
             email_confirmed: $family->contactEmailConfirmed(),
             satellite: $family->homeSatellite->name,
             area: $family->area_text,

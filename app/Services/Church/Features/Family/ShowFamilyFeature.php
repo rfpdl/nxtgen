@@ -9,6 +9,7 @@ use App\Domains\Card\DataObjects\CardRequestData;
 use App\Domains\Card\Jobs\GetFamilyOpenCardRequestsJob;
 use App\Domains\CheckIn\DataObjects\ChildAttendanceData;
 use App\Domains\CheckIn\Jobs\GetFamilyCheckInsJob;
+use App\Domains\Church\DataObjects\SatelliteOptionData;
 use App\Domains\Church\Jobs\GetChurchTodayJob;
 use App\Domains\Church\Jobs\GetSatellitesJob;
 use App\Domains\Family\DataObjects\DuplicatePairData;
@@ -67,12 +68,14 @@ final class ShowFamilyFeature extends BaseChurchFeature
         $scope = $this->scope();
         $family = $this->scopedFamily($this->familyId, $scope->canSeeFamily(...));
         $canEdit = $scope->canEditFamily($family);
+        // The details forms (Roy 2026-11-06): a Lifeshaper of its satellite too — the email still masked for them.
+        $canEditDetails = $scope->canEditFamilyDetails($family);
         $inAdmin = RouteArea::of(request()) === 'nxtgen.admin';
         $canSetLevel = $inAdmin && $scope->canSetLevel();
         $primary = $family->primaryGuardian;
 
         return Inertia::render('Church/Families/Show', [
-            'family' => FamilyAdminData::fromModel($family, canEdit: $canEdit),
+            'family' => FamilyAdminData::fromModel($family, canEdit: $canEditDetails, fullEmail: $canEdit),
             // Each child's attendance (slice 3): staff only — the parent's own page never carries it.
             'attendance' => ChildAttendanceData::forChildren(
                 $family->children,
@@ -89,10 +92,15 @@ final class ShowFamilyFeature extends BaseChurchFeature
                     canOpenSubject: $scope->canSeeFamily(DuplicateCandidate::familyOf($p->subject)),
                     canOpenCandidate: $scope->canSeeFamily(DuplicateCandidate::familyOf($p->candidate)),
                 ))->all()) : [],
-            'details' => $canEdit ? FamilyDetailsData::fromModel($family) : null,
-            'primary' => $canEdit && $primary !== null ? GuardianEditData::fromModel($primary) : null,
-            'other_guardians' => $canEdit ? GuardianEditData::othersOf($family) : [],
-            'satellites' => $canEdit ? $this->run(new GetSatellitesJob(church: $church)) : [],
+            'details' => $canEditDetails ? FamilyDetailsData::fromModel($family) : null,
+            'primary' => $canEditDetails && $primary !== null ? GuardianEditData::fromModel($primary) : null,
+            'other_guardians' => $canEditDetails ? GuardianEditData::othersOf($family) : [],
+            // Where the family may be moved: anywhere for an admin who may edit it; its own satellite for anyone else.
+            'satellites' => match (true) {
+                $canEdit => $this->run(new GetSatellitesJob(church: $church)),
+                $canEditDetails => [SatelliteOptionData::fromModel($family->homeSatellite)],
+                default => [],
+            },
             // Correct the email, set a child's status: an editor, in Admin.
             'admin_controls' => $inAdmin && $canEdit,
             'can_set_level' => $canSetLevel,

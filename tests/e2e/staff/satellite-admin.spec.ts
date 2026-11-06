@@ -1,5 +1,5 @@
 import { expect, test } from '../support/test'
-import { CHURCH, FAMILIES, sessionFile } from '../support/world'
+import { CHURCH, DOOR, FAMILIES, sessionFile, type DoorProject } from '../support/world'
 
 /*
  * Journey 4 — scope. A House Church admin sees House Church families and not CCF DXB ones, cannot open a
@@ -48,21 +48,29 @@ test('a satellite admin can only add Lifeshapers to their own satellite @story#7
     ])
 })
 
-test('a Lifeshaper can see a family but gets no edit forms @story#50 @story#53', async ({
+test("a Lifeshaper edits their own satellite's family in Serve — not its email, status or Level @story#50 @story#52 @story#60", async ({
     browser,
-}) => {
+}, info) => {
     const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const page = await lifeshaper.newPage()
-    await page.goto(`/${CHURCH}/nxtgen/serve/families?q=${FAMILIES.dxb.guardian}`)
-    await page
-        .getByTestId('family-row')
-        .filter({ hasText: FAMILIES.dxb.guardian })
-        .getByRole('link')
-        .click()
+    const family = `${DOOR.guardians[info.project.name as DoorProject]} Cruz`
+    await page.goto(`/${CHURCH}/nxtgen/serve/families?q=${encodeURIComponent(family)}`)
+    await page.getByTestId('family-row').filter({ hasText: family }).getByRole('link').click()
+    await expect(page).toHaveURL(/\/nxtgen\/serve\/families\/\d+$/)
 
-    await expect(page.getByTestId('family-child').first()).toBeVisible()
-    await expect(page.getByTestId('edit-family')).toHaveCount(0)
-    await expect(page.getByTestId('edit-child')).toHaveCount(0)
+    // Roy 2026-11-06: a Lifeshaper of the satellite keeps the family's details right.
+    const area = `Al Barsha ${info.project.name}`
+    await page.getByTestId('edit-family').click()
+    await page.getByTestId('area').fill(area)
+    await page.getByTestId('edit-family-submit').click()
+    await expect(page.getByTestId('flash-success')).toContainText('Family details saved')
+    await expect(page.getByText(area)).toBeVisible()
+    await expect(page.getByTestId('edit-child').first()).toBeVisible()
+
+    // The admin's own controls stay in Admin.
+    await expect(page.getByTestId('correct-email')).toHaveCount(0)
+    await expect(page.getByRole('combobox', { name: 'Status', exact: true })).toHaveCount(0)
+    await expect(page.getByRole('combobox', { name: 'Level', exact: true })).toHaveCount(0)
     await lifeshaper.close()
 })
 

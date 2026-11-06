@@ -242,11 +242,11 @@ describe('a family opened by staff', function (): void {
         Actor::HomeAdmin->value => [Actor::HomeAdmin, false],
     ]);
 
-    it('gives a Lifeshaper the family and its children, but no edit details and a masked email @story#50 @story#53', function (Actor $actor): void {
+    it('gives a Lifeshaper of its satellite the edit details (Roy 2026-11-06) — only its own satellite to pick, the email still masked @story#50 @story#52', function (Actor $actor): void {
         $props = propsOf($actor, familyPageWithCardRequest(...));
 
-        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, FAMILY_VIEW, ['details', 'primary', 'other_guardians', 'satellites', 'levels', 'duplicates']))
-            ->and([data_get($props, 'details'), data_get($props, 'primary'), data_get($props, 'satellites')])->toBe([null, null, []])
+        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, FAMILY_VIEW, FAMILY_EDIT_DETAILS, ['levels', 'duplicates']))
+            ->and(count(listAt($props, 'satellites')))->toBe(1)
             ->and(data_get($props, 'family.email'))->toBe('ja•••@example.com');
     })->with(actors(Actor::ChurchLifeshaper, Actor::HomeLifeshaper, Actor::BothHats, Actor::HomeParentLifeshaper));
 });
