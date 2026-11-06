@@ -123,6 +123,18 @@ function atSatellite(Satellite $satellite): RoleScope
     return new RoleScope($satellite->church()->firstOrFail(), ScopeTypeEnum::Satellite, $satellite->id);
 }
 
+/** The Admin Role at one class (TODO #9): a class admin's scope. */
+function atClass(Schedule $schedule): RoleScope
+{
+    return new RoleScope($schedule->satellite->church()->firstOrFail(), ScopeTypeEnum::Schedule, $schedule->id);
+}
+
+/** A new user who is class admin of `$schedule` (TODO #9). */
+function classAdminOf(Schedule $schedule): User
+{
+    return staffMember(RoleEnum::Admin, atClass($schedule));
+}
+
 /**
  * A new user holding exactly one role, at one scope.
  *

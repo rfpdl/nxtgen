@@ -2,15 +2,18 @@
 
 declare(strict_types=1);
 
+use App\Data\Models\RoleAssignment;
 use App\Data\Models\User;
 use App\Domains\Church\Jobs\GetAccessScopeJob;
 use App\Enums\RoleEnum;
+use App\Enums\ScopeTypeEnum;
 
 use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
 use function Tests\Support\church;
 use function Tests\Support\grantRole;
 use function Tests\Support\satelliteOf;
+use function Tests\Support\scheduleAt;
 
 /* What one person may do in one church, read from their ACTIVE roles in that church only. */
 
@@ -30,7 +33,24 @@ it('collects this person\'s active roles in this church, by role and scope', fun
         ->and($scope->isChurchLifeshaper)->toBeTrue()
         ->and($scope->adminSatelliteIds)->toBe([$dxb->id])
         ->and($scope->lifeshaperSatelliteIds)->toBe([$house->id])
-        ->and($scope->adminScheduleIds)->toBe([]);
+        ->and($scope->adminSchedules)->toBe([]);
+});
+
+it('reads a class admin\'s classes with their satellites — this church\'s, still active (TODO #9)', function (): void {
+    $church = church();
+    $dxb = satelliteOf($church);
+    $onePm = scheduleAt($dxb);
+    $retired = scheduleAt($dxb, ['is_active' => false]);
+    $theirs = scheduleAt(satelliteOf(church()));
+    $user = User::factory()->create();
+    foreach ([$onePm, $retired, $theirs] as $class) {
+        RoleAssignment::query()->create(['church_id' => $church->id, 'user_id' => $user->id, 'role' => RoleEnum::Admin, 'scope_type' => ScopeTypeEnum::Schedule, 'scope_id' => $class->id, 'is_active' => true]);
+    }
+
+    $scope = (new GetAccessScopeJob(user: $user, church: $church))->handle();
+
+    expect($scope->adminSchedules)->toBe([$onePm->id => $dxb->id])
+        ->and($scope->canWorkHere())->toBeTrue();
 });
 
 it('ignores a revoked role', function (): void {

@@ -11,6 +11,7 @@ const page = {
         church_nav: {
             area: 'nxtgen.serve' as string | null,
             can_use_admin: false,
+            can_use_full_admin: false,
             can_manage_people: false,
             can_manage_classes: false,
             can_see_attendance: false,
@@ -48,6 +49,9 @@ beforeEach(() => {
     page.url = '/ccf/nxtgen/serve/door?class=1'
     page.props.church_nav.area = 'nxtgen.serve'
     page.props.church_nav.can_use_admin = false
+    page.props.church_nav.can_use_full_admin = false
+    page.props.church_nav.can_manage_classes = false
+    page.props.church_nav.can_see_attendance = false
 })
 
 /** The menu as an admin sees it in NxtGen Admin. */
@@ -55,6 +59,7 @@ function inAdmin(): void {
     page.url = '/ccf/nxtgen/admin/families'
     page.props.church_nav.area = 'nxtgen.admin'
     page.props.church_nav.can_use_admin = true
+    page.props.church_nav.can_use_full_admin = true
 }
 
 const labels = (wrapper: ReturnType<typeof mount>): string[] =>
@@ -77,10 +82,24 @@ describe('ChurchShell', () => {
 
     it('in Serve: "Admin" for an admin, to their Admin area', () => {
         page.props.church_nav.can_use_admin = true
+        page.props.church_nav.can_use_full_admin = true
 
         expect(mount(ChurchShell).find('[data-testid="nav-admin"]').attributes('href')).toBe(
             'http://app.test/ccf/nxtgen/admin/families',
         )
+    })
+
+    it('gives a class admin (TODO #9) only Classes and Attendance in Admin, and "Admin" opens their Classes', () => {
+        page.props.church_nav.can_use_admin = true
+        page.props.church_nav.can_manage_classes = true
+        page.props.church_nav.can_see_attendance = true
+        expect(mount(ChurchShell).find('[data-testid="nav-admin"]').attributes('href')).toBe(
+            'http://app.test/ccf/nxtgen/admin/classes',
+        )
+
+        page.url = '/ccf/nxtgen/admin/classes'
+        page.props.church_nav.area = 'nxtgen.admin'
+        expect(labels(mount(ChurchShell))).toEqual(['Classes', 'Attendance', 'Serve', 'Password'])
     })
 
     it('in Admin: Families and Children, the admin pages they may open, then "Serve" — no door or poster', () => {
@@ -125,6 +144,7 @@ describe('ChurchShell', () => {
         page.url = '/ccf/admin/people'
         page.props.church_nav.area = 'admin'
         page.props.church_nav.can_use_admin = true
+        page.props.church_nav.can_use_full_admin = true
         page.props.church_nav.can_manage_people = true
 
         const wrapper = mount(ChurchShell)

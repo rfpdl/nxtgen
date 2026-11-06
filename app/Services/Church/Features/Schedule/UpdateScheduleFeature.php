@@ -37,7 +37,7 @@ final class UpdateScheduleFeature extends BaseChurchFeature
         abort_unless($scope->canManageClasses(), 404);
 
         $schedule = $this->run(new GetScheduleJob(church: $this->church(), id: $this->scheduleId));
-        abort_unless($scope->canManageClassesAt($schedule->satellite), 404);
+        abort_unless($scope->canManageSchedule($schedule), 404);
 
         try {
             $this->run(new UpdateScheduleJob(

@@ -8,6 +8,7 @@ use App\Domains\Church\DataObjects\RoleScope;
 use App\Domains\Church\Jobs\GetChurchAdminCountJob;
 use App\Domains\Church\Jobs\GetRoleAssignmentJob;
 use App\Domains\Church\Jobs\UpdateRoleAssignmentAsInactiveJob;
+use App\Domains\Schedule\Jobs\GetSchedulesByIdJob;
 use App\Enums\AccessRowEnum;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
@@ -41,7 +42,11 @@ final class RemoveStaffRoleFeature extends BaseChurchFeature
         abort_unless($scope->canManagePeople(), 404);
 
         $assignment = $this->run(new GetRoleAssignmentJob(church: $church, id: $this->assignmentId));
-        abort_unless($assignment->is_active && $scope->canGrant($assignment->role, RoleScope::ofAssignment($assignment)), 404);
+        // A class admin's Role (TODO #9) is removed by whoever may give it: the class's satellite says who.
+        $class = $assignment->scope_type === ScopeTypeEnum::Schedule
+            ? $this->run(new GetSchedulesByIdJob(church: $church, ids: [$assignment->scope_id]))[$assignment->scope_id] ?? null
+            : null;
+        abort_unless($assignment->is_active && $scope->canGrant($assignment->role, RoleScope::ofAssignment($assignment, $class)), 404);
 
         $isChurchAdmin = $assignment->role === RoleEnum::Admin && $assignment->scope_type === ScopeTypeEnum::Church;
 

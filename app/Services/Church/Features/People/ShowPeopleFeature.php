@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Church\Features\People;
 
 use App\Data\Models\RoleAssignment;
+use App\Data\Models\Schedule;
 use App\Domains\Church\DataObjects\GrantOptionData;
 use App\Domains\Church\DataObjects\RoleScope;
 use App\Domains\Church\DataObjects\SatelliteOptionData;
@@ -12,6 +13,8 @@ use App\Domains\Church\DataObjects\StaffMemberData;
 use App\Domains\Church\DataObjects\StaffRoleData;
 use App\Domains\Church\Jobs\GetSatellitesJob;
 use App\Domains\Church\Jobs\GetStaffRolesJob;
+use App\Domains\Schedule\Jobs\GetSchedulesByIdJob;
+use App\Domains\Schedule\Jobs\GetSchedulesBySatelliteJob;
 use App\Enums\AccessRowEnum;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
@@ -49,8 +52,12 @@ final class ShowPeopleFeature extends BaseChurchFeature
         }
 
         $roles = $this->run(new GetStaffRolesJob(church: $church, satelliteIds: $scope->isChurchAdmin ? null : $scope->adminSatelliteIds));
+        // Class admins' classes (TODO #9), retired ones too, to name each Role and to ask who may remove it.
+        $classes = $this->run(new GetSchedulesByIdJob(church: $church, ids: array_values($roles
+            ->filter(fn (RoleAssignment $a): bool => $a->scope_type === ScopeTypeEnum::Schedule)
+            ->map(fn (RoleAssignment $a): int => $a->scope_id)->unique()->all())));
 
-        $people = $roles->groupBy('user_id')->map(function ($held) use ($scope, $satelliteNames): StaffMemberData {
+        $people = $roles->groupBy('user_id')->map(function ($held) use ($scope, $satelliteNames, $classes): StaffMemberData {
             /** @var RoleAssignment $first */
             $first = $held->first();
 
@@ -61,26 +68,36 @@ final class ShowPeopleFeature extends BaseChurchFeature
                 roles: array_values($held->map(fn (RoleAssignment $a): StaffRoleData => StaffRoleData::fromModel(
                     $a,
                     $satelliteNames,
-                    canRemove: $scope->canGrant($a->role, RoleScope::ofAssignment($a)),
+                    $classes,
+                    canRemove: $scope->canGrant($a->role, RoleScope::ofAssignment($a, $classes[$a->scope_id] ?? null)),
                 ))->all()),
             );
         })->sortBy(fn (StaffMemberData $p): string => mb_strtolower($p->name))->values();
 
         return Inertia::render('Church/People/Index', [
             'people' => $people->all(),
-            'grant_options' => $this->grantOptions($church->id, $satellites),
+            'grant_options' => $this->grantOptions($church->id, $satellites, $this->run(new GetSchedulesBySatelliteJob(
+                church: $church,
+                satelliteIds: array_map(fn (SatelliteOptionData $s): int => $s->id, $satellites),
+            ))),
         ]);
     }
 
     /**
+     * The Roles this admin may give: at the church, at each satellite, and Admin at each active class (TODO #9).
+     *
      * @param  list<SatelliteOptionData>  $satellites
+     * @param  array<int, list<Schedule>>  $classes  by satellite id
      * @return list<GrantOptionData>
      */
-    private function grantOptions(int $churchId, array $satellites): array
+    private function grantOptions(int $churchId, array $satellites, array $classes): array
     {
         $places = [[new RoleScope(ScopeTypeEnum::Church, $churchId), null]];
         foreach ($satellites as $satellite) {
             $places[] = [new RoleScope(ScopeTypeEnum::Satellite, $satellite->id), $satellite->name];
+            foreach ($classes[$satellite->id] ?? [] as $class) {
+                $places[] = [RoleScope::of($class), "{$satellite->name} · {$class->name}"];
+            }
         }
 
         $options = [];

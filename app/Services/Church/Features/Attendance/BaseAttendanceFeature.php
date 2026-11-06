@@ -49,7 +49,11 @@ abstract class BaseAttendanceFeature extends BaseChurchFeature
             fn (SatelliteOptionData $s): bool => $ids === null || in_array($s->id, $ids, true),
         ));
         $satelliteIds = array_map(fn (SatelliteOptionData $s): int => $s->id, $satellites);
-        $schedules = $this->run(new GetReportableSchedulesJob(church: $church, satelliteIds: $satelliteIds));
+        // A class admin (TODO #9) sees only their class's Sessions; an admin of the satellite or church, all of them.
+        $schedules = array_map(
+            fn (array $classes): array => array_values(array_filter($classes, fn (Schedule $c): bool => $scope->canSeeAttendanceOf($c))),
+            $this->run(new GetReportableSchedulesJob(church: $church, satelliteIds: $satelliteIds)),
+        );
 
         $selection = $this->run(new GetAttendanceSelectionJob(
             church: $church,

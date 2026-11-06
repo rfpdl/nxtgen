@@ -37,10 +37,10 @@ export const CLASSES = {
     sevenPm: { name: '7PM', when: 'Saturdays · 19:00–21:00' },
 } as const
 
-/** Saved sign-in for a staff member, written by auth.setup.ts. */
 /** Each browser's own Lifeshaper (E2ESeeder::VOLUNTEER_EMAIL), signed in by the journey that needs them. */
 export const volunteer = (project: string): string => `volunteer-${project}@nxtgen.test`
 
+/** Saved sign-in for a staff member, written by auth.setup.ts. */
 export const sessionFile = (role: StaffRole): string => `tests/e2e/.auth/${role}.json`
 
 /** A fresh address per run, so the per-address email limit never carries over between runs. */

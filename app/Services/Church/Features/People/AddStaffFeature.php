@@ -6,9 +6,11 @@ namespace App\Services\Church\Features\People;
 
 use App\Domains\Auth\Jobs\CreateMagicLinkJob;
 use App\Domains\Auth\Jobs\SendMagicLinkJob;
+use App\Domains\Church\DataObjects\RoleScope;
 use App\Domains\Church\DataObjects\StaffRoleData;
 use App\Domains\Church\Jobs\CreateRoleAssignmentJob;
 use App\Domains\Church\Jobs\GetSatelliteJob;
+use App\Domains\Schedule\Jobs\GetScheduleJob;
 use App\Domains\User\Jobs\CreateUserJob;
 use App\Domains\User\Jobs\GetUserByEmailJob;
 use App\Enums\AccessRowEnum;
@@ -31,8 +33,14 @@ use Illuminate\Support\Facades\DB;
 #[UserStory(
     title: 'Add someone to serve',
     persona: 'church admin or satellite admin',
-    happyPaths: ['story#76' => 'An Admin adds someone: the login is made or reused, the Role given, a sign-in link emailed'],
-    unhappyPaths: ['story#77' => 'A Satellite admin gives only Lifeshaper, in their own Satellite; another church\'s Satellite is refused'],
+    happyPaths: [
+        'story#76' => 'An Admin adds someone: the login is made or reused, the Role given, a sign-in link emailed',
+        'story#180' => 'An Admin makes someone class admin of a class they look after (TODO #9): a church admin any class, a Satellite admin one at their Satellite',
+    ],
+    unhappyPaths: [
+        'story#77' => 'A Satellite admin gives only Lifeshaper, in their own Satellite; another church\'s Satellite is refused',
+        'story#181' => 'Not at a class they do not look after, another church\'s, or a retired one; never Lifeshaper of a class',
+    ],
 )]
 #[AccessRow(AccessRowEnum::GrantRoles)]
 final class AddStaffFeature extends BaseChurchFeature
@@ -46,18 +54,23 @@ final class AddStaffFeature extends BaseChurchFeature
         $satellite = $input->scope_type === ScopeTypeEnum::Satellite
             ? $this->run(new GetSatelliteJob(church: $church, id: $input->scope_id))
             : null;
-        abort_unless($scope->canGrant($input->role, $input->scope()), 404);
+        // A class admin (TODO #9): an active class of this church — its satellite says who may give it.
+        $class = $input->scope_type === ScopeTypeEnum::Schedule
+            ? $this->run(new GetScheduleJob(church: $church, id: $input->scope_id))
+            : null;
+        $place = $class === null ? $input->scope() : RoleScope::of($class);
+        abort_unless($scope->canGrant($input->role, $place), 404);
 
-        $label = StaffRoleData::label($input->role, $input->scope(), $satellite?->name);
+        $label = StaffRoleData::label($input->role, $place, $class === null ? $satellite?->name : StaffRoleData::className($class));
 
-        $result = DB::transaction(function () use ($church, $satellite, $input) {
+        $result = DB::transaction(function () use ($church, $satellite, $class, $input) {
             $user = $this->run(new GetUserByEmailJob(email: $input->email))
                 ?? $this->run(new CreateUserJob(name: $input->name, email: $input->email));
 
             $added = $this->run(new CreateRoleAssignmentJob(
                 user: $user,
                 role: $input->role,
-                place: $satellite ?? $church,
+                place: $class ?? $satellite ?? $church,
                 grantedBy: $this->staff(),
             ));
 

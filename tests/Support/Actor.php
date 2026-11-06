@@ -29,28 +29,30 @@ enum Actor: string
     case RevokedParent = 'revoked staff, still a parent';
     case AwayAdmin = 'other-satellite admin';
     case AwayLifeshaper = 'other-satellite Lifeshaper';
+    /** The Admin Role at Home's 1PM — the world's class — only (TODO #9): a class admin. */
+    case ClassAdmin = 'class admin of Home 1PM';
     /** An admin of another church ("other"), who is also a parent there. */
     case OtherChurch = 'other-church admin';
 
     /** @return list<self> anyone with an active role in the world's church */
     public static function staff(): array
     {
-        return [self::ChurchAdmin, self::HomeAdmin, self::ChurchLifeshaper, self::HomeLifeshaper, self::BothHats, self::HomeParentLifeshaper, self::AwayAdmin, self::AwayLifeshaper];
+        return [self::ChurchAdmin, self::HomeAdmin, self::ChurchLifeshaper, self::HomeLifeshaper, self::BothHats, self::HomeParentLifeshaper, self::AwayAdmin, self::AwayLifeshaper, self::ClassAdmin];
     }
 
-    /** @return list<self> staff who can see the world's family (AccessScope::canSeeFamily) */
+    /** @return list<self> staff who can see the world's family (AccessScope::canSeeFamily) — a class admin at Home too */
     public static function seeingFamily(): array
     {
-        return [self::ChurchAdmin, self::HomeAdmin, self::ChurchLifeshaper, self::HomeLifeshaper, self::BothHats, self::HomeParentLifeshaper];
+        return [self::ChurchAdmin, self::HomeAdmin, self::ChurchLifeshaper, self::HomeLifeshaper, self::BothHats, self::HomeParentLifeshaper, self::ClassAdmin];
     }
 
     /**
      * @return list<self> staff whose Role covers Home, where the world's family lives and its class meets — who may
-     *                    check children in at Home's door (AccessScope::canCheckInAt)
+     *                    check children in at Home's 1PM (AccessScope::canCheckInTo) — its class admin too
      */
     public static function coveringHome(): array
     {
-        return [self::ChurchAdmin, self::HomeAdmin, self::ChurchLifeshaper, self::HomeLifeshaper, self::BothHats, self::HomeParentLifeshaper];
+        return [self::ChurchAdmin, self::HomeAdmin, self::ChurchLifeshaper, self::HomeLifeshaper, self::BothHats, self::HomeParentLifeshaper, self::ClassAdmin];
     }
 
     /** @return list<self> staff who may edit it (AccessScope::canEditFamily) */
@@ -59,7 +61,10 @@ enum Actor: string
         return [self::ChurchAdmin, self::HomeAdmin];
     }
 
-    /** @return list<self> anyone with an active admin Role in the world's church — who may open the Admin areas */
+    /**
+     * @return list<self> anyone with an active church or satellite admin Role in the world's church — who may open the
+     *                    Admin areas (a class admin opens only Classes and Attendance there)
+     */
     public static function admins(): array
     {
         return [self::ChurchAdmin, self::HomeAdmin, self::AwayAdmin];

@@ -45,7 +45,7 @@ final class ConfirmHeadCountFeature extends BaseChurchFeature
     {
         $church = $this->church();
         $class = $this->run(new GetScheduleJob(church: $church, id: $this->scheduleId));
-        abort_unless($this->scope()->canCheckInAt($class->satellite), 404);
+        abort_unless($this->scope()->canCheckInTo($class), 404);
         $today = $this->run(new GetChurchTodayJob(church: $church));
         abort_unless($class->meetsOn($today), 404);
 

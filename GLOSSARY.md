@@ -126,7 +126,8 @@ What a Staff member may do, and where (the whole Church, one Satellite, or one S
 _Avoid_: Permission, access level
 
 **Admin**:
-The Role that manages people, families and settings for its scope.
+The Role that manages people, families and settings for its scope — the whole Church, one Satellite, or one class
+(a **class admin**: that class's door, Who's in, Attendance, and editing it).
 _Avoid_: Super user, manager
 
 **Lifeshaper**:

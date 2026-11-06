@@ -38,7 +38,7 @@ final class MarkPresentFeature extends BaseChurchFeature
     {
         $church = $this->church();
         $checkIn = $this->run(new GetCheckInJob(church: $church, id: $this->checkInId));
-        abort_unless($this->scope()->canCheckInAt($checkIn->session->satellite), 404);
+        abort_unless($this->scope()->canCheckInTo($checkIn->session->schedule), 404);
         abort_unless($checkIn->session->date->isSameDay($this->run(new GetChurchTodayJob(church: $church))), 404);
 
         if (! $this->run(new UpdateCheckInPresenceJob(checkIn: $checkIn, revision: $input->revision, present: $input->present, by: $this->staff()))) {

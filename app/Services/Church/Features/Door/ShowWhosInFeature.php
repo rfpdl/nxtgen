@@ -45,7 +45,7 @@ final class ShowWhosInFeature extends BaseChurchFeature
     {
         $church = $this->church();
         $today = $this->run(new GetChurchTodayJob(church: $church));
-        $classes = $this->run(new GetTodaysSchedulesJob(church: $church, satelliteIds: $this->scope()->doorSatelliteIds(), today: $today));
+        $classes = $this->run(new GetTodaysSchedulesJob(church: $church, satelliteIds: $this->scope()->doorSatelliteIds(), today: $today, alsoScheduleIds: $this->scope()->classAdminScheduleIds()));
         $class = $this->run(new GetChosenScheduleJob(classes: $classes, id: $address->class));
 
         $session = $class === null ? null : $this->run(new GetSessionJob(schedule: $class, date: $today));

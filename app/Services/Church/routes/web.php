@@ -62,49 +62,54 @@ Route::prefix('admin')->name('admin.')->middleware(RequireAdminArea::class)->gro
 });
 
 // ── NxtGen Admin ─────────────────────────────────────────────────────────────────────────────────────────────────
-Route::prefix('nxtgen/admin')->name('nxtgen.admin.')->middleware(RequireAdminArea::class)->group(function () use ($familyPages): void {
-    $familyPages(true);
-    Route::put('/families/{family}/email', [FamilyController::class, 'correctEmail'])->whereNumber('family')->name('families.email');
-    Route::get('/children', [ChildController::class, 'index'])->name('children.index');
-    Route::put('/children/{child}/level', [ChildController::class, 'updateLevel'])->whereNumber('child')->name('children.level');
-    Route::put('/children/{child}/status', [ChildController::class, 'updateStatus'])->whereNumber('child')->name('children.status');
-    // A photo deleted for good (TODO #25): a parent asking for erasure — an admin who may edit the family.
-    Route::delete('/children/{child}/photo', [ChildController::class, 'deletePhoto'])->whereNumber('child')->name('children.photo.destroy');
-    Route::put('/duplicates/{pair}', [DuplicateController::class, 'resolve'])->whereNumber('pair')->name('duplicates.resolve');
+Route::prefix('nxtgen/admin')->name('nxtgen.admin.')->group(function () use ($familyPages): void {
+    // A class admin (TODO #9) opens only these two in Admin: their class, and its Attendance.
+    Route::middleware(RequireAdminArea::class.':class')->group(function (): void {
+        // Classes (GLOSSARY "Schedule"): admins make a satellite's classes (DECISIONS 2026-10-26).
+        Route::get('/classes', [ScheduleController::class, 'index'])->name('schedules.index');
+        Route::post('/classes', [ScheduleController::class, 'store'])->name('schedules.store');
+        Route::put('/classes/{schedule}', [ScheduleController::class, 'update'])->whereNumber('schedule')->name('schedules.update');
+        Route::put('/classes/{schedule}/retire', [ScheduleController::class, 'retire'])->whereNumber('schedule')->name('schedules.retire');
 
-    // Cards (name cards 03): admins see and move the requests by step. Print lists (name cards 04, GLOSSARY "Print
-    // list"): the approved cards the tab shows, kept; downloaded, marked printed.
-    Route::get('/card-requests', [CardRequestController::class, 'index'])->name('card-requests.index');
-    Route::post('/card-requests/print-lists', [CardRequestController::class, 'makePrintList'])->name('card-requests.print-lists.store');
-    Route::get('/card-requests/print-lists/{printList}', [CardRequestController::class, 'downloadPrintList'])->whereNumber('printList')->name('card-requests.print-lists.show');
-    Route::put('/card-requests/print-lists/{printList}/mark-printed', [CardRequestController::class, 'markPrintListPrinted'])->whereNumber('printList')->name('card-requests.print-lists.mark-printed');
-    Route::put('/card-requests/{cardRequest}/mark-paid', [CardRequestController::class, 'markPaid'])->whereNumber('cardRequest')->name('card-requests.mark-paid');
-    Route::put('/card-requests/{cardRequest}/approve', [CardRequestController::class, 'approve'])->whereNumber('cardRequest')->name('card-requests.approve');
-    Route::put('/card-requests/{cardRequest}/refuse', [CardRequestController::class, 'refuse'])->whereNumber('cardRequest')->name('card-requests.refuse');
-    Route::put('/card-requests/{cardRequest}/mark-printed', [CardRequestController::class, 'markPrinted'])->whereNumber('cardRequest')->name('card-requests.mark-printed');
+        // Attendance (DECISIONS 2026-10-26: reports are admins only): ?satellite=&class=&date= picks the Session.
+        Route::get('/attendance', [AttendanceController::class, 'show'])->name('attendance.show');
+        Route::get('/attendance/export', [AttendanceController::class, 'export'])->name('attendance.export');
+    });
 
-    // Moving-Up (TODO #27): the yearly step to the next Level, and putting the last one back — church admin only.
-    Route::get('/moving-up', [MovingUpController::class, 'index'])->name('moving-up.index');
-    Route::post('/moving-up', [MovingUpController::class, 'store'])->name('moving-up.store');
-    Route::put('/moving-up/{movingUp}/children/{child}/put-back', [MovingUpController::class, 'putBackChild'])->whereNumber(['movingUp', 'child'])->name('moving-up.children.put-back');
-    Route::put('/moving-up/{movingUp}/put-back', [MovingUpController::class, 'putBackEveryone'])->whereNumber('movingUp')->name('moving-up.put-back');
+    Route::middleware(RequireAdminArea::class)->group(function () use ($familyPages): void {
+        $familyPages(true);
+        Route::put('/families/{family}/email', [FamilyController::class, 'correctEmail'])->whereNumber('family')->name('families.email');
+        Route::get('/children', [ChildController::class, 'index'])->name('children.index');
+        Route::put('/children/{child}/level', [ChildController::class, 'updateLevel'])->whereNumber('child')->name('children.level');
+        Route::put('/children/{child}/status', [ChildController::class, 'updateStatus'])->whereNumber('child')->name('children.status');
+        // A photo deleted for good (TODO #25): a parent asking for erasure — an admin who may edit the family.
+        Route::delete('/children/{child}/photo', [ChildController::class, 'deletePhoto'])->whereNumber('child')->name('children.photo.destroy');
+        Route::put('/duplicates/{pair}', [DuplicateController::class, 'resolve'])->whereNumber('pair')->name('duplicates.resolve');
 
-    // Classes (GLOSSARY "Schedule"): admins make a satellite's classes (DECISIONS 2026-10-26).
-    Route::get('/classes', [ScheduleController::class, 'index'])->name('schedules.index');
-    Route::post('/classes', [ScheduleController::class, 'store'])->name('schedules.store');
-    Route::put('/classes/{schedule}', [ScheduleController::class, 'update'])->whereNumber('schedule')->name('schedules.update');
-    Route::put('/classes/{schedule}/retire', [ScheduleController::class, 'retire'])->whereNumber('schedule')->name('schedules.retire');
+        // Cards (name cards 03): admins see and move the requests by step. Print lists (name cards 04, GLOSSARY "Print
+        // list"): the approved cards the tab shows, kept; downloaded, marked printed.
+        Route::get('/card-requests', [CardRequestController::class, 'index'])->name('card-requests.index');
+        Route::post('/card-requests/print-lists', [CardRequestController::class, 'makePrintList'])->name('card-requests.print-lists.store');
+        Route::get('/card-requests/print-lists/{printList}', [CardRequestController::class, 'downloadPrintList'])->whereNumber('printList')->name('card-requests.print-lists.show');
+        Route::put('/card-requests/print-lists/{printList}/mark-printed', [CardRequestController::class, 'markPrintListPrinted'])->whereNumber('printList')->name('card-requests.print-lists.mark-printed');
+        Route::put('/card-requests/{cardRequest}/mark-paid', [CardRequestController::class, 'markPaid'])->whereNumber('cardRequest')->name('card-requests.mark-paid');
+        Route::put('/card-requests/{cardRequest}/approve', [CardRequestController::class, 'approve'])->whereNumber('cardRequest')->name('card-requests.approve');
+        Route::put('/card-requests/{cardRequest}/refuse', [CardRequestController::class, 'refuse'])->whereNumber('cardRequest')->name('card-requests.refuse');
+        Route::put('/card-requests/{cardRequest}/mark-printed', [CardRequestController::class, 'markPrinted'])->whereNumber('cardRequest')->name('card-requests.mark-printed');
 
-    // Links (GLOSSARY; Roy 2026-11-06): a satellite's own addresses on its QR poster.
-    Route::get('/links', [LinkController::class, 'index'])->name('links.index');
-    Route::post('/links', [LinkController::class, 'store'])->name('links.store');
-    Route::put('/links/{link}', [LinkController::class, 'update'])->whereNumber('link')->name('links.update');
-    Route::put('/links/{link}/move', [LinkController::class, 'move'])->whereNumber('link')->name('links.move');
-    Route::delete('/links/{link}', [LinkController::class, 'destroy'])->whereNumber('link')->name('links.destroy');
+        // Moving-Up (TODO #27): the yearly step to the next Level, and putting the last one back — church admin only.
+        Route::get('/moving-up', [MovingUpController::class, 'index'])->name('moving-up.index');
+        Route::post('/moving-up', [MovingUpController::class, 'store'])->name('moving-up.store');
+        Route::put('/moving-up/{movingUp}/children/{child}/put-back', [MovingUpController::class, 'putBackChild'])->whereNumber(['movingUp', 'child'])->name('moving-up.children.put-back');
+        Route::put('/moving-up/{movingUp}/put-back', [MovingUpController::class, 'putBackEveryone'])->whereNumber('movingUp')->name('moving-up.put-back');
 
-    // Attendance (DECISIONS 2026-10-26: reports are admins only): ?satellite=&class=&date= picks the Session.
-    Route::get('/attendance', [AttendanceController::class, 'show'])->name('attendance.show');
-    Route::get('/attendance/export', [AttendanceController::class, 'export'])->name('attendance.export');
+        // Links (GLOSSARY; Roy 2026-11-06): a satellite's own addresses on its QR poster.
+        Route::get('/links', [LinkController::class, 'index'])->name('links.index');
+        Route::post('/links', [LinkController::class, 'store'])->name('links.store');
+        Route::put('/links/{link}', [LinkController::class, 'update'])->whereNumber('link')->name('links.update');
+        Route::put('/links/{link}/move', [LinkController::class, 'move'])->whereNumber('link')->name('links.move');
+        Route::delete('/links/{link}', [LinkController::class, 'destroy'])->whereNumber('link')->name('links.destroy');
+    });
 });
 
 // ── NxtGen Serve ─────────────────────────────────────────────────────────────────────────────────────────────────

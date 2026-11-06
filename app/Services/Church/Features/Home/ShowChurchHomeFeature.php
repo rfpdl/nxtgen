@@ -26,7 +26,7 @@ final class ShowChurchHomeFeature extends BaseChurchFeature
 {
     public function handle(): RedirectResponse
     {
-        return $this->scope()->canUseAdmin()
+        return $this->scope()->canUseFullAdmin()
             ? redirect()->route('nxtgen.admin.families.index', $this->church())
             : redirect()->route('nxtgen.serve.door.show', $this->church());
     }

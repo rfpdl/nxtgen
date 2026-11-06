@@ -13,7 +13,7 @@ import { route } from 'ziggy-js'
 /**
  * One satellite on the Classes page: its classes (GLOSSARY "Schedule") in the order of the week, one opened for
  * editing at a time in place, and "+ Add a class", which opens the add form until it is saved or cancelled — so a
- * phone is not one long form per satellite (Roy's look, 2026-10-26).
+ * phone is not one long form per satellite (Roy's look, 2026-10-26). A class admin (TODO #9) adds none (`can_add`).
  */
 defineProps<{ satellite: SatelliteSchedules }>()
 
@@ -62,7 +62,7 @@ function retire(scheduleId: number): void {
             />
         </div>
         <AppButton
-            v-else
+            v-else-if="satellite.can_add"
             variant="secondary"
             class="self-start"
             data-testid="open-add-schedule"

@@ -28,6 +28,7 @@ use function Tests\Support\atSatellite;
 use function Tests\Support\checkedIn;
 use function Tests\Support\childOf;
 use function Tests\Support\church;
+use function Tests\Support\classAdminOf;
 use function Tests\Support\familyAt;
 use function Tests\Support\guardianOf;
 use function Tests\Support\scheduleAt;
@@ -441,5 +442,30 @@ describe('undoing a Check-in', function (): void {
         actingAs(staffMember(RoleEnum::Admin, atChurch(church(['slug' => 'other']))))->put("/other/nxtgen/serve/check-ins/{$atHouse->id}/undo")->assertNotFound();
 
         expect([$atHouse->fresh()?->isIn(), $lastWeek->fresh()?->isIn()])->toBe([true, true]);
+    });
+});
+
+/* A class admin (TODO #9; plan §3.2 "Check in / undo: events of S"): their own class at the door, no other. */
+describe('a class admin at the door', function (): void {
+    it('is offered only their own class, and checks children in there @story#182', function (): void {
+        ['onePm' => $onePm, 'amara' => $amara] = doorChurch();
+        $classAdmin = classAdminOf($onePm);
+
+        actingAs($classAdmin)->get('/ccf/nxtgen/serve/door')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
+            ->has('classes', 1)->where('classes.0.name', '1PM'));
+        actingAs($classAdmin)->post("/ccf/nxtgen/serve/classes/{$onePm->id}/check-ins", ['children' => [['child_id' => $amara->id, 'level' => null, 'make_active' => false]]])
+            ->assertSessionHas('success');
+
+        expect(CheckIn::query()->where('child_id', $amara->id)->exists())->toBeTrue();
+    });
+
+    it('cannot check in at another class of the same satellite @story#183', function (): void {
+        ['amara' => $amara, 'onePm' => $onePm] = doorChurch();
+        $sevenPm = Schedule::query()->where('name', '7PM')->sole();
+
+        actingAs(classAdminOf($onePm))->post("/ccf/nxtgen/serve/classes/{$sevenPm->id}/check-ins", ['children' => [['child_id' => $amara->id, 'level' => null, 'make_active' => false]]])
+            ->assertNotFound();
+
+        expect(CheckIn::query()->count())->toBe(0);
     });
 });

@@ -12,6 +12,7 @@ use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
 use App\Notifications\MagicLinkNotification;
 use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia;
 
@@ -20,9 +21,11 @@ use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
 use function Tests\Support\atTheSameTime;
 use function Tests\Support\church;
+use function Tests\Support\classAdminOf;
 use function Tests\Support\familyAt;
 use function Tests\Support\guardianOf;
 use function Tests\Support\satelliteOf;
+use function Tests\Support\scheduleAt;
 use function Tests\Support\staffMember;
 use function Tests\Support\withCommittedWorld;
 
@@ -267,5 +270,58 @@ describe('removing a role', function (): void {
             expect($answers)->toBe(['refused', 'removed'])
                 ->and(RoleAssignment::query()->whereIn('id', [$anaRole->id, $benRole->id])->where('is_active', true)->count())->toBe(1);
         });
+    });
+});
+
+/*
+ * Class admins (TODO #9; plan §3.2 "Grant roles: church admin any; satellite admin Lifeshaper/class-admin within B
+ * only"): the Admin Role at one class.
+ */
+describe('class admins', function (): void {
+    it('lets a church admin make someone class admin of any class, and a satellite admin of a class at their satellite @story#180', function (): void {
+        Notification::fake();
+        ['church' => $church, 'htc' => $htc, 'house' => $house, 'admin' => $admin] = peopleChurch();
+        $onePm = scheduleAt($htc, ['name' => '1PM']);
+        $tenAm = scheduleAt($house, ['name' => '10AM']);
+        $satAdmin = staffMember(RoleEnum::Admin, atSatellite($htc), ['name' => 'Sam Satellite']);
+
+        actingAs($admin)->post('/ccf/admin/people', addPerson('cleo@example.com', RoleEnum::Admin, ScopeTypeEnum::Schedule, $tenAm->id, 'Cleo Class'))
+            ->assertSessionHas('success');
+        actingAs($satAdmin)->post('/ccf/admin/people', addPerson('kai@example.com', RoleEnum::Admin, ScopeTypeEnum::Schedule, $onePm->id, 'Kai Class'))
+            ->assertSessionHas('success');
+
+        actingAs($satAdmin)->get('/ccf/admin/people')->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('people.0.name', 'Kai Class')
+            ->where('people.0.roles.0.label', 'Admin · Holy Trinity Church · 1PM')
+            ->where('people.0.roles.0.can_remove', true)
+            ->where('grant_options', fn (Collection $options): bool => $options->pluck('label')->all() === ['Lifeshaper · Holy Trinity Church', 'Admin · Holy Trinity Church · 1PM']));
+        expect(RoleAssignment::query()->where('scope_type', ScopeTypeEnum::Schedule)->pluck('scope_id')->sort()->values()->all())
+            ->toBe(collect([$onePm->id, $tenAm->id])->sort()->values()->all());
+    });
+
+    it('refuses a class the admin does not look after, another church\'s class, a retired one, or Lifeshaper of a class @story#181', function (): void {
+        Notification::fake();
+        ['church' => $church, 'htc' => $htc, 'house' => $house, 'admin' => $admin] = peopleChurch();
+        $tenAm = scheduleAt($house);
+        $retired = scheduleAt($htc, ['is_active' => false]);
+        $theirs = scheduleAt(satelliteOf(church()));
+        $satAdmin = staffMember(RoleEnum::Admin, atSatellite($htc));
+
+        actingAs($satAdmin)->post('/ccf/admin/people', addPerson('a@example.com', RoleEnum::Admin, ScopeTypeEnum::Schedule, $tenAm->id))->assertNotFound();
+        actingAs($admin)->post('/ccf/admin/people', addPerson('b@example.com', RoleEnum::Admin, ScopeTypeEnum::Schedule, $theirs->id))->assertNotFound();
+        actingAs($admin)->post('/ccf/admin/people', addPerson('c@example.com', RoleEnum::Admin, ScopeTypeEnum::Schedule, $retired->id))->assertNotFound();
+        actingAs($admin)->post('/ccf/admin/people', addPerson('d@example.com', RoleEnum::Lifeshaper, ScopeTypeEnum::Schedule, $tenAm->id))->assertNotFound();
+
+        expect(RoleAssignment::query()->where('scope_type', ScopeTypeEnum::Schedule)->count())->toBe(0);
+    });
+
+    it('lets the satellite\'s admin remove a class admin of its class, and not another satellite\'s admin @story#180 @story#181', function (): void {
+        ['church' => $church, 'htc' => $htc, 'house' => $house] = peopleChurch();
+        $onePm = scheduleAt($htc);
+        $classAdmin = classAdminOf($onePm);
+        $role = RoleAssignment::query()->where('user_id', $classAdmin->id)->sole();
+
+        expect(removeAndSay(staffMember(RoleEnum::Admin, atSatellite($house)), $role))->toBe('refused')
+            ->and(removeAndSay(staffMember(RoleEnum::Admin, atSatellite($htc)), $role))->toBe('removed');
     });
 });

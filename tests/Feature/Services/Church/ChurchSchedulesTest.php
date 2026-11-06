@@ -14,6 +14,7 @@ use function Pest\Laravel\actingAs;
 use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
 use function Tests\Support\church;
+use function Tests\Support\classAdminOf;
 use function Tests\Support\satelliteOf;
 use function Tests\Support\scheduleAt;
 use function Tests\Support\staffMember;
@@ -210,5 +211,43 @@ describe('retiring a class', function (): void {
         actingAs(staffMember(RoleEnum::Admin, atChurch($otherChurch)))->put("/other/nxtgen/admin/classes/{$onePm->id}/retire")->assertNotFound();
 
         expect($onePm->fresh()?->is_active)->toBeTrue();
+    });
+});
+
+/*
+ * A class admin (TODO #9, plan §3.2 "Class admin (S)"): the Admin Role at one class — they see and change only that
+ * class; they never add one.
+ */
+describe('a class admin', function (): void {
+    it('sees only their own class, may edit and retire it, and is not offered "Add a class" @story#182', function (): void {
+        ['church' => $church, 'dxb' => $dxb, 'onePm' => $onePm] = classesChurch();
+        $classAdmin = classAdminOf($onePm);
+
+        actingAs($classAdmin)->get('/ccf/nxtgen/admin/classes')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
+            ->has('satellites', 1)
+            ->where('satellites.0.name', 'CCF DXB')
+            ->where('satellites.0.can_add', false)
+            ->has('satellites.0.schedules', 1)
+            ->where('satellites.0.schedules.0.name', '1PM'));
+        actingAs($classAdmin)->put("/ccf/nxtgen/admin/classes/{$onePm->id}", ['name' => '1:30PM', 'weekday' => 'saturday', 'starts_at' => '13:30', 'ends_at' => '15:00'])
+            ->assertSessionHas('success');
+        actingAs($classAdmin)->put("/ccf/nxtgen/admin/classes/{$onePm->id}/retire")->assertSessionHas('success');
+
+        expect([$onePm->fresh()?->name, $onePm->fresh()?->is_active])->toBe(['1:30PM', false]);
+    });
+
+    it('cannot change another class, add one, or open any other Admin page @story#183', function (): void {
+        ['church' => $church, 'dxb' => $dxb, 'onePm' => $onePm] = classesChurch();
+        $sevenPm = Schedule::query()->where('name', '7PM')->sole();
+        $classAdmin = classAdminOf($onePm);
+
+        actingAs($classAdmin)->put("/ccf/nxtgen/admin/classes/{$sevenPm->id}", ['name' => 'Nope', 'weekday' => null, 'starts_at' => null, 'ends_at' => null])->assertNotFound();
+        actingAs($classAdmin)->put("/ccf/nxtgen/admin/classes/{$sevenPm->id}/retire")->assertNotFound();
+        actingAs($classAdmin)->post('/ccf/nxtgen/admin/classes', ['satellite_id' => $dxb->id, 'name' => 'Nope', 'weekday' => null, 'starts_at' => null, 'ends_at' => null])->assertNotFound();
+        foreach (['/ccf/nxtgen/admin/families', '/ccf/nxtgen/admin/children', '/ccf/nxtgen/admin/card-requests', '/ccf/nxtgen/admin/links', '/ccf/admin/people'] as $page) {
+            actingAs($classAdmin)->get($page)->assertNotFound();
+        }
+
+        expect([$sevenPm->fresh()?->name, Schedule::query()->where('name', 'Nope')->exists()])->toBe(['7PM', false]);
     });
 });

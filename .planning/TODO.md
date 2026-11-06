@@ -22,7 +22,7 @@ Updated 2026-11-03. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 
 | # | Item | Why |
 |---|---|---|
-| 9 | Schedule-admin roles (shown as "class", `ScopeTypeEnum::Schedule`) in People — `canGrant` refuses them until Schedules exist | People |
+| 9 | ~~Class admin roles~~ — done 2026-11-07: the Admin Role at one class — its door, Who's in, Attendance, edit/retire; given on People (`tasks/2026-11-07-class-admin/`) | done |
 | — | Open questions for R2: `lifeshapers_can_open` default; follow-up threshold (weeks absent) — plan §13 | plan §13 |
 
 ## Later

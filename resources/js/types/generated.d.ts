@@ -154,6 +154,7 @@ declare namespace App {
                 export type ChurchNavData = {
                     area: string | null
                     can_use_admin: boolean
+                    can_use_full_admin: boolean
                     can_manage_people: boolean
                     can_manage_classes: boolean
                     can_see_attendance: boolean
@@ -366,6 +367,7 @@ declare namespace App {
                     id: number
                     name: string
                     schedules: App.Domains.Schedule.DataObjects.ScheduleData[]
+                    can_add: boolean
                 }
                 export type ScheduleData = {
                     id: number

@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 use App\Data\Models\Church;
 use App\Data\Models\Family;
+use App\Data\Models\RoleAssignment;
 use App\Data\Models\Satellite;
+use App\Data\Models\Schedule;
 use App\Data\Models\User;
+use App\Domains\Church\DataObjects\AccessScope;
 use App\Domains\Church\DataObjects\RoleScope;
 use App\Domains\Church\Jobs\GetAccessScopeJob;
 use App\Enums\RoleEnum;
@@ -18,6 +21,7 @@ use function Tests\Support\church;
 use function Tests\Support\familyAt;
 use function Tests\Support\grantRole;
 use function Tests\Support\satelliteOf;
+use function Tests\Support\scheduleAt;
 
 /*
  * The access matrix (plan §3.2), one rule per test. AccessScope is the ONE owner of these answers;
@@ -197,7 +201,7 @@ it('lets anyone with a staff role in the church re-send a family\'s confirmation
         'church' => atChurch($church),
         'home' => atSatellite($htc),
         'away' => atSatellite($house),
-        'class' => new TestRoleScope($church, ScopeTypeEnum::Schedule, 99),
+        'class' => new TestRoleScope($church, ScopeTypeEnum::Schedule, scheduleAt($house)->id),
         default => throw new LogicException("Unknown place: {$where}"),
     });
 
@@ -298,7 +302,7 @@ it('lets anyone with a Role at a satellite check children in there; a church-wid
 
     $scope = (new GetAccessScopeJob(user: $user, church: $church))->handle();
 
-    expect([$scope->canCheckInAt($htc), $scope->canCheckInAt($house)])->toBe([$atHtc, $atHouse])
+    expect([$scope->canCheckInTo(scheduleAt($htc)), $scope->canCheckInTo(scheduleAt($house))])->toBe([$atHtc, $atHouse])
         ->and($scope->doorSatelliteIds())->toBe($where === 'church' ? null : [$htc->id]);
 })->with([
     'church admin' => [RoleEnum::Admin, 'church', true, true],
@@ -314,8 +318,43 @@ it('never lets anyone check in at another church\'s satellite, nor with a switch
     $revoked = User::factory()->create();
     grantRole($revoked, RoleEnum::Lifeshaper, atSatellite($htc), active: false);
 
-    expect((new GetAccessScopeJob(user: $admin, church: $church))->handle()->canCheckInAt(satelliteOf(church())))->toBeFalse()
-        ->and((new GetAccessScopeJob(user: $revoked, church: $church))->handle()->canCheckInAt($htc))->toBeFalse();
+    expect((new GetAccessScopeJob(user: $admin, church: $church))->handle()->canCheckInTo(scheduleAt(satelliteOf(church()))))->toBeFalse()
+        ->and((new GetAccessScopeJob(user: $revoked, church: $church))->handle()->canCheckInTo(scheduleAt($htc)))->toBeFalse();
+});
+
+/**
+ * A class admin of 1PM at HTC (TODO #9), and the HTC class they are not admin of.
+ *
+ * @return array{scope: AccessScope, htc: Satellite, house: Satellite, onePm: Schedule, sevenPm: Schedule}
+ */
+function classAdminScope(): array
+{
+    ['church' => $church, 'htc' => $htc, 'house' => $house] = fx();
+    $onePm = scheduleAt($htc, ['name' => '1PM']);
+    $sevenPm = scheduleAt($htc, ['name' => '7PM']);
+    $user = User::factory()->create();
+    RoleAssignment::query()->create(['church_id' => $church->id, 'user_id' => $user->id, 'role' => RoleEnum::Admin, 'scope_type' => ScopeTypeEnum::Schedule, 'scope_id' => $onePm->id, 'is_active' => true]);
+
+    return ['scope' => (new GetAccessScopeJob(user: $user, church: $church))->handle(), 'htc' => $htc, 'house' => $house, 'onePm' => $onePm, 'sevenPm' => $sevenPm];
+}
+
+it('gives a class admin their class — its door, its Attendance, editing it — and nothing of another class (TODO #9)', function (): void {
+    ['scope' => $scope, 'htc' => $htc, 'onePm' => $onePm, 'sevenPm' => $sevenPm] = classAdminScope();
+
+    expect([$scope->canCheckInTo($onePm), $scope->canCheckInTo($sevenPm)])->toBe([true, false])
+        ->and($scope->doorSatelliteIds())->toBe([])
+        ->and($scope->classAdminScheduleIds())->toBe([$onePm->id])
+        ->and([$scope->canManageClasses(), $scope->canManageSchedule($onePm), $scope->canManageSchedule($sevenPm), $scope->canManageClassesAt($htc)])->toBe([true, true, false, false])
+        ->and([$scope->canSeeAttendance(), $scope->canSeeAttendanceOf($onePm), $scope->canSeeAttendanceOf($sevenPm), $scope->attendanceSatelliteIds()])->toBe([true, true, false, [$htc->id]]);
+});
+
+it('lets a class admin work at their class\'s satellite as a Lifeshaper there, and into Admin only for Classes and Attendance (TODO #9)', function (): void {
+    ['scope' => $scope, 'htc' => $htc, 'house' => $house] = classAdminScope();
+
+    expect($scope->visibleSatelliteIds())->toBe([$htc->id])
+        ->and([$scope->canSeeFamily(familyAt($htc)), $scope->canSeeFamily(familyAt($house)), $scope->canEditFamily(familyAt($htc))])->toBe([true, false, false])
+        ->and([$scope->canUseAdmin(), $scope->canUseFullAdmin()])->toBe([true, false])
+        ->and([$scope->canManagePeople(), $scope->canManageCards(), $scope->canManageLinks(), $scope->canReviewDuplicates(), $scope->canMoveUp()])->toBe([false, false, false, false, false]);
 });
 
 it('lets an admin manage the Links of the satellites they look after — a church admin every satellite\'s (Roy 2026-11-06)', function (): void {

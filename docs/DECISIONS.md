@@ -6,6 +6,13 @@ describes the design; this records the choices that shaped or changed it.
 
 ## 2026-11-07 (overnight — Claude, from Roy's list)
 
+- **Class admin roles (TODO #9), built from plan §3.2's "Class admin (S)" column** (`tasks/2026-11-07-class-admin/`).
+  Claude, where the plan is silent — the narrower answer, for Roy to confirm: a class admin works at their class's
+  satellite as a Lifeshaper there (its families, register, edit details); at the door they see **only their class**;
+  in Admin **only Classes** (edit or retire their class, add none) **and Attendance** (their class) — every other
+  Admin page is 404; `/ccf` takes them to the door. Given on People by a church admin (any class) or a satellite admin
+  (classes at their satellite), named "Admin · CCF DXB · 1PM". A retired class's Role gives nothing.
+
 - **Delete a photo for good (TODO #25, SECURITY #19).** Claude, low-stakes, for Roy to confirm: the **parent** deletes
   their child's photo from their own page (a hidden one too), or an **admin who may edit the family** does it for
   them in Admin; **not a Lifeshaper** — it cannot be undone. The file goes, the child's history says who; consent is

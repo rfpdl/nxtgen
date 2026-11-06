@@ -48,3 +48,16 @@ it('lists every satellite\'s for a church-wide Role, by satellite, and never ano
 
     expect(array_map(fn (Schedule $s): string => "{$s->satellite->name} {$s->name}", $classes))->toBe(['CCF DXB 1PM', 'House Church 10AM']);
 });
+
+it('adds a class admin\'s own classes to the satellites asked for — not their satellite\'s other classes (TODO #9)', function (): void {
+    $church = church();
+    $dxb = satelliteOf($church, ['name' => 'CCF DXB']);
+    $house = satelliteOf($church, ['name' => 'House']);
+    scheduleAt($dxb, ['name' => '1PM', 'weekday' => null]);
+    $sevenPm = scheduleAt($dxb, ['name' => '7PM', 'weekday' => null]);
+    scheduleAt($house, ['name' => '10AM', 'weekday' => null]);
+
+    $classes = (new GetTodaysSchedulesJob(church: $church, satelliteIds: [$house->id], today: CarbonImmutable::parse('2026-10-31'), alsoScheduleIds: [$sevenPm->id]))->handle();
+
+    expect(array_map(fn (Schedule $s): string => $s->name, $classes))->toBe(['7PM', '10AM']);
+});

@@ -81,10 +81,11 @@ final class AccessMatrix
             'nxtgen.admin.moving-up.put-back' => [AccessRowEnum::MovingUp, [Actor::ChurchAdmin]],
             // Classes (DECISIONS 2026-10-26): the page opens for every admin; Home's class is changed only by an admin
             // over Home.
-            'nxtgen.admin.schedules.index' => [AccessRowEnum::ManageClasses, Actor::admins()],
+            // A class admin (TODO #9) sees and changes their own class — the world's — and adds none.
+            'nxtgen.admin.schedules.index' => [AccessRowEnum::ManageClasses, [...Actor::admins(), Actor::ClassAdmin]],
             'nxtgen.admin.schedules.store' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin]],
-            'nxtgen.admin.schedules.update' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin]],
-            'nxtgen.admin.schedules.retire' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin]],
+            'nxtgen.admin.schedules.update' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin, Actor::ClassAdmin]],
+            'nxtgen.admin.schedules.retire' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin, Actor::ClassAdmin]],
             // Links (Roy 2026-11-06): the page opens for every admin; Home's Links are changed only by an admin over Home.
             'nxtgen.admin.links.index' => [AccessRowEnum::ManageLinks, Actor::admins()],
             'nxtgen.admin.links.store' => [AccessRowEnum::ManageLinks, [Actor::ChurchAdmin, Actor::HomeAdmin]],
@@ -92,8 +93,8 @@ final class AccessMatrix
             'nxtgen.admin.links.move' => [AccessRowEnum::ManageLinks, [Actor::ChurchAdmin, Actor::HomeAdmin]],
             'nxtgen.admin.links.destroy' => [AccessRowEnum::ManageLinks, [Actor::ChurchAdmin, Actor::HomeAdmin]],
             // Attendance (DECISIONS 2026-10-26: reports are admins only): Home's class, only for an admin over Home.
-            'nxtgen.admin.attendance.show' => [AccessRowEnum::Attendance, [Actor::ChurchAdmin, Actor::HomeAdmin]],
-            'nxtgen.admin.attendance.export' => [AccessRowEnum::Attendance, [Actor::ChurchAdmin, Actor::HomeAdmin]],
+            'nxtgen.admin.attendance.show' => [AccessRowEnum::Attendance, [Actor::ChurchAdmin, Actor::HomeAdmin, Actor::ClassAdmin]],
+            'nxtgen.admin.attendance.export' => [AccessRowEnum::Attendance, [Actor::ChurchAdmin, Actor::HomeAdmin, Actor::ClassAdmin]],
             // ── Church-wide Admin ──
             // People opens for every admin; adding or removing a home Lifeshaper needs the home satellite.
             'admin.people.index' => [AccessRowEnum::GrantRoles, Actor::admins()],

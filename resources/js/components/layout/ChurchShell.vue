@@ -25,14 +25,16 @@ const items = computed<ShellItem[]>(() => {
     const nav = page.props.church_nav
     const slug = church.value.slug
     const inAdmin = nav?.area === 'nxtgen.admin' || nav?.area === 'admin'
+    // A class admin (TODO #9) has only Classes and Attendance in Admin.
+    const full = nav?.can_use_full_admin === true
     const all: (ShellItem | false)[] = inAdmin
         ? [
-              {
+              full && {
                   label: 'Families',
                   href: route('nxtgen.admin.families.index', slug),
                   testid: 'nav-families',
               },
-              { label: 'Children', href: route('nxtgen.admin.children.index', slug) },
+              full && { label: 'Children', href: route('nxtgen.admin.children.index', slug) },
               nav?.can_manage_classes === true && {
                   label: 'Classes',
                   href: route('nxtgen.admin.schedules.index', slug),
@@ -69,7 +71,10 @@ const items = computed<ShellItem[]>(() => {
               { label: 'QR poster', href: route('nxtgen.serve.poster', slug) },
               nav?.can_use_admin === true && {
                   label: 'Admin',
-                  href: route('nxtgen.admin.families.index', slug),
+                  href: route(
+                      full ? 'nxtgen.admin.families.index' : 'nxtgen.admin.schedules.index',
+                      slug,
+                  ),
                   testid: 'nav-admin',
               },
           ]

@@ -6,6 +6,7 @@ namespace App\Domains\Church\DataObjects;
 
 use App\Data\Models\Family;
 use App\Data\Models\Satellite;
+use App\Domains\Church\DataObjects\Concerns\ClassRules;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
 
@@ -16,17 +17,20 @@ use App\Enums\ScopeTypeEnum;
  *   church admin     → everything in the church
  *   satellite admin  → see + edit families whose home satellite is theirs; manage that satellite's Schedules (classes);
  *                      see its Attendance
- *   schedule admin   → that Schedule (shown as "class"; Release 2)
+ *   class admin      → that class (a Schedule — TODO #9): its door, Who's in, Attendance, edit/retire it; families of
+ *                      its satellite as a Lifeshaper there (ClassRules)
  *   Lifeshaper       → see their satellites' families, register families, add children
  *   any staff role   → re-send any family's confirmation link (a visiting family too); check children in at the
  *                      door of the satellite(s) the Role covers — any child of the church (DECISIONS 2026-10-26)
  */
 final readonly class AccessScope
 {
+    use ClassRules;
+
     /**
      * @param  list<int>  $adminSatelliteIds
      * @param  list<int>  $lifeshaperSatelliteIds
-     * @param  list<int>  $adminScheduleIds
+     * @param  array<int, int>  $adminSchedules  class admin (TODO #9): schedule id => its satellite id
      */
     public function __construct(
         public int $churchId,
@@ -34,13 +38,13 @@ final readonly class AccessScope
         public bool $isChurchLifeshaper,
         public array $adminSatelliteIds,
         public array $lifeshaperSatelliteIds,
-        public array $adminScheduleIds,
+        public array $adminSchedules,
     ) {}
 
     public function canWorkHere(): bool
     {
         return $this->isChurchAdmin || $this->isChurchLifeshaper
-            || $this->adminSatelliteIds !== [] || $this->lifeshaperSatelliteIds !== [] || $this->adminScheduleIds !== [];
+            || $this->adminSatelliteIds !== [] || $this->lifeshaperSatelliteIds !== [] || $this->isClassAdmin();
     }
 
     /**
@@ -54,7 +58,8 @@ final readonly class AccessScope
             return null;
         }
 
-        return array_values(array_unique([...$this->adminSatelliteIds, ...$this->lifeshaperSatelliteIds]));
+        // A class admin works at their class's satellite, as a Lifeshaper there (TODO #9).
+        return array_values(array_unique([...$this->adminSatelliteIds, ...$this->lifeshaperSatelliteIds, ...array_values($this->adminSchedules)]));
     }
 
     public function canSeeFamily(Family $family): bool
@@ -138,34 +143,6 @@ final readonly class AccessScope
     }
 
     /**
-     * The Classes page (Schedules, shown as "class" — DECISIONS 2026-10-26): church admins and satellite admins.
-     * WHICH satellites' classes each may add, edit and retire is canManageClassesAt.
-     */
-    public function canManageClasses(): bool
-    {
-        return $this->isAnyAdmin();
-    }
-
-    /**
-     * The satellites whose classes this person manages: null = every satellite (church admin); a satellite admin's
-     * own; nobody else's.
-     *
-     * @return list<int>|null
-     */
-    public function classSatelliteIds(): ?array
-    {
-        return $this->isChurchAdmin ? null : $this->adminSatelliteIds;
-    }
-
-    /** A satellite's classes: a church admin anywhere in this church, a satellite admin at their own satellite. */
-    public function canManageClassesAt(Satellite $satellite): bool
-    {
-        $ids = $this->classSatelliteIds();
-
-        return $satellite->church_id === $this->churchId && ($ids === null || in_array($satellite->id, $ids, true));
-    }
-
-    /**
      * Links (GLOSSARY; Roy 2026-11-06): a satellite's own addresses on its poster — managed by church admins and
      * satellite admins. WHICH satellites' is canManageLinksAt, as for classes.
      */
@@ -192,49 +169,18 @@ final readonly class AccessScope
     }
 
     /**
-     * The satellites whose classes this person checks children into at the door (DECISIONS 2026-10-26): those their
-     * Role covers — null = every satellite (a church-wide Role). Which CHILDREN is not limited: any child of the
-     * church may be checked in, a visitor too.
-     *
-     * @return list<int>|null
+     * The Admin areas (Roy 2026-11-06): any admin Role here — church, satellite, or one class (TODO #9). A class
+     * admin opens only Classes and Attendance there (canUseFullAdmin is everything else). Everyone else serves in Serve.
      */
-    public function doorSatelliteIds(): ?array
-    {
-        return $this->visibleSatelliteIds();
-    }
-
-    /** Check children in (and undo) at this satellite's classes: a Role covering it, in this church. */
-    public function canCheckInAt(Satellite $satellite): bool
-    {
-        $ids = $this->doorSatelliteIds();
-
-        return $satellite->church_id === $this->churchId && $this->canWorkHere() && ($ids === null || in_array($satellite->id, $ids, true));
-    }
-
-    /** The Admin areas (Roy 2026-11-06): any admin Role here, church or satellite. Everyone else serves in Serve. */
     public function canUseAdmin(): bool
     {
-        return $this->isAnyAdmin();
+        return $this->isAnyAdmin() || $this->isClassAdmin();
     }
 
-    /**
-     * Attendance (reports are admins only — DECISIONS 2026-10-26): church admins and satellite admins. WHICH
-     * satellites' Sessions each may see is attendanceSatelliteIds.
-     */
-    public function canSeeAttendance(): bool
+    /** Every Admin page — families, Excel, Children, Cards, Links, People…: a church or satellite admin, not a class admin. */
+    public function canUseFullAdmin(): bool
     {
         return $this->isAnyAdmin();
-    }
-
-    /**
-     * The satellites whose Attendance this person sees: null = every satellite (church admin); a satellite admin's
-     * own; nobody else's.
-     *
-     * @return list<int>|null
-     */
-    public function attendanceSatelliteIds(): ?array
-    {
-        return $this->isChurchAdmin ? null : $this->adminSatelliteIds;
     }
 
     /**
@@ -270,8 +216,11 @@ final readonly class AccessScope
      */
     public function canGrant(RoleEnum $role, RoleScope $scope): bool
     {
+        // A class admin (TODO #9): the Admin Role at a class of this church (its satellite known) — given by a church
+        // admin anywhere, by a satellite admin at their satellite (plan §3.2).
         if ($scope->type === ScopeTypeEnum::Schedule) {
-            return false;
+            return $role === RoleEnum::Admin && $scope->satelliteId !== null
+                && ($this->isChurchAdmin || in_array($scope->satelliteId, $this->adminSatelliteIds, true));
         }
 
         if ($this->isChurchAdmin) {

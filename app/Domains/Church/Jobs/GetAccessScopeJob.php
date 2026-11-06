@@ -6,6 +6,7 @@ namespace App\Domains\Church\Jobs;
 
 use App\Data\Models\Church;
 use App\Data\Models\RoleAssignment;
+use App\Data\Models\Schedule;
 use App\Data\Models\User;
 use App\Domains\Church\DataObjects\AccessScope;
 use App\Enums\RoleEnum;
@@ -39,7 +40,28 @@ final class GetAccessScopeJob extends BaseJob
             isChurchLifeshaper: $ids(RoleEnum::Lifeshaper, ScopeTypeEnum::Church) !== [],
             adminSatelliteIds: $ids(RoleEnum::Admin, ScopeTypeEnum::Satellite),
             lifeshaperSatelliteIds: $ids(RoleEnum::Lifeshaper, ScopeTypeEnum::Satellite),
-            adminScheduleIds: $ids(RoleEnum::Admin, ScopeTypeEnum::Schedule),
+            adminSchedules: $this->classesOf($ids(RoleEnum::Admin, ScopeTypeEnum::Schedule)),
         );
+    }
+
+    /**
+     * A class admin's classes (TODO #9) with each one's satellite — this church's, still active: a retired class's
+     * Role gives nothing.
+     *
+     * @param  list<int>  $scheduleIds
+     * @return array<int, int> schedule id => satellite id
+     */
+    private function classesOf(array $scheduleIds): array
+    {
+        if ($scheduleIds === []) {
+            return [];
+        }
+
+        $classes = [];
+        foreach (Schedule::query()->where('church_id', $this->church->id)->whereIn('id', $scheduleIds)->where('is_active', true)->get(['id', 'satellite_id']) as $schedule) {
+            $classes[$schedule->id] = $schedule->satellite_id;
+        }
+
+        return $classes;
     }
 }

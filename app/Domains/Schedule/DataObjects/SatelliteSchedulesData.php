@@ -7,7 +7,10 @@ namespace App\Domains\Schedule\DataObjects;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** A satellite on the Classes page, with its active classes in the order of the week. */
+/**
+ * A satellite on the Classes page, with its active classes in the order of the week — and whether this person may add
+ * one there (a class admin, TODO #9, sees only their own class and adds none).
+ */
 #[TypeScript]
 final class SatelliteSchedulesData extends Data
 {
@@ -16,5 +19,6 @@ final class SatelliteSchedulesData extends Data
         public int $id,
         public string $name,
         public array $schedules,
+        public bool $can_add,
     ) {}
 }

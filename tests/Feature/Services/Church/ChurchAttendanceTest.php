@@ -24,6 +24,7 @@ use function Tests\Support\atSatellite;
 use function Tests\Support\checkedIn;
 use function Tests\Support\childOf;
 use function Tests\Support\church;
+use function Tests\Support\classAdminOf;
 use function Tests\Support\exportedRows;
 use function Tests\Support\familyAt;
 use function Tests\Support\guardianOf;
@@ -252,5 +253,28 @@ describe('the Attendance Excel', function (): void {
         actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->get("/ccf/nxtgen/admin/attendance/export?class={$onePm->id}&date=2026-10-31")->assertNotFound();
         actingAs($admin)->get("/ccf/nxtgen/admin/attendance/export?class={$theirs->id}&date=2026-10-31")->assertNotFound();
         actingAs($lifeshaper)->get("/ccf/nxtgen/admin/attendance/export?class={$onePm->id}&date=2026-10-31")->assertNotFound();
+    });
+});
+
+/* A class admin (TODO #9; plan §3.2 "Attendance reports: S"): their own class's Sessions, nothing else. */
+describe('a class admin', function (): void {
+    it('sees their own class\'s Attendance, and is offered no other class @story#182', function (): void {
+        ['dxb' => $dxb, 'onePm' => $onePm] = attendanceChurch();
+
+        actingAs(classAdminOf($onePm))->get('/ccf/nxtgen/admin/attendance')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('class_id', $onePm->id)
+            ->where('total', 3)
+            ->has('satellites', 1)
+            ->where('satellites.0.name', 'CCF DXB')
+            ->where('satellites.0.classes', [['id' => $onePm->id, 'name' => '1PM', 'retired' => false]]));
+    });
+
+    it('never gets another class\'s Attendance, on screen or in Excel: asking for it is not found @story#183', function (): void {
+        ['onePm' => $onePm, 'sevenPm' => $sevenPm, 'house' => $house, 'houseClass' => $houseClass] = attendanceChurch();
+        $classAdmin = classAdminOf($onePm);
+
+        actingAs($classAdmin)->get("/ccf/nxtgen/admin/attendance?class={$sevenPm->id}&date=2026-10-24")->assertNotFound();
+        actingAs($classAdmin)->get("/ccf/nxtgen/admin/attendance?satellite={$house->id}&class={$houseClass->id}")->assertNotFound();
+        actingAs($classAdmin)->get("/ccf/nxtgen/admin/attendance/export?class={$sevenPm->id}&date=2026-10-24")->assertNotFound();
     });
 });

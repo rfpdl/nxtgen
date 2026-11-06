@@ -23,6 +23,7 @@ vi.mock('ziggy-js', () => ({
 const dxb: SatelliteSchedulesProp = {
     id: 3,
     name: 'CCF DXB',
+    can_add: true,
     schedules: [
         {
             id: 4,
@@ -98,5 +99,14 @@ describe('SatelliteSchedules', () => {
             {},
             expect.anything(),
         )
+    })
+
+    it('offers no "+ Add a class" to a class admin, who looks after one class (TODO #9)', () => {
+        const wrapper = mount(SatelliteSchedules, {
+            props: { satellite: { ...dxb, can_add: false } },
+        })
+
+        expect(wrapper.find('[data-testid="open-add-schedule"]').exists()).toBe(false)
+        expect(wrapper.findAll('[data-testid="schedule"]').length).toBeGreaterThan(0)
     })
 })

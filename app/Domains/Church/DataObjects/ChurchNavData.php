@@ -18,6 +18,7 @@ final class ChurchNavData extends Data
     public function __construct(
         public ?string $area,
         public bool $can_use_admin,
+        public bool $can_use_full_admin,
         public bool $can_manage_people,
         public bool $can_manage_classes,
         public bool $can_see_attendance,
@@ -31,6 +32,7 @@ final class ChurchNavData extends Data
         return new self(
             area: $area,
             can_use_admin: $scope->canUseAdmin(),
+            can_use_full_admin: $scope->canUseFullAdmin(),
             can_manage_people: $scope->canManagePeople(),
             can_manage_classes: $scope->canManageClasses(),
             can_see_attendance: $scope->canSeeAttendance(),
