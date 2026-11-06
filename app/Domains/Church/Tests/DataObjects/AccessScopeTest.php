@@ -317,3 +317,22 @@ it('never lets anyone check in at another church\'s satellite, nor with a switch
     expect((new GetAccessScopeJob(user: $admin, church: $church))->handle()->canCheckInAt(satelliteOf(church())))->toBeFalse()
         ->and((new GetAccessScopeJob(user: $revoked, church: $church))->handle()->canCheckInAt($htc))->toBeFalse();
 });
+
+it('lets an admin manage the Links of the satellites they look after — a church admin every satellite\'s (Roy 2026-11-06)', function (): void {
+    ['church' => $church, 'htc' => $htc, 'house' => $house] = fx();
+    $churchAdmin = User::factory()->create();
+    grantRole($churchAdmin, RoleEnum::Admin, atChurch($church));
+    $satelliteAdmin = User::factory()->create();
+    grantRole($satelliteAdmin, RoleEnum::Admin, atSatellite($htc));
+    $lifeshaper = User::factory()->create();
+    grantRole($lifeshaper, RoleEnum::Lifeshaper, atChurch($church));
+
+    $wide = (new GetAccessScopeJob(user: $churchAdmin, church: $church))->handle();
+    $own = (new GetAccessScopeJob(user: $satelliteAdmin, church: $church))->handle();
+    $serves = (new GetAccessScopeJob(user: $lifeshaper, church: $church))->handle();
+
+    expect([$wide->canManageLinks(), $wide->linkSatelliteIds(), $wide->canManageLinksAt($house)])->toBe([true, null, true])
+        ->and([$own->canManageLinks(), $own->linkSatelliteIds(), $own->canManageLinksAt($htc), $own->canManageLinksAt($house)])->toBe([true, [$htc->id], true, false])
+        ->and([$serves->canManageLinks(), $serves->canManageLinksAt($htc)])->toBe([false, false])
+        ->and($wide->canManageLinksAt(satelliteOf(church())))->toBeFalse();
+});

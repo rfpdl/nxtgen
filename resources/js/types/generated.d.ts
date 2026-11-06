@@ -159,6 +159,7 @@ declare namespace App {
                     can_see_attendance: boolean
                     can_manage_cards: boolean
                     can_move_up: boolean
+                    can_manage_links: boolean
                 }
                 export type GrantOptionData = {
                     label: string
@@ -170,6 +171,21 @@ declare namespace App {
                     church_name: string
                     label: string
                     url: string
+                }
+                export type PosterLinkData = {
+                    label: string
+                    url: string
+                    qr: string
+                }
+                export type SatelliteLinkData = {
+                    id: number
+                    label: string
+                    url: string
+                }
+                export type SatelliteLinksData = {
+                    id: number
+                    name: string
+                    links: App.Domains.Church.DataObjects.SatelliteLinkData[]
                 }
                 export type SatelliteOptionData = {
                     id: number
@@ -385,6 +401,7 @@ declare namespace App {
             | 'card_request'
             | 'cards'
             | 'moving_up'
+            | 'manage_links'
         export type CardFeeEnum = 'free' | 'paid' | 'not_paid'
         export type CardListTabEnum = 'asked' | 'approved' | 'printed' | 'closed'
         export type CardMatchEnum = 'exact' | 'several' | 'close' | 'none'
@@ -520,6 +537,11 @@ declare namespace App {
         }
         namespace Church {
             namespace Data {
+                export type AddSatelliteLinkInput = {
+                    satellite_id: number
+                    label: string
+                    url: string
+                }
                 export type AddScheduleInput = {
                     satellite_id: number
                     name: string
@@ -571,11 +593,18 @@ declare namespace App {
                 export type MoveChildrenUpInput = {
                     children: App.Services.Church.Data.MoveChildUpInput[]
                 }
+                export type MoveSatelliteLinkInput = {
+                    direction: string
+                }
                 export type RefuseCardRequestInput = {
                     reason: string
                 }
                 export type ResolveDuplicateInput = {
                     status: App.Enums.DuplicateStatusEnum
+                }
+                export type SatelliteLinkInput = {
+                    label: string
+                    url: string
                 }
                 export type ScheduleInput = {
                     name: string

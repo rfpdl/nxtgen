@@ -22,6 +22,7 @@ use App\Services\Church\Http\Controllers\Door\Controller as DoorController;
 use App\Services\Church\Http\Controllers\Duplicate\Controller as DuplicateController;
 use App\Services\Church\Http\Controllers\Family\Controller as FamilyController;
 use App\Services\Church\Http\Controllers\Home\Controller as HomeController;
+use App\Services\Church\Http\Controllers\Link\Controller as LinkController;
 use App\Services\Church\Http\Controllers\MovingUp\Controller as MovingUpController;
 use App\Services\Church\Http\Controllers\People\Controller as PeopleController;
 use App\Services\Church\Http\Controllers\Poster\Controller as PosterController;
@@ -91,6 +92,13 @@ Route::prefix('nxtgen/admin')->name('nxtgen.admin.')->middleware(RequireAdminAre
     Route::post('/classes', [ScheduleController::class, 'store'])->name('schedules.store');
     Route::put('/classes/{schedule}', [ScheduleController::class, 'update'])->whereNumber('schedule')->name('schedules.update');
     Route::put('/classes/{schedule}/retire', [ScheduleController::class, 'retire'])->whereNumber('schedule')->name('schedules.retire');
+
+    // Links (GLOSSARY; Roy 2026-11-06): a satellite's own addresses on its QR poster.
+    Route::get('/links', [LinkController::class, 'index'])->name('links.index');
+    Route::post('/links', [LinkController::class, 'store'])->name('links.store');
+    Route::put('/links/{link}', [LinkController::class, 'update'])->whereNumber('link')->name('links.update');
+    Route::put('/links/{link}/move', [LinkController::class, 'move'])->whereNumber('link')->name('links.move');
+    Route::delete('/links/{link}', [LinkController::class, 'destroy'])->whereNumber('link')->name('links.destroy');
 
     // Attendance (DECISIONS 2026-10-26: reports are admins only): ?satellite=&class=&date= picks the Session.
     Route::get('/attendance', [AttendanceController::class, 'show'])->name('attendance.show');

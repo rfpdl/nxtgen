@@ -6,6 +6,13 @@ describes the design; this records the choices that shaped or changed it.
 
 ## 2026-11-06 (iPad at the door — Roy)
 
+- **Links on the QR poster (TODO #31 step 3, built).** Claude, low-stakes, for Roy to confirm: up to **6 Links a
+  satellite** (the poster still prints on one page); **https only** (a QR parents scan must never open a plain-http
+  or script address); the Links page shows every satellite the admin looks after, one section each, like Classes;
+  "Links" is in the Admin menu; the poster's picker shows only for someone in more than one satellite. On paper the
+  poster shrinks (registration QR ~5 cm, each Link's ~3 cm) so six Links print on one A4 or Letter page — a browser
+  journey prints it to PDF and counts the pages (Astra). Adding, moving and removing Links lock the satellite, so two
+  admins at once never pass the limit or put two Links in one place (Astra).
 - **Lifeshapers edit families in Serve (TODO #31 step 2, built).** Claude, low-stakes, for Roy to confirm: moving a
   family to another satellite stays an admin's (a Lifeshaper could otherwise move a family out of their own reach,
   or into another satellite's); a Lifeshaper who edits still sees the email masked (correcting it is an admin's).

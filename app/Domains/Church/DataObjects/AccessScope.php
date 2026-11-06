@@ -166,6 +166,32 @@ final readonly class AccessScope
     }
 
     /**
+     * Links (GLOSSARY; Roy 2026-11-06): a satellite's own addresses on its poster — managed by church admins and
+     * satellite admins. WHICH satellites' is canManageLinksAt, as for classes.
+     */
+    public function canManageLinks(): bool
+    {
+        return $this->isAnyAdmin();
+    }
+
+    /**
+     * The satellites whose Links this person manages: null = every satellite (church admin); a satellite admin's own.
+     *
+     * @return list<int>|null
+     */
+    public function linkSatelliteIds(): ?array
+    {
+        return $this->classSatelliteIds();
+    }
+
+    public function canManageLinksAt(Satellite $satellite): bool
+    {
+        $ids = $this->linkSatelliteIds();
+
+        return $satellite->church_id === $this->churchId && ($ids === null || in_array($satellite->id, $ids, true));
+    }
+
+    /**
      * The satellites whose classes this person checks children into at the door (DECISIONS 2026-10-26): those their
      * Role covers — null = every satellite (a church-wide Role). Which CHILDREN is not limited: any child of the
      * church may be checked in, a visitor too.

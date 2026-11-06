@@ -82,6 +82,10 @@ export type ListChild = App.Domains.Family.DataObjects.ListChildData
 /** A class (GLOSSARY "Schedule") on the Classes page, and a satellite with its classes. */
 export type Schedule = App.Domains.Schedule.DataObjects.ScheduleData
 export type SatelliteSchedules = App.Domains.Schedule.DataObjects.SatelliteSchedulesData
+/** Links (GLOSSARY): a satellite's own addresses on its QR poster — on the Links page, a satellite with them, and on the poster with its QR. */
+export type SatelliteLink = App.Domains.Church.DataObjects.SatelliteLinkData
+export type SatelliteLinks = App.Domains.Church.DataObjects.SatelliteLinksData
+export type PosterLink = App.Domains.Church.DataObjects.PosterLinkData
 /** The door (DECISIONS 2026-10-26/27): one of today's classes, a family found, one of its children, a child checked in, a child's health. */
 export type DoorClass = App.Domains.CheckIn.DataObjects.DoorClassData
 export type DoorFamily = App.Domains.CheckIn.DataObjects.DoorFamilyData
@@ -136,6 +140,9 @@ export type UpdateChildStatusInput = App.Services.Church.Data.UpdateChildStatusI
 export type UpdateChildLevelInput = App.Services.Church.Data.UpdateChildLevelInput
 export type ScheduleInput = App.Services.Church.Data.ScheduleInput
 export type AddScheduleInput = App.Services.Church.Data.AddScheduleInput
+export type SatelliteLinkInput = App.Services.Church.Data.SatelliteLinkInput
+export type AddSatelliteLinkInput = App.Services.Church.Data.AddSatelliteLinkInput
+export type MoveSatelliteLinkInput = App.Services.Church.Data.MoveSatelliteLinkInput
 export type CheckInInput = App.Services.Church.Data.CheckInInput
 export type CheckInChildInput = App.Services.Church.Data.CheckInChildInput
 export type CardRequestInput = App.Services.Church.Data.CardRequestInput

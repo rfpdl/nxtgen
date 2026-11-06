@@ -9,7 +9,7 @@ import { route } from 'ziggy-js'
 /**
  * The church staff frame (AppShell, the Bold look), one menu per area (Roy 2026-11-06, `church_nav.area`). Serve:
  * Check in (the door), Families, QR poster, and "Admin" for an admin. Admin (NxtGen's and the church-wide People):
- * Families, Children, then Classes, Attendance, Cards and People as the person may, and "Serve". Then Password,
+ * Families, Children, then Classes, Attendance, Cards, Links and People as the person may, and "Serve". Then Password,
  * Switch and Sign out.
  * Registering starts from the Families list's button, and possible duplicates from its "duplicates" filter
  * (DECISIONS 2026-10-17, after first look) — neither has a tab.
@@ -44,6 +44,10 @@ const items = computed<ShellItem[]>(() => {
               nav?.can_manage_cards === true && {
                   label: 'Cards',
                   href: route('nxtgen.admin.card-requests.index', slug),
+              },
+              nav?.can_manage_links === true && {
+                  label: 'Links',
+                  href: route('nxtgen.admin.links.index', slug),
               },
               nav?.can_manage_people === true && {
                   label: 'People',

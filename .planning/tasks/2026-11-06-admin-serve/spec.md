@@ -1,6 +1,6 @@
 # Admin and Serve — the staff pages split by who uses them (TODO #31)
 
-Status: ready-for-agent
+Status: done
 Decided: Roy 2026-11-06 (DECISIONS): staff addresses grouped by area — **Admin** and **Serve** — under the ministry:
 `/ccf/nxtgen/admin/…` (manage families, children…) and `/ccf/nxtgen/serve/…` (the everyday app — check-in and
 registration); church-wide admin (People) at `/ccf/admin/…`. Path, not subdomain (one sign-in across churches). Someone without
@@ -62,8 +62,8 @@ WhatsApp group, or any link an admin names), each with its own QR; the admin set
 ## Step 3 design (Claude, from Roy's answers)
 - **Table** `satellite_links`: church_id, satellite_id, label (≤ 60), url (https only, ≤ 500), position; up to 6 per
   satellite. Model `SatelliteLink` (tenancy list).
-- **Admin page** `/ccf/nxtgen/admin/links?satellite=` — "Links" in the Admin menu: a satellite picker (the
-  satellites the admin's Role covers; church admin: all), that satellite's Links in order; add (Facebook group and
+- **Admin page** `/ccf/nxtgen/admin/links` — "Links" in the Admin menu: each satellite the admin's Role covers
+  (church admin: all), as Classes, with its Links in order; add (Facebook group and
   WhatsApp group offered as labels), rename / change the address, move up or down, remove. Access row `ManageLinks`:
   church admin at any satellite; satellite admin at their own (as Classes).
 - **The poster** `/ccf/nxtgen/serve/poster?satellite=` — the satellites the person is assigned to (Roy: "assign you to
@@ -81,7 +81,9 @@ WhatsApp group, or any link an admin names), each with its own QR; the admin set
    `canEditFamily` (admins). Claude, low-stakes: moving a family to another satellite stays an admin's (a
    Lifeshaper's form offers only the family's own satellite, and the server refuses a move); the email stays masked
    for a Lifeshaper.
-3. **Links + poster**: migration, admin page, the poster's QRs (design above).
+3. **Links + poster** — **done 2026-11-06**: `satellite_links`, the Links page in Admin (one section per satellite the
+   admin looks after, as Classes — no picker needed), the poster's satellite picker (only for someone in more than
+   one) and a QR per Link. Status: all three steps built.
 
 ## Answered (Roy 2026-11-06, before the overnight run)
 4. A Lifeshaper edits in Serve: **the family's details, guardians and children** (names, phone, allergies, notes) —

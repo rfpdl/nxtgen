@@ -1,0 +1,270 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Data\Models\Church;
+use App\Data\Models\Satellite;
+use App\Data\Models\SatelliteLink;
+use App\Enums\RoleEnum;
+use Inertia\Testing\AssertableInertia;
+
+use function Pest\Laravel\actingAs;
+use function Tests\Support\atChurch;
+use function Tests\Support\atSatellite;
+use function Tests\Support\atTheSameTime;
+use function Tests\Support\church;
+use function Tests\Support\grantRole;
+use function Tests\Support\satelliteOf;
+use function Tests\Support\staffMember;
+use function Tests\Support\withCommittedWorld;
+
+/*
+ * Links (GLOSSARY; Roy 2026-11-06, TODO #31 step 3): a satellite's own addresses on its QR poster — its parents'
+ * Facebook group, its WhatsApp group, any link an admin names. Church admins manage every satellite's, satellite
+ * admins their own (AccessScope::canManageLinksAt). The poster shows the satellite's Links as QR codes, for the
+ * satellites the person is assigned to.
+ */
+
+/** @return array{church: Church, dxb: Satellite, house: Satellite} */
+function linksChurch(): array
+{
+    $church = church(['slug' => 'ccf', 'name' => 'CCF']);
+
+    return ['church' => $church, 'dxb' => satelliteOf($church, ['name' => 'CCF DXB']), 'house' => satelliteOf($church, ['name' => 'House Church'])];
+}
+
+/** @return list<string> */
+function labelsAt(Satellite $satellite): array
+{
+    return array_values(SatelliteLink::query()->where('satellite_id', $satellite->id)->orderBy('position')->get()->map(fn (SatelliteLink $l): string => $l->label)->all());
+}
+
+describe('the Links page', function (): void {
+    it('shows an admin each satellite they look after with its Links in order; a church admin every satellite @story#164', function (): void {
+        ['church' => $church, 'dxb' => $dxb, 'house' => $house] = linksChurch();
+        SatelliteLink::factory()->for($dxb)->create(['label' => 'WhatsApp', 'url' => 'https://chat.whatsapp.com/abc', 'position' => 2]);
+        SatelliteLink::factory()->for($dxb)->create(['label' => 'Facebook', 'url' => 'https://facebook.com/groups/ccf', 'position' => 1]);
+
+        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/nxtgen/admin/links')->assertOk()
+            ->assertInertia(fn (AssertableInertia $p) => $p->component('Church/Links/Index')
+                ->has('satellites', 2)
+                ->where('satellites.0.name', 'CCF DXB')
+                ->where('satellites.0.links.0.label', 'Facebook')
+                ->where('satellites.0.links.1.url', 'https://chat.whatsapp.com/abc')
+                ->where('satellites.1.links', [])
+                ->where('max', 6));
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->get('/ccf/nxtgen/admin/links')
+            ->assertInertia(fn (AssertableInertia $p) => $p->has('satellites', 1)->where('satellites.0.name', 'House Church'));
+    });
+
+    it('is not there for a Lifeshaper @story#165', function (): void {
+        ['church' => $church] = linksChurch();
+
+        actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get('/ccf/nxtgen/admin/links')->assertNotFound();
+    });
+});
+
+describe('adding a Link', function (): void {
+    it('adds a Link last on a satellite\'s poster @story#166', function (): void {
+        ['church' => $church, 'dxb' => $dxb] = linksChurch();
+        SatelliteLink::factory()->for($dxb)->create(['label' => 'Facebook', 'position' => 1]);
+
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($dxb)))
+            ->post('/ccf/nxtgen/admin/links', ['satellite_id' => $dxb->id, 'label' => 'Parents\' WhatsApp group', 'url' => 'https://chat.whatsapp.com/abc'])
+            ->assertRedirect()->assertSessionHas('success', 'Added "Parents\' WhatsApp group" to CCF DXB\'s poster.');
+
+        expect(labelsAt($dxb))->toBe(['Facebook', 'Parents\' WhatsApp group']);
+    });
+
+    it('takes only an https address, and a label @story#167', function (string $url): void {
+        ['church' => $church, 'dxb' => $dxb] = linksChurch();
+
+        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
+            ->post('/ccf/nxtgen/admin/links', ['satellite_id' => $dxb->id, 'label' => '', 'url' => $url])
+            ->assertSessionHasErrors(['label', 'url']);
+
+        expect(labelsAt($dxb))->toBe([]);
+    })->with([
+        'plain http' => ['http://chat.whatsapp.com/abc'],
+        'a script' => ['javascript:alert(1)'],
+        'not an address' => ['whatsapp group'],
+    ]);
+
+    it('holds at most 6 a satellite, so the poster prints on one page @story#167', function (): void {
+        ['church' => $church, 'dxb' => $dxb] = linksChurch();
+        foreach (range(1, 6) as $i) {
+            SatelliteLink::factory()->for($dxb)->create(['label' => "Link {$i}", 'position' => $i]);
+        }
+
+        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
+            ->post('/ccf/nxtgen/admin/links', ['satellite_id' => $dxb->id, 'label' => 'Seventh', 'url' => 'https://example.com'])
+            ->assertSessionHasErrors(['label' => 'CCF DXB\'s poster has 6 links already — remove one first.']);
+
+        expect(labelsAt($dxb))->toHaveCount(6);
+    });
+
+    it('adds only at a satellite the admin looks after, in this church @story#167', function (): void {
+        ['church' => $church, 'dxb' => $dxb, 'house' => $house] = linksChurch();
+        $other = satelliteOf(church());
+        $admin = staffMember(RoleEnum::Admin, atSatellite($house));
+
+        foreach ([$dxb, $other] as $satellite) {
+            actingAs($admin)->post('/ccf/nxtgen/admin/links', ['satellite_id' => $satellite->id, 'label' => 'Nope', 'url' => 'https://example.com'])->assertNotFound();
+        }
+
+        expect(SatelliteLink::query()->count())->toBe(0);
+    });
+});
+
+describe('changing, moving and removing a Link', function (): void {
+    it('renames a Link and changes its address @story#168', function (): void {
+        ['church' => $church, 'dxb' => $dxb] = linksChurch();
+        $link = SatelliteLink::factory()->for($dxb)->create(['label' => 'Old', 'url' => 'https://old.example']);
+
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($dxb)))
+            ->put("/ccf/nxtgen/admin/links/{$link->id}", ['label' => 'Facebook group', 'url' => 'https://facebook.com/groups/ccf'])
+            ->assertRedirect()->assertSessionHas('success', 'Saved "Facebook group".');
+
+        expect([$link->fresh()?->label, $link->fresh()?->url])->toBe(['Facebook group', 'https://facebook.com/groups/ccf']);
+    });
+
+    it('changes only a Link at a satellite the admin looks after, and only to an https address @story#169', function (): void {
+        ['church' => $church, 'dxb' => $dxb, 'house' => $house] = linksChurch();
+        $link = SatelliteLink::factory()->for($dxb)->create(['label' => 'Kept', 'url' => 'https://kept.example']);
+
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))
+            ->put("/ccf/nxtgen/admin/links/{$link->id}", ['label' => 'Nope', 'url' => 'https://nope.example'])->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($dxb)))
+            ->put("/ccf/nxtgen/admin/links/{$link->id}", ['label' => 'Nope', 'url' => 'http://nope.example'])->assertSessionHasErrors('url');
+
+        expect([$link->fresh()?->label, $link->fresh()?->url])->toBe(['Kept', 'https://kept.example']);
+    });
+
+    it('moves a Link up or down the poster @story#170', function (): void {
+        ['church' => $church, 'dxb' => $dxb] = linksChurch();
+        SatelliteLink::factory()->for($dxb)->create(['label' => 'A', 'position' => 1]);
+        $b = SatelliteLink::factory()->for($dxb)->create(['label' => 'B', 'position' => 2]);
+        $admin = staffMember(RoleEnum::Admin, atChurch($church));
+
+        actingAs($admin)->put("/ccf/nxtgen/admin/links/{$b->id}/move", ['direction' => 'up'])->assertRedirect()->assertSessionHasNoErrors();
+        expect(labelsAt($dxb))->toBe(['B', 'A']);
+
+        actingAs($admin)->put("/ccf/nxtgen/admin/links/{$b->id}/move", ['direction' => 'down'])->assertRedirect();
+        expect(labelsAt($dxb))->toBe(['A', 'B']);
+    });
+
+    it('moves only a Link the admin looks after, up or down @story#171', function (): void {
+        ['church' => $church, 'dxb' => $dxb, 'house' => $house] = linksChurch();
+        SatelliteLink::factory()->for($dxb)->create(['label' => 'A', 'position' => 1]);
+        $b = SatelliteLink::factory()->for($dxb)->create(['label' => 'B', 'position' => 2]);
+
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->put("/ccf/nxtgen/admin/links/{$b->id}/move", ['direction' => 'up'])->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->put("/ccf/nxtgen/admin/links/{$b->id}/move", ['direction' => 'sideways'])->assertSessionHasErrors('direction');
+
+        expect(labelsAt($dxb))->toBe(['A', 'B']);
+    });
+
+    it('removes a Link from the poster @story#172', function (): void {
+        ['church' => $church, 'dxb' => $dxb] = linksChurch();
+        $link = SatelliteLink::factory()->for($dxb)->create(['label' => 'Gone']);
+
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($dxb)))->delete("/ccf/nxtgen/admin/links/{$link->id}")
+            ->assertRedirect()->assertSessionHas('success', 'Removed "Gone" from CCF DXB\'s poster.');
+
+        expect(labelsAt($dxb))->toBe([]);
+    });
+
+    it('removes only a Link the admin looks after, in this church @story#173', function (): void {
+        ['church' => $church, 'dxb' => $dxb, 'house' => $house] = linksChurch();
+        $link = SatelliteLink::factory()->for($dxb)->create(['label' => 'Kept']);
+        $theirs = SatelliteLink::factory()->for(satelliteOf(church()))->create();
+
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->delete("/ccf/nxtgen/admin/links/{$link->id}")->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->delete("/ccf/nxtgen/admin/links/{$theirs->id}")->assertNotFound();
+
+        expect(SatelliteLink::query()->count())->toBe(2);
+    });
+});
+
+describe('two admins at the same moment (Astra) — two connections', function (): void {
+    it('never lets two adds past the limit: at five Links, one of two adds is refused @story#167', function (): void {
+        ['church' => $church, 'dxb' => $dxb] = linksChurch();
+        foreach (range(1, 5) as $i) {
+            SatelliteLink::factory()->for($dxb)->create(['label' => "Link {$i}", 'position' => $i]);
+        }
+        $admin = staffMember(RoleEnum::Admin, atChurch($church));
+
+        withCommittedWorld(function () use ($admin, $dxb): void {
+            $add = function (string $label) use ($admin, $dxb): Closure {
+                return function () use ($admin, $dxb, $label): bool {
+                    actingAs($admin)->post('/ccf/nxtgen/admin/links', ['satellite_id' => $dxb->id, 'label' => $label, 'url' => 'https://example.com']);
+
+                    return session()->has('success');
+                };
+            };
+
+            $added = atTheSameTime($add('Sixth'), $add('Seventh'));
+
+            expect(array_values(array_filter($added)))->toHaveCount(1)
+                ->and(SatelliteLink::query()->where('satellite_id', $dxb->id)->count())->toBe(6)
+                ->and(SatelliteLink::query()->where('satellite_id', $dxb->id)->distinct()->count('position'))->toBe(6);
+        });
+    });
+
+    it('keeps every Link in its own place when two are moved at once @story#170', function (): void {
+        ['church' => $church, 'dxb' => $dxb] = linksChurch();
+        SatelliteLink::factory()->for($dxb)->create(['label' => 'A', 'position' => 1]);
+        $b = SatelliteLink::factory()->for($dxb)->create(['label' => 'B', 'position' => 2]);
+        $c = SatelliteLink::factory()->for($dxb)->create(['label' => 'C', 'position' => 3]);
+        $admin = staffMember(RoleEnum::Admin, atChurch($church));
+
+        withCommittedWorld(function () use ($admin, $dxb, $b, $c): void {
+            $up = fn (SatelliteLink $link): Closure => fn (): int => actingAs($admin)
+                ->put("/ccf/nxtgen/admin/links/{$link->id}/move", ['direction' => 'up'])->status();
+
+            atTheSameTime($up($b), $up($c));
+
+            // B first: B A C, then C up → B C A. C first: A C B, then B (now last) up → A B C. Never two in one place.
+            $positions = SatelliteLink::query()->where('satellite_id', $dxb->id)->get()->map(fn (SatelliteLink $l): int => $l->position)->all();
+            expect(array_unique($positions))->toHaveCount(3)
+                ->and(labelsAt($dxb))->toBeIn([['B', 'C', 'A'], ['A', 'B', 'C']]);
+        });
+    });
+});
+
+describe('the poster', function (): void {
+    it('shows the satellite\'s Links after the registration QR, each with its own QR code @story#174', function (): void {
+        ['church' => $church, 'dxb' => $dxb] = linksChurch();
+        SatelliteLink::factory()->for($dxb)->create(['label' => 'WhatsApp', 'url' => 'https://chat.whatsapp.com/abc', 'position' => 1]);
+
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->get('/ccf/nxtgen/serve/poster')->assertOk()
+            ->assertInertia(fn (AssertableInertia $p) => $p->component('Church/Poster')
+                ->where('register_url', url('/ccf/register'))
+                ->where('satellite', ['id' => $dxb->id, 'name' => 'CCF DXB'])
+                ->where('satellites', [['id' => $dxb->id, 'name' => 'CCF DXB']])
+                ->has('links', 1)
+                ->where('links.0.label', 'WhatsApp')
+                ->where('links.0.url', 'https://chat.whatsapp.com/abc')
+                ->where('links.0.qr', fn (string $qr): bool => str_starts_with($qr, 'data:image/svg+xml;base64,')));
+    });
+
+    it('lets someone in two satellites pick, and a church-wide Role every satellite @story#174', function (): void {
+        ['church' => $church, 'dxb' => $dxb, 'house' => $house] = linksChurch();
+        SatelliteLink::factory()->for($house)->create(['label' => 'House group']);
+        $both = staffMember(RoleEnum::Lifeshaper, atSatellite($dxb));
+        grantRole($both, RoleEnum::Lifeshaper, atSatellite($house));
+
+        actingAs($both)->get("/ccf/nxtgen/serve/poster?satellite={$house->id}")
+            ->assertInertia(fn (AssertableInertia $p) => $p->has('satellites', 2)->where('satellite.name', 'House Church')->where('links.0.label', 'House group'));
+        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/nxtgen/serve/poster')
+            ->assertInertia(fn (AssertableInertia $p) => $p->has('satellites', 2)->where('satellite.name', 'CCF DXB')->where('links', []));
+    });
+
+    it('never shows a satellite the person is not assigned to — the first of their own instead @story#175', function (): void {
+        ['church' => $church, 'dxb' => $dxb, 'house' => $house] = linksChurch();
+        SatelliteLink::factory()->for($house)->create(['label' => 'House only']);
+
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->get("/ccf/nxtgen/serve/poster?satellite={$house->id}")
+            ->assertInertia(fn (AssertableInertia $p) => $p->where('satellite.name', 'CCF DXB')->where('links', []));
+    });
+});

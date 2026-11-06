@@ -57,7 +57,7 @@ every staff, parent and public page is on the kit (issues 02 and 03 of `.plannin
 | EditChildForm           | organism | "Edit {child}'s details": ChildFieldset from what is saved, PUT to the given action; never status/Level                                              |
 | RegistrationListFilters | molecule | Families + children lists: search, satellite/status/Level (+ unconfirmed/duplicates with familyToggles); emits address params                        |
 | SwitchLink              | atom     | "Switch" between My family / Serve (or churches): only when there is more than one place to go                                                       |
-| PasswordLoginForm       | organism | The staff backup password on /loginp (never on /login): a Card of TextFields + Sign in                                                              |
+| PasswordLoginForm       | organism | The staff backup password on /loginp (never on /login): a Card of TextFields + Sign in                                                               |
 | ChildPhotoForm          | organism | A child's photo: take (camera) or choose; parent agrees/takes back consent, staff only after consent                                                 |
 | ChildAdminControls      | molecule | Staff status (`enums.child_status`) + Level pickers inside a child's card; a refused Level shows on that child                                       |
 | ResendLinkButton        | atom     | "Send the confirmation link again" (a secondary AppButton that POSTs) for an unconfirmed family: family page, lists, door search                     |
@@ -69,6 +69,9 @@ every staff, parent and public page is on the kit (issues 02 and 03 of `.plannin
 | AttendanceSquadTable    | molecule | One Squad of a Session on Attendance: name, count, head count + warning; table (sm+) or stacked rows (phone): names, time, who, present              |
 | ScheduleForm            | organism | Add (POST, with `satelliteId`) or edit (PUT, from a saved `schedule`) a class: name, day, times; `done` on save or cancel                            |
 | SatelliteSchedules      | organism | One satellite on the Classes page: its classes, one edited in place at a time, "+ Add a class" opening the add form                                  |
+| LinkCard                | molecule | One Link on the Links page: label and address; Edit, Move up/down (not past either end), Remove after a second tap                                   |
+| LinkForm                | organism | Add (POST, with `satelliteId`, Facebook/WhatsApp starter labels) or change (PUT, from a saved `link`) a Link; `done` on save or cancel               |
+| SatelliteLinks          | organism | One satellite on the Links page: its Links in order, one edited in place, "+ Add a link" until the poster holds `max`                                |
 | DoorChildRow            | molecule | A door child: full-height tick zone; the rest opens (Disclosure) health, status, Level, family link; ✓ + Undo; make active; Level                    |
 | ChildHealthPanel        | molecule | A child's health details inside their opened door row; allergies first and loud, or "Allergies: none"                                                |
 | DoorFamilyCard          | organism | A family found at the door: its children (DoorChildRow), "Check in N children" (POST), Undo (PUT); a scanned card's child pre-ticked                 |
@@ -82,4 +85,4 @@ every staff, parent and public page is on the kit (issues 02 and 03 of `.plannin
 | ChildCardRequest        | organism | A child's name card on the staff family page: "Card: Asked · not paid" (Pill) for an open request, else "New card…" → Lost/Damaged + note            |
 | CardRequestRow          | organism | One Card request on Cards: child's full name, family (link) · satellite, reason — note, fee Pill; the moves the server sends (PUT), Refuse… asks why |
 | PrintListCard           | molecule | A print list still to print on Cards' Approved tab: "Print list · 12 cards · made … by …", Download (Excel), "Mark these N printed" (PUT)            |
-| MovingUpLastCard        | molecule | The last Moving-Up: when and by whom, each child "Level 1 → Level 2" (or Graduated), "Put back" each, "Put everyone back" (PUTs)                 |
+| MovingUpLastCard        | molecule | The last Moving-Up: when and by whom, each child "Level 1 → Level 2" (or Graduated), "Put back" each, "Put everyone back" (PUTs)                     |

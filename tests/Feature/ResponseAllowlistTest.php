@@ -36,7 +36,7 @@ const SHARED = ['auth.can_switch', 'auth.user.id', 'auth.user.name', 'church.nam
 const FRAME = [...SHARED, 'church_nav'];
 
 /** A staff page: the staff menu's switches (People, Classes, Attendance, Cards, Moving-Up). Duplicates has no tab (DECISIONS 2026-10-17, after first look). */
-const STAFF_FRAME = [...SHARED, 'church_nav.area', 'church_nav.can_manage_cards', 'church_nav.can_manage_classes', 'church_nav.can_manage_people', 'church_nav.can_move_up', 'church_nav.can_see_attendance', 'church_nav.can_use_admin'];
+const STAFF_FRAME = [...SHARED, 'church_nav.area', 'church_nav.can_manage_cards', 'church_nav.can_manage_classes', 'church_nav.can_manage_links', 'church_nav.can_manage_people', 'church_nav.can_move_up', 'church_nav.can_see_attendance', 'church_nav.can_use_admin'];
 
 /** Health, photo and contact fields: never on a list or search page, whoever asks — only the allergy yes/no. */
 const NEVER_ON_LISTS = '/photo|allerg|illness|fear|dislike|guardian_notes|phone|notes|ministries/';

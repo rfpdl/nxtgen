@@ -37,7 +37,7 @@ Updated 2026-11-03. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 
 | # | Item | Trigger |
 |---|---|---|
-| 31 | **Admin and Serve** (Roy 2026-11-06): staff addresses by service — `/ccf/admin/…` and `/ccf/serve/…`; Lifeshapers edit families in Serve; the QR poster gets the church's Links (`tasks/2026-11-06-admin-serve/`) | next |
+| 31 | **Admin and Serve** (Roy 2026-11-06): staff addresses by service — `/ccf/admin/…` and `/ccf/serve/…`; Lifeshapers edit families in Serve; the QR poster gets the church's Links (`tasks/2026-11-06-admin-serve/`) | done 2026-11-06 |
 | 29 | **Merge two families or two children** (a child registered again, legacy duplicates) — write a spec first (who may, what moves, history) | when a re-registration happens |
 | 30 | ~~UI overhaul~~ — done: the Bold theme, one UI kit for every page (`tasks/2026-10-28-ui-theme/`) | done 2026-10-28 |
 

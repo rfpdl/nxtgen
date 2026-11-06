@@ -16,6 +16,7 @@ const page = {
             can_see_attendance: false,
             can_manage_cards: false,
             can_move_up: false,
+            can_manage_links: false,
         },
     },
 }
@@ -35,6 +36,7 @@ const PATHS: Record<string, string> = {
     'nxtgen.admin.schedules.index': 'nxtgen/admin/classes',
     'nxtgen.admin.card-requests.index': 'nxtgen/admin/card-requests',
     'nxtgen.admin.attendance.show': 'nxtgen/admin/attendance',
+    'nxtgen.admin.links.index': 'nxtgen/admin/links',
 }
 
 vi.mock('ziggy-js', () => ({
@@ -88,6 +90,7 @@ describe('ChurchShell', () => {
             can_manage_classes: true,
             can_see_attendance: true,
             can_manage_cards: true,
+            can_manage_links: true,
         })
         const wrapper = mount(ChurchShell)
 
@@ -97,6 +100,7 @@ describe('ChurchShell', () => {
             'Classes',
             'Attendance',
             'Cards',
+            'Links',
             'People',
             'Serve',
             'Password',
@@ -113,6 +117,7 @@ describe('ChurchShell', () => {
             can_manage_classes: false,
             can_see_attendance: false,
             can_manage_cards: false,
+            can_manage_links: false,
         })
     })
 

@@ -18,6 +18,11 @@ A part of the Church with its own people and classes (e.g. NxtGen kids). Planned
 pages sit under its name in the address: `/ccf/nxtgen/…`.
 _Avoid_: Department, program
 
+**Link**:
+One of a Satellite's own addresses on its QR poster — its parents' Facebook group, its WhatsApp group — with what
+the poster says under its QR code. Up to 6 a Satellite; https only.
+_Avoid_: URL (in copy), social link, bookmark
+
 **Serve** (area):
 The everyday pages for everyone who serves — the door, Who's in, Families, the QR poster (`/ccf/nxtgen/serve/…`).
 Where anyone without an Admin Role lands.

@@ -7,6 +7,7 @@ namespace Tests\Feature\AccessMatrix;
 use App\Data\Models\CardRequest;
 use App\Data\Models\MovingUp;
 use App\Data\Models\PrintList;
+use App\Data\Models\SatelliteLink;
 use App\Data\Models\SquadHeadCount;
 use App\Enums\AccessRowEnum;
 use App\Enums\CardStepEnum;
@@ -161,6 +162,11 @@ function requestFor(string $route, AccessWorld $w): array
         'moving-up.store' => ['POST', "{$base}/moving-up", ['children' => [['child_id' => $c, 'level' => childAtLevel($w)]]]],
         'moving-up.children.put-back' => ['PUT', "{$base}/moving-up/".movingUpOf($w)->id."/children/{$c}/put-back", []],
         'moving-up.put-back' => ['PUT', "{$base}/moving-up/".movingUpOf($w)->id.'/put-back', []],
+        'links.index' => ['GET', "{$base}/links", []],
+        'links.store' => ['POST', "{$base}/links", ['satellite_id' => $w->home->id, 'label' => 'Parents\' WhatsApp group', 'url' => 'https://chat.whatsapp.com/abc']],
+        'links.update' => ['PUT', "{$base}/links/".linkOf($w)->id, ['label' => 'Facebook group', 'url' => 'https://facebook.com/groups/ccf']],
+        'links.move' => ['PUT', "{$base}/links/".linkOf($w)->id.'/move', ['direction' => 'up']],
+        'links.destroy' => ['DELETE', "{$base}/links/".linkOf($w)->id, []],
         'schedules.index' => ['GET', "{$base}/classes", []],
         'schedules.store' => ['POST', "{$base}/classes", ['satellite_id' => $w->home->id, 'name' => 'Special class', 'weekday' => null, 'starts_at' => null, 'ends_at' => null]],
         'schedules.update' => ['PUT', "{$base}/classes/{$w->schedule->id}", ['name' => '1PM', 'weekday' => 'saturday', 'starts_at' => '13:30', 'ends_at' => '15:00']],
@@ -240,6 +246,21 @@ function movingUpOf(AccessWorld $w): MovingUp
     return $movingUp;
 }
 
+/**
+ * The second of Home's two Links (made once, so one world serves every guess) — second, so moving it up moves it, a
+ * change that says nothing: its proof is quietChanges()'.
+ */
+function linkOf(AccessWorld $w): SatelliteLink
+{
+    $links = SatelliteLink::query()->where('satellite_id', $w->home->id)->orderBy('position')->get();
+    if ($links->count() < 2) {
+        SatelliteLink::factory()->for($w->home)->create(['label' => 'First', 'position' => 1]);
+        SatelliteLink::factory()->for($w->home)->create(['label' => 'Second', 'position' => 2]);
+    }
+
+    return SatelliteLink::query()->where('satellite_id', $w->home->id)->where('label', 'Second')->firstOrFail();
+}
+
 /** A print list holding the world's child's approved card (made once, so one world serves every guess). */
 function printListOf(AccessWorld $w): PrintList
 {
@@ -261,6 +282,7 @@ function quietChanges(): array
 {
     return [
         'nxtgen.serve.door.present' => fn (AccessWorld $w): bool => $w->checkIn->fresh()?->isPresent() === true,
+        'nxtgen.admin.links.move' => fn (AccessWorld $w): bool => SatelliteLink::query()->where('satellite_id', $w->home->id)->orderBy('position')->value('label') === 'Second',
         'nxtgen.serve.door.head-count' => fn (AccessWorld $w): bool => SquadHeadCount::query()->where('session_id', $w->checkIn->session_id)->where('squad_id', $w->checkIn->squad_id)->value('head_count') === 3,
     ];
 }
@@ -449,6 +471,19 @@ describe('duplicates and People, for admins', function (): void {
         ->with(cells('admin.people.store'));
     it('lets a home Lifeshaper\'s role be removed only by an admin over that satellite @story#78 @story#79', cellTest())
         ->with(cells('admin.people.roles.destroy'));
+});
+
+describe('Links, for admins', function (): void {
+    it('opens Links for admins only @story#164 @story#165', cellTest())
+        ->with(cells('nxtgen.admin.links.index'));
+    it('has a Link added to Home\'s poster only by an admin over Home @story#166 @story#167', cellTest())
+        ->with(cells('nxtgen.admin.links.store'));
+    it('has Home\'s Link changed only by an admin over Home @story#168 @story#169', cellTest())
+        ->with(cells('nxtgen.admin.links.update'));
+    it('has Home\'s Link moved only by an admin over Home @story#170 @story#171', cellTest())
+        ->with(cells('nxtgen.admin.links.move'));
+    it('has Home\'s Link removed only by an admin over Home @story#172 @story#173', cellTest())
+        ->with(cells('nxtgen.admin.links.destroy'));
 });
 
 describe('Moving-Up, for a church admin', function (): void {

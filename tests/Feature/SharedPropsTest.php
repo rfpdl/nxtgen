@@ -25,7 +25,7 @@ it('gives a staff page the church it is about', function (): void {
 
     actingAs($admin)->get('/ccf/nxtgen/serve/families')->assertInertia(fn (AssertableInertia $p) => $p
         ->where('church', ['name' => 'CCF', 'slug' => 'ccf'])
-        ->where('church_nav', ['area' => 'nxtgen.serve', 'can_use_admin' => true, 'can_manage_people' => true, 'can_manage_classes' => true, 'can_see_attendance' => true, 'can_manage_cards' => true, 'can_move_up' => true]));
+        ->where('church_nav', ['area' => 'nxtgen.serve', 'can_use_admin' => true, 'can_manage_people' => true, 'can_manage_classes' => true, 'can_see_attendance' => true, 'can_manage_cards' => true, 'can_move_up' => true, 'can_manage_links' => true]));
 });
 
 it('tells the staff menu which area the page is in (Roy 2026-11-06)', function (): void {
