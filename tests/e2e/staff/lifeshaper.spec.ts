@@ -2,6 +2,7 @@ import { checkLayout, expect, test } from '../support/test'
 import { fillChild, fillFamily } from '../support/forms'
 import { latestMail, mailCount } from '../support/mailbox'
 import { openMenu } from '../support/menu'
+import { signInByEmail } from '../support/sign-in'
 import {
     CHURCH,
     FAMILIES,
@@ -9,7 +10,9 @@ import {
     sessionFile,
     uniqueEmail,
     uniqueSurname,
+    volunteer,
 } from '../support/world'
+import type { Browser, Page } from '@playwright/test'
 
 /*
  * Journey 2 — a Lifeshaper at the door, on their phone: search first; a family that is already registered
@@ -92,7 +95,21 @@ test('prints the registration poster, whose address opens the form @story#80', a
     await expect(page.getByRole('heading', { name: 'Register your family' })).toBeVisible()
 })
 
-test('re-sends the confirmation link from the families list @story#84', async ({ page }) => {
+/**
+ * A page signed in as this browser's own volunteer (a Lifeshaper at CCF DXB, E2ESeeder::VOLUNTEER_EMAIL): resending is
+ * limited to 10 a minute per person, and fifteen browsers sharing one Lifeshaper could meet that limit.
+ */
+async function asOwnVolunteer(browser: Browser, project: string): Promise<Page> {
+    const context = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+    const page = await context.newPage()
+    await signInByEmail(page, volunteer(project))
+    return page
+}
+
+test('re-sends the confirmation link from the families list @story#84', async ({
+    browser,
+}, info) => {
+    const page = await asOwnVolunteer(browser, info.project.name)
     const email = uniqueEmail('resend')
     const surname = uniqueSurname('Reyes')
     await page.goto(`/${CHURCH}/nxtgen/serve/families/new`)
@@ -122,8 +139,9 @@ test('re-sends the confirmation link from the families list @story#84', async ({
 })
 
 test("re-sends a visiting family's confirmation link from the door search @story#84", async ({
-    page,
-}) => {
+    browser,
+}, info) => {
+    const page = await asOwnVolunteer(browser, info.project.name)
     // A House Church family; this Lifeshaper serves at CCF DXB, so they cannot open it — but they can help.
     const email = uniqueEmail('visiting')
     const surname = uniqueSurname('Bautista')
