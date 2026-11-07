@@ -21,7 +21,7 @@ function submit(): void {
 
 <template>
     <Head title="Sign in" />
-    <AppShell title="NxtGen" narrow>
+    <AppShell narrow>
         <PageHeader
             title="Sign in"
             sub="Enter your email and we will send you a link. No password needed."

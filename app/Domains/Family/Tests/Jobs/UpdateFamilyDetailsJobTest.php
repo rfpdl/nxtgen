@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Data\Models\User;
 use App\Domains\Family\DataObjects\FamilyDetailsData;
 use App\Domains\Family\Jobs\UpdateFamilyDetailsJob;
+use App\Enums\LifestageEnum;
 
 use function Tests\Support\church;
 use function Tests\Support\familyAt;
@@ -21,13 +22,13 @@ it('saves the details, trimmed and with blanks as null', function (): void {
     (new UpdateFamilyDetailsJob(family: $family, details: new FamilyDetailsData(
         home_satellite_id: $moved->id, area_text: ' Deira ', fb_account: '  ', wants_fb_group: true, in_dgroup: true,
         dgroup_area_text: 'Barsha', dgroup_leader_name: ' Jo Cruz ', dgroup_leader_phone: '0501234567', wants_dgroup: false,
-        lifestage: 'Couple', notes: '',
+        lifestage: LifestageEnum::Ksp, notes: '',
     )))->handle();
 
     $family->refresh();
     expect($family->home_satellite_id)->toBe($moved->id)
         ->and([$family->area_text, $family->fb_account, $family->dgroup_area_text, $family->dgroup_leader_name, $family->dgroup_leader_phone, $family->lifestage, $family->notes])
-        ->toBe(['Deira', null, 'Barsha', 'Jo Cruz', '0501234567', 'Couple', null])
+        ->toBe(['Deira', null, 'Barsha', 'Jo Cruz', '0501234567', LifestageEnum::Ksp, null])
         ->and([$family->wants_fb_group, $family->in_dgroup, $family->wants_dgroup])->toBe([true, true, false]);
 });
 

@@ -9,6 +9,7 @@ import GuardianFieldset from '@/components/molecules/GuardianFieldset.vue'
 import OtherGuardiansFieldset from '@/components/organisms/OtherGuardiansFieldset.vue'
 import type { ChildDraft, Draft, RegisterFamilyInput, SatelliteOption } from '@/types'
 import { useForm } from '@inertiajs/vue3'
+import { ref, watch } from 'vue'
 
 /**
  * The parent registration form (plan §6 R1): today's Google Form fields plus the home satellite, and the family's
@@ -47,7 +48,7 @@ const form = useForm<Omit<Draft<RegisterFamilyInput>, 'notes'>>({
     dgroup_leader_name: '',
     dgroup_leader_phone: '',
     wants_dgroup: false,
-    lifestage: '',
+    lifestage: 'married',
     guardian: {
         first_name: '',
         last_name: '',
@@ -59,6 +60,21 @@ const form = useForm<Omit<Draft<RegisterFamilyInput>, 'notes'>>({
     children: [blankChild()],
     guardians: [],
 })
+
+/**
+ * The lifestage follows the parent's relationship (Roy 2026-11-07): a mother or father is Married, anyone else
+ * none given — until the parent picks one themselves (even Married, even none); then it is theirs (Astra).
+ */
+const lifestagePicked = ref(false)
+
+watch(
+    () => form.guardian.relationship,
+    (relationship) => {
+        if (!lifestagePicked.value) {
+            form.lifestage = relationship === 'mother' || relationship === 'father' ? 'married' : ''
+        }
+    },
+)
 
 const errors = (): Record<string, string | undefined> =>
     form.errors as Record<string, string | undefined>
@@ -93,7 +109,12 @@ function submit(): void {
 
         <Card as="section" class="flex flex-col gap-4">
             <SectionHeading>Your family</SectionHeading>
-            <FamilyFieldset v-model="form" :satellites="satellites" :errors="errors()" />
+            <FamilyFieldset
+                v-model="form"
+                :satellites="satellites"
+                :errors="errors()"
+                @pick-lifestage="lifestagePicked = true"
+            />
         </Card>
 
         <section class="flex flex-col gap-4">

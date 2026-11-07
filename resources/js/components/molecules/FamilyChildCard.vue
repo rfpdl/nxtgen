@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Card from '@/components/atoms/Card.vue'
+import ItemList from '@/components/atoms/ItemList.vue'
 import Pill from '@/components/atoms/Pill.vue'
 import type { ChildPortal } from '@/types'
 import { computed } from 'vue'
@@ -13,9 +14,11 @@ import { computed } from 'vue'
  */
 const props = defineProps<{ child: ChildPortal }>()
 
+const ILLNESSES = 'Sickness or illness'
+
 const health = computed(() =>
     [
-        ['Sickness or illness', props.child.illnesses],
+        [ILLNESSES, props.child.illnesses],
         ['Dislikes', props.child.dislikes],
         ['Afraid of', props.child.fears],
         ['From the family', props.child.guardian_notes],
@@ -51,13 +54,13 @@ const health = computed(() =>
                 </p>
             </div>
         </div>
-        <p
+        <div
             v-if="child.allergies"
             class="bg-danger-soft text-danger rounded-control p-3 text-lg font-bold"
             data-testid="allergy"
         >
-            ⚠ Allergies: {{ child.allergies }}
-        </p>
+            ⚠ Allergies: <ItemList :text="child.allergies" />
+        </div>
         <dl
             v-if="health.length > 0"
             class="text-text grid gap-x-3 gap-y-1 sm:grid-cols-[auto_1fr]"
@@ -65,7 +68,10 @@ const health = computed(() =>
         >
             <template v-for="[label, value] in health" :key="label">
                 <dt class="text-text-muted">{{ label }}</dt>
-                <dd>{{ value }}</dd>
+                <dd v-if="label === ILLNESSES" data-testid="illnesses">
+                    <ItemList :text="value" />
+                </dd>
+                <dd v-else>{{ value }}</dd>
             </template>
         </dl>
         <div v-if="$slots.default" class="border-border flex flex-col gap-4 border-t-2 pt-4">

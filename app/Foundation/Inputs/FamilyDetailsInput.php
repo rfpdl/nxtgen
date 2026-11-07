@@ -6,6 +6,7 @@ namespace App\Foundation\Inputs;
 
 use App\Domains\Family\DataObjects\FamilyDetailsData;
 use App\Domains\Family\DataObjects\GuardianEditData;
+use App\Enums\LifestageEnum;
 use App\Foundation\Support\RouteChurch;
 use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
@@ -39,7 +40,7 @@ final class FamilyDetailsInput extends Data
         public ?string $dgroup_leader_name = null,
         public ?string $dgroup_leader_phone = null,
         public bool $wants_dgroup = false,
-        public ?string $lifestage = null,
+        public ?LifestageEnum $lifestage = null,
         public ?string $notes = null,
         #[DataCollectionOf(OtherGuardianInput::class)]
         public array $guardians = [],
@@ -67,7 +68,7 @@ final class FamilyDetailsInput extends Data
             'dgroup_area_text' => ['nullable', 'string', 'max:120'],
             'dgroup_leader_name' => ['nullable', 'string', 'max:120'],
             'dgroup_leader_phone' => ['nullable', 'string', 'max:30'],
-            'lifestage' => ['nullable', 'string', 'max:120'],
+            'lifestage' => ['nullable', Rule::enum(LifestageEnum::class)],
             'notes' => ['nullable', 'string', 'max:1000'],
             'guardians' => ['array', 'max:5'],
             'removed_guardian_ids' => ['array', 'max:20'],

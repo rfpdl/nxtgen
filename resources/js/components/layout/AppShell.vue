@@ -5,6 +5,7 @@ import SignOutButton from '@/components/atoms/SignOutButton.vue'
 import SwitchLink from '@/components/atoms/SwitchLink.vue'
 import FlashBanner from '@/components/molecules/FlashBanner.vue'
 import { useFlashMessages } from '@/composables/useFlashMessages'
+import { APP_NAME } from '@/lib/brand'
 import type { ShellItem } from '@/types'
 import { Menu, X } from 'lucide-vue-next'
 import {
@@ -32,10 +33,12 @@ import { computed, ref, watch } from 'vue'
  * Without `items` there is no menu at all — the public pages (welcome, register, sign in) and the few signed-in
  * pages with nowhere else to go (choose, nothing yet) get just the bar and the logo. `narrow` keeps the page to a
  * phone-like column on a wide screen, for the parent's and the public pages: one form, one column, easy to read.
+ * "CCF NxtGen" (APP_NAME, Roy 2026-11-07) is in the top left on every page: a small line over the page's name, or
+ * the name itself on a page without one (`title` left out: sign in, welcome).
  */
 const props = withDefaults(
-    defineProps<{ title: string; place?: string; items?: ShellItem[]; narrow?: boolean }>(),
-    { place: undefined, items: undefined },
+    defineProps<{ title?: string; place?: string; items?: ShellItem[]; narrow?: boolean }>(),
+    { title: undefined, place: undefined, items: undefined },
 )
 
 const width = computed(() => (props.narrow ? 'max-w-2xl' : 'max-w-5xl'))
@@ -78,8 +81,14 @@ function wrapOptionTab(event: KeyboardEvent): void {
                 <div class="flex min-h-14 items-center gap-3">
                     <BrandMark />
                     <p class="flex min-w-0 flex-1 flex-col leading-tight">
+                        <span
+                            v-if="title"
+                            class="truncate text-sm font-bold"
+                            data-testid="app-name"
+                            >{{ APP_NAME }}</span
+                        >
                         <span class="truncate text-xl font-bold" data-testid="page-name">{{
-                            title
+                            title ?? APP_NAME
                         }}</span>
                         <span v-if="place" class="truncate text-base font-medium">{{ place }}</span>
                     </p>

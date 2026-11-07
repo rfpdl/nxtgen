@@ -14,6 +14,7 @@ use App\Data\Models\User;
 use App\Domains\Family\Jobs\CreateDuplicateCandidatesJob;
 use App\Enums\ChildStatusEnum;
 use App\Enums\GenderEnum;
+use App\Enums\LifestageEnum;
 use App\Enums\MagicLinkPurposeEnum;
 use App\Enums\RegistrationSourceEnum;
 use App\Enums\RoleEnum;
@@ -439,7 +440,7 @@ describe('resending a link and registering for a parent, at the edges', function
 
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->post('/ccf/nxtgen/serve/families', [
             'home_satellite_id' => $htc->id, 'area_text' => 'Deira', 'privacy_consented' => true,
-            'dgroup_area_text' => 'Barsha', 'dgroup_leader_phone' => '0501234567', 'lifestage' => 'Couple',
+            'dgroup_area_text' => 'Barsha', 'dgroup_leader_phone' => '0501234567', 'lifestage' => 'ksp',
             'guardian' => ['first_name' => 'Mira', 'last_name' => 'Bonza', 'relationship' => 'mother', 'phone' => '0523508443', 'email' => 'mira2@example.com'],
             'children' => [['first_name' => 'Clarion', 'last_name' => 'Bonza', 'nickname' => 'Clarion', 'gender' => 'boy', 'date_of_birth' => '2018-02-03', 'has_allergies' => false]],
         ])->assertRedirect();
@@ -447,7 +448,7 @@ describe('resending a link and registering for a parent, at the edges', function
         $family = Family::query()->sole();
         expect($family->dgroup_area_text)->toBe('Barsha')
             ->and($family->dgroup_leader_phone)->toBe('0501234567')
-            ->and($family->lifestage)->toBe('Couple');
+            ->and($family->lifestage)->toBe(LifestageEnum::Ksp);
     });
 });
 

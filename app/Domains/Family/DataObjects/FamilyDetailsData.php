@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Family\DataObjects;
 
 use App\Data\Models\Family;
+use App\Enums\LifestageEnum;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -25,7 +26,7 @@ final class FamilyDetailsData extends Data
         public ?string $dgroup_leader_name,
         public ?string $dgroup_leader_phone,
         public bool $wants_dgroup,
-        public ?string $lifestage,
+        public ?LifestageEnum $lifestage,
         public ?string $notes,
     ) {}
 

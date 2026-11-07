@@ -195,7 +195,7 @@ test('the welcome page is there, and "Register your family" opens the form @stor
 }) => {
     await page.goto('/')
     await expect(
-        page.getByRole('heading', { name: 'Welcome to NxtGen', exact: true }),
+        page.getByRole('heading', { name: 'Welcome to CCF NxtGen', exact: true }),
     ).toBeVisible()
     await page.getByTestId('welcome-register').click()
     await expect(page).toHaveURL(new RegExp(`/${CHURCH}/register$`))

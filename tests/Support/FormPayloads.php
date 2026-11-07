@@ -36,7 +36,7 @@ function familyEdit(Satellite $satellite, array $overrides = []): array
         'dgroup_leader_name' => 'Leah',
         'dgroup_leader_phone' => '0501231234',
         'wants_dgroup' => false,
-        'lifestage' => 'Married with kids',
+        'lifestage' => 'married',
         'notes' => null,
         'guardian' => $guardian,
     ], $overrides);

@@ -10,7 +10,7 @@ import { Head } from '@inertiajs/vue3'
 
 <template>
     <Head title="Nothing here yet" />
-    <AppShell title="NxtGen" narrow>
+    <AppShell narrow>
         <PageHeader title="Nothing here yet" />
         <Card class="flex flex-col gap-4">
             <p class="text-text text-xl">

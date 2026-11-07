@@ -17,6 +17,8 @@ every staff, parent and public page is on the kit (issues 02 and 03 of `.plannin
 | -------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | AppButton      | atom   | THE button: `primary` (green, pressable) / `secondary` / `quiet` / `danger` / `link`; `md`/`lg`/`icon`; loading; `href` → Inertia Link, `external` → plain `<a>` (a download)  |
 | TextField      | atom   | Labelled input (v-model, `type`), hint + error wired by `aria-describedby`, `#leading` icon, `hideLabel`                                                                       |
+| DateField      | atom   | Labelled date to type (day / month / year) or pick (calendar button); no day after today; model `YYYY-MM-DD` or ''                                                             |
+| DateCalendar   | atom   | DateField's calendar: month and year selects to jump, then the days — none after `max`                                                                                         |
 | SelectField    | atom   | Labelled pick-one list; the model is the option's own value (`null` for the placeholder; `placeholderDisabled`: shown, not pickable); hint + error wired                       |
 | TextArea       | atom   | Labelled box for a few lines; hint + error wired                                                                                                                               |
 | CheckRow       | atom   | Big tick (role checkbox): a whole row with a label slot, or a 64px square named by `label` (`stretch`: full row height); disabled                                              |
@@ -27,6 +29,7 @@ every staff, parent and public page is on the kit (issues 02 and 03 of `.plannin
 | RollCallMark   | atom   | A child's roll call on Attendance: "Present ✓" (a success Pill) or "Not marked" in quiet words — one piece for phone rows and table                                            |
 | Notice         | atom   | A short message in the page: `danger` (an alert), `warning` (check this) or `info`, bold on a soft tint — e.g. a name card that matched no one                                 |
 | Pill           | atom   | Small label: a `level` (Level: number + name) in the age-level chart's colours (tint + dot; says the name by default), or `danger` / status / neutral                          |
+| ItemList       | atom   | Typed text as its items, one chip each — a comma separates them (allergies, illnesses); stored whole                                                                           |
 | SectionHeading | atom   | A part of a page's heading: `h2` under the PageHeader, or a smaller `h3` (`level="3"`) inside a card                                                                           |
 | LinkTabs       | atom   | Tabs that are pages: a named `nav` of links, the current one marked and pressed in; two a row on a phone, one row of equal tabs wider — door, Cards                            |
 | RowList        | atom   | A card of padded rows with a line between them; `href` makes each whole row a link ending in ›, `#after` sits outside it; `plain`                                              |

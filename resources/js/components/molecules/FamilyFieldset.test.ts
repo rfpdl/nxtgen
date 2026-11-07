@@ -1,7 +1,11 @@
 import FamilyFieldset from '@/components/molecules/FamilyFieldset.vue'
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { reactive } from 'vue'
+
+vi.mock('@inertiajs/vue3', async (original) =>
+    (await import('@/tests/enumPage')).withEnums(await original()),
+)
 
 const satellites = [
     { id: 7, name: 'CCF DXB' },
@@ -19,7 +23,7 @@ const family = () =>
         dgroup_leader_name: '',
         dgroup_leader_phone: '',
         wants_dgroup: false,
-        lifestage: '',
+        lifestage: '' as '' | 'single' | 'married' | 'ksp',
     })
 
 describe('FamilyFieldset', () => {
@@ -55,9 +59,9 @@ describe('FamilyFieldset', () => {
         const wrapper = mount(FamilyFieldset, { props: { modelValue: f, satellites, errors: {} } })
 
         await wrapper.find('[data-testid="area"]').setValue('Deira')
-        await wrapper.find('[data-testid="lifestage"]').setValue('Married')
+        await wrapper.find('[data-testid="lifestage"]').setValue('married')
 
         expect(f.area_text).toBe('Deira')
-        expect(f.lifestage).toBe('Married')
+        expect(f.lifestage).toBe('married')
     })
 })

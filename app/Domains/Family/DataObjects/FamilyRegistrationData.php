@@ -7,6 +7,7 @@ namespace App\Domains\Family\DataObjects;
 use App\Data\Models\Church;
 use App\Data\Models\Satellite;
 use App\Data\Models\User;
+use App\Enums\LifestageEnum;
 use App\Enums\RegistrationSourceEnum;
 use App\Foundation\Attributes\NonClientFacing;
 use App\Foundation\Support\EmailAddress;
@@ -35,7 +36,7 @@ final readonly class FamilyRegistrationData
         public ?string $dgroupLeaderName = null,
         public ?string $dgroupLeaderPhone = null,
         public bool $wantsDgroup = false,
-        public ?string $lifestage = null,
+        public ?LifestageEnum $lifestage = null,
         public ?string $notes = null,
         public bool $notify = true,
         public array $otherGuardians = [],

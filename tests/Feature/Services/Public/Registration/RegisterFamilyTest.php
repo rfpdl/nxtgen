@@ -8,6 +8,7 @@ use App\Data\Models\Family;
 use App\Data\Models\Guardian;
 use App\Data\Models\Satellite;
 use App\Data\Models\User;
+use App\Enums\LifestageEnum;
 use App\Enums\RegistrationOutcomeEnum;
 use App\Notifications\MagicLinkNotification;
 use Illuminate\Support\Facades\Notification;
@@ -57,7 +58,9 @@ it('shows the registration form with the church satellites @story#2', function (
         ->where('satellites.0.id', $satellite->id)
         ->where('satellites.0.name', 'CCF DXB')
         ->has('enums.relationship')
-        ->has('enums.gender'));
+        ->has('enums.gender')
+        ->has('enums.lifestage', 3)
+        ->where('enums.lifestage.2.label', 'KSP'));
 });
 
 it('404s for a church that does not exist @story#3', function (): void {
@@ -259,7 +262,7 @@ it('keeps the rest of the Google Form: DGroup area and leader phone, lifestage, 
         'dgroup_area_text' => 'Barsha',
         'dgroup_leader_name' => 'Leah',
         'dgroup_leader_phone' => '0501231234',
-        'lifestage' => 'Married with kids',
+        'lifestage' => 'married',
     ];
 
     post('/ccf/register', $form)->assertRedirect();
@@ -267,7 +270,7 @@ it('keeps the rest of the Google Form: DGroup area and leader phone, lifestage, 
     $family = Family::query()->with('primaryGuardian')->sole();
     expect($family->dgroup_area_text)->toBe('Barsha')
         ->and($family->dgroup_leader_phone)->toBe('0501231234')
-        ->and($family->lifestage)->toBe('Married with kids')
+        ->and($family->lifestage)->toBe(LifestageEnum::Married)
         ->and($family->primaryGuardian?->ministries)->toBe(['Music']);
 });
 
@@ -287,4 +290,20 @@ it('keeps Laravel\'s own words when "Anything else we should know" is not text',
 
     post('/ccf/register', $form)
         ->assertSessionHasErrors(['children.0.guardian_notes' => 'The children.0.parent notes field must be a string.']);
+});
+
+it('takes KSP as a lifestage @story#184', function (): void {
+    Notification::fake();
+    [, $satellite] = ccf();
+
+    post('/ccf/register', validForm($satellite) + ['lifestage' => 'ksp'])->assertRedirect();
+
+    expect(Family::query()->sole()->lifestage)->toBe(LifestageEnum::Ksp);
+});
+
+it('refuses any other lifestage @story#185', function (): void {
+    [, $satellite] = ccf();
+
+    post('/ccf/register', validForm($satellite) + ['lifestage' => 'widowed'])->assertSessionHasErrors('lifestage');
+    expect(Family::query()->count())->toBe(0);
 });

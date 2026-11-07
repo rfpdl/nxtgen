@@ -32,6 +32,7 @@ export type Option<T extends string = string> = { value: T; label: string; color
 export type EnumMap = {
     gender: App.Enums.GenderEnum
     relationship: App.Enums.RelationshipEnum
+    lifestage: App.Enums.LifestageEnum
     child_status: App.Enums.ChildStatusEnum
     weekday: App.Enums.WeekdayEnum
     /** The reasons staff may pick for a new name card: Lost or Damaged (never First card). */
@@ -46,6 +47,7 @@ export type EnumProps = { [K in keyof EnumMap]?: Option<EnumMap[K]>[] }
 
 export type Gender = App.Enums.GenderEnum
 export type Relationship = App.Enums.RelationshipEnum
+export type Lifestage = App.Enums.LifestageEnum
 export type ChildStatus = App.Enums.ChildStatusEnum
 export type DuplicateStatus = App.Enums.DuplicateStatusEnum
 export type MagicLinkRoute = App.Enums.MagicLinkRouteEnum

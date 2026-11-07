@@ -266,7 +266,7 @@ declare namespace App {
                     dgroup_leader_name: string | null
                     dgroup_leader_phone: string | null
                     wants_dgroup: boolean
-                    lifestage: string | null
+                    lifestage: App.Enums.LifestageEnum | null
                     notes: string | null
                 }
                 export type FamilyListRowData = {
@@ -419,6 +419,7 @@ declare namespace App {
         export type DuplicateStatusEnum = 'open' | 'dismissed' | 'confirmed'
         export type FamilyClaimStatusEnum = 'pending' | 'accepted' | 'revoked'
         export type GenderEnum = 'boy' | 'girl'
+        export type LifestageEnum = 'single' | 'married' | 'ksp'
         export type MagicLinkPurposeEnum = 'login' | 'verify_email' | 'claim_family'
         export type MagicLinkRouteEnum = 'login' | 'verify' | 'claim'
         export type NoteKindEnum = 'system' | 'observation'
@@ -477,7 +478,7 @@ declare namespace App {
                 dgroup_leader_name: string | null
                 dgroup_leader_phone: string | null
                 wants_dgroup: boolean
-                lifestage: string | null
+                lifestage: App.Enums.LifestageEnum | null
                 notes: string | null
                 guardians: App.Foundation.Inputs.OtherGuardianInput[]
                 removed_guardian_ids: number[]
@@ -518,7 +519,7 @@ declare namespace App {
                 dgroup_leader_name: string | null
                 dgroup_leader_phone: string | null
                 wants_dgroup: boolean
-                lifestage: string | null
+                lifestage: App.Enums.LifestageEnum | null
                 notes: string | null
                 guardians: App.Foundation.Inputs.OtherGuardianInput[]
             }

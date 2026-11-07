@@ -22,6 +22,11 @@ export const enums: Required<EnumProps> = {
         { value: 'sibling', label: 'Sibling', color: 'muted' },
         { value: 'other', label: 'Other', color: 'muted' },
     ],
+    lifestage: [
+        { value: 'single', label: 'Single', color: 'muted' },
+        { value: 'married', label: 'Married', color: 'muted' },
+        { value: 'ksp', label: 'KSP', color: 'muted' },
+    ],
     child_status: [
         { value: 'active', label: 'Active', color: 'success' },
         { value: 'inactive', label: 'Inactive', color: 'muted' },

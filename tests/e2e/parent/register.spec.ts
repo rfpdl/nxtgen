@@ -1,5 +1,5 @@
 import { expect, test } from '../support/test'
-import { fillChild, fillFamily } from '../support/forms'
+import { fillChild, fillFamily, pickDate } from '../support/forms'
 import { mailCount } from '../support/mailbox'
 import { signOutFromMenu } from '../support/menu'
 import { openEmailedLink, signInByEmail } from '../support/sign-in'
@@ -31,6 +31,8 @@ test('a parent registers, confirms their email and sees their family @story#4 @s
             { first: 'Sofia', last: 'Reyes', nickname: 'Sofi', gender: 'girl', dob: '2019-11-02' },
         ],
     )
+    // Sofia's birthday again, picked in the calendar this time (Roy 2026-11-07): the year, the month, the day.
+    await pickDate(page, 'child-1-dob', '2019-11-03')
     // The father too: he will not sign in, so the form asks him for no email.
     await page.getByTestId('add-guardian').click()
     await page.getByTestId('other-guardian-0-first-name').fill('Ramon')
@@ -52,6 +54,9 @@ test('a parent registers, confirms their email and sees their family @story#4 @s
         /Ramon Reyes · Father · 0501234568/,
     ])
     await expect(page.getByTestId('family-child')).toHaveCount(2)
+    await expect(page.getByTestId('family-child').filter({ hasText: 'Sofi' })).toContainText(
+        'Born 2019-11-03',
+    )
     await expect(
         page.getByTestId('family-child').filter({ hasText: 'Gabby' }).getByTestId('allergy'),
     ).toBeVisible()
@@ -72,7 +77,7 @@ test('a parent registers, confirms their email and sees their family @story#4 @s
     // A shared family phone: sign out, and the family page is closed again.
     await signOutFromMenu(page)
     await expect(
-        page.getByRole('heading', { name: 'Welcome to NxtGen', exact: true }),
+        page.getByRole('heading', { name: 'Welcome to CCF NxtGen', exact: true }),
     ).toBeVisible()
     await page.goto(`/${CHURCH}/family`)
     await expect(page).toHaveURL(/\/login/)
@@ -93,9 +98,14 @@ test('a registered parent signs in again with just their email @story#9 @story#1
     await openEmailedLink(page, email, before)
     await page.context().clearCookies()
 
+    // The sign-in page names the app (Roy 2026-11-07); the family page carries it over the page's name.
+    await page.goto('/login')
+    await expect(page.getByTestId('page-name')).toHaveText('CCF NxtGen')
+    await expect(page).toHaveTitle(/CCF NxtGen/)
     await signInByEmail(page, email)
 
     await expect(page).toHaveURL(new RegExp(`/${CHURCH}/family`))
+    await expect(page.getByTestId('app-name')).toHaveText('CCF NxtGen')
     await expect(page.getByTestId('family-child')).toContainText('Noah')
 })
 

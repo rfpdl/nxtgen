@@ -28,7 +28,7 @@ final class CreateFamilyJob extends BaseJob
             'dgroup_leader_name' => self::clean($r->dgroupLeaderName),
             'dgroup_leader_phone' => self::clean($r->dgroupLeaderPhone),
             'wants_dgroup' => $r->wantsDgroup,
-            'lifestage' => self::clean($r->lifestage),
+            'lifestage' => $r->lifestage,
             'privacy_consented_at' => $r->privacyConsented ? now() : null,
             'registered_by_user_id' => $r->registeredBy?->id,
             'registration_source' => $r->source,

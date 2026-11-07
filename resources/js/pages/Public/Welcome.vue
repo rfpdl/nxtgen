@@ -16,10 +16,10 @@ defineProps<{ register_url: string | null }>()
 
 <template>
     <Head title="Welcome" />
-    <AppShell title="NxtGen" place="Kids church" narrow>
+    <AppShell place="Kids church" narrow>
         <Card as="section" class="flex flex-col items-center gap-5 py-8 text-center">
             <BrandMark large />
-            <h1 class="text-text text-3xl font-bold">Welcome to NxtGen</h1>
+            <h1 class="text-text text-3xl font-bold">Welcome to CCF NxtGen</h1>
             <p class="text-text text-xl">
                 Kids church registration and check-in. We are glad you are here.
             </p>

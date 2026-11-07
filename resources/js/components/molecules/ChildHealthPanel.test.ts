@@ -24,6 +24,19 @@ describe('ChildHealthPanel', () => {
         expect(wrapper.text()).not.toContain('Afraid of')
     })
 
+    it('shows each allergy and each illness as its own item — a comma separates them (Roy 2026-11-07)', () => {
+        const wrapper = mount(ChildHealthPanel, {
+            props: {
+                health: { ...amara, allergies: 'Peanuts, eggs', illnesses: 'asthma, eczema ,' },
+            },
+        })
+
+        const items = (testid: string): string[] =>
+            wrapper.findAll(`[data-testid="${testid}"] li`).map((li) => li.text())
+        expect(items('health-allergies')).toEqual(['Peanuts', 'eggs'])
+        expect(items('health-illnesses')).toEqual(['asthma', 'eczema'])
+    })
+
     it('says "Allergies: none" plainly, and when nothing else was given', () => {
         const wrapper = mount(ChildHealthPanel, {
             props: { health: { ...amara, allergies: null, illnesses: null } },

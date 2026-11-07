@@ -47,6 +47,11 @@ _Avoid_: Parent (in code), carer, contact
 A young person registered on a Family, at one Level.
 _Avoid_: Kid, student, member
 
+**Lifestage**:
+A Family's stage of life, from the registration form: Single, Married or KSP — or none given. The form starts on
+Married when the parent registering is a mother or father.
+_Avoid_: Civil status, marital status
+
 **Consent**:
 A Guardian's recorded yes or no to a specific use of a Child's data (today: the Child's photo).
 _Avoid_: Permission, agreement

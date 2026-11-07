@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import { expect, type Page } from '@playwright/test'
 
 export type Child = {
     first: string
@@ -9,13 +9,32 @@ export type Child = {
     allergies?: string
 }
 
+/** A DateField, typed as a person types it: day, month, year (each part moves on to the next by itself). */
+export async function typeDate(page: Page, testid: string, iso: string): Promise<void> {
+    const [year, month, day] = iso.split('-')
+    await page.getByTestId(`${testid}-day`).click()
+    await page.keyboard.type(`${day}${month}${year}`)
+    await expect(page.getByTestId(testid)).toContainText(`${day}/${month}/${year}`)
+}
+
+/** A DateField, picked in its calendar: the year, the month, then the day. */
+export async function pickDate(page: Page, testid: string, iso: string): Promise<void> {
+    const [year, month] = iso.split('-')
+    await page.getByTestId(`${testid}-open`).click()
+    const calendar = page.getByTestId(`${testid}-calendar`)
+    await calendar.getByTestId(`${testid}-year`).selectOption(year!)
+    await calendar.getByTestId(`${testid}-month`).selectOption(String(Number(month)))
+    await calendar.locator(`[data-value="${iso}"]`).click()
+    await expect(calendar).toBeHidden()
+}
+
 /** One child's fields (ChildFieldset). `index` = which child on the form. */
 export async function fillChild(page: Page, index: number, child: Child): Promise<void> {
     await page.getByTestId(`child-${index}-first-name`).fill(child.first)
     await page.getByTestId(`child-${index}-last-name`).fill(child.last)
     await page.getByTestId(`child-${index}-nickname`).fill(child.nickname)
     await page.getByTestId(`child-${index}-gender`).selectOption(child.gender)
-    await page.getByTestId(`child-${index}-dob`).fill(child.dob)
+    await typeDate(page, `child-${index}-dob`, child.dob)
     // Always answered, yes or no — the form will not take a blank (review B6).
     if (child.allergies) {
         await page.getByTestId(`child-${index}-has-allergies-yes`).check()

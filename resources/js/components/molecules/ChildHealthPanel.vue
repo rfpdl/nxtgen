@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ItemList from '@/components/atoms/ItemList.vue'
 import type { ChildHealth } from '@/types'
 import { computed } from 'vue'
 
@@ -9,9 +10,11 @@ import { computed } from 'vue'
  */
 const props = defineProps<{ health: ChildHealth }>()
 
+const ILLNESSES = 'Sickness or illness'
+
 const rows = computed(() =>
     [
-        ['Sickness or illness', props.health.illnesses],
+        [ILLNESSES, props.health.illnesses],
         ['Dislikes', props.health.dislikes],
         ['Afraid of', props.health.fears],
         ['From the family', props.health.guardian_notes],
@@ -21,20 +24,23 @@ const rows = computed(() =>
 
 <template>
     <div class="flex flex-col gap-2" aria-live="polite" data-testid="child-health">
-        <p
+        <div
             v-if="health.allergies"
             class="bg-danger-soft text-danger rounded-control p-3 text-lg font-bold"
             data-testid="health-allergies"
         >
-            ⚠ Allergies: {{ health.allergies }}
-        </p>
+            ⚠ Allergies: <ItemList :text="health.allergies" />
+        </div>
         <p v-else class="text-text text-lg font-semibold" data-testid="health-allergies">
             Allergies: none
         </p>
         <dl v-if="rows.length > 0" class="text-text grid gap-x-3 gap-y-1 sm:grid-cols-[auto_1fr]">
             <template v-for="[label, value] in rows" :key="label">
                 <dt class="text-text-muted">{{ label }}</dt>
-                <dd>{{ value }}</dd>
+                <dd v-if="label === ILLNESSES" data-testid="health-illnesses">
+                    <ItemList :text="value" />
+                </dd>
+                <dd v-else>{{ value }}</dd>
             </template>
         </dl>
         <p v-else class="text-text">No other health details given.</p>

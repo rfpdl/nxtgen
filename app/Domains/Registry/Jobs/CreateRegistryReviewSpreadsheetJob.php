@@ -49,7 +49,7 @@ final class CreateRegistryReviewSpreadsheetJob extends BaseJob
                 $writer->addRow(TextRow::of([
                     'yes', $family->key, $family->email, $p->guardianFirstName, $p->guardianLastName, $p->relationship->value, $p->phone ?? '',
                     $family->homeSatellite, $p->area ?? '', $yes($p->wantsFbGroup), $p->fbAccount ?? '', $yes($p->inDgroup), $p->dgroupArea ?? '',
-                    $p->dgroupLeaderName ?? '', $p->dgroupLeaderPhone ?? '', $yes($p->wantsDgroup), $p->ministry ?? '', $p->lifestage ?? '',
+                    $p->dgroupLeaderName ?? '', $p->dgroupLeaderPhone ?? '', $yes($p->wantsDgroup), $p->ministry ?? '', $p->lifestage?->label() ?? '',
                     $yes($p->privacyConsented), $child->sourceKey, (string) $child->rowNumber,
                     $child->childFirstName, $child->childLastName, $child->nickname, $child->gender->value ?? '', $child->dateOfBirth ?? '',
                     $child->allergies ?? '', $child->dislikes ?? '', $child->fears ?? '', $child->guardianNotes ?? '', $child->status->value,

@@ -7,6 +7,7 @@ namespace App\Domains\Registry\Jobs;
 use App\Domains\Registry\DataObjects\RegistryRowData;
 use App\Domains\Registry\Values\RegistryCsvColumn as Col;
 use App\Domains\Registry\Values\RegistryCsvRecord;
+use App\Enums\LifestageEnum;
 use App\Foundation\Jobs\BaseJob;
 use Illuminate\Support\Str;
 use SplFileObject;
@@ -80,7 +81,7 @@ final class GetRegistryRowsJob extends BaseJob
             dgroupLeaderPhone: $c->orNull(Col::DgroupLeaderPhone),
             ministry: $c->orNull(Col::Ministry),
             wantsDgroup: $c->yes(Col::WantsDgroup),
-            lifestage: $c->orNull(Col::Lifestage),
+            lifestage: LifestageEnum::fromLoose($c->orNull(Col::Lifestage)),
             privacyConsented: $c->yes(Col::Privacy),
             schedule: $c->get(Col::Schedule),
             status: $c->status(),

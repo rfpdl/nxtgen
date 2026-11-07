@@ -63,7 +63,7 @@ const LITE_FAMILY = ['can_open', 'can_resend', ...LIST_CHILD, 'email_confirmed',
 
 /** A family opened by staff, minus what only an editor gets (Church/Families/Show). */
 const FAMILY_VIEW = [
-    'admin_controls', 'can_set_level', 'enums.card_reason', 'enums.child_status', 'enums.gender', 'enums.relationship',
+    'admin_controls', 'can_set_level', 'enums.card_reason', 'enums.child_status', 'enums.gender', 'enums.lifestage', 'enums.relationship',
     'family.area', 'family.can_edit', 'family.email', 'family.email_confirmed', 'family.id', 'family.primary_name',
     'family.registered_by', 'family.satellite',
     'family.children.*.allergies', 'family.children.*.date_of_birth', 'family.children.*.dislikes', 'family.children.*.fears',
@@ -225,7 +225,7 @@ describe('the door search — the church-wide lite view', function (): void {
     it('shows any staff only names, satellite, a masked email and nicknames — never a photo or a health field @story#46', function (Actor $actor): void {
         $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/nxtgen/serve/families/new?q=Amara');
 
-        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, ['enums.gender', 'enums.relationship', 'query', 'satellites.*.id', 'satellites.*.name'], prefixed('results.*', LITE_FAMILY)))
+        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, ['enums.gender', 'enums.lifestage', 'enums.relationship', 'query', 'satellites.*.id', 'satellites.*.name'], prefixed('results.*', LITE_FAMILY)))
             ->and(forbiddenOnLists($props))->toBe([])
             ->and(data_get($props, 'results.0.masked_email'))->toBe('ja•••@example.com');
     })->with(actors(...Actor::staff()));
@@ -495,7 +495,7 @@ describe('the parent\'s own family page', function (): void {
     it('gives a parent their own family, its children and the edit forms — no staff notes, no registration source @story#28', function (Actor $actor): void {
         $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/family');
 
-        expect(keyPaths($props))->toBe(allowlist(FRAME, ['enums.gender', 'enums.relationship', 'family.area', 'family.home_satellite', 'satellites.*.id', 'satellites.*.name'],
+        expect(keyPaths($props))->toBe(allowlist(FRAME, ['enums.gender', 'enums.lifestage', 'enums.relationship', 'family.area', 'family.home_satellite', 'satellites.*.id', 'satellites.*.name'],
             prefixed('family.children.*', ['allergies', 'date_of_birth', 'dislikes', 'fears', 'first_name', 'gender', 'guardian_notes', 'id', 'illnesses', 'has_photo', 'last_name', 'level.name', 'level.number', 'middle_name', 'nickname', 'photo_consent', 'photo_url', 'status_label']),
             prefixed('family.guardians.*', ['first_name', 'last_name', 'phone', 'relationship_label']),
             array_values(array_filter(FAMILY_EDIT_DETAILS, fn (string $p): bool => str_starts_with($p, 'details.'))),

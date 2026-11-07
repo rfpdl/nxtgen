@@ -35,7 +35,7 @@ final class UpdateFamilyDetailsJob extends BaseJob
             'dgroup_leader_name' => self::clean($d->dgroup_leader_name),
             'dgroup_leader_phone' => self::clean($d->dgroup_leader_phone),
             'wants_dgroup' => $d->wants_dgroup,
-            'lifestage' => self::clean($d->lifestage),
+            'lifestage' => $d->lifestage,
             'notes' => self::clean($d->notes),
         ]);
 

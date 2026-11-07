@@ -2,7 +2,8 @@
 import CheckRow from '@/components/atoms/CheckRow.vue'
 import SelectField from '@/components/atoms/SelectField.vue'
 import TextField from '@/components/atoms/TextField.vue'
-import type { FamilyFieldsDraft, SatelliteOption } from '@/types'
+import { useEnum } from '@/composables/useEnum'
+import type { FamilyFieldsDraft, Lifestage, SatelliteOption } from '@/types'
 import { computed } from 'vue'
 
 /**
@@ -17,6 +18,8 @@ const props = defineProps<{
 }>()
 
 const family = defineModel<FamilyFieldsDraft>({ required: true })
+/** `pick-lifestage`: the person chose a lifestage themselves (registration stops suggesting one). */
+const emit = defineEmits<{ 'pick-lifestage': [] }>()
 
 const satelliteOptions = computed(() =>
     props.satellites.map((s) => ({ value: s.id, label: s.name })),
@@ -24,6 +27,13 @@ const satelliteOptions = computed(() =>
 
 function setSatellite(value: string | number | null): void {
     family.value.home_satellite_id = value === null ? '' : Number(value)
+}
+
+const { options: lifestageOptions } = useEnum('lifestage')
+
+function pickLifestage(value: string | number | null): void {
+    family.value.lifestage = (value ?? '') as Lifestage | ''
+    emit('pick-lifestage')
 }
 </script>
 
@@ -92,11 +102,13 @@ function setSatellite(value: string | number | null): void {
         @update:model-value="family.wants_dgroup = $event"
         >I would like to join a DGroup</CheckRow
     >
-    <TextField
-        v-model="family.lifestage"
+    <SelectField
         label="Your lifestage"
-        hint="For example: single, married, married with kids"
+        placeholder="—"
+        :options="lifestageOptions"
+        :model-value="family.lifestage || null"
         :error="errors['lifestage']"
         data-testid="lifestage"
+        @update:model-value="pickLifestage"
     />
 </template>

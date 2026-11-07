@@ -11,8 +11,10 @@ use App\Data\Models\Note;
 use App\Data\Models\Satellite;
 use App\Data\Models\User;
 use App\Enums\ChildStatusEnum;
+use App\Enums\LifestageEnum;
 use App\Enums\RelationshipEnum;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
@@ -192,7 +194,7 @@ it('lets a parent edit their family details and their own details @story#30', fu
     expect($family->home_satellite_id)->toBe($other->id)
         ->and($family->area_text)->toBe('Deira')
         ->and($family->dgroup_leader_phone)->toBe('0501231234')
-        ->and($family->lifestage)->toBe('Married with kids')
+        ->and($family->lifestage)->toBe(LifestageEnum::Married)
         ->and($guardian->last_name)->toBe('Ramos-Lee')
         ->and($guardian->phone)->toBe('0559998888')
         ->and($guardian->ministries)->toBe(['Music'])
@@ -289,4 +291,17 @@ it('refuses guardian changes on a family with no primary guardian, and saves not
 
     expect($lolo->fresh())->not->toBeNull()
         ->and($family->fresh()?->area_text)->toBe('Al Barsha');
+});
+
+// Found by Astra (2026-11-07): a lifestage stored before the three choices must not break the page.
+it('reads a lifestage stored before Single, Married and KSP loosely: any capitals, anything else as none given @story#185', function (): void {
+    [, $family, $user] = familyWithGuardian();
+
+    DB::table('families')->where('id', $family->id)->update(['lifestage' => 'MARRIED']);
+    actingAs($user)->get('/ccf/family')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
+        ->where('details.lifestage', 'married'));
+
+    DB::table('families')->where('id', $family->id)->update(['lifestage' => 'Married with kids']);
+    actingAs($user)->get('/ccf/family')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
+        ->where('details.lifestage', null));
 });

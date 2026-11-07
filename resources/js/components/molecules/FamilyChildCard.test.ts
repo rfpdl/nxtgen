@@ -46,6 +46,21 @@ describe('FamilyChildCard', () => {
         ).toContain('Peanuts')
     })
 
+    it('shows each allergy and each illness as its own item — a comma separates them (Roy 2026-11-07)', () => {
+        const wrapper = mount(FamilyChildCard, {
+            props: { child: child({ allergies: 'Peanuts, eggs', illnesses: 'asthma, eczema' }) },
+        })
+
+        expect(wrapper.findAll('[data-testid="allergy"] li').map((li) => li.text())).toEqual([
+            'Peanuts',
+            'eggs',
+        ])
+        expect(wrapper.findAll('[data-testid="illnesses"] li').map((li) => li.text())).toEqual([
+            'asthma',
+            'eczema',
+        ])
+    })
+
     it('shows the Level as a pill in its own colour, and the status beside it', () => {
         const wrapper = mount(FamilyChildCard, { props: { child: child() } })
         const level = wrapper.find('[data-testid="child-level-pill"]')

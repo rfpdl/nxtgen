@@ -74,10 +74,10 @@ describe('RegisterFamilyForm', () => {
         expect(wrapper.find('[data-testid="dgroup-leader-phone"]').exists()).toBe(true)
     })
 
-    it('sends lifestage and the ministry the parent serves in', async () => {
+    it('sends the lifestage picked and the ministry the parent serves in', async () => {
         const wrapper = mount(RegisterFamilyForm, { props })
 
-        await wrapper.find('[data-testid="lifestage"]').setValue('Married with kids')
+        await wrapper.find('[data-testid="lifestage"]').setValue('ksp')
         await wrapper.find('[data-testid="guardian-ministry"]').setValue('Music')
         await wrapper.find('form').trigger('submit')
 
@@ -85,8 +85,59 @@ describe('RegisterFamilyForm', () => {
             lifestage: string
             guardian: { ministries: string[] }
         }
-        expect(sent.lifestage).toBe('Married with kids')
+        expect(sent.lifestage).toBe('ksp')
         expect(sent.guardian.ministries).toEqual(['Music'])
+    })
+
+    it('offers Single, Married and KSP, and starts on Married for a mother (Roy 2026-11-07)', () => {
+        const select = mount(RegisterFamilyForm, { props }).find('[data-testid="lifestage"]')
+
+        expect(select.findAll('option').map((o) => o.text())).toEqual([
+            '—',
+            'Single',
+            'Married',
+            'KSP',
+        ])
+        expect((select.element as HTMLSelectElement).value).toBe('married')
+    })
+
+    it('leaves the lifestage empty for anyone but a mother or father, until one is picked', async () => {
+        const wrapper = mount(RegisterFamilyForm, { props })
+        const lifestage = (): string =>
+            (wrapper.find('[data-testid="lifestage"]').element as HTMLSelectElement).value
+
+        await wrapper.find('[data-testid="guardian-relationship"]').setValue('aunt_uncle')
+        expect(lifestage()).toBe('')
+
+        await wrapper.find('[data-testid="guardian-relationship"]').setValue('father')
+        expect(lifestage()).toBe('married')
+    })
+
+    it('keeps a lifestage the person picked when the relationship changes', async () => {
+        const wrapper = mount(RegisterFamilyForm, { props })
+
+        await wrapper.find('[data-testid="lifestage"]').setValue('single')
+        await wrapper.find('[data-testid="guardian-relationship"]').setValue('aunt_uncle')
+
+        expect((wrapper.find('[data-testid="lifestage"]').element as HTMLSelectElement).value).toBe(
+            'single',
+        )
+    })
+
+    // Found by Astra (2026-11-07): a pick that happens to equal the suggestion is still the person's own.
+    it('keeps Married, or an empty lifestage, when the person picked it themselves', async () => {
+        const wrapper = mount(RegisterFamilyForm, { props })
+        const lifestage = wrapper.find('[data-testid="lifestage"]')
+        const relationship = wrapper.find('[data-testid="guardian-relationship"]')
+
+        await lifestage.setValue('single')
+        await lifestage.setValue('married')
+        await relationship.setValue('aunt_uncle')
+        expect((lifestage.element as HTMLSelectElement).value).toBe('married')
+
+        await lifestage.setValue('')
+        await relationship.setValue('mother')
+        expect((lifestage.element as HTMLSelectElement).value).toBe('')
     })
 
     it("sends the family's other parents and guardians, who are asked no email", async () => {

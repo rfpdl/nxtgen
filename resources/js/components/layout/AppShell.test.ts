@@ -72,6 +72,21 @@ describe('AppShell', () => {
         wrapper.unmount()
     })
 
+    it('names the app "CCF NxtGen" in the top left, over the page name (Roy 2026-11-07)', () => {
+        const wrapper = shell()
+
+        expect(wrapper.find('[data-testid="app-name"]').text()).toBe('CCF NxtGen')
+        expect(wrapper.find('[data-testid="page-name"]').text()).toBe('Check in')
+        wrapper.unmount()
+    })
+
+    it('puts "CCF NxtGen" big, once, on a page with no name of its own (sign in, welcome)', () => {
+        const wrapper = mount(AppShell, { props: {}, slots: { default: '<p>the page</p>' } })
+
+        expect(wrapper.find('[data-testid="page-name"]').text()).toBe('CCF NxtGen')
+        expect(wrapper.find('[data-testid="app-name"]').exists()).toBe(false)
+    })
+
     it('picks the sheet or the row with CSS alone — the row from 1024px (lg), where the whole menu fits on one line', () => {
         const wrapper = shell()
 

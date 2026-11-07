@@ -6,6 +6,7 @@ namespace App\Domains\Registry\DataObjects;
 
 use App\Enums\ChildStatusEnum;
 use App\Enums\GenderEnum;
+use App\Enums\LifestageEnum;
 use App\Enums\RelationshipEnum;
 use App\Foundation\Attributes\NonClientFacing;
 
@@ -40,7 +41,7 @@ final readonly class RegistryRowData
         public ?string $dgroupLeaderPhone,
         public ?string $ministry,
         public bool $wantsDgroup,
-        public ?string $lifestage,
+        public ?LifestageEnum $lifestage,
         public bool $privacyConsented,
         public string $schedule,
         public ChildStatusEnum $status,

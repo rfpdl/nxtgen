@@ -37,6 +37,8 @@ Updated 2026-11-03. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 
 | # | Item | Trigger |
 |---|---|---|
+| 33 | **Satellites in the address, platform admin** (Roy 2026-11-07): `nxtgen.app/{satellite}/serve|admin`, an Admin Role per satellite, a QR code per satellite that never changes, `/platform` (`tasks/2026-11-07-ccf-nxtgen/` items 5–12) | next |
+| 32 | **The form and the header** (Roy 2026-11-07): "CCF NxtGen" branding, Lifestage Single/Married/KSP, allergies and illnesses as items, the birthday calendar (`tasks/2026-11-07-ccf-nxtgen/` items 1–4) | done 2026-11-07 |
 | 31 | **Admin and Serve** (Roy 2026-11-06): staff addresses by service — `/ccf/admin/…` and `/ccf/serve/…`; Lifeshapers edit families in Serve; the QR poster gets the church's Links (`tasks/2026-11-06-admin-serve/`) | done 2026-11-06 |
 | 29 | **Merge two families or two children** (a child registered again, legacy duplicates) — spec written 2026-11-07 — `tasks/2026-11-07-merge/spec.md`, 8 questions for Roy before building | when a re-registration happens |
 | 30 | ~~UI overhaul~~ — done: the Bold theme, one UI kit for every page (`tasks/2026-10-28-ui-theme/`) | done 2026-10-28 |

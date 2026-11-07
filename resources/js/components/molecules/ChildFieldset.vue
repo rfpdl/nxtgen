@@ -3,6 +3,7 @@ import AppButton from '@/components/atoms/AppButton.vue'
 import ChoiceChips from '@/components/atoms/ChoiceChips.vue'
 import SelectField from '@/components/atoms/SelectField.vue'
 import TextArea from '@/components/atoms/TextArea.vue'
+import DateField from '@/components/atoms/DateField.vue'
 import TextField from '@/components/atoms/TextField.vue'
 import { useEnum } from '@/composables/useEnum'
 import type { ChildDraft } from '@/types'
@@ -93,9 +94,8 @@ function setAllergies(value: string | number | null): void {
             :data-testid="`child-${index}-gender`"
             @update:model-value="setGender"
         />
-        <TextField
+        <DateField
             v-model="child.date_of_birth"
-            type="date"
             label="Birthday"
             required
             :error="error('date_of_birth')"

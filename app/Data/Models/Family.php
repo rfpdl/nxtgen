@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Data\Models;
 
+use App\Data\Casts\LifestageCast;
+use App\Enums\LifestageEnum;
 use App\Enums\RegistrationSourceEnum;
 use App\Foundation\Support\SearchWords;
 use Carbon\CarbonImmutable;
@@ -29,7 +31,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $dgroup_leader_name
  * @property string|null $dgroup_leader_phone
  * @property bool $wants_dgroup
- * @property string|null $lifestage
+ * @property LifestageEnum|null $lifestage
  * @property list<int>|null $preferred_schedule_ids
  * @property CarbonImmutable|null $privacy_consented_at
  * @property int|null $registered_by_user_id
@@ -62,7 +64,7 @@ final class Family extends Model
             'wants_dgroup' => 'boolean',
             'preferred_schedule_ids' => 'array',
             'privacy_consented_at' => 'immutable_datetime',
-            'registration_source' => RegistrationSourceEnum::class,
+            'registration_source' => RegistrationSourceEnum::class,            'lifestage' => LifestageCast::class,
         ];
     }
 

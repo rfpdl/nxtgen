@@ -6,6 +6,7 @@ use App\Domains\Registry\DataObjects\RegistryRowData;
 use App\Domains\Registry\Jobs\GetRegistryRowsJob;
 use App\Enums\ChildStatusEnum;
 use App\Enums\GenderEnum;
+use App\Enums\LifestageEnum;
 
 /*
  * The sheet has one row per CHILD with the parent repeated (plan §7). A synthetic CSV with the real column
@@ -60,4 +61,26 @@ it('keeps a short or malformed record as a row instead of dropping it silently',
     expect($rows)->toHaveCount(1)
         ->and($rows[0]->childFirstName)->toBe('Lonely')
         ->and($rows[0]->email)->toBe('');
+});
+
+it('reads the lifestage in any capitals, and anything but Single, Married or KSP as none given', function (): void {
+    $path = sys_get_temp_dir().'/registry-lifestage-'.uniqid().'.csv';
+    $in = new SplFileObject(base_path('tests/Fixtures/registry-sample.csv'));
+    $in->setFlags(SplFileObject::READ_CSV | SplFileObject::SKIP_EMPTY | SplFileObject::READ_AHEAD);
+    $out = new SplFileObject($path, 'w');
+    $cells = ['MARRIED', ' ksp', 'n/a'];
+    foreach ($in as $line => $record) {
+        if (! is_array($record)) {
+            continue;
+        }
+        if ($line > 0 && $line <= count($cells)) {
+            $record[24] = $cells[$line - 1];
+        }
+        $out->fputcsv($record, escape: '');
+    }
+
+    $rows = (new GetRegistryRowsJob(path: $path))->handle();
+
+    expect(array_map(fn (RegistryRowData $r) => $r->lifestage, array_slice($rows, 0, 4)))
+        ->toBe([LifestageEnum::Married, LifestageEnum::Ksp, null, null]);
 });

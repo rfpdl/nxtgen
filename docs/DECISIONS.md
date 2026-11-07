@@ -4,6 +4,24 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-11-07 (CCF NxtGen — Roy)
+
+- **The app serves CCF's NxtGen ministry only, at several satellites** (Roy: "too much" to build for every church;
+  later DGroup or family apps may reuse its parts). The church stays in the data, never in the address. Batch B
+  (TODO #33, `tasks/2026-11-07-ccf-nxtgen/spec.md`) moves addresses to `nxtgen.app/{satellite}/serve|admin` —
+  satellites `dubai`, `sharjah`, `abu-dhabi` — with an Admin Role per satellite (no church-wide admin), a QR code per
+  satellite that never changes (`/{code}/register` forwards to the slug), and a platform admin area set by command.
+- **"CCF NxtGen" is the brand** (Roy: "that is our branding"): top left on every page — a small line over the page's
+  name, or the name itself on sign in and welcome; the tab title; the mail sender.
+- **Lifestage is Single, Married or KSP, or none given** (Roy). The registration form starts on Married when the
+  parent registering is a mother or father and leaves it empty for anyone else, until the parent picks one; their
+  own pick stays. The Registry import reads the three in any capitals; anything else is none given — never guessed
+  as Married. Old free text was not migrated: the app is not live yet (`make fresh`).
+- **Allergies and illnesses show as items** (Roy): a comma separates them ("asthma, eczema" is two chips); stored as
+  typed, so Excel and the forms keep the text whole.
+- **Birthday: a calendar in the app's style** (Roy): day / month / year to type, or the calendar with year and month
+  selects (three taps for a birthday years back); no day after today. reka-ui's DatePicker, already in the kit.
+
 ## 2026-11-07 (overnight — Claude, from Roy's list)
 
 - **Class admin roles (TODO #9), built from plan §3.2's "Class admin (S)" column** (`tasks/2026-11-07-class-admin/`).

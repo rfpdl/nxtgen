@@ -4,12 +4,11 @@ import { createInertiaApp } from '@inertiajs/vue3'
 import { createPinia } from 'pinia'
 import type { DefineComponent } from 'vue'
 import { createApp, h } from 'vue'
+import { APP_NAME } from '@/lib/brand'
 import { ZiggyVue } from 'ziggy-js'
 
-const appName = import.meta.env.VITE_APP_NAME ?? 'NxtGen'
-
 void createInertiaApp({
-    title: (title) => (title ? `${title} · ${appName}` : appName),
+    title: (title) => (title ? `${title} · ${APP_NAME}` : APP_NAME),
 
     resolve: (name) =>
         resolvePageComponent(

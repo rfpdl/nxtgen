@@ -20,6 +20,7 @@ use App\Domains\Registry\Jobs\GetApprovedRegistryRowsJob;
 use App\Domains\Registry\Jobs\GetImportedSourceKeysJob;
 use App\Enums\ChildStatusEnum;
 use App\Enums\GenderEnum;
+use App\Enums\LifestageEnum;
 use App\Enums\RegistrationOutcomeEnum;
 use App\Enums\RegistrationSourceEnum;
 use App\Enums\RelationshipEnum;
@@ -222,7 +223,7 @@ final class ApplyRegistryImportFeature extends BaseConsoleFeature
             dgroupLeaderName: $p->orNull('DGroup leader'),
             dgroupLeaderPhone: $p->orNull('DGroup leader phone'),
             wantsDgroup: $p->yes('Wants DGroup'),
-            lifestage: $p->orNull('Lifestage'),
+            lifestage: LifestageEnum::fromLoose($p->orNull('Lifestage')),
             notify: false,
         );
     }

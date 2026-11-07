@@ -9,6 +9,7 @@ use App\Data\Models\Satellite;
 use App\Data\Models\User;
 use App\Domains\Family\DataObjects\FamilyRegistrationData;
 use App\Domains\Family\DataObjects\GuardianEditData;
+use App\Enums\LifestageEnum;
 use App\Enums\RegistrationSourceEnum;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Data;
@@ -40,7 +41,7 @@ final class RegisterFamilyInput extends Data
         public ?string $dgroup_leader_name = null,
         public ?string $dgroup_leader_phone = null,
         public bool $wants_dgroup = false,
-        public ?string $lifestage = null,
+        public ?LifestageEnum $lifestage = null,
         public ?string $notes = null,
         #[DataCollectionOf(OtherGuardianInput::class)]
         public array $guardians = [],

@@ -25,10 +25,12 @@ use Illuminate\Http\RedirectResponse;
     happyPaths: [
         'story#4' => 'A parent registers their Family and Children and is thanked',
         'story#87' => 'A parent adds the Family\'s other parents and Guardians, who get no login: the Family has one',
+        'story#184' => 'The lifestage is Single, Married or KSP, or none given',
     ],
     unhappyPaths: [
         'story#5' => 'An email already registered gets the same answer, so nobody learns who is registered',
         'story#6' => 'A Satellite of another church is refused',
+        'story#185' => 'Any other lifestage is refused',
     ],
 )]
 final class RegisterFamilyFeature extends BasePublicFeature
