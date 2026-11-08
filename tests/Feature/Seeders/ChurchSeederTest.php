@@ -45,6 +45,8 @@ it('creates the church, its satellites, each satellite\'s Squads and the first p
     expect($church->name)->toBe('CCF')
         ->and(Satellite::query()->where('church_id', $church->id)->orderBy('name')->pluck('name')->all())->toBe(['CCF Dubai', 'CCF Sharjah'])
         ->and(Satellite::query()->orderBy('slug')->pluck('slug')->all())->toBe(['dubai', 'sharjah'])
+        // Each with its own QR code (spec item 7): 8 letters and digits, kept on a second run (below).
+        ->and(Satellite::query()->pluck('code')->filter(fn (mixed $c): bool => is_string($c) && preg_match('/^[2-9a-hjkmnp-z]{8}$/', $c) === 1)->count())->toBe(2)
         ->and($admin->password)->toBeNull()
         ->and($admin->is_platform_admin)->toBeTrue()
         ->and(RoleAssignment::query()->count())->toBe(0);
@@ -71,7 +73,10 @@ it('is safe to run again', function (): void {
     churchSettings();
 
     seed(ChurchSeeder::class);
+    $codes = Satellite::query()->orderBy('id')->pluck('code')->all();
     seed(ChurchSeeder::class);
+
+    expect(Satellite::query()->orderBy('id')->pluck('code')->all())->toBe($codes);
 
     expect(Church::query()->count())->toBe(1)
         ->and(Satellite::query()->count())->toBe(2)
@@ -92,7 +97,7 @@ it('refuses a satellite address that clashes with a page of the app, or one with
 
     expect(fn () => seed(ChurchSeeder::class))->toThrow(RuntimeException::class, 'address=name');
     expect(Church::query()->count())->toBe(0);
-})->with(['an app page' => ['login=CCF Login'], 'no name' => ['dubai'], 'not an address' => ['Dubai City=CCF Dubai']]);
+})->with(['an app page' => ['login=CCF Login'], 'no name' => ['dubai'], 'not an address' => ['Dubai City=CCF Dubai'], 'shaped like a QR code (Astra)' => ['k7m2q9xa=CCF K']]);
 
 it('never puts the demo accounts into production', function (): void {
     churchSettings();

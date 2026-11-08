@@ -4,6 +4,17 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-11-09 (Issue 07 built — registration by address or code)
+
+- **Each satellite has a registration code, 8 lowercase letters and digits with no look-alikes, made once and never
+  changed** (Roy). Only the registration page takes it: `/{code}/register` forwards to `/{address}/register`; a code
+  anywhere else is an address nobody has.
+- **The poster's QR carries the code; the address printed under it is the satellite's address** (Claude's call,
+  reversible): the QR outlives an address change, and the printed one is short enough to type. Link QRs carry the link.
+- No "new code" button yet (spec item 7). **A satellite address never has a code's shape** (8 letters and digits of the
+  code alphabet — Astra): addresses are looked up first, so one could otherwise take over another satellite's printed
+  QR. The setup refuses one; the platform's add and change-address (issue 09) will too (`SatelliteCode::looksLikeOne`).
+
 ## 2026-11-09 (Issue 06 built — an Admin Role per satellite)
 
 - **No church-wide Role** (spec item 9): a Role is at one satellite or one class. A satellite's admins give and remove

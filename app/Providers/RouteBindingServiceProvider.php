@@ -11,6 +11,7 @@ use App\Domains\Card\Jobs\GetCardRequestJob;
 use App\Domains\Card\Jobs\GetPrintListJob;
 use App\Domains\CheckIn\Jobs\GetCheckInJob;
 use App\Domains\Church\Jobs\GetRoleAssignmentJob;
+use App\Domains\Church\Jobs\GetSatelliteByCodeJob;
 use App\Domains\Church\Jobs\GetSatelliteBySlugJob;
 use App\Domains\Church\Jobs\GetSatelliteLinkJob;
 use App\Domains\Family\Jobs\GetChildWithFamilyJob;
@@ -22,6 +23,7 @@ use App\Domains\Family\Jobs\GetOwnGuardianJob;
 use App\Domains\Level\Jobs\GetMovingUpJob;
 use App\Domains\Schedule\Jobs\GetScheduleJob;
 use Closure;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Routing\Route as RoutingRoute;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -45,7 +47,17 @@ final class RouteBindingServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Route::bind('satellite', fn (string $slug): Satellite => $this->run(new GetSatelliteBySlugJob(slug: $slug)));
+        Route::bind('satellite', function (string $address, RoutingRoute $route): Satellite {
+            try {
+                return $this->run(new GetSatelliteBySlugJob(slug: $address));
+            } catch (ModelNotFoundException $notAnAddress) {
+                // The registration page alone also takes a satellite's code — its printed QR poster (spec item 7) — and
+                // forwards it to the satellite's address (ShowRegisterFeature).
+                $byCode = $route->getName() === 'public.register' ? $this->run(new GetSatelliteByCodeJob(code: $address)) : null;
+
+                return $byCode ?? throw $notAnAddress;
+            }
+        });
 
         $this->inChurch('family', fn (Church $church, int $id) => $this->run(new GetFamilyByIdJob(church: $church, id: $id)));
         $this->inChurch('schedule', fn (Church $church, int $id) => $this->run(new GetScheduleJob(church: $church, id: $id)));

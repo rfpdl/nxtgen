@@ -20,6 +20,11 @@ A part of the Church with its own people and classes (e.g. NxtGen kids). Today t
 ministry is not in the address.
 _Avoid_: Department, program
 
+**Registration code**:
+A Satellite's 8 letters and digits (e.g. `k7m2q9xa`) that never change, carried by its printed QR poster:
+`/k7m2q9xa/register` opens the Satellite's registration form at its address, whatever the address is now.
+_Avoid_: short link, poster id, slug (the slug is the address, which may change)
+
 **Link**:
 One of a Satellite's own addresses on its QR poster — its parents' Facebook group, its WhatsApp group — with what
 the poster says under its QR code. Up to 6 a Satellite; https only.

@@ -12,6 +12,7 @@ use App\Data\Models\User;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
 use App\Foundation\Support\RouteSatellite;
+use App\Foundation\Support\SatelliteCode;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -38,7 +39,8 @@ final class ChurchSeeder extends Seeder
             ]);
 
             foreach ($settings['satellites'] as $slug => $name) {
-                Squad::createChartFor(Satellite::query()->firstOrCreate(['church_id' => $church->id, 'slug' => $slug], ['name' => $name]));
+                // A code for its QR poster, made once and never changed (spec item 7).
+                Squad::createChartFor(Satellite::query()->firstOrCreate(['church_id' => $church->id, 'slug' => $slug], ['name' => $name, 'code' => SatelliteCode::random()]));
             }
 
             // The first person is the platform admin (Roy 2026-11-08): on no satellite's People, able to open each, and
@@ -68,7 +70,7 @@ final class ChurchSeeder extends Seeder
         foreach (array_filter(array_map('trim', explode('|', $text('satellites'))), fn (string $s): bool => $s !== '') as $entry) {
             [$address, $name] = array_map('trim', explode('=', $entry, 2) + [1 => '']);
             $address = mb_strtolower($address);
-            if ($name === '' || preg_match('/^'.RouteSatellite::pattern().'$/', $address) !== 1) {
+            if ($name === '' || preg_match('/^'.RouteSatellite::pattern().'$/', $address) !== 1 || SatelliteCode::looksLikeOne($address)) {
                 throw new RuntimeException("Satellite \"{$entry}\" needs address=name, and an address the app does not use itself.");
             }
             $satellites[$address] = $name;

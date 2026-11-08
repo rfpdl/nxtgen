@@ -13,7 +13,7 @@ use Inertia\Response;
 
 final class Controller extends \Lucid\Units\Controller
 {
-    public function show(Satellite $satellite): Response
+    public function show(Satellite $satellite): Response|RedirectResponse
     {
         return $this->serve(ShowRegisterFeature::class, ['satellite' => $satellite]);
     }

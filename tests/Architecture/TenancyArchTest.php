@@ -43,6 +43,7 @@ function crossChurchOnPurpose(): array
         'GetLandingOptionsJob.php — RoleAssignment' => 'After sign-in: which churches does this login serve in?',
         'GetLandingOptionsJob.php — Satellite' => 'After sign-in, the platform admin (no Role, spec item 12) goes to the first satellite there is — they may open any; every other satellite read here names its church.',
         'GetOwnGuardianJob.php — Guardian' => 'The parent\'s own page, `/family`: the address names no church, so the church is read FROM the login\'s own guardian row (RequireGuardian).',
+        'GetSatelliteByCodeJob.php — Satellite' => 'A QR poster\'s registration code (spec item 7) names a satellite and never a church: the church is read FROM the satellite (codes are unique), and the page forwards to its address.',
         'GetSatelliteBySlugJob.php — Satellite' => 'The address names a satellite and never a church (spec item 5): the church is read FROM the satellite (its slug is unique), then every id in the address is looked up within it (RouteBindingServiceProvider).',
         'GetChildWithFamilyJob.php — Child' => 'A photo link carries only the child id: the church is read FROM the child, then the viewer is checked against it (ShowChildPhotoFeature).',
         'GetUserIsStaffJob.php — RoleAssignment' => 'Backup password (plan D7): does this login serve in ANY church right now? Parents never get one.',

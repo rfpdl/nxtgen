@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $church_id
  * @property string $name
  * @property string $slug
+ * @property string $code the registration code its QR poster carries: never changes (spec item 7)
  * @property-read Church $church
  * @property-read Collection<int, Squad> $squads
  */

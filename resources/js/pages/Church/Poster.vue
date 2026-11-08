@@ -14,6 +14,8 @@ import { route } from 'ziggy-js'
  */
 defineProps<{
     register_url: string
+    /** What the QR code says: the satellite's code address, which never changes (spec item 7). */
+    qr_url: string
     qr: string
     links: PosterLink[]
 }>()
@@ -47,6 +49,7 @@ function print(): void {
             :src="qr"
             alt="QR code for the registration form"
             class="aspect-square w-full max-w-96 print:max-w-48"
+            :data-qr-url="qr_url"
             data-testid="poster-qr"
         />
         <p class="text-text text-2xl font-semibold print:text-xl">Scan with your phone camera</p>

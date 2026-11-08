@@ -26,6 +26,7 @@ return new class extends Migration
             $table->foreignId('church_id')->comment('Church this satellite belongs to')->constrained()->restrictOnDelete();
             $table->string('name')->comment('Satellite name, e.g. Holy Trinity Church');
             $table->string('slug')->unique()->comment('Its address, /{slug}/… — the church is never in the address (Roy 2026-11-07)');
+            $table->char('code', 8)->unique()->comment('Its registration code, carried by its QR poster: never changes (spec item 7)');
             $table->timestampsTz();
         });
 

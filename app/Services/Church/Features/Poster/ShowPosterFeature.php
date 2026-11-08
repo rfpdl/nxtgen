@@ -41,13 +41,17 @@ final class ShowPosterFeature extends BaseChurchFeature
     public function handle(): Response
     {
         // The poster of the satellite in the address (DECISIONS 2026-11-08): its registration link and its own Links.
+        // The QR carries the satellite's code, which never changes — a printed poster outlives an address change; the
+        // address printed under it is the one to type (spec item 7).
         $satellite = $this->satellite();
         $url = route('public.register', $satellite);
+        $qrUrl = route('public.register', $satellite->code);
         $links = $this->run(new GetSatelliteLinksJob(church: $this->church(), satelliteIds: [$satellite->id]))[$satellite->id] ?? [];
 
         return Inertia::render('Church/Poster', [
             'register_url' => $url,
-            'qr' => $this->qr($url),
+            'qr_url' => $qrUrl,
+            'qr' => $this->qr($qrUrl),
             'links' => array_map(fn (SatelliteLink $l): PosterLinkData => new PosterLinkData(label: $l->label, url: $l->url, qr: $this->qr($l->url)), $links),
         ]);
     }

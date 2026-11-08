@@ -15,6 +15,7 @@ vi.mock('ziggy-js', () => ({
 
 const base = {
     register_url: 'https://app.test/dubai/register',
+    qr_url: 'https://app.test/k7m2q9xa/register',
     qr: 'data:image/svg+xml;base64,AAA',
     links: [],
 }
@@ -25,6 +26,10 @@ describe('Poster', () => {
 
         expect(wrapper.find('[data-testid="poster-qr"]').attributes('src')).toBe(
             'data:image/svg+xml;base64,AAA',
+        )
+        // The QR says the code address, which never changes; the printed one is the address to type (spec item 7).
+        expect(wrapper.find('[data-testid="poster-qr"]').attributes('data-qr-url')).toBe(
+            'https://app.test/k7m2q9xa/register',
         )
         expect(wrapper.find('[data-testid="poster-url"]').text()).toBe(
             'https://app.test/dubai/register',

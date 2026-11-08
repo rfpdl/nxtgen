@@ -7,6 +7,7 @@ namespace Database\Factories;
 use App\Data\Models\Church;
 use App\Data\Models\Satellite;
 use App\Data\Models\Squad;
+use App\Foundation\Support\SatelliteCode;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -24,6 +25,7 @@ final class SatelliteFactory extends Factory
             'church_id' => Church::factory(),
             'name' => $name,
             'slug' => Str::slug($name),
+            'code' => SatelliteCode::random(),
         ];
     }
 
