@@ -1,7 +1,7 @@
-# CCF NxtGen: one church, satellites in the address, platform admin (TODO #32, #33)
+# CCF NxtGen: one church, satellites in the address, platform admin, Sessions (TODO #32, #33, #35)
 
 Status: ready-for-agent
-Decided: Roy 2026-11-07 (grilling, three rounds). The app serves CCF's NxtGen ministry only, at several satellites;
+Decided: Roy 2026-11-07 (grilling, three rounds); the bar and Batch C Roy 2026-11-08 (grilling, six rounds). The app serves CCF's NxtGen ministry only, at several satellites;
 later apps (DGroup, family) may reuse its parts, so the church stays in the data.
 
 ## Batch A — the form and the header (TODO #32)
@@ -35,6 +35,32 @@ later apps (DGroup, family) may reuse its parts, so the church stays in the data
 12. **Platform admin** at `/platform`, set by an artisan command only: satellites (add, rename, change the slug),
     all people and every Role anywhere, church settings (time zone, card fee, moving-up date). A platform admin may
     open any satellite's Admin and Serve; history names them.
+
+13. **The bar**: left, the logo and "CCF NxtGen"; right, the satellite (a dropdown when the person has more than one)
+    and Sign out. The page's name shows only on a phone. The door's heading no longer names the satellite.
+
+## Batch C — classes and Sessions: registration and check-in made really good (TODO #35)
+Registration = a new Child joins; Check-in = a registered Child is recorded at a Session.
+
+14. **A class is recurring or one-time.** Recurring: a weekday, a start and an end time, every week (no rule
+    package: "does it happen today?" is the weekday). One-time: one date, a start and an end time (True Life,
+    Christmas party). An event over several days is several one-time classes ("True Life Day 1", "Day 2"), each its
+    own count. Every class has both times, the end after the start. The demo "Any day" class goes. One satellite each.
+15. **A Session is one class on one date, and an admin opens and closes its check-in** (reverses DECISIONS
+    2026-10-26 "never opened or closed"). Opened any time on its date, never on another day; closed by the admin or
+    at midnight (satellite time); reopened the same day. A Child is checked in only to an open Session. Attendance
+    lists every opened Session, 0 children included. Only an admin (the satellite's, or that class's) opens and closes
+    until the Lifeshaper schedule (TODO #36) lets a scheduled Lifeshaper do it.
+16. **The Session address**: opening gives the Session a code (nanoid). The door is `/<session code>/checkin`, Who's in
+    `/<session code>/whos-in`; a Role at the Session's satellite is needed, else 404. A closed Session's Who's in
+    stays readable.
+17. **Serve** (`/{satellite}/serve`): "Open now" (Sessions with check-in open) and "Today" (today's classes not yet
+    open, each with Open check-in for an admin); none → "No class today". The bar's dropdown switches between open
+    Sessions.
+18. **Helper for the day**: an admin adds a person for one Session only; their access ends when it closes. They sign
+    in with the emailed link.
+19. **Offline (later round, noted now)**: opening and closing need signal; an open door that loses signal keeps
+    checking in and sends when back — those Check-ins are kept even if the Session closed meanwhile.
 
 ## Stories (numbering from 184)
 Batch A: story#184 lifestage choice and its default (happy); story#185 an unknown lifestage is refused or left empty

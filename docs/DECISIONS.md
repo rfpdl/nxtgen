@@ -4,6 +4,20 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-11-08 (Classes and Sessions — Roy)
+
+- **A Session's check-in is opened and closed** (Roy, reversing 2026-10-26 "never opened or closed"): so the door
+  lists only classes children can attend now, and Attendance holds no stray days. An admin opens it on its date and
+  closes it, or it closes at midnight; reopened the same day. Only admins until the Lifeshaper schedule (TODO #36).
+- **A class is recurring (weekday) or one-time (one date), always with start and end times** (Roy). A several-day
+  event is several one-time classes, each its own count ("less complicated"). No recurrence-rule package: weekly is
+  a weekday check; Sessions are made when opened, never ahead.
+- **The door's address is the Session's code** — `/<session code>/checkin` (Roy: "based on uri, not query param"),
+  so a door bookmark is one class on one day.
+- **The bar** (Roy): logo and "CCF NxtGen" left; satellite (dropdown) and Sign out right; the page name only on a
+  phone.
+- Details: `tasks/2026-11-07-ccf-nxtgen/spec.md` items 13–19 (TODO #35); Lifeshaper management is TODO #36.
+
 ## 2026-11-07 (CCF NxtGen — Roy)
 
 - **The app serves CCF's NxtGen ministry only, at several satellites** (Roy: "too much" to build for every church;

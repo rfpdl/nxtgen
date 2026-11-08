@@ -59,12 +59,13 @@ _Avoid_: Permission, agreement
 ## Classes
 
 **Schedule**:
-A Satellite's named, regular kids class (e.g. "1PM" on Saturdays at 1pm); a Satellite may have several. Shown to
-people as "class".
+A Satellite's named kids class, with a start and an end time; a Satellite may have several. **Recurring** (a weekday,
+every week — "1PM" on Saturdays) or **one-time** (one date — "True Life Day 1"). Shown to people as "class".
 _Avoid_: Class (in code), event series, service, session
 
 **Session**:
-One Schedule on one date (e.g. Saturday 31 Oct, 1PM at CCF Dxb). It begins with its first Check-in; it is never opened or closed.
+One Schedule on one date (e.g. Saturday 31 Oct, 1PM at CCF Dubai). An admin opens its check-in (which gives it its
+code) and closes it, or it closes at midnight; a Child is checked in only while it is open.
 _Avoid_: Event, occurrence, service
 
 **Check-in**:

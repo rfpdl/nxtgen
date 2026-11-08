@@ -1,7 +1,7 @@
 # TODO
 
 Numbers are stable — reviews and code comments refer to them. Grouped by when they are needed.
-Updated 2026-11-03. **The refactor (`.planning/tasks/2026-10-17-refactor/`) comes first** — it absorbed #1, #17, #18, #19, #24 (all done). Decisions behind these: `docs/DECISIONS.md`; security items: `SECURITY.md`.
+Updated 2026-11-08. **The refactor (`.planning/tasks/2026-10-17-refactor/`) comes first** — it absorbed #1, #17, #18, #19, #24 (all done). Decisions behind these: `docs/DECISIONS.md`; security items: `SECURITY.md`.
 
 ## Before Release 1 ships (exit criteria, plan §12)
 
@@ -37,7 +37,10 @@ Updated 2026-11-03. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 
 | # | Item | Trigger |
 |---|---|---|
-| 33 | **Satellites in the address, platform admin** (Roy 2026-11-07): `nxtgen.app/{satellite}/serve|admin`, an Admin Role per satellite, a QR code per satellite that never changes, `/platform` (`tasks/2026-11-07-ccf-nxtgen/` items 5–12) | next |
+| 36 | **Lifeshaper management** (Roy 2026-11-08): Lifeshapers' schedules in the app — a scheduled Lifeshaper may open that day's Session; who serves which class; more from the stakeholder chat. A big module: its own grilling round | after #35 |
+| 35 | **Classes and Sessions** (Roy 2026-11-08): recurring or one-time classes; an admin opens and closes a Session's check-in; the door at `/<session code>/checkin`; a helper for the day (`tasks/2026-11-07-ccf-nxtgen/` items 14–19) | after #33 |
+| 34 | **A nice home page** (Roy 2026-11-07): `nxtgen.app/` says what CCF NxtGen is and does, for parents and volunteers; maybe the launch video once Roy uploads it (`brag-output/` stays out of git) | later |
+| 33 | **Satellites in the address, platform admin** (Roy 2026-11-07): `nxtgen.app/{satellite}/serve|admin`, an Admin Role per satellite, a QR code per satellite that never changes, `/platform`, the new bar (`tasks/2026-11-07-ccf-nxtgen/` items 5–13) | next |
 | 32 | **The form and the header** (Roy 2026-11-07): "CCF NxtGen" branding, Lifestage Single/Married/KSP, allergies and illnesses as items, the birthday calendar (`tasks/2026-11-07-ccf-nxtgen/` items 1–4) | done 2026-11-07 |
 | 31 | **Admin and Serve** (Roy 2026-11-06): staff addresses by service — `/ccf/admin/…` and `/ccf/serve/…`; Lifeshapers edit families in Serve; the QR poster gets the church's Links (`tasks/2026-11-06-admin-serve/`) | done 2026-11-06 |
 | 29 | **Merge two families or two children** (a child registered again, legacy duplicates) — spec written 2026-11-07 — `tasks/2026-11-07-merge/spec.md`, 8 questions for Roy before building | when a re-registration happens |
