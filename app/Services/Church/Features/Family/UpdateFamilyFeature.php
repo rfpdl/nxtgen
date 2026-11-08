@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Family;
 
+use App\Data\Models\Family;
 use App\Domains\Family\Jobs\CreateDuplicateCandidatesJob;
 use App\Domains\Family\Jobs\UpdateFamilyDetailsJob;
 use App\Domains\Family\Jobs\UpdateFamilyGuardiansJob;
@@ -41,12 +42,12 @@ use Illuminate\Validation\ValidationException;
 #[AccessRow(AccessRowEnum::EditFamily)]
 final class UpdateFamilyFeature extends BaseChurchFeature
 {
-    public function __construct(private readonly int $familyId) {}
+    public function __construct(private readonly Family $family) {}
 
     public function handle(FamilyDetailsInput $input): RedirectResponse
     {
         $scope = $this->scope();
-        $family = $this->scopedFamily($this->familyId, $scope->canEditFamilyDetails(...));
+        $family = $this->scopedFamily($this->family, $scope->canEditFamilyDetails(...));
         $primary = $family->primaryGuardian;
         abort_if($primary === null, 404);
         if ($input->home_satellite_id !== $family->home_satellite_id && ! $scope->canEditFamily($family)) {

@@ -24,9 +24,8 @@ use Illuminate\Http\RedirectResponse;
 abstract class BaseCardRequestFeature extends BaseChurchFeature
 {
     /** @param  Closure(Family): bool  $allows */
-    protected function scopedRequest(int $id, Closure $allows): CardRequest
+    protected function scopedRequest(CardRequest $request, Closure $allows): CardRequest
     {
-        $request = $this->run(new GetCardRequestJob(church: $this->church(), id: $id));
         abort_unless($allows($request->child->family), 404);
 
         return $request;

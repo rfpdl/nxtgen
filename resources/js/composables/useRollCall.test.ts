@@ -41,7 +41,7 @@ function host() {
     const wrapper = mount(
         defineComponent({
             setup() {
-                api = useRollCall(() => 'ccf')
+                api = useRollCall(() => 'dubai')
                 return () => h('div')
             },
         }),
@@ -74,7 +74,7 @@ describe('useRollCall', () => {
         expect(api.pending[31]).toBe(true)
         await flush()
         expect(puts.map((p) => [p.url, p.data])).toEqual([
-            ['nxtgen.serve.door.present:["ccf",31]', { present: true, revision: 0 }],
+            ['serve.door.present:["dubai",31]', { present: true, revision: 0 }],
         ])
 
         puts[0]?.options.onFinish()
@@ -156,7 +156,7 @@ describe('useRollCall', () => {
         puts[0]?.options.onFinish()
         await flush()
 
-        expect(puts[1]?.url).toBe('nxtgen.serve.door.head-count:["ccf",1,5]')
+        expect(puts[1]?.url).toBe('serve.door.head-count:["dubai",1,5]')
         expect(puts[1]?.data).toEqual({ count: 4 })
         expect(puts[1]?.options.errorBag).toBe('head-count-5')
         puts[1]?.options.onFinish()

@@ -7,7 +7,7 @@ declare(strict_types=1);
 | Family — a child's photo (no prefix: /photos/children/{child})
 |--------------------------------------------------------------------------
 |
-| Parents AND staff open it, so it sits outside /{church}/family and RequireGuardian: the link is signed and
+| Parents AND staff open it, so it sits outside /family and RequireGuardian: the link is signed and
 | short-lived, and ShowChildPhotoFeature checks who is asking against the child's own church.
 */
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Link;
 
+use App\Data\Models\SatelliteLink;
 use App\Domains\Church\Jobs\DeleteSatelliteLinkJob;
 use App\Domains\Church\Jobs\GetSatelliteForUpdateJob;
 use App\Enums\AccessRowEnum;
@@ -26,11 +27,11 @@ use Illuminate\Support\Facades\DB;
 #[AccessRow(AccessRowEnum::ManageLinks)]
 final class RemoveLinkFeature extends BaseLinkFeature
 {
-    public function __construct(private readonly int $linkId) {}
+    public function __construct(private readonly SatelliteLink $link) {}
 
     public function handle(): RedirectResponse
     {
-        $link = $this->scopedLink($this->linkId);
+        $link = $this->scopedLink($this->link);
 
         DB::transaction(function () use ($link): void {
             $this->run(new GetSatelliteForUpdateJob(satellite: $link->satellite));

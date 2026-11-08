@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Child;
 
+use App\Data\Models\Child;
 use App\Domains\Family\Jobs\UpdateChildPhotoConsentJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -27,11 +28,11 @@ use Illuminate\Support\Facades\DB;
 #[AccessRow(AccessRowEnum::ChildPhoto)]
 final class RecordPhotoConsentFeature extends BaseChurchFeature
 {
-    public function __construct(private readonly int $childId) {}
+    public function __construct(private readonly Child $child) {}
 
     public function handle(): RedirectResponse
     {
-        $child = $this->scopedChild($this->childId, $this->scope()->canSeeFamily(...));
+        $child = $this->scopedChild($this->child, $this->scope()->canSeeFamily(...));
         $staff = $this->staff();
 
         // Consent and its history note together, or neither (review 4).

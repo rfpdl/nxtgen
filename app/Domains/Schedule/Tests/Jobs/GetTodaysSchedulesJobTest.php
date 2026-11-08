@@ -36,17 +36,20 @@ it('lists the classes meeting today at the asked-for satellites, in start-time o
         ->toBe(['Special class']);
 });
 
-it('lists every satellite\'s for a church-wide Role, by satellite, and never another church\'s', function (): void {
+it('lists by satellite, never another church\'s even when handed its satellite, and nothing for no satellite', function (): void {
     $church = church();
     $dxb = satelliteOf($church, ['name' => 'CCF DXB']);
     $house = satelliteOf($church, ['name' => 'House Church']);
+    $theirs = satelliteOf(church());
     scheduleAt($house, ['name' => '10AM', 'starts_at' => '10:00']);
     scheduleAt($dxb, ['name' => '1PM', 'starts_at' => '13:00']);
-    scheduleAt(satelliteOf(church()), ['name' => 'Theirs']);
+    scheduleAt($theirs, ['name' => 'Theirs']);
+    $saturday = CarbonImmutable::parse('2026-10-31');
 
-    $classes = (new GetTodaysSchedulesJob(church: $church, satelliteIds: null, today: CarbonImmutable::parse('2026-10-31')))->handle();
+    $classes = (new GetTodaysSchedulesJob(church: $church, satelliteIds: [$house->id, $dxb->id, $theirs->id], today: $saturday))->handle();
 
-    expect(array_map(fn (Schedule $s): string => "{$s->satellite->name} {$s->name}", $classes))->toBe(['CCF DXB 1PM', 'House Church 10AM']);
+    expect(array_map(fn (Schedule $s): string => "{$s->satellite->name} {$s->name}", $classes))->toBe(['CCF DXB 1PM', 'House Church 10AM'])
+        ->and((new GetTodaysSchedulesJob(church: $church, satelliteIds: [], today: $saturday))->handle())->toBe([]);
 });
 
 it('adds a class admin\'s own classes to the satellites asked for — not their satellite\'s other classes (TODO #9)', function (): void {

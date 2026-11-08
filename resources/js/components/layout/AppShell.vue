@@ -6,7 +6,8 @@ import SwitchLink from '@/components/atoms/SwitchLink.vue'
 import FlashBanner from '@/components/molecules/FlashBanner.vue'
 import { useFlashMessages } from '@/composables/useFlashMessages'
 import { APP_NAME } from '@/lib/brand'
-import type { ShellItem } from '@/types'
+import type { SharedProps, ShellItem } from '@/types'
+import { usePage } from '@inertiajs/vue3'
 import { Menu, X } from 'lucide-vue-next'
 import {
     DialogClose,
@@ -42,6 +43,9 @@ const props = withDefaults(
 )
 
 const width = computed(() => (props.narrow ? 'max-w-2xl' : 'max-w-5xl'))
+
+/** Sign out only for someone signed in — a visitor's bar (welcome) has Sign in instead. */
+const signedIn = computed(() => usePage<SharedProps>().props.auth.user !== null)
 
 const { message, dismiss } = useFlashMessages()
 const open = ref(false)
@@ -143,7 +147,12 @@ function wrapOptionTab(event: KeyboardEvent): void {
                                         >{{ item.label }}</AppButton
                                     >
                                     <SwitchLink variant="secondary" size="lg" block />
-                                    <SignOutButton variant="secondary" size="lg" block />
+                                    <SignOutButton
+                                        v-if="signedIn"
+                                        variant="secondary"
+                                        size="lg"
+                                        block
+                                    />
                                 </nav>
                             </DialogContent>
                         </DialogPortal>
@@ -170,7 +179,7 @@ function wrapOptionTab(event: KeyboardEvent): void {
                     >
                     <span class="ml-auto flex items-center gap-1">
                         <SwitchLink />
-                        <SignOutButton />
+                        <SignOutButton v-if="signedIn" />
                     </span>
                 </nav>
             </div>

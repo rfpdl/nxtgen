@@ -3,11 +3,11 @@ import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const page = {
-    url: '/ccf/family',
+    url: '/family',
     props: {
         flash: {},
         church: { name: 'CCF DXB', slug: 'ccf' },
-        auth: { user: null, can_switch: false },
+        auth: { user: { id: 1, name: 'Roy' }, can_switch: false },
     },
 }
 
@@ -38,7 +38,7 @@ describe('FamilyShell', () => {
         const row = () => mount(FamilyShell).find('[data-testid="menu-row"]')
 
         expect(row().find('[data-testid="nav-family"]').attributes('href')).toBe(
-            'http://app.test/ccf#family.show',
+            'http://app.test/#family.show',
         )
         expect(row().find('[data-testid="sign-out"]').exists()).toBe(true)
         expect(row().find('[data-testid="switch-place"]').exists()).toBe(false)

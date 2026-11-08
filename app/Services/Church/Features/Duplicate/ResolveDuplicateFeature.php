@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services\Church\Features\Duplicate;
 
 use App\Data\Models\DuplicateCandidate;
-use App\Domains\Family\Jobs\GetDuplicateCandidateJob;
 use App\Domains\Family\Jobs\UpdateDuplicateCandidateStatusJob;
 use App\Enums\AccessRowEnum;
 use App\Enums\DuplicateStatusEnum;
@@ -31,13 +30,13 @@ use Illuminate\Support\Facades\DB;
 #[AccessRow(AccessRowEnum::ReviewDuplicates)]
 final class ResolveDuplicateFeature extends BaseChurchFeature
 {
-    public function __construct(private readonly int $pairId) {}
+    public function __construct(private readonly DuplicateCandidate $pair) {}
 
     public function handle(ResolveDuplicateInput $input): RedirectResponse
     {
         $scope = $this->scope();
         abort_unless($scope->canReviewDuplicates(), 404);
-        $pair = $this->run(new GetDuplicateCandidateJob(church: $this->church(), id: $this->pairId));
+        $pair = $this->pair;
         abort_unless($pair->status === DuplicateStatusEnum::Open && $scope->canEditFamily(DuplicateCandidate::familyOf($pair->subject)), 404);
 
         // The answer and its note on the new family together, or neither.

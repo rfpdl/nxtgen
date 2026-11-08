@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Family;
 
+use App\Data\Models\Family;
 use App\Domains\Auth\Jobs\CreateMagicLinkJob;
 use App\Domains\Auth\Jobs\SendMagicLinkJob;
 use App\Domains\Family\Jobs\UpdateFamilyEmailJob;
@@ -34,12 +35,12 @@ use Illuminate\Support\Facades\DB;
 #[AccessRow(AccessRowEnum::CorrectContact)]
 final class CorrectFamilyEmailFeature extends BaseChurchFeature
 {
-    public function __construct(private readonly int $familyId) {}
+    public function __construct(private readonly Family $family) {}
 
     public function handle(CorrectFamilyEmailInput $input): RedirectResponse
     {
         $church = $this->church();
-        $family = $this->scopedFamily($this->familyId, $this->scope()->canEditFamily(...));
+        $family = $this->scopedFamily($this->family, $this->scope()->canEditFamily(...));
 
         $login = $family->primaryGuardian?->user;
 

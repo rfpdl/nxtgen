@@ -18,35 +18,42 @@ use function Tests\Support\scheduleAt;
 use function Tests\Support\staffMember;
 
 /*
- * The `church` prop is shared by HandleInertiaRequests for every page whose address names a church (refactor 06:
- * it was built by ten Features and declared by ten pages). Its fields are snake_case, like every prop.
+ * The `church` prop is shared by HandleInertiaRequests for every page about a church (refactor 06: it was built by ten
+ * Features and declared by ten pages): the address's satellite's church on staff and registration pages, the parent's
+ * own on family pages. The `satellite` prop is the satellite the address names (Roy 2026-11-07). Fields are
+ * snake_case, like every prop.
  */
 
 it('gives a staff page the church it is about', function (): void {
-    $admin = staffMember(RoleEnum::Admin, atChurch(church(['slug' => 'ccf', 'name' => 'CCF'])));
+    $church = church(['slug' => 'ccf', 'name' => 'CCF']);
+    $dubai = satelliteOf($church, ['name' => 'CCF Dubai', 'slug' => 'dubai']);
+    $admin = staffMember(RoleEnum::Admin, atChurch($church));
 
-    actingAs($admin)->get('/ccf/nxtgen/serve/families')->assertInertia(fn (AssertableInertia $p) => $p
+    actingAs($admin)->get('/dubai/serve/families')->assertInertia(fn (AssertableInertia $p) => $p
         ->where('church', ['name' => 'CCF', 'slug' => 'ccf'])
-        ->where('church_nav', ['area' => 'nxtgen.serve', 'can_use_admin' => true, 'can_use_full_admin' => true, 'can_manage_people' => true, 'can_manage_classes' => true, 'can_see_attendance' => true, 'can_manage_cards' => true, 'can_move_up' => true, 'can_manage_links' => true]));
+        ->where('satellite', ['id' => $dubai->id, 'name' => 'CCF Dubai', 'slug' => 'dubai'])
+        ->where('church_nav', ['area' => 'serve', 'can_use_admin' => true, 'can_use_full_admin' => true, 'can_manage_people' => true, 'can_manage_classes' => true, 'can_see_attendance' => true, 'can_manage_cards' => true, 'can_move_up' => true, 'can_manage_links' => true]));
 });
 
 it('gives a class admin the Admin area for their class only (TODO #9)', function (): void {
     $church = church(['slug' => 'ccf']);
-    $classAdmin = classAdminOf(scheduleAt(satelliteOf($church)));
+    $classAdmin = classAdminOf(scheduleAt(satelliteOf($church, ['slug' => 'dubai'])));
 
-    actingAs($classAdmin)->get('/ccf/nxtgen/serve/door')->assertInertia(fn (AssertableInertia $p) => $p
+    actingAs($classAdmin)->get('/dubai/serve/door')->assertInertia(fn (AssertableInertia $p) => $p
         ->where('church_nav.can_use_admin', true)->where('church_nav.can_use_full_admin', false)->where('church_nav.can_manage_classes', true));
-    actingAs($classAdmin)->get('/ccf')->assertRedirect('/ccf/nxtgen/serve/door');
+    actingAs($classAdmin)->get('/dubai')->assertRedirect('/dubai/serve/door');
 });
 
 it('tells the staff menu which area the page is in (Roy 2026-11-06)', function (): void {
     $church = church(['slug' => 'ccf']);
+    satelliteOf($church, ['slug' => 'dubai']);
     $admin = staffMember(RoleEnum::Admin, atChurch($church));
 
-    actingAs($admin)->get('/ccf/nxtgen/admin/families')->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav.area', 'nxtgen.admin'));
-    actingAs($admin)->get('/ccf/admin/people')->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav.area', 'admin'));
-    actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get('/ccf/nxtgen/serve/door')
-        ->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav.area', 'nxtgen.serve')->where('church_nav.can_use_admin', false));
+    // People is now a satellite's Admin page like the rest (DECISIONS 2026-11-08): area `admin`, no church-wide area.
+    actingAs($admin)->get('/dubai/admin/families')->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav.area', 'admin'));
+    actingAs($admin)->get('/dubai/admin/people')->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav.area', 'admin'));
+    actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get('/dubai/serve/door')
+        ->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav.area', 'serve')->where('church_nav.can_use_admin', false));
 });
 
 it('gives a parent\'s family page its church', function (): void {
@@ -54,27 +61,29 @@ it('gives a parent\'s family page its church', function (): void {
     $user = User::factory()->create();
     guardianOf(familyAt(satelliteOf($church)), $user);
 
-    actingAs($user)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('church', ['name' => 'CCF', 'slug' => 'ccf']));
+    // The church is never in the address (Roy 2026-11-07): a family page's church is the parent's own.
+    actingAs($user)->get('/family')->assertInertia(fn (AssertableInertia $p) => $p->where('church', ['name' => 'CCF', 'slug' => 'ccf']));
 });
 
 it('gives the public thank-you page its church', function (): void {
-    church(['slug' => 'ccf', 'name' => 'CCF']);
+    $dubai = satelliteOf(church(['slug' => 'ccf', 'name' => 'CCF']), ['name' => 'CCF Dubai', 'slug' => 'dubai']);
 
-    get('/ccf/register/thanks')->assertInertia(fn (AssertableInertia $p) => $p
+    get('/dubai/register/thanks')->assertInertia(fn (AssertableInertia $p) => $p
         ->component('Public/RegisterThanks')
-        ->where('church', ['name' => 'CCF', 'slug' => 'ccf']));
+        ->where('church', ['name' => 'CCF', 'slug' => 'ccf'])
+        ->where('satellite', ['id' => $dubai->id, 'name' => 'CCF Dubai', 'slug' => 'dubai']));
 });
 
 it('shares no church on a page whose address names none', function (): void {
-    get('/login')->assertInertia(fn (AssertableInertia $p) => $p->where('church', null));
+    get('/login')->assertInertia(fn (AssertableInertia $p) => $p->where('church', null)->where('satellite', null));
 });
 
 it('gives the staff menu only to a staff page — never to the next request in the same app', function (): void {
     $church = church(['slug' => 'ccf']);
     $parent = User::factory()->create();
-    guardianOf(familyAt(satelliteOf($church)), $parent);
+    guardianOf(familyAt(satelliteOf($church, ['slug' => 'dubai'])), $parent);
 
-    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/nxtgen/serve/families')
+    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/dubai/serve/families')
         ->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav.can_manage_people', true));
-    actingAs($parent)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav', null));
+    actingAs($parent)->get('/family')->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav', null));
 });

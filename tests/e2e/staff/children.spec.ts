@@ -1,6 +1,6 @@
 import { navTo } from '../support/menu'
 import { expect, test } from '../support/test'
-import { CHURCH, DOOR, LEVELS, sessionFile, type DoorProject } from '../support/world'
+import { DUBAI, DOOR, LEVELS, sessionFile, type DoorProject } from '../support/world'
 
 /*
  * The children list (plan §6) and a church admin correcting a child's Level (plan §3.2; DECISIONS 2026-10-17 —
@@ -16,7 +16,7 @@ test('an admin finds a child by Level on the children list and corrects their Le
     page,
 }, info) => {
     const family = `${LEVELS.surname} ${DOOR.guardians[info.project.name as DoorProject]}`
-    await page.goto(`/${CHURCH}/nxtgen/admin/families`)
+    await page.goto(`/${DUBAI}/admin/families`)
     await navTo(page, 'Children')
     await expect(page.getByRole('heading', { name: /^Children/ })).toBeVisible()
     await page.getByTestId('filter-level').selectOption({ label: LEVELS.suggested })
@@ -45,15 +45,13 @@ test('an admin finds a child by Level on the children list and corrects their Le
     await expect(page.getByTestId('history')).toContainText('Level changed from Level 3 to Level 4')
 
     // The children list agrees.
-    await page.goto(
-        `/${CHURCH}/nxtgen/admin/children?q=${encodeURIComponent(`${child} ${family}`)}`,
-    )
+    await page.goto(`/${DUBAI}/admin/children?q=${encodeURIComponent(`${child} ${family}`)}`)
     await expect(page.getByTestId('child-row').filter({ hasText: child })).toContainText('Level 4')
 })
 
 test('finds the children with no Level yet with the "No Level" filter', async ({ page }, info) => {
     const family = `Cruz ${DOOR.guardians[info.project.name as DoorProject]}`
-    await page.goto(`/${CHURCH}/nxtgen/admin/children`)
+    await page.goto(`/${DUBAI}/admin/children`)
     await page.getByTestId('filter-level').selectOption({ label: 'No Level' })
     await expect(page).toHaveURL(/level=0/)
     await page.getByTestId('filter-q').fill(family)

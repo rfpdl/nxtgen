@@ -1,6 +1,6 @@
 import { navTo } from '../support/menu'
 import { expect, test } from '../support/test'
-import { CHURCH, sessionFile } from '../support/world'
+import { DUBAI, sessionFile } from '../support/world'
 
 /*
  * The staff areas (Roy 2026-11-06, tasks/2026-11-06-admin-serve): NxtGen Serve for everyone who serves — the door,
@@ -13,16 +13,17 @@ test("a Lifeshaper's church address opens Serve: the door, Families without Exce
     const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const page = await lifeshaper.newPage()
 
-    await page.goto(`/${CHURCH}`)
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/serve/door`))
+    await page.goto(`/${DUBAI}`)
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/door`))
     await navTo(page, 'Families')
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/serve/families`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/families`))
     await expect(page.getByTestId('register-family')).toBeVisible()
     await expect(page.getByTestId('export')).toHaveCount(0)
     await expect(page.getByTestId('nav-admin')).toHaveCount(0)
 
-    const admin = await page.goto(`/${CHURCH}/nxtgen/admin/families`)
-    expect(admin?.status()).toBe(404)
+    await page.goto(`/${DUBAI}/admin/families`)
+    // Only serving here: an Admin page sends them to this satellite's Serve (spec item 10).
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/door$`))
     await lifeshaper.close()
 })
 
@@ -32,13 +33,13 @@ test("an admin's church address opens Admin, and the menu goes to Serve's door a
     const churchAdmin = await browser.newContext({ storageState: sessionFile('churchAdmin') })
     const page = await churchAdmin.newPage()
 
-    await page.goto(`/${CHURCH}`)
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/admin/families`))
+    await page.goto(`/${DUBAI}`)
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/admin/families`))
     await expect(page.getByTestId('export')).toBeVisible()
 
     await navTo(page, 'Serve')
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/serve/door`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/door`))
     await navTo(page, 'Admin')
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/admin/families`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/admin/families`))
     await churchAdmin.close()
 })

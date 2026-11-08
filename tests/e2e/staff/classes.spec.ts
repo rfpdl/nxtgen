@@ -1,10 +1,10 @@
 import { type Page } from '@playwright/test'
 import { navTo } from '../support/menu'
 import { checkLayout, expect, test } from '../support/test'
-import { CHURCH, CLASSES, SATELLITES, sessionFile } from '../support/world'
+import { DUBAI, CLASSES, SATELLITES, SHARJAH, sessionFile } from '../support/world'
 
 /*
- * Classes (GLOSSARY "Schedule", DECISIONS 2026-10-26). A church admin opens Classes from the menu, sees CCF DXB's
+ * Classes (GLOSSARY "Schedule", DECISIONS 2026-10-26). A church admin opens Classes from the menu, sees CCF Dubai's
  * 1PM and 7PM, adds "Special class" with no day, gives it a time, then retires it (so the seeded classes stay as
  * they are for the other journeys). A satellite admin sees only their own satellite; a Lifeshaper has no Classes.
  */
@@ -14,12 +14,12 @@ function satellite(page: Page, name: string) {
     return page.locator('section').filter({ has: page.getByRole('heading', { name, level: 2 }) })
 }
 
-test("an admin sees CCF DXB's classes, adds one with no day, edits its time and retires it @story#95 @story#97 @story#99 @story#101", async ({
+test("an admin sees CCF Dubai's classes, adds one with no day, edits its time and retires it @story#95 @story#97 @story#99 @story#101", async ({
     browser,
 }) => {
     const admin = await browser.newContext({ storageState: sessionFile('churchAdmin') })
     const page = await admin.newPage()
-    await page.goto(`/${CHURCH}/nxtgen/admin/families`)
+    await page.goto(`/${DUBAI}/admin/families`)
     await navTo(page, 'Classes')
     await expect(page.getByRole('heading', { name: 'Classes', level: 1 })).toBeVisible()
 
@@ -28,7 +28,8 @@ test("an admin sees CCF DXB's classes, adds one with no day, edits its time and 
         new RegExp(`${CLASSES.onePm.name}\\s*${CLASSES.onePm.when}`),
         new RegExp(`${CLASSES.sevenPm.name}\\s*${CLASSES.sevenPm.when}`),
     ])
-    await expect(satellite(page, SATELLITES.house)).toContainText('No classes yet.')
+    // Only the satellite in the address (DECISIONS 2026-11-08).
+    await expect(page.getByRole('heading', { level: 2 })).toHaveText([SATELLITES.dxb])
 
     // Add a special class with no day: it shows every day. The form opens from the button, and closes once added.
     // Named for this run, so the projects (and a retry) never meet each other's.
@@ -76,9 +77,10 @@ test("an admin sees CCF DXB's classes, adds one with no day, edits its time and 
 test("a satellite admin sees only their own satellite's classes @story#95", async ({ browser }) => {
     const houseAdmin = await browser.newContext({ storageState: sessionFile('houseAdmin') })
     const page = await houseAdmin.newPage()
-    await page.goto(`/${CHURCH}/nxtgen/admin/classes`)
+    await page.goto(`/${SHARJAH}/admin/classes`)
 
     await expect(page.getByRole('heading', { level: 2 })).toHaveText([SATELLITES.house])
+    await expect(page.getByText('No classes yet.')).toBeVisible()
     await expect(page.getByText(CLASSES.onePm.name, { exact: true })).toHaveCount(0)
     await houseAdmin.close()
 })
@@ -86,10 +88,11 @@ test("a satellite admin sees only their own satellite's classes @story#95", asyn
 test('a Lifeshaper has no Classes menu and no Classes page @story#96', async ({ browser }) => {
     const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const page = await lifeshaper.newPage()
-    await page.goto(`/${CHURCH}/nxtgen/serve/door`)
+    await page.goto(`/${DUBAI}/serve/door`)
     await expect(page.getByRole('link', { name: 'Classes' })).toHaveCount(0)
 
-    const response = await page.goto(`/${CHURCH}/nxtgen/admin/classes`)
-    expect(response?.status()).toBe(404)
+    await page.goto(`/${DUBAI}/admin/classes`)
+    // Only serving here: an Admin page sends them to this satellite's Serve (spec item 10).
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/door$`))
     await lifeshaper.close()
 })

@@ -7,10 +7,11 @@ namespace App\Http\Middleware;
 use App\Data\Models\User;
 use App\Domains\Church\DataObjects\ChurchData;
 use App\Domains\Church\DataObjects\ChurchNavData;
+use App\Domains\Church\DataObjects\SatelliteData;
 use App\Domains\Church\Jobs\GetLandingOptionsJob;
 use App\Foundation\Support\RequestContext;
 use App\Foundation\Support\RouteArea;
-use App\Foundation\Support\RouteChurch;
+use App\Foundation\Support\RouteSatellite;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Lucid\Bus\UnitDispatcher;
@@ -47,9 +48,12 @@ final class HandleInertiaRequests extends Middleware
                 'can_switch' => fn (): bool => $user instanceof User && count($this->run(new GetLandingOptionsJob(user: $user))) > 1,
             ],
 
-            // The church the address names (/{church}/…), for every page under it — staff, family and public
-            // registration alike. Read after the route's middleware has resolved and checked it; null elsewhere.
-            'church' => fn (): ?ChurchData => ($church = RouteChurch::from($request)) !== null ? ChurchData::fromModel($church) : null,
+            // The church a page is about: the address's satellite's (staff pages, registration), or the parent's own
+            // (family pages). Read after the route's middleware has resolved and checked it; null elsewhere.
+            'church' => fn (): ?ChurchData => ($church = RequestContext::church($request) ?? RouteSatellite::from($request)?->church) !== null ? ChurchData::fromModel($church) : null,
+
+            // The satellite the address names (/{satellite}/…, Roy 2026-11-07): staff pages build their links from it.
+            'satellite' => fn (): ?SatelliteData => ($satellite = RouteSatellite::from($request)) !== null ? SatelliteData::fromModel($satellite) : null,
 
             // The staff menu (ChurchShell), from the AccessScope RequireAssignment put on THIS request; null on any
             // page that is not a staff page. Navigation only — every Feature still asks the scope itself.

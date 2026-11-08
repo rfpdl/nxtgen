@@ -4,7 +4,7 @@ import { latestMail, mailCount } from '../support/mailbox'
 import { openMenu } from '../support/menu'
 import { signInByEmail } from '../support/sign-in'
 import {
-    CHURCH,
+    DUBAI,
     FAMILIES,
     SATELLITES,
     sessionFile,
@@ -24,7 +24,7 @@ test.use({ storageState: sessionFile('lifeshaper') })
 test('finds a registered family and adds a child to it @story#46 @story#48 @story#86', async ({
     page,
 }) => {
-    await page.goto(`/${CHURCH}/nxtgen/serve/families/new`)
+    await page.goto(`/${DUBAI}/serve/families/new`)
     await page.getByTestId('family-search').fill('Dela Cruz')
     await page.getByTestId('family-search').press('Enter')
 
@@ -53,7 +53,7 @@ test('registers a new family for a parent who is not found @story#46 @story#47 @
     const email = uniqueEmail('walkup')
     const surname = uniqueSurname('Mendoza')
     // Registering starts from the Families list (there is no Register tab).
-    await page.goto(`/${CHURCH}/nxtgen/serve/families`)
+    await page.goto(`/${DUBAI}/serve/families`)
     await page.getByTestId('register-family').click()
     await page.getByTestId('family-search').fill(surname)
     await page.getByTestId('family-search').press('Enter')
@@ -71,14 +71,14 @@ test('registers a new family for a parent who is not found @story#46 @story#47 @
     await expect(page.getByTestId('flash-success')).toContainText('Registered.')
     await expect(page.getByRole('heading', { name: `Rosa ${surname}` })).toBeVisible()
     await expect(page.getByTestId('family-child')).toContainText('Pao')
-    await page.goto(`/${CHURCH}/nxtgen/serve/families`)
+    await page.goto(`/${DUBAI}/serve/families`)
     const row = page.getByTestId('family-row').filter({ hasText: `Rosa ${surname}` })
     await expect(row).toContainText('Email not confirmed')
     await expect(row.getByTestId('resend')).toBeVisible()
 })
 
 test('prints the registration poster, whose address opens the form @story#80', async ({ page }) => {
-    await page.goto(`/${CHURCH}/nxtgen/serve/families`)
+    await page.goto(`/${DUBAI}/serve/families`)
     await openMenu(page)
     await page.getByRole('link', { name: 'QR poster' }).click()
 
@@ -90,13 +90,13 @@ test('prints the registration poster, whose address opens the form @story#80', a
         .toBe(true)
 
     const address = (await page.getByTestId('poster-url').textContent())?.trim() ?? ''
-    expect(address).toMatch(new RegExp(`/${CHURCH}/register$`))
+    expect(address).toMatch(new RegExp(`/${DUBAI}/register$`))
     await page.goto(new URL(address).pathname)
     await expect(page.getByRole('heading', { name: 'Register your family' })).toBeVisible()
 })
 
 /**
- * A page signed in as this browser's own volunteer (a Lifeshaper at CCF DXB, E2ESeeder::VOLUNTEER_EMAIL): resending is
+ * A page signed in as this browser's own volunteer (a Lifeshaper at CCF Dubai, E2ESeeder::VOLUNTEER_EMAIL): resending is
  * limited to 10 a minute per person, and fifteen browsers sharing one Lifeshaper could meet that limit.
  */
 async function asOwnVolunteer(browser: Browser, project: string): Promise<Page> {
@@ -112,7 +112,7 @@ test('re-sends the confirmation link from the families list @story#84', async ({
     const page = await asOwnVolunteer(browser, info.project.name)
     const email = uniqueEmail('resend')
     const surname = uniqueSurname('Reyes')
-    await page.goto(`/${CHURCH}/nxtgen/serve/families/new`)
+    await page.goto(`/${DUBAI}/serve/families/new`)
     await page.getByTestId('register-new').click()
     await fillFamily(
         page,
@@ -123,7 +123,7 @@ test('re-sends the confirmation link from the families list @story#84', async ({
     await expect(page.getByTestId('flash-success')).toBeVisible()
 
     // The parent says the email never came: find the family on the families list and send it again.
-    await page.goto(`/${CHURCH}/nxtgen/serve/families`)
+    await page.goto(`/${DUBAI}/serve/families`)
     await page.getByTestId('filter-q').fill(surname)
     await page.getByTestId('filter-q').press('Enter')
     await expect(page).toHaveURL(new RegExp(`q=${surname}`))
@@ -142,10 +142,10 @@ test("re-sends a visiting family's confirmation link from the door search @story
     browser,
 }, info) => {
     const page = await asOwnVolunteer(browser, info.project.name)
-    // A House Church family; this Lifeshaper serves at CCF DXB, so they cannot open it — but they can help.
+    // A CCF Sharjah family; this Lifeshaper serves at CCF Dubai, so they cannot open it — but they can help.
     const email = uniqueEmail('visiting')
     const surname = uniqueSurname('Bautista')
-    await page.goto(`/${CHURCH}/nxtgen/serve/families/new`)
+    await page.goto(`/${DUBAI}/serve/families/new`)
     await page.getByTestId('register-new').click()
     await fillFamily(
         page,
@@ -155,10 +155,10 @@ test("re-sends a visiting family's confirmation link from the door search @story
     await page.getByTestId('register-submit').click()
     // A family this Lifeshaper cannot open: back at the search, with the message.
     await expect(page.getByTestId('flash-success')).toContainText('Registered.')
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/serve/families/new$`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/families/new$`))
 
     // Next Sunday the parent visits DXB and says the email never came: search at the door, send it again.
-    await page.goto(`/${CHURCH}/nxtgen/serve/families/new`)
+    await page.goto(`/${DUBAI}/serve/families/new`)
     await page.getByTestId('family-search').fill(surname)
     await page.getByTestId('family-search').press('Enter')
     const hit = page.getByTestId('search-result').filter({ hasText: `Lyn ${surname}` })
@@ -182,7 +182,7 @@ test('on a narrow screen the menu is a sheet: Password and Sign out are in it, f
         (page.viewportSize()?.width ?? 0) >= 1024,
         'From 1024px the menu is a row: no sheet to test.',
     )
-    await page.goto(`/${CHURCH}/nxtgen/serve/door`)
+    await page.goto(`/${DUBAI}/serve/door`)
     await expect(page.getByTestId('menu-open')).toBeVisible()
     await openMenu(page)
     const sheet = page.getByTestId('menu-sheet')
@@ -213,7 +213,7 @@ test('turning the screen past 1024px closes an open menu sheet — the row and t
 }) => {
     // Sizes of its own: a tablet upright (768px, the sheet) turned on its side (1024px, the row).
     await page.setViewportSize({ width: 768, height: 1024 })
-    await page.goto(`/${CHURCH}/nxtgen/serve/door`)
+    await page.goto(`/${DUBAI}/serve/door`)
     await openMenu(page)
     await expect(page.getByTestId('menu-sheet')).toBeVisible()
 
@@ -232,7 +232,7 @@ test('turning the screen past 1024px closes an open menu sheet — the row and t
     }
     expect(inRow).toBe(true)
     await row.getByRole('link', { name: 'Families', exact: true }).click()
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/serve/families`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/families`))
 
     // And back to narrow: the page still takes a click, and the Menu button opens the sheet again.
     await page.setViewportSize({ width: 768, height: 1024 })

@@ -8,7 +8,7 @@ use App\Enums\ChildStatusEnum;
 use App\Foundation\Attributes\NonClientFacing;
 
 /**
- * The registration list's filters (plan §6): search text, satellite, a child's status or Level, unconfirmed
+ * The registration list's filters (plan §6): search text, a child's status or Level, unconfirmed
  * email, open possible duplicate. All optional; they only ever NARROW the viewer's own scope.
  */
 #[NonClientFacing]
@@ -16,7 +16,6 @@ final readonly class FamilyListFiltersData
 {
     public function __construct(
         public ?string $query = null,
-        public ?int $satelliteId = null,
         public ?ChildStatusEnum $status = null,
         public ?int $level = null,
         public bool $unconfirmedOnly = false,

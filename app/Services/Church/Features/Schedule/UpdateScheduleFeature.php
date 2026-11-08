@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Schedule;
 
-use App\Domains\Schedule\Jobs\GetScheduleJob;
+use App\Data\Models\Schedule;
 use App\Domains\Schedule\Jobs\UpdateScheduleJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -29,14 +29,14 @@ use Illuminate\Validation\ValidationException;
 #[AccessRow(AccessRowEnum::ManageClasses)]
 final class UpdateScheduleFeature extends BaseChurchFeature
 {
-    public function __construct(private readonly int $scheduleId) {}
+    public function __construct(private readonly Schedule $schedule) {}
 
     public function handle(ScheduleInput $input): RedirectResponse
     {
         $scope = $this->scope();
         abort_unless($scope->canManageClasses(), 404);
 
-        $schedule = $this->run(new GetScheduleJob(church: $this->church(), id: $this->scheduleId));
+        $schedule = $this->schedule;
         abort_unless($scope->canManageSchedule($schedule), 404);
 
         try {

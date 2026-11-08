@@ -15,18 +15,18 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 
 /**
- * The registration list (and its Excel download): families in the viewer's satellites, narrowed by the
- * filters. `$satelliteIds` null = every satellite; a chosen satellite outside them yields nothing, never more.
+ * The registration list (and its Excel download): families in the viewer's satellites (`$satelliteIds`: the address
+ * satellite, or none — DECISIONS 2026-11-08), narrowed by the filters.
  * Paged in the database, 50 at a time (ListPage); `$page` null = every filtered family (the Excel download).
  *
  * @extends BaseJob<ListPage<Family>>
  */
 final class GetFamiliesJob extends BaseJob
 {
-    /** @param list<int>|null $satelliteIds */
+    /** @param list<int> $satelliteIds */
     public function __construct(
         private readonly Church $church,
-        private readonly ?array $satelliteIds,
+        private readonly array $satelliteIds,
         private readonly FamilyListFiltersData $filters = new FamilyListFiltersData,
         private readonly ?int $page = null,
     ) {}
@@ -39,8 +39,7 @@ final class GetFamiliesJob extends BaseJob
         $query = Family::query()
             ->with(['primaryGuardian.user', 'homeSatellite', 'children'])
             ->where('church_id', $this->church->id)
-            ->when($this->satelliteIds !== null, fn (Builder $q) => $q->whereIn('home_satellite_id', $this->satelliteIds ?? []))
-            ->when($f->satelliteId !== null, fn (Builder $q) => $q->where('home_satellite_id', $f->satelliteId))
+            ->whereIn('home_satellite_id', $this->satelliteIds)
             ->when($f->query !== null, fn (Builder $q) => $q->matching((string) $f->query))
             ->when($f->status !== null, fn (Builder $q) => $q->whereHas('children', fn (Builder $c) => $c->where('status', $f->status)))
             ->when($f->level === LevelChart::NONE, fn (Builder $q) => $q->whereHas('children', fn (Builder $c) => $c->whereNull('level')))

@@ -62,11 +62,11 @@ function pageRoutes(): array
     ));
 }
 
-/** A route's address in the world: its church, family, child and print list are the world's; a link's token is any token. */
+/** A route's address in the world: its satellite (Home), family, child and print list are the world's; a link's token is any token. */
 function addressOf(Route $route, AccessWorld $world): string
 {
     $values = [
-        'church' => $world->church->slug,
+        'satellite' => $world->home->slug,
         'family' => (string) $world->family->id,
         'child' => (string) $world->child->id,
         'purpose' => 'login',

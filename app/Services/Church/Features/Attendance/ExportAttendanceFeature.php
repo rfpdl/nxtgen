@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services\Church\Features\Attendance;
 
 use App\Domains\CheckIn\Jobs\CreateAttendanceSpreadsheetJob;
-use App\Domains\Church\DataObjects\SatelliteOptionData;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
@@ -33,10 +32,10 @@ final class ExportAttendanceFeature extends BaseAttendanceFeature
 {
     public function handle(): BinaryFileResponse
     {
-        ['satellites' => $satellites, 'selection' => $selection, 'squads' => $squads] = $this->attendance();
+        ['selection' => $selection, 'squads' => $squads] = $this->attendance();
         $schedule = $selection->schedule;
-        $satellite = array_values(array_filter($satellites, fn (SatelliteOptionData $s): bool => $s->id === $selection->satelliteId))[0] ?? null;
-        abort_if($satellite === null || $schedule === null, 404);
+        abort_if($schedule === null, 404);
+        $satellite = $this->satellite();
 
         $path = $this->run(new CreateAttendanceSpreadsheetJob(squads: $squads));
         $name = 'nxtgen-attendance-'.Str::slug($satellite->name).'-'.Str::slug($schedule->name).'-'.$selection->date->toDateString().'.xlsx';

@@ -74,7 +74,7 @@ describe('Moving-Up', () => {
         await wrapper.find('[data-testid="moving-up-confirm"]').trigger('click')
 
         expect(posts).toHaveLength(1)
-        expect(posts[0]?.url).toBe('nxtgen.admin.moving-up.store:"ccf"')
+        expect(posts[0]?.url).toBe('admin.moving-up.store:"dubai"')
         expect(posts[0]?.data).toEqual({
             children: [
                 { child_id: 1, level: 1 },

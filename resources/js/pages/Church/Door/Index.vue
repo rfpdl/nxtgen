@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useSatellite } from '@/composables/useSatellite'
 import AppButton from '@/components/atoms/AppButton.vue'
 import EmptyState from '@/components/atoms/EmptyState.vue'
 import Notice from '@/components/atoms/Notice.vue'
@@ -9,7 +10,6 @@ import DoorClassPicker from '@/components/molecules/DoorClassPicker.vue'
 import DoorTabs from '@/components/molecules/DoorTabs.vue'
 import DoorFamilyCard from '@/components/organisms/DoorFamilyCard.vue'
 import ScanCardSheet from '@/components/organisms/ScanCardSheet.vue'
-import { useChurch } from '@/composables/useChurch'
 import type {
     ChildHealth,
     DoorCheckIn,
@@ -47,7 +47,7 @@ const props = defineProps<{
     health?: ChildHealth | null
 }>()
 
-const church = useChurch()
+const satellite = useSatellite()
 const q = ref(props.query)
 /** The health details fetched so far, by child id (null: none to show). */
 const healths = reactive<Record<number, ChildHealth | null>>({})
@@ -55,7 +55,7 @@ const scanning = ref(false)
 
 function visit(params: { class?: number | null; q?: string; card?: boolean }): void {
     router.get(
-        route('nxtgen.serve.door.show', church.value.slug),
+        route('serve.door.show', satellite.value.slug),
         {
             class: params.class ?? props.class_id ?? undefined,
             q: params.q ?? props.query,
@@ -76,7 +76,7 @@ function scanned(code: string): void {
 
 function undo(checkInId: number): void {
     router.put(
-        route('nxtgen.serve.door.undo', [church.value.slug, checkInId]),
+        route('serve.door.undo', [satellite.value.slug, checkInId]),
         {},
         { preserveScroll: true },
     )

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Http\Controllers\Schedule;
 
+use App\Data\Models\Schedule;
 use App\Services\Church\Features\Schedule\AddScheduleFeature;
 use App\Services\Church\Features\Schedule\RetireScheduleFeature;
 use App\Services\Church\Features\Schedule\ShowSchedulesFeature;
@@ -24,13 +25,13 @@ final class Controller extends \Lucid\Units\Controller
         return $this->serve(AddScheduleFeature::class);
     }
 
-    public function update(string $church, int $schedule): RedirectResponse
+    public function update(Schedule $schedule): RedirectResponse
     {
-        return $this->serve(UpdateScheduleFeature::class, ['scheduleId' => $schedule]);
+        return $this->serve(UpdateScheduleFeature::class, ['schedule' => $schedule]);
     }
 
-    public function retire(string $church, int $schedule): RedirectResponse
+    public function retire(Schedule $schedule): RedirectResponse
     {
-        return $this->serve(RetireScheduleFeature::class, ['scheduleId' => $schedule]);
+        return $this->serve(RetireScheduleFeature::class, ['schedule' => $schedule]);
     }
 }

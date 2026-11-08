@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * "Make print list" on Cards' Approved tab (name cards 04, GLOSSARY "Print list"): the approved cards the tab shows —
- * the admin's satellites (a church admin's every one), the search typed — kept as a list by id, said to be made by
+ * the address satellite's families, the search typed — kept as a list by id, said to be made by
  * them. It then shows on the Approved tab, to download and to mark printed. Nothing approved: said plainly.
  *
  * @extends BaseChurchFeature<RedirectResponse>

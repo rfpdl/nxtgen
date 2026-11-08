@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import { useSatellite } from '@/composables/useSatellite'
 import AppButton from '@/components/atoms/AppButton.vue'
 import Card from '@/components/atoms/Card.vue'
 import DoorChildRow from '@/components/molecules/DoorChildRow.vue'
-import { useChurch } from '@/composables/useChurch'
 import type { CheckInInput, ChildHealth, DoorFamily, LevelOption } from '@/types'
 import { router } from '@inertiajs/vue3'
 import { computed, reactive, ref } from 'vue'
@@ -30,7 +30,7 @@ const props = withDefaults(
 )
 const emit = defineEmits<{ health: [childId: number] }>()
 
-const church = useChurch()
+const satellite = useSatellite()
 
 type Pick = { ticked: boolean; level: number | null; makeActive: boolean }
 /**
@@ -55,7 +55,9 @@ const picks = reactive<Record<number, Pick>>(
 )
 const sending = ref(false)
 const familyHref = computed(() =>
-    props.family.can_open ? areaRoute('families.show', [church.value.slug, props.family.id]) : null,
+    props.family.can_open
+        ? areaRoute('families.show', [satellite.value.slug, props.family.id])
+        : null,
 )
 
 const ticked = computed(() => props.family.children.filter((c) => picks[c.id]?.ticked === true))
@@ -88,7 +90,7 @@ function checkIn(): void {
         })),
     }
     sending.value = true
-    router.post(route('nxtgen.serve.door.check-in', [church.value.slug, props.classId]), payload, {
+    router.post(route('serve.door.check-in', [satellite.value.slug, props.classId]), payload, {
         preserveScroll: true,
         onSuccess: () => {
             for (const pick of Object.values(picks)) {
@@ -103,7 +105,7 @@ function checkIn(): void {
 
 function undo(checkInId: number): void {
     router.put(
-        route('nxtgen.serve.door.undo', [church.value.slug, checkInId]),
+        route('serve.door.undo', [satellite.value.slug, checkInId]),
         {},
         { preserveScroll: true },
     )

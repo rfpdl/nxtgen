@@ -6,12 +6,14 @@ namespace App\Foundation\Support;
 
 use App\Data\Models\Church;
 use App\Data\Models\Guardian;
+use App\Data\Models\Satellite;
 use App\Domains\Church\DataObjects\AccessScope;
 use Illuminate\Http\Request;
 
 /**
  * What a service middleware resolved about the request, kept on it for the Features — in ONE place, so no Feature
- * or middleware spells an attribute name. `RequireAssignment` puts the church and the staff member's AccessScope;
+ * or middleware spells an attribute name. `RequireAssignment` puts the satellite in the address, its church and the
+ * staff member's AccessScope there;
  * `RequireGuardian` puts the church and the signed-in Guardian (whose Family the parent pages act on).
  *
  * Getters answer null when nothing (or something else) was put; the base Features turn that into a 404.
@@ -19,6 +21,8 @@ use Illuminate\Http\Request;
 final class RequestContext
 {
     private const string CHURCH = 'church';
+
+    private const string SATELLITE = 'satellite';
 
     private const string SCOPE = 'scope';
 
@@ -34,6 +38,18 @@ final class RequestContext
         $church = $request->attributes->get(self::CHURCH);
 
         return $church instanceof Church ? $church : null;
+    }
+
+    public static function putSatellite(Request $request, Satellite $satellite): void
+    {
+        $request->attributes->set(self::SATELLITE, $satellite);
+    }
+
+    public static function satellite(Request $request): ?Satellite
+    {
+        $satellite = $request->attributes->get(self::SATELLITE);
+
+        return $satellite instanceof Satellite ? $satellite : null;
     }
 
     public static function putScope(Request $request, AccessScope $scope): void

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Http\Controllers\Family;
 
+use App\Data\Models\Family;
 use App\Services\Church\Features\Family\AddChildFeature;
 use App\Services\Church\Features\Family\CorrectFamilyEmailFeature;
 use App\Services\Church\Features\Family\ExportFamiliesFeature;
@@ -39,28 +40,28 @@ final class Controller extends \Lucid\Units\Controller
         return $this->serve(RegisterFamilyFeature::class);
     }
 
-    public function show(string $church, int $family): Response
+    public function show(Family $family): Response
     {
-        return $this->serve(ShowFamilyFeature::class, ['familyId' => $family]);
+        return $this->serve(ShowFamilyFeature::class, ['family' => $family]);
     }
 
-    public function update(string $church, int $family): RedirectResponse
+    public function update(Family $family): RedirectResponse
     {
-        return $this->serve(UpdateFamilyFeature::class, ['familyId' => $family]);
+        return $this->serve(UpdateFamilyFeature::class, ['family' => $family]);
     }
 
-    public function addChild(string $church, int $family): RedirectResponse
+    public function addChild(Family $family): RedirectResponse
     {
-        return $this->serve(AddChildFeature::class, ['familyId' => $family]);
+        return $this->serve(AddChildFeature::class, ['family' => $family]);
     }
 
-    public function resend(string $church, int $family): RedirectResponse
+    public function resend(Family $family): RedirectResponse
     {
-        return $this->serve(ResendConfirmationFeature::class, ['familyId' => $family]);
+        return $this->serve(ResendConfirmationFeature::class, ['family' => $family]);
     }
 
-    public function correctEmail(string $church, int $family): RedirectResponse
+    public function correctEmail(Family $family): RedirectResponse
     {
-        return $this->serve(CorrectFamilyEmailFeature::class, ['familyId' => $family]);
+        return $this->serve(CorrectFamilyEmailFeature::class, ['family' => $family]);
     }
 }

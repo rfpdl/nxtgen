@@ -22,15 +22,15 @@ use App\Operations\Registration\RegisterFamilyOperation;
 use Illuminate\Database\Seeder;
 
 /**
- * The browser tests' world (`make e2e`): the demo church plus a House Church admin and one family in each
+ * The browser tests' world (`make e2e`): the demo church plus a CCF Sharjah admin and one family in each
  * satellite. Families go through RegisterFamilyOperation — the import path, no emails — so the rows are ones
  * the app itself can produce. Must match `tests/e2e/support/world.ts`.
  *
  * The journeys run on fifteen browser projects (by layout band and browser — Chrome, Safari, Firefox; see playwright.config.ts)
  * against one database, so each browser has its OWN families to check in
- * (DOOR_GUARDIANS): a Cruz family at CCF DXB — Amara (allergic), Ben, Noah (inactive), Lola (no Level), Gabe
- * (Graduated) — and a visiting Villa family at House Church (Pia). Birthdays differ per browser, so no two are
- * "possible duplicates". For Who's in (roll call), a Reyes family at CCF DXB with four Level 2 girls whose names are
+ * (DOOR_GUARDIANS): a Cruz family at CCF Dubai — Amara (allergic), Ben, Noah (inactive), Lola (no Level), Gabe
+ * (Graduated) — and a visiting Villa family at CCF Sharjah (Pia). Birthdays differ per browser, so no two are
+ * "possible duplicates". For Who's in (roll call), a Reyes family at CCF Dubai with four Level 2 girls whose names are
  * the browser's own (ROLL_CALL_GIRLS): the browsers share one 1PM Session and its Squads, so each ticks its own. For
  * name cards, an Ocampo family of nine boys with no Card request (CARD_CHILDREN).
  */
@@ -38,7 +38,7 @@ final class E2ESeeder extends Seeder
 {
     public const string HOUSE_ADMIN_EMAIL = 'house-admin@nxtgen.test';
 
-    /** Each browser's own Lifeshaper at CCF DXB (`volunteer-desktop@…`): the password journey sets and uses its own password. */
+    /** Each browser's own Lifeshaper at CCF Dubai (`volunteer-desktop@…`): the password journey sets and uses its own password. */
     public const string VOLUNTEER_EMAIL = 'volunteer-%s@nxtgen.test';
 
     /** Browser project => the first name of its door families' parent. */
@@ -78,12 +78,12 @@ final class E2ESeeder extends Seeder
     ];
 
     /**
-     * Each browser's Ocampo family at CCF DXB (name cards): imported, so no Card request — each card journey asks for a
+     * Each browser's Ocampo family at CCF Dubai (name cards): imported, so no Card request — each card journey asks for a
      * new card for the first of them still without one. Nine, so the two card journeys (four children a run) and a
      * retry (CI retries once) find fresh children without a reseed, and the door's families stay untouched.
      */
     /**
-     * Each browser's Torres family at CCF DXB: girls whose age suggests Level 3. The Level journey moves the first still at
+     * Each browser's Torres family at CCF Dubai: girls whose age suggests Level 3. The Level journey moves the first still at
      * Level 3 to Level 4 — three, so a retry finds another without a reseed.
      */
     public const array LEVEL_CHILDREN = ['Lexi', 'Lara', 'Luz'];
@@ -91,7 +91,7 @@ final class E2ESeeder extends Seeder
     public const array CARD_CHILDREN = ['Jon', 'Kit', 'Ned', 'Rex', 'Sam', 'Tom', 'Ugo', 'Vic', 'Wes'];
 
     /**
-     * Each browser's Navarro family at CCF DXB (Moving-Up): Mika at Level 1 and Theo at Level 4, each with the browser's
+     * Each browser's Navarro family at CCF Dubai (Moving-Up): Mika at Level 1 and Theo at Level 4, each with the browser's
      * own middle name (SCAN_MIDDLE_NAMES), so the journey ticks only its own two — "Mika Joy Navarro" — out of the whole
      * church, moves them up and puts them back.
      *
@@ -104,8 +104,8 @@ final class E2ESeeder extends Seeder
         $this->call(DemoChurchSeeder::class);
 
         $ccf = Church::query()->where('slug', 'ccf')->firstOrFail();
-        $dxb = Satellite::query()->where('slug', 'ccf-dxb')->firstOrFail();
-        $house = Satellite::query()->where('slug', 'house-church')->firstOrFail();
+        $dxb = Satellite::query()->where('slug', 'dubai')->firstOrFail();
+        $house = Satellite::query()->where('slug', 'sharjah')->firstOrFail();
 
         $houseAdmin = User::query()->create(['name' => 'House Admin', 'email' => self::HOUSE_ADMIN_EMAIL, 'email_verified_at' => now()]);
         RoleAssignment::query()->create([

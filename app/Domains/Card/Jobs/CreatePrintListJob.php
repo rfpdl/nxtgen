@@ -13,7 +13,7 @@ use App\Foundation\Jobs\BaseJob;
 
 /**
  * Make a Print list (GLOSSARY "Print list", name cards 04): the Approved cards the tab shows — this church, the families
- * of `$satelliteIds` (null = every satellite: a church admin), the child-name search — kept by id, saying who made it.
+ * of `$satelliteIds` (the address satellite), the child-name search — kept by id, saying who made it.
  * From then on the list IS those cards: nothing approved, renamed or moved in later joins it. It comes back with `cards_count` set. Null when there is
  * nothing to put on it. The caller runs it in a transaction (the list and its cards together).
  *
@@ -21,10 +21,10 @@ use App\Foundation\Jobs\BaseJob;
  */
 final class CreatePrintListJob extends BaseJob
 {
-    /** @param list<int>|null $satelliteIds */
+    /** @param list<int> $satelliteIds */
     public function __construct(
         private readonly Church $church,
-        private readonly ?array $satelliteIds,
+        private readonly array $satelliteIds,
         private readonly ?string $query,
         private readonly User $by,
     ) {}

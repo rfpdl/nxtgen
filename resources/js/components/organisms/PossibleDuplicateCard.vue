@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import { useSatellite } from '@/composables/useSatellite'
 import AppButton from '@/components/atoms/AppButton.vue'
 import Card from '@/components/atoms/Card.vue'
 import FamilySearchResultCard from '@/components/molecules/FamilySearchResultCard.vue'
-import { useChurch } from '@/composables/useChurch'
 import type { DuplicatePair, DuplicateStatus } from '@/types'
 import { areaRoute } from '@/composables/useArea'
 
@@ -16,9 +16,9 @@ defineProps<{ pair: DuplicatePair }>()
 
 const emit = defineEmits<{ answer: [pairId: number, status: Exclude<DuplicateStatus, 'open'>] }>()
 
-const church = useChurch()
+const satellite = useSatellite()
 
-const familyHref = (id: number): string => areaRoute('families.show', [church.value.slug, id])
+const familyHref = (id: number): string => areaRoute('families.show', [satellite.value.slug, id])
 </script>
 
 <template>

@@ -31,12 +31,14 @@ it('lists only this church\'s families, newest first', function (): void {
     $satellite = satelliteOf($church);
     $older = familyAt($satellite);
     $newer = familyAt($satellite);
-    familyAt(satelliteOf(church()));
+    $elsewhere = satelliteOf(church());
+    familyAt($elsewhere);
 
-    expect(listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: null)))->toBe([$newer->id, $older->id]);
+    // Even handed another church's satellite id, the church still holds.
+    expect(listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: [$satellite->id, $elsewhere->id])))->toBe([$newer->id, $older->id]);
 });
 
-it('keeps to the viewer\'s satellites, and a chosen satellite outside them yields nothing', function (): void {
+it('keeps to the viewer\'s satellites, and lists nothing for no satellite', function (): void {
     $church = church();
     $mine = satelliteOf($church);
     $theirs = satelliteOf($church);
@@ -44,9 +46,9 @@ it('keeps to the viewer\'s satellites, and a chosen satellite outside them yield
     familyAt($theirs);
 
     $scoped = listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: [$mine->id]));
-    $outside = listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: [$mine->id], filters: new FamilyListFiltersData(satelliteId: $theirs->id)));
+    $none = listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: []));
 
-    expect($scoped)->toBe([$family->id])->and($outside)->toBeEmpty();
+    expect($scoped)->toBe([$family->id])->and($none)->toBeEmpty();
 });
 
 it('narrows by search text, a child\'s status and a child\'s level', function (): void {
@@ -60,7 +62,7 @@ it('narrows by search text, a child\'s status and a child\'s level', function ()
     guardianOf($reyes, User::factory()->create(['email' => 'carlo@example.com']), ['first_name' => 'Carlo', 'last_name' => 'Reyes']);
     childOf($reyes, ['status' => ChildStatusEnum::Inactive, 'level' => 3]);
 
-    $list = fn (FamilyListFiltersData $f): array => listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: null, filters: $f));
+    $list = fn (FamilyListFiltersData $f): array => listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: [$satellite->id], filters: $f));
 
     expect($list(new FamilyListFiltersData(query: 'santos')))->toBe([$santos->id])
         ->and($list(new FamilyListFiltersData(status: ChildStatusEnum::Inactive)))->toBe([$reyes->id])
@@ -75,7 +77,7 @@ it('shows only families whose primary guardian has no confirmed login, when aske
     $unconfirmed = familyAt($satellite);
     guardianOf($unconfirmed, User::factory()->unverified()->create());
 
-    $list = listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: null, filters: new FamilyListFiltersData(unconfirmedOnly: true)));
+    $list = listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: [$satellite->id], filters: new FamilyListFiltersData(unconfirmedOnly: true)));
 
     expect($list)->toBe([$unconfirmed->id]);
 });
@@ -95,7 +97,7 @@ it('shows only families on an open possible duplicate, when asked — by family 
     (new CreateDuplicateCandidatesJob(family: $new))->handle();
     (new CreateDuplicateCandidatesJob(family: $twinB))->handle();
 
-    $list = fn (): array => listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: null, filters: new FamilyListFiltersData(duplicatesOnly: true)));
+    $list = fn (): array => listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: [$satellite->id], filters: new FamilyListFiltersData(duplicatesOnly: true)));
 
     expect($list())->toEqualCanonicalizing([$old->id, $new->id, $twinA->id, $twinB->id]);
 
@@ -113,7 +115,7 @@ it('narrows by every word of the search, all on the same family — the door\'s 
     guardianOf($joy, User::factory()->create(), ['first_name' => 'Joy', 'last_name' => 'Reyes']);
     childOf($joy, ['first_name' => 'Ana', 'nickname' => 'Ana', 'last_name' => 'Santos']);
 
-    $search = fn (string $q): array => listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: null, filters: new FamilyListFiltersData(query: $q)));
+    $search = fn (string $q): array => listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: [$satellite->id], filters: new FamilyListFiltersData(query: $q)));
 
     expect($search('Ana Reyes'))->toEqualCanonicalizing([$ana->id, $joy->id])   // Joy's family: parent Reyes + child Ana
         ->and($search('Ana Santos'))->toBe([$joy->id])
@@ -122,10 +124,11 @@ it('narrows by every word of the search, all on the same family — the door\'s 
 
 it('finds a family by phone whatever spaces or + the phone was saved with', function (): void {
     $church = church();
-    $family = familyAt(satelliteOf($church));
+    $satellite = satelliteOf($church);
+    $family = familyAt($satellite);
     guardianOf($family, User::factory()->create(['email' => 'phone-only@example.com']), ['phone' => '+971 50 123 4567']);
 
-    $found = fn (string $q) => listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: null, filters: new FamilyListFiltersData(query: $q)));
+    $found = fn (string $q) => listedFamilyIds(new GetFamiliesJob(church: $church, satelliteIds: [$satellite->id], filters: new FamilyListFiltersData(query: $q)));
 
     expect($found('501234567'))->toBe([$family->id])
         ->and($found('50-123-4567'))->toBe([$family->id]);
@@ -136,7 +139,7 @@ it('hands back the asked-for page of 50, newest first, cut in the database', fun
     $satellite = satelliteOf($church);
     $ids = array_reverse(array_map(fn (): int => familyAt($satellite)->id, range(1, 55)));
 
-    $page = (new GetFamiliesJob(church: $church, satelliteIds: null, page: 2))->handle();
+    $page = (new GetFamiliesJob(church: $church, satelliteIds: [$satellite->id], page: 2))->handle();
 
     expect(collect($page->items)->pluck('id')->all())->toBe(array_slice($ids, 50))
         ->and([$page->page, $page->lastPage, $page->total])->toBe([2, 2, 55])
@@ -150,5 +153,5 @@ it('hands back every filtered family when no page is asked for (the Excel downlo
         familyAt($satellite);
     }
 
-    expect((new GetFamiliesJob(church: $church, satelliteIds: null))->handle()->items)->toHaveCount(55);
+    expect((new GetFamiliesJob(church: $church, satelliteIds: [$satellite->id]))->handle()->items)->toHaveCount(55);
 });

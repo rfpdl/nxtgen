@@ -10,7 +10,7 @@ use App\Foundation\Support\LevelChart;
 use Illuminate\Http\Request;
 
 /**
- * The list's filters as they arrive in the address (`?q=&satellite=&status=&level=&unconfirmed=1&duplicates=1`)
+ * The list's filters as they arrive in the address (`?q=&status=&level=&unconfirmed=1&duplicates=1`)
  * — read leniently: anything unrecognised is simply no filter. Shared by the list and its Excel download, so
  * the download is what the screen shows.
  */
@@ -22,7 +22,6 @@ final class FamilyListQuery
 
         return new FamilyListFiltersData(
             query: $q === '' ? null : $q,
-            satelliteId: $request->integer('satellite') ?: null,
             status: ChildStatusEnum::tryFrom($request->string('status')->value()),
             level: $request->string('level')->value() === (string) LevelChart::NONE ? LevelChart::NONE : ($request->integer('level') ?: null),
             unconfirmedOnly: $request->boolean('unconfirmed'),

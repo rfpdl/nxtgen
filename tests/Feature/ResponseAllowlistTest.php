@@ -29,14 +29,14 @@ use function Tests\Support\exportedRows;
  * another family at Home, a parent-and-Lifeshaper whose family is Away, a possible duplicate, a staff note.
  */
 
-/** What HandleInertiaRequests shares with every page under a church, apart from the staff menu. */
+/** What HandleInertiaRequests shares with every page about a church, apart from the satellite and the staff menu. */
 const SHARED = ['auth.can_switch', 'auth.user.id', 'auth.user.name', 'church.name', 'church.slug', 'errors', 'flash.error', 'flash.success'];
 
-/** A page that is not a staff page: the staff menu is null. */
-const FRAME = [...SHARED, 'church_nav'];
+/** A page that is not a staff page: no satellite in its address (`/family`, Roy 2026-11-07), and the staff menu is null. */
+const FRAME = [...SHARED, 'church_nav', 'satellite'];
 
-/** A staff page: the staff menu's switches (People, Classes, Attendance, Cards, Moving-Up). Duplicates has no tab (DECISIONS 2026-10-17, after first look). */
-const STAFF_FRAME = [...SHARED, 'church_nav.area', 'church_nav.can_manage_cards', 'church_nav.can_manage_classes', 'church_nav.can_manage_links', 'church_nav.can_manage_people', 'church_nav.can_move_up', 'church_nav.can_see_attendance', 'church_nav.can_use_admin', 'church_nav.can_use_full_admin'];
+/** A staff page: the address's satellite, and the staff menu's switches (People, Classes, Attendance, Cards, Moving-Up). Duplicates has no tab (DECISIONS 2026-10-17, after first look). */
+const STAFF_FRAME = [...SHARED, 'satellite.id', 'satellite.name', 'satellite.slug', 'church_nav.area', 'church_nav.can_manage_cards', 'church_nav.can_manage_classes', 'church_nav.can_manage_links', 'church_nav.can_manage_people', 'church_nav.can_move_up', 'church_nav.can_see_attendance', 'church_nav.can_use_admin', 'church_nav.can_use_full_admin'];
 
 /** Health, photo and contact fields: never on a list or search page, whoever asks — only the allergy yes/no. */
 const NEVER_ON_LISTS = '/photo|allerg|illness|fear|dislike|guardian_notes|phone|notes|ministries/';
@@ -84,13 +84,13 @@ function familyPageWithCardRequest(AccessWorld $w): string
 {
     CardRequest::factory()->for($w->child)->create(['note' => 'Lost at the park']);
 
-    return "/ccf/nxtgen/serve/families/{$w->family->id}";
+    return "/home-sat/serve/families/{$w->family->id}";
 }
 
 /** The same page in the Admin area, where an admin also gets the admin-only controls (Roy 2026-11-06). */
 function adminFamilyPageWithCardRequest(AccessWorld $w): string
 {
-    return str_replace('/nxtgen/serve/', '/nxtgen/admin/', familyPageWithCardRequest($w));
+    return str_replace('/serve/', '/admin/', familyPageWithCardRequest($w));
 }
 
 /** The family's other guardians (no login) as the edit form lists them — for whoever may edit the family. */
@@ -122,8 +122,8 @@ const POSSIBLE_DUPLICATES = [
 
 /** A list page's filters, options and pagination (families and children lists). */
 const LIST_FRAME = [
-    'enums.child_status', 'filters.duplicates', 'filters.level', 'filters.q', 'filters.satellite', 'filters.status', 'filters.unconfirmed',
-    'options.levels.*.level', 'options.levels.*.name', 'options.satellites.*.id', 'options.satellites.*.name',
+    'enums.child_status', 'filters.duplicates', 'filters.level', 'filters.q', 'filters.status', 'filters.unconfirmed',
+    'options.levels.*.level', 'options.levels.*.name',
     'pagination.last_page', 'pagination.page', 'pagination.per_page', 'pagination.total',
 ];
 
@@ -223,7 +223,7 @@ function listAt(array $props, string $key): array
 
 describe('the door search — the church-wide lite view', function (): void {
     it('shows any staff only names, satellite, a masked email and nicknames — never a photo or a health field @story#46', function (Actor $actor): void {
-        $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/nxtgen/serve/families/new?q=Amara');
+        $props = propsOf($actor, fn (AccessWorld $w): string => '/home-sat/serve/families/new?q=Amara');
 
         expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, ['enums.gender', 'enums.lifestage', 'enums.relationship', 'query', 'satellites.*.id', 'satellites.*.name'], prefixed('results.*', LITE_FAMILY)))
             ->and(forbiddenOnLists($props))->toBe([])
@@ -256,7 +256,7 @@ describe('Cards, for admins', function (): void {
         $props = propsOf($actor, function (AccessWorld $w): string {
             CardRequest::factory()->for($w->child)->create(['note' => 'Lost at the park']);
 
-            return '/ccf/nxtgen/admin/card-requests';
+            return '/home-sat/admin/card-requests';
         });
 
         expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, ['enums.card_move', 'enums.card_tab', 'print_lists', 'q', 'tab', 'pagination.last_page', 'pagination.page', 'pagination.per_page', 'pagination.total'], prefixed('requests.*', [
@@ -269,7 +269,7 @@ describe('Cards, for admins', function (): void {
             $card = CardRequest::factory()->for($w->child)->create(['step' => CardStepEnum::Approved]);
             PrintList::factory()->for($w->church)->create()->cards()->attach([$card->id]);
 
-            return '/ccf/nxtgen/admin/card-requests?tab=approved';
+            return '/home-sat/admin/card-requests?tab=approved';
         });
 
         expect(array_values(array_filter(keyPaths($props), fn (string $p): bool => str_starts_with($p, 'print_lists'))))
@@ -279,7 +279,7 @@ describe('Cards, for admins', function (): void {
 
 describe('the registration lists', function (): void {
     it('lists families with nicknames and Levels only, the email in full only for an editor @story#43', function (Actor $actor, string $email): void {
-        $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/nxtgen/serve/families');
+        $props = propsOf($actor, fn (AccessWorld $w): string => '/home-sat/serve/families');
         $janice = collect(listAt($props, 'families'))->first(fn (mixed $f): bool => in_array('Amara', array_column(listAt(is_array($f) ? $f : [], 'children'), 'nickname'), true));
 
         expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, LIST_FRAME, prefixed('families.*', ['can_resend', ...LIST_CHILD, 'email', 'email_confirmed', 'id', 'primary_name', 'registered_by', 'registered_on', 'satellite'])))
@@ -293,13 +293,14 @@ describe('the registration lists', function (): void {
     ]);
 
     it('never lists a family outside an away staff member\'s satellite @story#44', function (Actor $actor): void {
-        $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/nxtgen/serve/families');
+        // Away staff have no Role at Home (404 there, DECISIONS 2026-11-08): they ask at their own satellite's address.
+        $props = propsOf($actor, fn (AccessWorld $w): string => '/away/serve/families');
 
         expect(collect(listAt($props, 'families'))->pluck('satellite')->unique()->values()->all())->toBe(['Away']);
     })->with(actors(Actor::AwayAdmin, Actor::AwayLifeshaper));
 
     it('never lists a child outside an away staff member\'s satellite @story#58', function (Actor $actor): void {
-        $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/nxtgen/admin/children');
+        $props = propsOf($actor, fn (AccessWorld $w): string => '/away/admin/children');
 
         expect(collect(listAt($props, 'children'))->pluck('satellite')->unique()->values()->all())->toBe(['Away']);
     })->with(actors(Actor::AwayAdmin));
@@ -308,7 +309,7 @@ describe('the registration lists', function (): void {
         Storage::fake('photos');
         $world = AccessWorld::make();
 
-        $rows = exportedRows(actingAs($world->user($actor) ?? throw new \LogicException('Away staff sign in.'))->get('/ccf/nxtgen/admin/families/export'));
+        $rows = exportedRows(actingAs($world->user($actor) ?? throw new \LogicException('Away staff sign in.'))->get('/away/admin/families/export'));
         $satellites = array_unique(array_map(fn (string $row): string => explode('|', $row)[3] ?? '', array_slice($rows, 1)));
 
         expect(array_values($satellites))->toBe(['Away']);
@@ -318,13 +319,13 @@ describe('the registration lists', function (): void {
         Storage::fake('photos');
         $world = AccessWorld::make();
 
-        $rows = exportedRows(actingAs($world->user(Actor::ChurchAdmin) ?? throw new \LogicException('An admin signs in.'))->get('/ccf/nxtgen/admin/families/export'));
+        $rows = exportedRows(actingAs($world->user(Actor::ChurchAdmin) ?? throw new \LogicException('An admin signs in.'))->get('/home-sat/admin/families/export'));
 
         expect($rows[0])->toBe('Family|Email|Email confirmed|Satellite|Child nickname|Child full name|Birthday|Level|Allergies|Status|Registered by|Registered on');
     });
 
     it('lists children with an allergy yes/no only — no health details, no photo @story#58', function (Actor $actor): void {
-        $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/nxtgen/admin/children');
+        $props = propsOf($actor, fn (AccessWorld $w): string => '/home-sat/admin/children');
 
         expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, LIST_FRAME, prefixed('children.*', ['age', 'date_of_birth', 'family_id', 'full_name', 'has_allergies', 'id', 'level.name', 'level.number', 'nickname', 'satellite', 'status_label'])))
             ->and(forbiddenOnLists($props))->toBe([]);
@@ -332,24 +333,25 @@ describe('the registration lists', function (): void {
 });
 
 describe('admin pages', function (): void {
-    it('shows People as names, emails and roles — and an away admin only their own satellite\'s @story#74', function (Actor $actor, bool $seesHome): void {
-        $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/admin/people');
+    it('shows People as names, emails and roles — and an away admin only their own satellite\'s @story#74', function (Actor $actor, string $at, bool $seesHome): void {
+        // Each admin asks at a satellite where they have the Role: an away admin at Away's address (DECISIONS 2026-11-08).
+        $props = propsOf($actor, fn (AccessWorld $w): string => "/{$at}/admin/people");
         $labels = collect(listAt($props, 'people'))->flatMap(fn (mixed $p): array => listAt(is_array($p) ? $p : [], 'roles'))->pluck('label');
 
         expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, ['grant_options.*.label', 'grant_options.*.role', 'grant_options.*.scope_id', 'grant_options.*.scope_type'], prefixed('people.*', ['email', 'id', 'name', 'roles.*.can_remove', 'roles.*.id', 'roles.*.label'])))
             ->and($labels->contains(fn (mixed $l): bool => is_string($l) && str_contains($l, 'Home')))->toBe($seesHome);
     })->with([
-        Actor::ChurchAdmin->value => [Actor::ChurchAdmin, true],
-        Actor::HomeAdmin->value => [Actor::HomeAdmin, true],
-        Actor::AwayAdmin->value => [Actor::AwayAdmin, false],
+        Actor::ChurchAdmin->value => [Actor::ChurchAdmin, 'home-sat', true],
+        Actor::HomeAdmin->value => [Actor::HomeAdmin, 'home-sat', true],
+        Actor::AwayAdmin->value => [Actor::AwayAdmin, 'away', false],
     ]);
 
     it('shows Moving-Up as names, satellites and Levels — no health, contact or family details @story#154', function (): void {
         $props = propsOf(Actor::ChurchAdmin, function (AccessWorld $w): string {
             $w->child->forceFill(['level' => 2, 'status' => ChildStatusEnum::Active])->save();
-            actingAs($w->user(Actor::ChurchAdmin) ?? throw new \LogicException('A church admin signs in.'))->post('/ccf/nxtgen/admin/moving-up', ['children' => [['child_id' => $w->child->id, 'level' => 2]]]);
+            actingAs($w->user(Actor::ChurchAdmin) ?? throw new \LogicException('A church admin signs in.'))->post('/home-sat/admin/moving-up', ['children' => [['child_id' => $w->child->id, 'level' => 2]]]);
 
-            return '/ccf/nxtgen/admin/moving-up';
+            return '/home-sat/admin/moving-up';
         });
 
         expect(keyPaths($props))->toBe(allowlist(
@@ -363,15 +365,18 @@ describe('admin pages', function (): void {
 });
 
 describe('the Classes page', function (): void {
-    it('shows admins each satellite\'s classes — names, days and times, no people — and an away admin only Away @story#95', function (Actor $actor, array $satellites): void {
-        $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/nxtgen/admin/classes');
+    it('shows admins each satellite\'s classes — names, days and times, no people — and an away admin only Away @story#95', function (Actor $actor, string $at, array $satellites): void {
+        $props = propsOf($actor, fn (AccessWorld $w): string => "/{$at}/admin/classes");
 
         expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, ['enums.weekday', 'satellites.*.can_add', 'satellites.*.id', 'satellites.*.name'], prefixed('satellites.*.schedules.*', ['ends_at', 'id', 'name', 'starts_at', 'weekday', 'weekday_label'])))
             ->and(collect(listAt($props, 'satellites'))->pluck('name')->all())->toBe($satellites);
     })->with([
-        Actor::ChurchAdmin->value => [Actor::ChurchAdmin, ['Away', 'Home']],
-        Actor::HomeAdmin->value => [Actor::HomeAdmin, ['Home']],
-        Actor::AwayAdmin->value => [Actor::AwayAdmin, ['Away']],
+        // A page shows only the satellite in its address (DECISIONS 2026-11-08): a church admin at Home sees Home's
+        // classes only (was Away and Home), and at Away only Away's.
+        Actor::ChurchAdmin->value => [Actor::ChurchAdmin, 'home-sat', ['Home']],
+        'church admin at Away' => [Actor::ChurchAdmin, 'away', ['Away']],
+        Actor::HomeAdmin->value => [Actor::HomeAdmin, 'home-sat', ['Home']],
+        Actor::AwayAdmin->value => [Actor::AwayAdmin, 'away', ['Away']],
     ]);
 });
 
@@ -392,7 +397,7 @@ describe('the door', function (): void {
         travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
         // A Role covering Home opens Home's 1PM, which Amara is in; Away's staff see their 7PM, with no one in yet.
         $home = in_array($actor, Actor::coveringHome(), true);
-        $props = propsOf($actor, fn (AccessWorld $w): string => $home ? "/ccf/nxtgen/serve/door?class={$w->schedule->id}&q=Amara" : '/ccf/nxtgen/serve/door?q=Amara');
+        $props = propsOf($actor, fn (AccessWorld $w): string => $home ? "/home-sat/serve/door?class={$w->schedule->id}&q=Amara" : '/home-sat/serve/door?q=Amara');
         $checkedIn = $home ? prefixed('checked_in.*', DOOR_CHECK_IN) : ['checked_in'];
 
         expect(keyPaths($props))->toBe(allowlist(
@@ -408,7 +413,7 @@ describe('the door', function (): void {
 
     it('sends a scanned name card as its code and the children it names — no more than any search @story#128', function (): void {
         travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
-        $props = propsOf(Actor::HomeLifeshaper, fn (AccessWorld $w): string => "/ccf/nxtgen/serve/door?class={$w->schedule->id}&card=1&q={$w->child->name_key}");
+        $props = propsOf(Actor::HomeLifeshaper, fn (AccessWorld $w): string => "/home-sat/serve/door?class={$w->schedule->id}&card=1&q={$w->child->name_key}");
 
         expect(array_values(array_filter(keyPaths($props), fn (string $p): bool => str_starts_with($p, 'scan'))))->toBe(['scan.child_ids.*', 'scan.code', 'scan.match', 'scan.note'])
             ->and(forbiddenOnLists($props))->toBe([])
@@ -420,8 +425,10 @@ describe('the door', function (): void {
         Storage::fake('photos');
         $world = AccessWorld::make();
         $user = $world->user($actor) ?? throw new \LogicException('Staff sign in.');
+        // Each at their own satellite's door; the door finds any child of the church (a visiting family).
+        $at = $actor === Actor::AwayLifeshaper ? 'away' : 'home-sat';
 
-        $response = actingAs($user)->get("/ccf/nxtgen/serve/door?q=Amara&health={$world->child->id}", [
+        $response = actingAs($user)->get("/{$at}/serve/door?q=Amara&health={$world->child->id}", [
             'X-Inertia' => 'true',
             'X-Inertia-Version' => (string) app(HandleInertiaRequests::class)->version(request()),
             'X-Inertia-Partial-Component' => 'Church/Door/Index',
@@ -447,7 +454,7 @@ describe('Who\'s in', function (): void {
         travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
         // A Role covering Home opens Home's 1PM, which Amara is in; Away's staff see their 7PM, with no one in yet.
         $home = in_array($actor, Actor::coveringHome(), true);
-        $props = propsOf($actor, fn (AccessWorld $w): string => $home ? "/ccf/nxtgen/serve/door/whos-in?class={$w->schedule->id}" : '/ccf/nxtgen/serve/door/whos-in');
+        $props = propsOf($actor, fn (AccessWorld $w): string => $home ? "/home-sat/serve/door/whos-in?class={$w->schedule->id}" : '/home-sat/serve/door/whos-in');
         $squads = $home ? prefixed('squads.*', ['count', 'id', 'level.name', 'level.number', 'name', 'present', ...prefixed('children.*', WHOS_IN_CHILD), ...prefixed('head_count', ['count', 'counted_at', 'counted_by'])]) : ['squads'];
 
         expect(keyPaths($props))->toBe(allowlist(
@@ -465,12 +472,12 @@ const ATTENDANCE_CHILD = ['checked_in_at', 'checked_in_by', 'full_name', 'id', '
 
 describe('Attendance', function (): void {
     it('shows an admin over Home the Session by Squad — names, time, who checked in and the roll call; no health detail, phone or photo @story#112 @story#124', function (Actor $actor): void {
-        $props = propsOf($actor, fn (AccessWorld $w): string => "/ccf/nxtgen/admin/attendance?class={$w->schedule->id}&date=2026-10-31");
+        $props = propsOf($actor, fn (AccessWorld $w): string => "/home-sat/admin/attendance?class={$w->schedule->id}&date=2026-10-31");
 
         expect(keyPaths($props))->toBe(allowlist(
             STAFF_FRAME,
-            ['class_id', 'date', 'date_label', 'satellite_id', 'satellites.*.id', 'satellites.*.name', 'total'],
-            prefixed('satellites.*.classes.*', ['id', 'name', 'retired']),
+            ['class_id', 'date', 'date_label', 'total'],
+            prefixed('classes.*', ['id', 'name', 'retired']),
             prefixed('squads.*', ['count', 'level.name', 'level.number', 'name', ...prefixed('children.*', ATTENDANCE_CHILD), ...prefixed('head_count', ['count', 'counted_at', 'counted_by'])]),
         ))
             ->and(forbiddenOnLists($props))->toBe([])
@@ -483,7 +490,7 @@ describe('Attendance', function (): void {
         $world = AccessWorld::make();
 
         $rows = exportedRows(actingAs($world->user(Actor::ChurchAdmin) ?? throw new \LogicException('An admin signs in.'))
-            ->get("/ccf/nxtgen/admin/attendance/export?class={$world->schedule->id}&date=2026-10-31"));
+            ->get("/home-sat/admin/attendance/export?class={$world->schedule->id}&date=2026-10-31"));
 
         expect($rows[0])->toBe('Squad|Child nickname|Child full name|Checked in at|Checked in by|Present|Squad head count')
             ->and($rows)->toHaveCount(2)
@@ -493,7 +500,7 @@ describe('Attendance', function (): void {
 
 describe('the parent\'s own family page', function (): void {
     it('gives a parent their own family, its children and the edit forms — no staff notes, no registration source @story#28', function (Actor $actor): void {
-        $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/family');
+        $props = propsOf($actor, fn (AccessWorld $w): string => '/family');
 
         expect(keyPaths($props))->toBe(allowlist(FRAME, ['enums.gender', 'enums.lifestage', 'enums.relationship', 'family.area', 'family.home_satellite', 'satellites.*.id', 'satellites.*.name'],
             prefixed('family.children.*', ['allergies', 'date_of_birth', 'dislikes', 'fears', 'first_name', 'gender', 'guardian_notes', 'id', 'illnesses', 'has_photo', 'last_name', 'level.name', 'level.number', 'middle_name', 'nickname', 'photo_consent', 'photo_url', 'status_label']),
@@ -504,7 +511,7 @@ describe('the parent\'s own family page', function (): void {
     })->with(actors(...Actor::parents()));
 
     it('shows each parent only their own family @story#29', function (Actor $actor, array $guardians, string $child): void {
-        $props = propsOf($actor, fn (AccessWorld $w): string => '/ccf/family');
+        $props = propsOf($actor, fn (AccessWorld $w): string => '/family');
 
         expect(collect(listAt($props, 'family.guardians'))->pluck('first_name')->all())->toBe($guardians)
             ->and(collect(listAt($props, 'family.children'))->pluck('nickname')->all())->toBe([$child]);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\MovingUp;
 
+use App\Data\Models\Child;
 use App\Data\Models\MovingUp;
 use App\Data\Models\MovingUpChild;
 use App\Enums\AccessRowEnum;
@@ -30,17 +31,17 @@ use Illuminate\Http\RedirectResponse;
 final class PutBackChildFeature extends BaseMovingUpFeature
 {
     public function __construct(
-        private readonly int $movingUpId,
-        private readonly int $childId,
+        private readonly MovingUp $movingUp,
+        private readonly Child $child,
     ) {}
 
     public function handle(): RedirectResponse
     {
-        [$moved, $result] = $this->withLastMovingUp($this->movingUpId, function (MovingUp $movingUp): array {
-            $moved = $movingUp->children->first(fn (MovingUpChild $m): bool => $m->child_id === $this->childId);
+        [$moved, $result] = $this->withLastMovingUp($this->movingUp, function (MovingUp $movingUp): array {
+            $moved = $movingUp->children->first(fn (MovingUpChild $m): bool => $m->child_id === $this->child->id);
             abort_unless($moved instanceof MovingUpChild, 404);
 
-            return [$moved, $this->run(new PutBackChildOperation(church: $this->church(), movingUp: $movingUp, childId: $this->childId, by: $this->staff()))];
+            return [$moved, $this->run(new PutBackChildOperation(church: $this->church(), movingUp: $movingUp, childId: $this->child->id, by: $this->staff()))];
         });
         $name = $moved->child->displayName();
 

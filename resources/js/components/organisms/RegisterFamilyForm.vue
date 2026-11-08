@@ -20,6 +20,8 @@ import { ref, watch } from 'vue'
 const props = defineProps<{
     action: string
     satellites: SatelliteOption[]
+    /** The satellite the form starts on — the one in the address. */
+    satelliteId?: number | null
 }>()
 
 const blankChild = (): ChildDraft => ({
@@ -38,7 +40,7 @@ const blankChild = (): ChildDraft => ({
 })
 
 const form = useForm<Omit<Draft<RegisterFamilyInput>, 'notes'>>({
-    home_satellite_id: '',
+    home_satellite_id: props.satelliteId ?? '',
     area_text: '',
     privacy_consented: false,
     fb_account: '',

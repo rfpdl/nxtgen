@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useSatellite } from '@/composables/useSatellite'
 import PageHeader from '@/components/atoms/PageHeader.vue'
 import AppShell from '@/components/layout/AppShell.vue'
 import RegisterFamilyForm from '@/components/organisms/RegisterFamilyForm.vue'
@@ -7,10 +8,14 @@ import type { SatelliteOption } from '@/types'
 import { Head } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
-/** The church's registration link and QR code open this (the Bold look): the bar with no menu, then the form. */
+/**
+ * A satellite's registration link and QR code open this (the Bold look): the bar with no menu, then the form, starting
+ * on the satellite in the address.
+ */
 defineProps<{ satellites: SatelliteOption[] }>()
 
 const church = useChurch()
+const satellite = useSatellite()
 </script>
 
 <template>
@@ -21,8 +26,9 @@ const church = useChurch()
             :sub="`For ${church.name} kids church. It takes about 5 minutes.`"
         />
         <RegisterFamilyForm
-            :action="route('public.register.store', church.slug)"
+            :action="route('public.register.store', satellite.slug)"
             :satellites="satellites"
+            :satellite-id="satellite.id"
         />
     </AppShell>
 </template>

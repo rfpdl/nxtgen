@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Door;
 
+use App\Data\Models\Schedule;
 use App\Domains\CheckIn\Jobs\GetSessionJob;
 use App\Domains\CheckIn\Jobs\GetSessionSquadJob;
 use App\Domains\CheckIn\Jobs\UpdateSquadHeadCountJob;
 use App\Domains\Church\Jobs\GetChurchTodayJob;
-use App\Domains\Schedule\Jobs\GetScheduleJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
@@ -37,14 +37,14 @@ use Illuminate\Http\RedirectResponse;
 final class ConfirmHeadCountFeature extends BaseChurchFeature
 {
     public function __construct(
-        private readonly int $scheduleId,
+        private readonly Schedule $schedule,
         private readonly int $squadId,
     ) {}
 
     public function handle(HeadCountInput $input): RedirectResponse
     {
         $church = $this->church();
-        $class = $this->run(new GetScheduleJob(church: $church, id: $this->scheduleId));
+        $class = $this->schedule;
         abort_unless($this->scope()->canCheckInTo($class), 404);
         $today = $this->run(new GetChurchTodayJob(church: $church));
         abort_unless($class->meetsOn($today), 404);

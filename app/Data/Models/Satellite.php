@@ -38,6 +38,12 @@ final class Satellite extends Model
         return $this->belongsTo(Church::class);
     }
 
+    /** Its address is its slug (`/dubai/…`, Roy 2026-11-07), so a link built from the model says `dubai`. */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
     /** @return HasMany<Squad, $this> */
     public function squads(): HasMany
     {

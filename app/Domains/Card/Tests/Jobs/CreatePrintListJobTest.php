@@ -35,8 +35,9 @@ it('keeps exactly the approved cards of the admin\'s satellites and search, sayi
 
 it('makes no list when nothing approved is shown', function (): void {
     $church = church();
-    CardRequest::factory()->for(childOf(familyAt(satelliteOf($church))))->create();
+    $satellite = satelliteOf($church);
+    CardRequest::factory()->for(childOf(familyAt($satellite)))->create();
 
-    expect((new CreatePrintListJob(church: $church, satelliteIds: null, query: null, by: User::factory()->create()))->handle())->toBeNull()
+    expect((new CreatePrintListJob(church: $church, satelliteIds: [$satellite->id], query: null, by: User::factory()->create()))->handle())->toBeNull()
         ->and(PrintList::query()->count())->toBe(0);
 });

@@ -1,3 +1,4 @@
+import { makeSatellite } from '@/tests/satellite'
 import type { EnumProps } from '@/types'
 
 /**
@@ -60,14 +61,19 @@ export const enums: Required<EnumProps> = {
     ],
 }
 
-/** The page's church, for a component that builds a route with `useChurch()`. */
+/** The page's church, for a component that reads `useChurch()`. */
 export const church = { name: 'CCF', slug: 'ccf' }
 
-/** Inertia as the real module, except that its page carries `enums` (and the church). */
+/** The satellite the address names, for a component that builds a staff route with `useSatellite()`. */
+export const satellite = makeSatellite()
+
+/** Inertia as the real module, except that its page carries `enums` (and the church and satellite). */
 export function withEnums<T extends object>(
     inertia: T,
 ): T & {
-    usePage: () => { props: { enums: Required<EnumProps>; church: typeof church } }
+    usePage: () => {
+        props: { enums: Required<EnumProps>; church: typeof church; satellite: typeof satellite }
+    }
 } {
-    return { ...inertia, usePage: () => ({ props: { enums, church } }) }
+    return { ...inertia, usePage: () => ({ props: { enums, church, satellite } }) }
 }

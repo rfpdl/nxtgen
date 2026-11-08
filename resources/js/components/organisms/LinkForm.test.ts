@@ -25,9 +25,9 @@ describe('LinkForm', () => {
         put.mockReset()
     })
 
-    it('adds a Link at its satellite — "Facebook group" or "WhatsApp group" a tap away as the label', async () => {
+    it('adds a Link at the satellite in the address — "Facebook group" or "WhatsApp group" a tap away as the label', async () => {
         const wrapper = mount(LinkForm, {
-            props: { action: '/ccf/nxtgen/admin/links', satelliteId: 3, submitLabel: 'Add link' },
+            props: { action: '/dubai/admin/links', submitLabel: 'Add link' },
         })
 
         const starters = wrapper.findAll('[data-testid="link-starter"]')
@@ -36,17 +36,17 @@ describe('LinkForm', () => {
         await wrapper.find('[data-testid="link-url"]').setValue('https://chat.whatsapp.com/abc')
         await wrapper.find('form').trigger('submit')
 
+        expect(form).not.toHaveProperty('satellite_id')
         expect(form).toMatchObject({
-            satellite_id: 3,
             label: 'WhatsApp group',
             url: 'https://chat.whatsapp.com/abc',
         })
-        expect(post).toHaveBeenCalledWith('/ccf/nxtgen/admin/links', expect.anything())
+        expect(post).toHaveBeenCalledWith('/dubai/admin/links', expect.anything())
     })
 
     it('changes a saved Link in place — its label and address filled in, no starters', async () => {
         const wrapper = mount(LinkForm, {
-            props: { action: '/ccf/nxtgen/admin/links/7', link: whatsapp, submitLabel: 'Save' },
+            props: { action: '/dubai/admin/links/7', link: whatsapp, submitLabel: 'Save' },
         })
 
         expect(wrapper.find('[data-testid="link-starter"]').exists()).toBe(false)
@@ -56,12 +56,12 @@ describe('LinkForm', () => {
         await wrapper.find('form').trigger('submit')
 
         expect(form).not.toHaveProperty('satellite_id')
-        expect(put).toHaveBeenCalledWith('/ccf/nxtgen/admin/links/7', expect.anything())
+        expect(put).toHaveBeenCalledWith('/dubai/admin/links/7', expect.anything())
     })
 
     it("shows the server's words on each field, and says it is done when cancelled", async () => {
         const wrapper = mount(LinkForm, {
-            props: { action: '/ccf/nxtgen/admin/links', satelliteId: 3, submitLabel: 'Add link' },
+            props: { action: '/dubai/admin/links', submitLabel: 'Add link' },
         })
         form.errors = { url: 'Please paste the whole link, starting with https://' }
         await wrapper.vm.$nextTick()

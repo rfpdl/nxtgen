@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Family\Features\Child;
 
+use App\Data\Models\Child;
 use App\Domains\Family\Jobs\CreateChildPhotoJob;
 use App\Domains\Family\Jobs\UpdateChildPhotoConsentJob;
 use App\Enums\AccessRowEnum;
@@ -30,11 +31,11 @@ use Illuminate\Validation\ValidationException;
 #[AccessRow(AccessRowEnum::OwnFamily)]
 final class AddChildPhotoFeature extends BaseFamilyFeature
 {
-    public function __construct(private readonly int $childId) {}
+    public function __construct(private readonly Child $child) {}
 
     public function handle(ChildPhotoInput $input): RedirectResponse
     {
-        $child = $this->ownChild($this->childId);
+        $child = $this->ownChild($this->child);
         $guardian = $this->guardianUser();
 
         if ($child->photo_consent_at === null && ! $input->consent) {

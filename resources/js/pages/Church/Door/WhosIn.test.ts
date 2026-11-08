@@ -1,5 +1,6 @@
 import WhosIn from '@/pages/Church/Door/WhosIn.vue'
 import type { DoorClass, WhosInSquad } from '@/types'
+import { makeSatellite } from '@/tests/satellite'
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -7,7 +8,7 @@ const polls: number[] = []
 const gets: { url: string; data: unknown }[] = []
 
 vi.mock('@inertiajs/vue3', () => ({
-    usePage: () => ({ props: { church: { name: 'CCF', slug: 'ccf' } } }),
+    usePage: () => ({ props: { satellite: makeSatellite() } }),
     usePoll: (interval: number) => polls.push(interval),
     Head: { template: '<span />' },
     Link: { props: ['href'], template: '<a :href="href"><slot /></a>' },
@@ -67,7 +68,7 @@ describe("Who's in", () => {
             'No one checked in yet',
         )
         expect(wrapper.find('[data-testid="go-check-in"]').attributes('href')).toBe(
-            'nxtgen.serve.door.show:{"church":"ccf","class":1}',
+            'serve.door.show:{"satellite":"dubai","class":1}',
         )
         expect(wrapper.find('[data-testid="squad-picker"]').exists()).toBe(false)
     })
@@ -77,8 +78,6 @@ describe("Who's in", () => {
 
         await wrapper.find('[data-testid="squad-picker"] [data-value="5"]').trigger('click')
 
-        expect(gets).toEqual([
-            { url: 'nxtgen.serve.door.whos-in:"ccf"', data: { class: 1, squad: 5 } },
-        ])
+        expect(gets).toEqual([{ url: 'serve.door.whos-in:"dubai"', data: { class: 1, squad: 5 } }])
     })
 })

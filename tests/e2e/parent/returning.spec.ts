@@ -2,7 +2,7 @@ import { expect, test } from '../support/test'
 import { fillFamily } from '../support/forms'
 import { latestMail, magicPath, mailCount } from '../support/mailbox'
 import { openEmailedLink } from '../support/sign-in'
-import { CHURCH, DOOR, SATELLITES, doorFamily } from '../support/world'
+import { DUBAI, DOOR, SATELLITES, doorFamily } from '../support/world'
 
 /*
  * R1 exit criterion (plan §12): a returning IMPORTED parent who fills in the form again is told they are
@@ -18,7 +18,7 @@ test('an imported parent who registers again is signed in to their existing fami
     const satellite = SATELLITES.dxb
     const before = mailCount(email)
 
-    await page.goto(`/${CHURCH}/register`)
+    await page.goto(`/${DUBAI}/register`)
     await fillFamily(
         page,
         { first: 'Maria', last: 'Cruz', email, phone: '0500000000', satellite },
@@ -33,7 +33,7 @@ test('an imported parent who registers again is signed in to their existing fami
     expect(mail.body).toContain('already registered')
 
     await openEmailedLink(page, email, before)
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/family`))
+    await expect(page).toHaveURL(new RegExp(`/family`))
     // Nothing was created twice: the imported child appears once. (Other journeys may add siblings.)
     await expect(page.getByTestId('family-child').filter({ hasText: child })).toHaveCount(1)
 

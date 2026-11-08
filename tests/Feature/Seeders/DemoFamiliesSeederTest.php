@@ -36,7 +36,7 @@ it('gives the door every case to try', function (): void {
         ->and($children->where('status', ChildStatusEnum::Graduated))->not->toBeEmpty()
         ->and($children->whereNull('level')->where('status', ChildStatusEnum::Active))->not->toBeEmpty()
         ->and($children->whereNotNull('allergies'))->not->toBeEmpty()
-        ->and($children->map(fn (Child $c): string => $c->family->homeSatellite->name)->unique()->sort()->values()->all())->toBe(['CCF DXB', 'House Church'])
+        ->and($children->map(fn (Child $c): string => $c->family->homeSatellite->name)->unique()->sort()->values()->all())->toBe(['CCF Dubai', 'CCF Sharjah'])
         ->and(Guardian::query()->whereNull('user_id')->count())->toBeGreaterThanOrEqual(1);   // a second guardian, no login
 });
 

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Door;
 
+use App\Data\Models\Schedule;
 use App\Domains\Church\Jobs\GetChurchTodayJob;
 use App\Domains\Family\Jobs\GetChurchChildrenJob;
-use App\Domains\Schedule\Jobs\GetScheduleJob;
 use App\Enums\AccessRowEnum;
 use App\Enums\CheckInResultEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -41,12 +41,12 @@ use Illuminate\Support\Arr;
 #[AccessRow(AccessRowEnum::CheckIn)]
 final class CheckInChildrenFeature extends BaseChurchFeature
 {
-    public function __construct(private readonly int $scheduleId) {}
+    public function __construct(private readonly Schedule $schedule) {}
 
     public function handle(CheckInInput $input): RedirectResponse
     {
         $church = $this->church();
-        $class = $this->run(new GetScheduleJob(church: $church, id: $this->scheduleId));
+        $class = $this->schedule;
         abort_unless($this->scope()->canCheckInTo($class), 404);
         $today = $this->run(new GetChurchTodayJob(church: $church));
         abort_unless($class->meetsOn($today), 404);

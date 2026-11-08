@@ -19,11 +19,7 @@ final class SatelliteLinkInput extends Data
         public string $url,
     ) {}
 
-    /**
-     * Shared with AddSatelliteLinkInput.
-     *
-     * @return array<string, list<mixed>>
-     */
+    /** @return array<string, list<mixed>> */
     public static function rules(): array
     {
         return [

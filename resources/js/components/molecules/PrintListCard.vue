@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { useSatellite } from '@/composables/useSatellite'
 import AppButton from '@/components/atoms/AppButton.vue'
 import Card from '@/components/atoms/Card.vue'
-import { useChurch } from '@/composables/useChurch'
 import type { PrintList } from '@/types'
 import { computed } from 'vue'
 import { route } from 'ziggy-js'
@@ -13,7 +13,7 @@ import { route } from 'ziggy-js'
  */
 const props = defineProps<{ list: PrintList }>()
 
-const church = useChurch()
+const satellite = useSatellite()
 
 const what = computed(() =>
     [
@@ -34,16 +34,13 @@ const markLabel = computed(() =>
             <AppButton
                 variant="secondary"
                 external
-                :href="route('nxtgen.admin.card-requests.print-lists.show', [church.slug, list.id])"
+                :href="route('admin.card-requests.print-lists.show', [satellite.slug, list.id])"
                 data-testid="print-list-download"
                 >Download</AppButton
             >
             <AppButton
                 :href="
-                    route('nxtgen.admin.card-requests.print-lists.mark-printed', [
-                        church.slug,
-                        list.id,
-                    ])
+                    route('admin.card-requests.print-lists.mark-printed', [satellite.slug, list.id])
                 "
                 method="put"
                 :preserve-scroll="true"

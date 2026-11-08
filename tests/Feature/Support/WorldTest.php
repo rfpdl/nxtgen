@@ -44,35 +44,38 @@ it('makes a satellite staff member who sees only their own satellite', function 
     $church = church();
     $dxb = satelliteOf($church);
     $ours = familyAt($dxb);
-    $theirs = familyAt(satelliteOf($church));
+    $shj = satelliteOf($church);
+    $theirs = familyAt($shj);
 
     $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($dxb));
-    $scope = (new GetAccessScopeJob(user: $lifeshaper, church: $church))->handle();
+    $scope = (new GetAccessScopeJob(user: $lifeshaper, satellite: $dxb))->handle();
 
     expect($scope->canSeeFamily($ours))->toBeTrue()
-        ->and($scope->canSeeFamily($theirs))->toBeFalse();
+        ->and($scope->canSeeFamily($theirs))->toBeFalse()
+        ->and((new GetAccessScopeJob(user: $lifeshaper, satellite: $shj))->handle()->canWorkHere())->toBeFalse();
 });
 
 it('gives a role only in the church its scope belongs to', function (): void {
-    $ccf = church();
-    $other = church();
+    $ccf = satelliteOf(church());
+    $other = satelliteOf(church());
 
-    $admin = staffMember(RoleEnum::Admin, atChurch($ccf));
+    $admin = staffMember(RoleEnum::Admin, atChurch($ccf->church));
 
-    expect((new GetAccessScopeJob(user: $admin, church: $ccf))->handle()->canWorkHere())->toBeTrue()
-        ->and((new GetAccessScopeJob(user: $admin, church: $other))->handle()->canWorkHere())->toBeFalse();
+    expect((new GetAccessScopeJob(user: $admin, satellite: $ccf))->handle()->canWorkHere())->toBeTrue()
+        ->and((new GetAccessScopeJob(user: $admin, satellite: $other))->handle()->canWorkHere())->toBeFalse();
 });
 
 it('gives an existing user a role, or a revoked one that opens nothing', function (): void {
     $church = church();
+    $satellite = satelliteOf($church);
     $admin = User::factory()->create();
     $revoked = User::factory()->create();
 
     grantRole($admin, RoleEnum::Admin, atChurch($church));
     grantRole($revoked, RoleEnum::Admin, atChurch($church), active: false);
 
-    expect((new GetAccessScopeJob(user: $admin, church: $church))->handle()->canWorkHere())->toBeTrue()
-        ->and((new GetAccessScopeJob(user: $revoked, church: $church))->handle()->canWorkHere())->toBeFalse();
+    expect((new GetAccessScopeJob(user: $admin, satellite: $satellite))->handle()->canWorkHere())->toBeTrue()
+        ->and((new GetAccessScopeJob(user: $revoked, satellite: $satellite))->handle()->canWorkHere())->toBeFalse();
 });
 
 it('makes a signed-in guardian the primary guardian of their family', function (): void {

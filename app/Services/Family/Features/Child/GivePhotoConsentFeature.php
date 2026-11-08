@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Family\Features\Child;
 
+use App\Data\Models\Child;
 use App\Domains\Family\Jobs\UpdateChildPhotoConsentJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -26,11 +27,11 @@ use Illuminate\Support\Facades\DB;
 #[AccessRow(AccessRowEnum::OwnFamily)]
 final class GivePhotoConsentFeature extends BaseFamilyFeature
 {
-    public function __construct(private readonly int $childId) {}
+    public function __construct(private readonly Child $child) {}
 
     public function handle(): RedirectResponse
     {
-        $child = $this->ownChild($this->childId);
+        $child = $this->ownChild($this->child);
         $guardian = $this->guardianUser();
 
         // Consent and its history note together, or neither (review 4).

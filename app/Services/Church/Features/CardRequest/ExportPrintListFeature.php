@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Church\Features\CardRequest;
 
 use App\Data\Models\CardRequest;
+use App\Data\Models\PrintList;
 use App\Domains\Card\Jobs\CreateCardPrintListSpreadsheetJob;
 use App\Enums\AccessRowEnum;
 use App\Enums\CardStepEnum;
@@ -31,11 +32,11 @@ final class ExportPrintListFeature extends BasePrintListFeature
     /** The cards the sheet lists: still to print, or printed (one may need printing again) — never given or refused. */
     private const array ON_THE_SHEET = [CardStepEnum::Approved, CardStepEnum::Printed];
 
-    public function __construct(private readonly int $printListId) {}
+    public function __construct(private readonly PrintList $printList) {}
 
     public function handle(): BinaryFileResponse
     {
-        [$list, $cards] = $this->scopedPrintList($this->printListId);
+        [$list, $cards] = $this->scopedPrintList($this->printList);
         $toPrint = array_values(array_filter($cards, fn (CardRequest $card): bool => in_array($card->step, self::ON_THE_SHEET, true)));
 
         $path = $this->run(new CreateCardPrintListSpreadsheetJob(requests: $toPrint));

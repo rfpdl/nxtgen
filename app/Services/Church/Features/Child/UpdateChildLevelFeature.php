@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Child;
 
+use App\Data\Models\Child;
+use App\Data\Models\Family;
 use App\Domains\Church\Jobs\GetChurchForUpdateJob;
-use App\Domains\Family\Jobs\GetChurchChildJob;
 use App\Domains\Family\Jobs\UpdateChildLevelJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -32,12 +33,12 @@ use Illuminate\Support\Facades\DB;
 #[AccessRow(AccessRowEnum::SetChildLevel)]
 final class UpdateChildLevelFeature extends BaseChurchFeature
 {
-    public function __construct(private readonly int $childId) {}
+    public function __construct(private readonly Child $child) {}
 
     public function handle(UpdateChildLevelInput $input): RedirectResponse
     {
-        abort_unless($this->scope()->canSetLevel(), 404);
-        $child = $this->run(new GetChurchChildJob(church: $this->church(), id: $this->childId));
+        // A child of a family at this address's satellite (spec item 10): elsewhere, at its own satellite's address.
+        $child = $this->scopedChild($this->child, fn (Family $family): bool => $this->scope()->canSetLevel() && $this->scope()->canEditFamily($family));
 
         // The Level and its history note together, or neither.
         // After the church's row, as Moving-Up takes it: the two queue instead of overwriting each other (Astra, Moving-Up).

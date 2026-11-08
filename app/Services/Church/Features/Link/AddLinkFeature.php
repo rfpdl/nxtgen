@@ -7,19 +7,18 @@ namespace App\Services\Church\Features\Link;
 use App\Data\Models\SatelliteLink;
 use App\Domains\Church\Jobs\CreateSatelliteLinkJob;
 use App\Domains\Church\Jobs\GetSatelliteForUpdateJob;
-use App\Domains\Church\Jobs\GetSatelliteJob;
 use App\Domains\Church\Jobs\GetSatelliteLinksJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
-use App\Services\Church\Data\AddSatelliteLinkInput;
+use App\Services\Church\Data\SatelliteLinkInput;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Add a Link to a satellite's poster, last: a label and an https address. A satellite this admin does not look
- * after — or another church's — is a 404; a poster already holding SatelliteLink::MAX_PER_SATELLITE is refused, so
+ * Add a Link to the poster of the satellite in the address (DECISIONS 2026-11-08), last: a label and an https
+ * address. A satellite this admin does not look after is a 404; a poster already holding SatelliteLink::MAX_PER_SATELLITE is refused, so
  * it still prints on one page. The satellite is locked while it counts and adds, so two admins at once never pass the
  * limit or share a place (Astra).
  *
@@ -34,13 +33,13 @@ use Illuminate\Validation\ValidationException;
 #[AccessRow(AccessRowEnum::ManageLinks)]
 final class AddLinkFeature extends BaseLinkFeature
 {
-    public function handle(AddSatelliteLinkInput $input): RedirectResponse
+    public function handle(SatelliteLinkInput $input): RedirectResponse
     {
         $church = $this->church();
         $scope = $this->scope();
         abort_unless($scope->canManageLinks(), 404);
 
-        $satellite = $this->run(new GetSatelliteJob(church: $church, id: $input->satellite_id));
+        $satellite = $this->satellite();
         abort_unless($scope->canManageLinksAt($satellite), 404);
 
         DB::transaction(function () use ($church, $satellite, $input): void {

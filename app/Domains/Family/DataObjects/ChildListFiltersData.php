@@ -13,7 +13,6 @@ final readonly class ChildListFiltersData
 {
     public function __construct(
         public ?string $query = null,
-        public ?int $satelliteId = null,
         public ?ChildStatusEnum $status = null,
         public ?int $level = null,
     ) {}

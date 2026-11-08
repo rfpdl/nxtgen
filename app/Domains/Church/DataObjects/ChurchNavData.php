@@ -9,8 +9,8 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
  * The staff menu's switches (ChurchShell), shared as `church_nav` on every staff page from the request's AccessScope,
- * and the area the page is in (RouteArea: 'admin', 'nxtgen.admin', 'nxtgen.serve') — which menu to show, and where a
- * page shown in both NxtGen areas builds its links. Navigation only — every Feature still asks the scope itself.
+ * and the area the page is in (RouteArea: 'admin' or 'serve') — which menu to show, and where a
+ * page shown in both areas (Admin and Serve) builds its links. Navigation only — every Feature still asks the scope itself.
  */
 #[TypeScript]
 final class ChurchNavData extends Data

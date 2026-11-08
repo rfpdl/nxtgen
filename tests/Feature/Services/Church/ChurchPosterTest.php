@@ -22,24 +22,26 @@ use function Tests\Support\satelliteOf;
 
 it('gives a staff member a poster whose QR code opens this church\'s registration form @story#80', function (): void {
     $church = church(['slug' => 'ccf', 'name' => 'CCF']);
+    satelliteOf($church, ['name' => 'CCF Dubai', 'slug' => 'dubai']);
     $user = User::factory()->create();
     grantRole($user, RoleEnum::Lifeshaper, atChurch($church));
 
-    actingAs($user)->get('/ccf/nxtgen/serve/poster')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
+    // The poster is the address satellite's: its own registration address (DECISIONS 2026-11-08).
+    actingAs($user)->get('/dubai/serve/poster')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
         ->component('Church/Poster')
         ->where('church.name', 'CCF')
-        ->where('register_url', url('/ccf/register'))
+        ->where('register_url', url('/dubai/register'))
         ->where('qr', fn (string $qr): bool => str_starts_with($qr, 'data:image/svg+xml;base64,')
             && str_contains((string) base64_decode(substr($qr, 26), true), '<svg')));
 });
 
 it('is not found for a Guardian with no Role in the church @story#81', function (): void {
     $church = church(['slug' => 'ccf']);
-    $family = familyAt(satelliteOf($church));
+    $family = familyAt(satelliteOf($church, ['slug' => 'dubai']));
     $guardian = User::factory()->create();
     guardianOf($family, $guardian);
 
-    actingAs($guardian)->get('/ccf/nxtgen/serve/poster')->assertNotFound();
+    actingAs($guardian)->get('/dubai/serve/poster')->assertNotFound();
 });
 
 it('draws a different code for a different address', function (): void {

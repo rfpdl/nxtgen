@@ -21,8 +21,8 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * The Cards page (name cards 03, DECISIONS 2026-10-29): the Card requests of the families an admin looks after — a
- * church admin's every satellite, a satellite admin's own — by tab (`?tab=` asked, approved, printed, closed; an
+ * The Cards page (name cards 03, DECISIONS 2026-10-29): the Card requests of the families of the satellite in the
+ * address (DECISIONS 2026-11-08), for its admin — by tab (`?tab=` asked, approved, printed, closed; an
  * unknown one is Asked), searched by the child's name (`?q=`), 50 a page — and, on
  * Approved, the print lists still to print. Lifeshapers and parents have no Cards page.
  *

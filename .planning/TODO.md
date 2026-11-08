@@ -29,7 +29,7 @@ Updated 2026-11-08. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 
 | # | Item | Trigger |
 |---|---|---|
-| 8 | A church slug must never be a reserved path — ChurchSeeder refuses one; enforce again in any create-church screen | with Platform screens |
+| 8 | A satellite address must never be a reserved path — ChurchSeeder refuses one (`RouteSatellite::RESERVED`); enforce again on the platform's add-satellite and change-address (issue 09) | with Platform screens |
 | 25 | ~~A "delete this photo for good" action~~ — done 2026-11-07: the parent on their own page, an admin in Admin (`tasks/2026-11-07-photo-delete/`) | done |
 | 26 | Storybook, as aegis (a story per component) — not now (DECISIONS 2026-10-17) | when components grow |
 
@@ -37,10 +37,11 @@ Updated 2026-11-08. **The refactor (`.planning/tasks/2026-10-17-refactor/`) come
 
 | # | Item | Trigger |
 |---|---|---|
+| 37 | **Registry import and the new satellite names** (issue 05): the import matches a family's home satellite by NAME, as the sheet spells it ("CCF DXB"); the satellites are now "CCF Dubai", "CCF Sharjah", "CCF Abu Dhabi". Before the import: rename the sheet's column values, or let the import know the old names — Roy to say | before the Registry import (#23) |
 | 36 | **Lifeshaper management** (Roy 2026-11-08): Lifeshapers' schedules in the app — a scheduled Lifeshaper may open that day's Session; who serves which class; more from the stakeholder chat. A big module: its own grilling round | after #35 |
 | 35 | **Classes and Sessions** (Roy 2026-11-08): recurring or one-time classes; an admin opens and closes a Session's check-in; the door at `/<session code>/checkin`; a helper for the day (`tasks/2026-11-07-ccf-nxtgen/` items 14–19) | after #33 |
 | 34 | **A nice home page** (Roy 2026-11-07): `nxtgen.app/` says what CCF NxtGen is and does, for parents and volunteers; maybe the launch video once Roy uploads it (`brag-output/` stays out of git) | later |
-| 33 | **Satellites in the address, platform admin** (Roy 2026-11-07): `nxtgen.app/{satellite}/serve|admin`, an Admin Role per satellite, a QR code per satellite that never changes, `/platform`, the new bar (`tasks/2026-11-07-ccf-nxtgen/` items 5–13) | next |
+| 33 | **Satellites in the address, platform admin** (Roy 2026-11-07): `nxtgen.app/{satellite}/serve|admin`, an Admin Role per satellite, a QR code per satellite that never changes, `/platform`, the new bar (`tasks/2026-11-07-ccf-nxtgen/` items 5–13). Issue 05 (addresses) done 2026-11-08; 06–09 next | in progress |
 | 32 | **The form and the header** (Roy 2026-11-07): "CCF NxtGen" branding, Lifestage Single/Married/KSP, allergies and illnesses as items, the birthday calendar (`tasks/2026-11-07-ccf-nxtgen/` items 1–4) | done 2026-11-07 |
 | 31 | **Admin and Serve** (Roy 2026-11-06): staff addresses by service — `/ccf/admin/…` and `/ccf/serve/…`; Lifeshapers edit families in Serve; the QR poster gets the church's Links (`tasks/2026-11-06-admin-serve/`) | done 2026-11-06 |
 | 29 | **Merge two families or two children** (a child registered again, legacy duplicates) — spec written 2026-11-07 — `tasks/2026-11-07-merge/spec.md`, 8 questions for Roy before building | when a re-registration happens |

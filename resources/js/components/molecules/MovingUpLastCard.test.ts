@@ -59,7 +59,7 @@ describe('MovingUpLastCard', () => {
 
         expect(buttons).toHaveLength(1)
         expect(buttons[0]?.attributes()).toMatchObject({
-            href: '/#nxtgen.admin.moving-up.children.put-back/ccf/9/3',
+            href: '/#admin.moving-up.children.put-back/dubai/9/3',
             'data-method': 'put',
             'data-preserve-scroll': 'true',
         })
@@ -73,7 +73,7 @@ describe('MovingUpLastCard', () => {
             mount(MovingUpLastCard, { props: { movingUp: last } })
                 .find('[data-testid="moving-up-put-back-everyone"]')
                 .attributes('href'),
-        ).toBe('/#nxtgen.admin.moving-up.put-back/ccf/9')
+        ).toBe('/#admin.moving-up.put-back/dubai/9')
         expect(
             mount(MovingUpLastCard, { props: { movingUp: { ...last, children: [gabe] } } })
                 .find('[data-testid="moving-up-put-back-everyone"]')

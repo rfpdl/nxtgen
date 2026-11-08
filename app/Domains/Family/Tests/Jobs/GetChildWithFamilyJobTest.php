@@ -9,7 +9,10 @@ use function Tests\Support\church;
 use function Tests\Support\familyAt;
 use function Tests\Support\satelliteOf;
 
-/* A child by id with its family and church — the church is READ from the child, for the caller to check. */
+/*
+ * A child by id with its family, its church and its home satellite — read FROM the child, for the caller to check (the
+ * photo link asks staff about the family's own satellite).
+ */
 
 it('finds the child in any church and loads its own family and church', function (): void {
     church();
@@ -21,7 +24,8 @@ it('finds the child in any church and loads its own family and church', function
     expect($found?->id)->toBe($child->id)
         ->and($found?->relationLoaded('family'))->toBeTrue()
         ->and($found?->family?->id)->toBe($child->family_id)
-        ->and($found?->family?->church?->id)->toBe($church->id);
+        ->and($found?->family?->church?->id)->toBe($church->id)
+        ->and($found?->family?->relationLoaded('homeSatellite'))->toBeTrue();
 });
 
 it('returns nothing for an unknown id', function (): void {

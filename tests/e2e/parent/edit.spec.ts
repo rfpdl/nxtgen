@@ -1,6 +1,6 @@
 import { expect, test } from '../support/test'
 import { registerAndConfirm } from '../support/forms'
-import { CHURCH, SATELLITES } from '../support/world'
+import { SATELLITES } from '../support/world'
 
 /*
  * A parent keeps their own details right (plan §3.2 "own family, not status/Level"; review B5): the family's
@@ -14,7 +14,7 @@ test("a parent edits their family details, the other guardians and a child's hea
         { first: 'Mia', last: 'Cruz', phone: '0501110000', satellite: SATELLITES.dxb },
         [{ first: 'Leo', last: 'Cruz', nickname: 'Leo', gender: 'boy', dob: '2018-01-15' }],
     )
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/family`))
+    await expect(page).toHaveURL(new RegExp(`/family`))
 
     // Family + own details: moved house, new number, now in a DGroup.
     await page.getByTestId('edit-family').click()

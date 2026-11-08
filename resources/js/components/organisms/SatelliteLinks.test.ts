@@ -1,5 +1,6 @@
 import SatelliteLinks from '@/components/organisms/SatelliteLinks.vue'
 import type { SatelliteLinks as SatelliteLinksProp } from '@/types'
+import { makeSatellite } from '@/tests/satellite'
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -9,7 +10,7 @@ const routerDelete = vi.fn()
 vi.mock('@inertiajs/vue3', async () => {
     const { reactive } = await import('vue')
     return {
-        usePage: () => ({ props: { church: { name: 'CCF', slug: 'ccf' } } }),
+        usePage: () => ({ props: { satellite: makeSatellite() } }),
         useForm: (data: Record<string, unknown>) =>
             reactive({ ...data, errors: {}, processing: false, post: vi.fn(), put: vi.fn() }),
         router: {
@@ -55,14 +56,14 @@ describe('SatelliteLinks', () => {
 
         await wrapper.findAll('[data-testid="link-up"]')[1]?.trigger('click')
         expect(routerPut).toHaveBeenCalledWith(
-            'nxtgen.admin.links.move:["ccf",8]',
+            'admin.links.move:["dubai",8]',
             { direction: 'up' },
             { preserveScroll: true },
         )
 
         await wrapper.findAll('[data-testid="remove-link"]')[0]?.trigger('click')
         await wrapper.find('[data-testid="confirm-remove-link"]').trigger('click')
-        expect(routerDelete).toHaveBeenCalledWith('nxtgen.admin.links.destroy:["ccf",7]', {
+        expect(routerDelete).toHaveBeenCalledWith('admin.links.destroy:["dubai",7]', {
             preserveScroll: true,
         })
     })

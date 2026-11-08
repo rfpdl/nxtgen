@@ -3,7 +3,7 @@ import { fillChild, fillFamily, pickDate } from '../support/forms'
 import { mailCount } from '../support/mailbox'
 import { signOutFromMenu } from '../support/menu'
 import { openEmailedLink, signInByEmail } from '../support/sign-in'
-import { CHURCH, SATELLITES, uniqueEmail } from '../support/world'
+import { DUBAI, SATELLITES, uniqueEmail } from '../support/world'
 
 /*
  * Journey 1 — the one the stakeholders care about most: a parent registers their family on their phone,
@@ -15,7 +15,7 @@ test('a parent registers, confirms their email and sees their family @story#4 @s
     const email = uniqueEmail('parent')
     const before = mailCount(email)
 
-    await page.goto(`/${CHURCH}/register`)
+    await page.goto(`/${DUBAI}/register`)
     await fillFamily(
         page,
         { first: 'Joy', last: 'Reyes', email, phone: '0501234567', satellite: SATELLITES.dxb },
@@ -41,12 +41,12 @@ test('a parent registers, confirms their email and sees their family @story#4 @s
     await expect(page.getByTestId('other-guardian-0-email')).toHaveCount(0)
     await page.getByTestId('register-submit').click()
 
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/register/thanks`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/register/thanks`))
     await expect(page.getByRole('heading', { name: 'Thank you' })).toBeVisible()
 
     // The confirmation email → Continue → their family page.
     await openEmailedLink(page, email, before)
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/family`))
+    await expect(page).toHaveURL(new RegExp(`/family`))
     await expect(page.getByTestId('page-name')).toHaveText('My family')
     await expect(page.getByRole('heading', { name: 'The Reyes family' })).toBeVisible()
     await expect(page.getByTestId('guardian')).toHaveText([
@@ -79,7 +79,7 @@ test('a parent registers, confirms their email and sees their family @story#4 @s
     await expect(
         page.getByRole('heading', { name: 'Welcome to CCF NxtGen', exact: true }),
     ).toBeVisible()
-    await page.goto(`/${CHURCH}/family`)
+    await page.goto(`/family`)
     await expect(page).toHaveURL(/\/login/)
 })
 
@@ -88,7 +88,7 @@ test('a registered parent signs in again with just their email @story#9 @story#1
 }) => {
     const email = uniqueEmail('returning')
     const before = mailCount(email)
-    await page.goto(`/${CHURCH}/register`)
+    await page.goto(`/${DUBAI}/register`)
     await fillFamily(
         page,
         { first: 'Rhea', last: 'Lim', email, phone: '0507654321', satellite: SATELLITES.house },
@@ -104,16 +104,16 @@ test('a registered parent signs in again with just their email @story#9 @story#1
     await expect(page).toHaveTitle(/CCF NxtGen/)
     await signInByEmail(page, email)
 
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/family`))
+    await expect(page).toHaveURL(new RegExp(`/family`))
     await expect(page.getByTestId('app-name')).toHaveText('CCF NxtGen')
     await expect(page.getByTestId('family-child')).toContainText('Noah')
 })
 
 test('the form says what is missing, in plain words', async ({ page }) => {
-    await page.goto(`/${CHURCH}/register`)
+    await page.goto(`/${DUBAI}/register`)
     await page.getByTestId('register-submit').click()
 
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/register$`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/register$`))
     await expect(page.getByRole('alert').first()).toBeVisible()
     // The allergy question must be answered, and a "yes" needs the details.
     await expect(page.getByText('Please answer: does your child have any allergies?')).toBeVisible()

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Child;
 
+use App\Data\Models\Child;
 use App\Domains\Family\Jobs\UpdateChildDetailsJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -27,11 +28,11 @@ use Illuminate\Http\RedirectResponse;
 #[AccessRow(AccessRowEnum::EditFamily)]
 final class UpdateChildDetailsFeature extends BaseChurchFeature
 {
-    public function __construct(private readonly int $childId) {}
+    public function __construct(private readonly Child $child) {}
 
     public function handle(ChildInput $input): RedirectResponse
     {
-        $child = $this->scopedChild($this->childId, $this->scope()->canEditFamilyDetails(...));
+        $child = $this->scopedChild($this->child, $this->scope()->canEditFamilyDetails(...));
 
         $this->run(new UpdateChildDetailsJob(child: $child, details: $input->toDetails()));
 

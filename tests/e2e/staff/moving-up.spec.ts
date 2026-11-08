@@ -1,6 +1,6 @@
 import { navTo } from '../support/menu'
 import { expect, test } from '../support/test'
-import { CHURCH, movingUpChild, sessionFile } from '../support/world'
+import { DUBAI, movingUpChild, sessionFile } from '../support/world'
 
 /*
  * Moving-Up (TODO #27; DECISIONS 2026-11-06): a church admin moves children up a Level — from Level 4 they graduate —
@@ -12,15 +12,17 @@ test.use({ storageState: sessionFile('churchAdmin') })
 test('a church admin moves two children up — one graduates — then puts one back, then everyone @story#154 @story#156 @story#158 @story#160', async ({
     page,
 }, info) => {
+    // A long journey: on Safari, late in a full run, it needs more than the default 30s.
+    test.setTimeout(60_000)
     const mika = movingUpChild('Mika', info.project.name)
     const theo = movingUpChild('Theo', info.project.name)
     const row = (name: string) => page.getByTestId('moving-up-child').filter({ hasText: name })
     const moved = (name: string) => page.getByTestId('moved-child').filter({ hasText: name })
 
-    await page.goto(`/${CHURCH}/nxtgen/admin/families`)
+    await page.goto(`/${DUBAI}/admin/families`)
     await navTo(page, 'Children')
     await page.getByTestId('children-moving-up').click()
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/admin/moving-up$`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/admin/moving-up$`))
 
     // A retry after a failure part-way (CI retries once) first puts back what the failed try moved.
     for (const name of [mika, theo]) {

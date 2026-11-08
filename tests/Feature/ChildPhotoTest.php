@@ -37,8 +37,8 @@ use function Tests\Support\staffMember;
 function photoFamily(): array
 {
     $church = church(['slug' => 'ccf']);
-    $htc = satelliteOf($church);
-    $house = satelliteOf($church);
+    $htc = satelliteOf($church, ['slug' => 'htc']);
+    $house = satelliteOf($church, ['slug' => 'house']);
     $family = familyAt($htc);
     $guardian = User::factory()->create();
     $g = guardianOf($family, $guardian);
@@ -58,7 +58,7 @@ describe('a parent', function (): void {
     it('agrees and adds a photo in one go @story#38', function (): void {
         ['guardian' => $guardian, 'child' => $child] = photoFamily();
 
-        actingAs($guardian)->post("/ccf/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true])
+        actingAs($guardian)->post("/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true])
             ->assertRedirect()->assertSessionHas('success');
 
         $child->refresh();
@@ -70,7 +70,7 @@ describe('a parent', function (): void {
     it('cannot add a photo without agreeing @story#39', function (): void {
         ['guardian' => $guardian, 'child' => $child] = photoFamily();
 
-        actingAs($guardian)->post("/ccf/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => false])
+        actingAs($guardian)->post("/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => false])
             ->assertSessionHasErrors(['consent' => 'Please agree to the photo first.']);
 
         expect($child->fresh()?->photo_path)->toBeNull();
@@ -79,28 +79,28 @@ describe('a parent', function (): void {
     it('only sends photos', function (): void {
         ['guardian' => $guardian, 'child' => $child] = photoFamily();
 
-        actingAs($guardian)->post("/ccf/family/children/{$child->id}/photo", ['photo' => UploadedFile::fake()->create('notes.pdf', 10, 'application/pdf'), 'consent' => true])
+        actingAs($guardian)->post("/family/children/{$child->id}/photo", ['photo' => UploadedFile::fake()->create('notes.pdf', 10, 'application/pdf'), 'consent' => true])
             ->assertSessionHasErrors('photo');
     });
 
     // Roy's decision, 2026-10-16.
     it('takes consent back, which HIDES the photo — and saying yes again brings it back @story#37', function (): void {
         ['church' => $church, 'htc' => $htc, 'guardian' => $guardian, 'child' => $child] = photoFamily();
-        actingAs($guardian)->post("/ccf/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true]);
+        actingAs($guardian)->post("/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true]);
         $path = (string) $child->fresh()?->photo_path;
         $url = URL::temporarySignedRoute('photos.child', now()->addMinutes(5), ['child' => $child->id]);
 
-        actingAs($guardian)->delete("/ccf/family/children/{$child->id}/photo-consent")->assertSessionHas('success');
+        actingAs($guardian)->delete("/family/children/{$child->id}/photo-consent")->assertSessionHas('success');
 
         $child->refresh();
         expect($child->photo_consent_at)->toBeNull()->and($child->photo_path)->toBe($path);
         Storage::disk('photos')->assertExists($path);
         // Hidden from everyone: no link, and the photo itself refuses — for the family and for staff.
-        actingAs($guardian)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('family.children.0.photo_url', null));
+        actingAs($guardian)->get('/family')->assertInertia(fn (AssertableInertia $p) => $p->where('family.children.0.photo_url', null));
         actingAs($guardian)->get($url)->assertNotFound();
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get($url)->assertNotFound();
 
-        actingAs($guardian)->put("/ccf/family/children/{$child->id}/photo-consent");
+        actingAs($guardian)->put("/family/children/{$child->id}/photo-consent");
         actingAs($guardian)->get($url)->assertOk();
     });
 
@@ -108,7 +108,7 @@ describe('a parent', function (): void {
         ['guardian' => $guardian] = photoFamily();
         $stranger = Child::factory()->create();
 
-        actingAs($guardian)->post("/ccf/family/children/{$stranger->id}/photo", ['photo' => photoFile(), 'consent' => true])->assertNotFound();
+        actingAs($guardian)->post("/family/children/{$stranger->id}/photo", ['photo' => photoFile(), 'consent' => true])->assertNotFound();
     });
 });
 
@@ -118,8 +118,8 @@ describe('the consent history', function (): void {
         ['guardian' => $guardian, 'child' => $child] = photoFamily();
         $guardian->forceFill(['name' => 'Janice Ramos'])->save();
 
-        actingAs($guardian)->put("/ccf/family/children/{$child->id}/photo-consent");
-        actingAs($guardian)->delete("/ccf/family/children/{$child->id}/photo-consent");
+        actingAs($guardian)->put("/family/children/{$child->id}/photo-consent");
+        actingAs($guardian)->delete("/family/children/{$child->id}/photo-consent");
 
         expect(Note::query()->where('noteable_type', 'child')->where('noteable_id', $child->id)->orderBy('id')->pluck('body')->all())->toBe([
             'Amara: photo consent given by Janice Ramos.',
@@ -134,8 +134,8 @@ describe('the consent history', function (): void {
         withoutExceptionHandling();
 
         $request = fn () => $who === 'parent'
-            ? actingAs($guardian)->put("/ccf/family/children/{$child->id}/photo-consent")
-            : actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->put("/ccf/nxtgen/serve/children/{$child->id}/photo-consent");
+            ? actingAs($guardian)->put("/family/children/{$child->id}/photo-consent")
+            : actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->put("/htc/serve/children/{$child->id}/photo-consent");
 
         expect($request)->toThrow(RuntimeException::class, 'note store down');
         expect($child->fresh()?->photo_consent_at)->toBeNull();
@@ -145,7 +145,7 @@ describe('the consent history', function (): void {
         ['guardian' => $guardian, 'child' => $child] = photoFamily();
         $guardian->forceFill(['name' => 'Janice Ramos'])->save();
 
-        actingAs($guardian)->post("/ccf/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true]);
+        actingAs($guardian)->post("/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true]);
 
         expect(Note::query()->where('noteable_id', $child->id)->sole()->body)->toBe('Amara: photo consent given by Janice Ramos.');
     });
@@ -156,23 +156,23 @@ describe('consent first, photo later', function (): void {
     it('lets a parent agree without a photo, so a Lifeshaper can take the first one at church @story#36', function (): void {
         ['church' => $church, 'htc' => $htc, 'guardian' => $guardian, 'child' => $child] = photoFamily();
 
-        actingAs($guardian)->put("/ccf/family/children/{$child->id}/photo-consent")->assertRedirect()->assertSessionHas('success');
+        actingAs($guardian)->put("/family/children/{$child->id}/photo-consent")->assertRedirect()->assertSessionHas('success');
         expect($child->fresh()?->photo_consent_by)->toBe($guardian->id)->and($child->fresh()?->photo_path)->toBeNull();
 
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))
-            ->post("/ccf/nxtgen/serve/children/{$child->id}/photo", ['photo' => photoFile()])->assertSessionHas('success');
+            ->post("/htc/serve/children/{$child->id}/photo", ['photo' => photoFile()])->assertSessionHas('success');
         expect($child->fresh()?->photo_path)->not->toBeNull();
     });
 
     it('never shows a photo, nor gives a link to one, once consent is gone @story#41', function (): void {
         ['guardian' => $guardian, 'child' => $child] = photoFamily();
-        actingAs($guardian)->post("/ccf/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true]);
+        actingAs($guardian)->post("/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true]);
         $url = URL::temporarySignedRoute('photos.child', now()->addMinutes(5), ['child' => $child->id]);
         // The state an upload finishing after a withdrawal could leave: a stored photo, no consent.
         $child->forceFill(['photo_consent_at' => null, 'photo_consent_by' => null])->save();
 
         actingAs($guardian)->get($url)->assertNotFound();
-        actingAs($guardian)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('family.children.0.photo_url', null));
+        actingAs($guardian)->get('/family')->assertInertia(fn (AssertableInertia $p) => $p->where('family.children.0.photo_url', null));
     });
 });
 
@@ -182,7 +182,7 @@ describe('a Lifeshaper', function (): void {
         $child->forceFill(['photo_consent_at' => now(), 'photo_consent_by' => $guardian->id])->save();
 
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))
-            ->post("/ccf/nxtgen/serve/children/{$child->id}/photo", ['photo' => photoFile()])->assertSessionHas('success');
+            ->post("/htc/serve/children/{$child->id}/photo", ['photo' => photoFile()])->assertSessionHas('success');
 
         expect($child->fresh()?->photo_path)->not->toBeNull();
     });
@@ -191,7 +191,7 @@ describe('a Lifeshaper', function (): void {
         ['church' => $church, 'htc' => $htc, 'child' => $child] = photoFamily();
 
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))
-            ->post("/ccf/nxtgen/serve/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true])
+            ->post("/htc/serve/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true])
             ->assertSessionHas('error', 'The parent has not agreed to a photo yet. If they say yes to you, record it first.');
 
         expect($child->fresh()?->photo_path)->toBeNull()->and($child->fresh()?->photo_consent_at)->toBeNull();
@@ -203,8 +203,8 @@ describe('a Lifeshaper', function (): void {
         $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
         $lifeshaper->forceFill(['name' => 'Leo Lifeshaper'])->save();
 
-        actingAs($lifeshaper)->put("/ccf/nxtgen/serve/children/{$child->id}/photo-consent")->assertSessionHas('success');
-        actingAs($lifeshaper)->post("/ccf/nxtgen/serve/children/{$child->id}/photo", ['photo' => photoFile()])->assertSessionHas('success');
+        actingAs($lifeshaper)->put("/htc/serve/children/{$child->id}/photo-consent")->assertSessionHas('success');
+        actingAs($lifeshaper)->post("/htc/serve/children/{$child->id}/photo", ['photo' => photoFile()])->assertSessionHas('success');
 
         $child->refresh();
         expect($child->photo_consent_by)->toBe($lifeshaper->id)
@@ -217,7 +217,7 @@ describe('a Lifeshaper', function (): void {
         ['church' => $church, 'house' => $house, 'child' => $child] = photoFamily();
 
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($house)))
-            ->put("/ccf/nxtgen/serve/children/{$child->id}/photo-consent")->assertNotFound();
+            ->put("/house/serve/children/{$child->id}/photo-consent")->assertNotFound();
 
         expect($child->fresh()?->photo_consent_at)->toBeNull();
     });
@@ -227,17 +227,17 @@ describe('a Lifeshaper', function (): void {
         $child->forceFill(['photo_consent_at' => now(), 'photo_consent_by' => $guardian->id])->save();
 
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($house)))
-            ->post("/ccf/nxtgen/serve/children/{$child->id}/photo", ['photo' => photoFile()])->assertNotFound();
+            ->post("/house/serve/children/{$child->id}/photo", ['photo' => photoFile()])->assertNotFound();
     });
 });
 
 describe('seeing a photo', function (): void {
     it('is a short-lived signed link, for the family and for staff who can see the family @story#40', function (): void {
         ['church' => $church, 'htc' => $htc, 'house' => $house, 'guardian' => $guardian, 'child' => $child] = photoFamily();
-        actingAs($guardian)->post("/ccf/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true]);
+        actingAs($guardian)->post("/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true]);
 
         $url = '';
-        actingAs($guardian)->get('/ccf/family')->assertInertia(function (AssertableInertia $p) use (&$url) {
+        actingAs($guardian)->get('/family')->assertInertia(function (AssertableInertia $p) use (&$url) {
             $p->where('family.children.0.photo_consent', true)->where('family.children.0.photo_url', function (string $u) use (&$url): bool {
                 $url = $u;
 
@@ -254,10 +254,22 @@ describe('seeing a photo', function (): void {
         get($url)->assertRedirect('/login');                                    // signed, but nobody signed in
     });
 
+    // Astra 2026-11-08: the signature is checked before the child is looked up, so an unsigned address says the same
+    // for a child of this church, of another church, and for no child at all — it confirms no child id.
+    it('refuses an unsigned photo address the same way whether the child exists or not @story#41', function (): void {
+        ['child' => $child] = photoFamily();
+        $theirs = childOf(familyAt(satelliteOf(church())));
+        $nobody = $theirs->id + 1000;
+
+        foreach ([$child->id, $theirs->id, $nobody] as $id) {
+            actingAs(User::factory()->create())->get("/photos/children/{$id}")->assertForbidden();
+        }
+    });
+
     it('gives no link when there is no photo @story#41', function (): void {
         ['guardian' => $guardian] = photoFamily();
 
-        actingAs($guardian)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p
+        actingAs($guardian)->get('/family')->assertInertia(fn (AssertableInertia $p) => $p
             ->where('family.children.0.photo_url', null)->where('family.children.0.photo_consent', false));
     });
 });
@@ -269,37 +281,37 @@ describe('seeing a photo', function (): void {
 describe('deleting a photo for good', function (): void {
     it('lets a parent delete their child\'s photo for good — even one hidden when consent was taken back @story#176', function (): void {
         ['guardian' => $guardian, 'child' => $child] = photoFamily();
-        actingAs($guardian)->post("/ccf/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true]);
+        actingAs($guardian)->post("/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true]);
         $path = (string) $child->fresh()?->photo_path;
-        actingAs($guardian)->delete("/ccf/family/children/{$child->id}/photo-consent");
-        actingAs($guardian)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p
+        actingAs($guardian)->delete("/family/children/{$child->id}/photo-consent");
+        actingAs($guardian)->get('/family')->assertInertia(fn (AssertableInertia $p) => $p
             ->where('family.children.0.photo_url', null)->where('family.children.0.has_photo', true));
 
-        actingAs($guardian)->delete("/ccf/family/children/{$child->id}/photo")
+        actingAs($guardian)->delete("/family/children/{$child->id}/photo")
             ->assertRedirect()->assertSessionHas('success', 'Amara\'s photo is deleted for good.');
 
         Storage::disk('photos')->assertMissing($path);
         expect($child->fresh()?->photo_path)->toBeNull()
             ->and(Note::query()->where('body', 'like', '%photo deleted for good%')->exists())->toBeTrue();
-        actingAs($guardian)->get('/ccf/family')->assertInertia(fn (AssertableInertia $p) => $p->where('family.children.0.has_photo', false));
+        actingAs($guardian)->get('/family')->assertInertia(fn (AssertableInertia $p) => $p->where('family.children.0.has_photo', false));
     });
 
     it('deletes only their own child\'s, and says plainly when there is nothing to delete @story#177', function (): void {
         ['guardian' => $guardian, 'child' => $child] = photoFamily();
         $stranger = Child::factory()->create(['photo_path' => 'children/9/x.jpg']);
 
-        actingAs($guardian)->delete("/ccf/family/children/{$stranger->id}/photo")->assertNotFound();
-        actingAs($guardian)->delete("/ccf/family/children/{$child->id}/photo")->assertSessionHas('error', 'Amara has no photo to delete.');
+        actingAs($guardian)->delete("/family/children/{$stranger->id}/photo")->assertNotFound();
+        actingAs($guardian)->delete("/family/children/{$child->id}/photo")->assertSessionHas('error', 'Amara has no photo to delete.');
 
         expect($stranger->fresh()?->photo_path)->toBe('children/9/x.jpg');
     });
 
     it('lets an admin who may edit the family delete a child\'s photo for good, in Admin @story#178', function (): void {
         ['htc' => $htc, 'guardian' => $guardian, 'child' => $child] = photoFamily();
-        actingAs($guardian)->post("/ccf/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true]);
+        actingAs($guardian)->post("/family/children/{$child->id}/photo", ['photo' => photoFile(), 'consent' => true]);
         $path = (string) $child->fresh()?->photo_path;
 
-        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->delete("/ccf/nxtgen/admin/children/{$child->id}/photo")
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->delete("/htc/admin/children/{$child->id}/photo")
             ->assertRedirect()->assertSessionHas('success', 'Amara\'s photo is deleted for good.');
 
         Storage::disk('photos')->assertMissing($path);
@@ -310,9 +322,9 @@ describe('deleting a photo for good', function (): void {
         ['htc' => $htc, 'house' => $house, 'child' => $child] = photoFamily();
         $child->forceFill(['photo_path' => 'children/1/kept.jpg', 'photo_consent_at' => now()])->save();
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->delete("/ccf/nxtgen/admin/children/{$child->id}/photo")->assertNotFound();
-        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->delete("/ccf/nxtgen/admin/children/{$child->id}/photo")->assertNotFound();
-        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->delete("/ccf/nxtgen/serve/children/{$child->id}/photo")->assertStatus(405);
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->delete("/htc/admin/children/{$child->id}/photo")->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->delete("/house/admin/children/{$child->id}/photo")->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->delete("/htc/serve/children/{$child->id}/photo")->assertStatus(405);
 
         expect($child->fresh()?->photo_path)->toBe('children/1/kept.jpg');
     });

@@ -6,7 +6,7 @@ namespace App\Providers;
 
 use App\Data\Models\Child;
 use App\Data\Models\Family;
-use App\Foundation\Support\RouteChurch;
+use App\Foundation\Support\RouteSatellite;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -35,8 +35,8 @@ final class AppServiceProvider extends ServiceProvider
         // must not orphan rows. Enforced: an unmapped model in a morph relation is an error, not a silent FQCN.
         Relation::enforceMorphMap(['family' => Family::class, 'child' => Child::class]);
 
-        // Every route starting with a church slug shares one rule, so /up, /login… never reach a church.
-        Route::pattern('church', RouteChurch::pattern());
+        // Every route starting with a satellite slug shares one rule, so /up, /login… never reach a satellite.
+        Route::pattern('satellite', RouteSatellite::pattern());
 
         // Public forms and emailed links: one per-device limit, from config (config/nxtgen.php).
         RateLimiter::for('per-device', fn (Request $request): Limit => Limit::perMinute(self::perDevicePerMinute())->by('device:'.$request->ip()));

@@ -1,7 +1,7 @@
 import { expect, test } from '../support/test'
 import { askForNewCard, freshCardChild, openCardFamily } from '../support/cards'
 import { registerAndConfirm } from '../support/forms'
-import { CHURCH, SATELLITES, projectPhone, sessionFile, uniqueSurname } from '../support/world'
+import { DUBAI, SATELLITES, projectPhone, sessionFile, uniqueSurname } from '../support/world'
 
 /*
  * Name cards (DECISIONS 2026-10-29). Issue 02: a parent registers Amara, and her family page shows staff her free first
@@ -24,14 +24,14 @@ test('a newly registered child has a free first card asked for; staff ask for a 
         },
         [{ first: 'Amara', last: surname, nickname: 'Amara', gender: 'girl', dob: '2019-05-05' }],
     )
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/family`))
+    await expect(page).toHaveURL(new RegExp(`/family`))
 
     const staff = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     try {
         const desk = await staff.newPage()
 
         // Issue 02: Amara's first card, asked for when she was registered.
-        await desk.goto(`/${CHURCH}/nxtgen/serve/families?q=${surname}`)
+        await desk.goto(`/${DUBAI}/serve/families?q=${surname}`)
         await desk.getByTestId('family-row').getByRole('link').click()
         const amara = desk.getByTestId('family-child').filter({ hasText: 'Amara' })
         await expect(amara.getByTestId('card-request-step')).toHaveText('Card: Asked · free')

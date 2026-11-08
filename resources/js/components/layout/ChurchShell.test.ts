@@ -1,15 +1,17 @@
 import ChurchShell from '@/components/layout/ChurchShell.vue'
+import { makeSatellite } from '@/tests/satellite'
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const page = {
-    url: '/ccf/nxtgen/serve/door?class=1',
+    url: '/dubai/serve/door?class=1',
     props: {
         flash: {},
         church: { name: 'CCF', slug: 'ccf' },
-        auth: { user: null, can_switch: false },
+        satellite: makeSatellite(),
+        auth: { user: { id: 1, name: 'Roy' }, can_switch: false },
         church_nav: {
-            area: 'nxtgen.serve' as string | null,
+            area: 'serve' as string | null,
             can_use_admin: false,
             can_use_full_admin: false,
             can_manage_people: false,
@@ -28,16 +30,16 @@ vi.mock('@inertiajs/vue3', () => ({
 }))
 
 const PATHS: Record<string, string> = {
-    'nxtgen.serve.door.show': 'nxtgen/serve/door',
-    'nxtgen.serve.families.index': 'nxtgen/serve/families',
-    'nxtgen.serve.poster': 'nxtgen/serve/poster',
-    'nxtgen.admin.families.index': 'nxtgen/admin/families',
-    'nxtgen.admin.children.index': 'nxtgen/admin/children',
+    'serve.door.show': 'serve/door',
+    'serve.families.index': 'serve/families',
+    'serve.poster': 'serve/poster',
+    'admin.families.index': 'admin/families',
+    'admin.children.index': 'admin/children',
     'admin.people.index': 'admin/people',
-    'nxtgen.admin.schedules.index': 'nxtgen/admin/classes',
-    'nxtgen.admin.card-requests.index': 'nxtgen/admin/card-requests',
-    'nxtgen.admin.attendance.show': 'nxtgen/admin/attendance',
-    'nxtgen.admin.links.index': 'nxtgen/admin/links',
+    'admin.schedules.index': 'admin/classes',
+    'admin.card-requests.index': 'admin/card-requests',
+    'admin.attendance.show': 'admin/attendance',
+    'admin.links.index': 'admin/links',
 }
 
 vi.mock('ziggy-js', () => ({
@@ -46,18 +48,18 @@ vi.mock('ziggy-js', () => ({
 }))
 
 beforeEach(() => {
-    page.url = '/ccf/nxtgen/serve/door?class=1'
-    page.props.church_nav.area = 'nxtgen.serve'
+    page.url = '/dubai/serve/door?class=1'
+    page.props.church_nav.area = 'serve'
     page.props.church_nav.can_use_admin = false
     page.props.church_nav.can_use_full_admin = false
     page.props.church_nav.can_manage_classes = false
     page.props.church_nav.can_see_attendance = false
 })
 
-/** The menu as an admin sees it in NxtGen Admin. */
+/** The menu as an admin sees it in Admin. */
 function inAdmin(): void {
-    page.url = '/ccf/nxtgen/admin/families'
-    page.props.church_nav.area = 'nxtgen.admin'
+    page.url = '/dubai/admin/families'
+    page.props.church_nav.area = 'admin'
     page.props.church_nav.can_use_admin = true
     page.props.church_nav.can_use_full_admin = true
 }
@@ -75,7 +77,7 @@ describe('ChurchShell', () => {
         expect(wrapper.find('[data-testid="nav-door"]').text()).toBe('Check in')
         expect(labels(wrapper)).toEqual(['Check in', 'Families', 'QR poster', 'Password'])
         expect(wrapper.find('[data-testid="nav-families"]').attributes('href')).toBe(
-            'http://app.test/ccf/nxtgen/serve/families',
+            'http://app.test/dubai/serve/families',
         )
         expect(wrapper.text()).toContain('body')
     })
@@ -85,7 +87,7 @@ describe('ChurchShell', () => {
         page.props.church_nav.can_use_full_admin = true
 
         expect(mount(ChurchShell).find('[data-testid="nav-admin"]').attributes('href')).toBe(
-            'http://app.test/ccf/nxtgen/admin/families',
+            'http://app.test/dubai/admin/families',
         )
     })
 
@@ -94,11 +96,11 @@ describe('ChurchShell', () => {
         page.props.church_nav.can_manage_classes = true
         page.props.church_nav.can_see_attendance = true
         expect(mount(ChurchShell).find('[data-testid="nav-admin"]').attributes('href')).toBe(
-            'http://app.test/ccf/nxtgen/admin/classes',
+            'http://app.test/dubai/admin/classes',
         )
 
-        page.url = '/ccf/nxtgen/admin/classes'
-        page.props.church_nav.area = 'nxtgen.admin'
+        page.url = '/dubai/admin/classes'
+        page.props.church_nav.area = 'admin'
         expect(labels(mount(ChurchShell))).toEqual(['Classes', 'Attendance', 'Serve', 'Password'])
     })
 
@@ -125,10 +127,10 @@ describe('ChurchShell', () => {
             'Password',
         ])
         expect(wrapper.find('[data-testid="nav-families"]').attributes('href')).toBe(
-            'http://app.test/ccf/nxtgen/admin/families',
+            'http://app.test/dubai/admin/families',
         )
         expect(wrapper.find('[data-testid="nav-serve"]').attributes('href')).toBe(
-            'http://app.test/ccf/nxtgen/serve/door',
+            'http://app.test/dubai/serve/door',
         )
         expect(wrapper.find('[data-testid="page-name"]').text()).toBe('Families')
         Object.assign(page.props.church_nav, {
@@ -140,8 +142,8 @@ describe('ChurchShell', () => {
         })
     })
 
-    it('shows the Admin menu on the church-wide Admin pages (People) too', () => {
-        page.url = '/ccf/admin/people'
+    it("shows the Admin menu on the People page too — the satellite's Admin, like the rest", () => {
+        page.url = '/dubai/admin/people'
         page.props.church_nav.area = 'admin'
         page.props.church_nav.can_use_admin = true
         page.props.church_nav.can_use_full_admin = true
@@ -159,7 +161,7 @@ describe('ChurchShell', () => {
             'nav-door',
         )
 
-        page.url = '/ccf/nxtgen/serve/families/12'
+        page.url = '/dubai/serve/families/12'
         expect(mount(ChurchShell).find('[data-testid="page-name"]').text()).toBe('Families')
 
         expect(
@@ -168,7 +170,7 @@ describe('ChurchShell', () => {
                 .text(),
         ).toBe('Register a family')
 
-        page.url = '/ccf'
+        page.url = '/dubai'
         expect(mount(ChurchShell).find('[data-testid="page-name"]').text()).toBe('CCF')
     })
 

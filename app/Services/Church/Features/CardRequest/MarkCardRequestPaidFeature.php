@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\CardRequest;
 
+use App\Data\Models\CardRequest;
 use App\Domains\Card\Jobs\UpdateCardRequestAsPaidJob;
 use App\Enums\AccessRowEnum;
 use App\Enums\CardFeeEnum;
@@ -27,11 +28,11 @@ use Illuminate\Http\RedirectResponse;
 #[AccessRow(AccessRowEnum::Cards)]
 final class MarkCardRequestPaidFeature extends BaseCardRequestFeature
 {
-    public function __construct(private readonly int $requestId) {}
+    public function __construct(private readonly CardRequest $cardRequest) {}
 
     public function handle(): RedirectResponse
     {
-        $request = $this->scopedRequest($this->requestId, $this->scope()->canEditFamily(...));
+        $request = $this->scopedRequest($this->cardRequest, $this->scope()->canEditFamily(...));
         if ($request->fee() === CardFeeEnum::Free) {
             return back()->with('error', "{$request->child->displayName()}'s first card is free — nothing to pay.");
         }

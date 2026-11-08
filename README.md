@@ -56,7 +56,8 @@ it from the Mac; elsewhere (CI) it launches Firefox itself.
 
 1. In the server's `.env` (start from `.env.example`, which is set up for LOCAL use): `APP_ENV=production`,
    `APP_DEBUG=false`, a real mailer (`MAIL_MAILER` + its keys — the first admin signs in by email link), and the
-   church: `NXTGEN_CHURCH_*`, `NXTGEN_SATELLITES` (spelled as the registry sheet spells them), and
+   church: `NXTGEN_CHURCH_*`, `NXTGEN_SATELLITES` (`address=name|…`, e.g. `dubai=CCF Dubai|sharjah=CCF Sharjah` — the
+   address is `/dubai/…`; the registry import matches a family's satellite by the NAME, so see TODO #37), and
    `NXTGEN_FIRST_ADMIN_EMAIL`. Photos: attach a PRIVATE bucket in Laravel Cloud (it fills in `AWS_*`) and set `PHOTOS_DISK=s3`.
 2. `php artisan migrate --force && php artisan db:seed --force` — creates that church, its satellites, each
    satellite's squads and the first admin only (never the demo logins). It refuses to run with a log-only mailer. Running it

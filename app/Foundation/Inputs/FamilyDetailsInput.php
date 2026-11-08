@@ -7,7 +7,8 @@ namespace App\Foundation\Inputs;
 use App\Domains\Family\DataObjects\FamilyDetailsData;
 use App\Domains\Family\DataObjects\GuardianEditData;
 use App\Enums\LifestageEnum;
-use App\Foundation\Support\RouteChurch;
+use App\Foundation\Support\RequestContext;
+use App\Foundation\Support\RouteSatellite;
 use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Data;
@@ -59,7 +60,8 @@ final class FamilyDetailsInput extends Data
     /** @return array<string, list<mixed>> */
     public static function rules(): array
     {
-        $churchId = RouteChurch::from(request())->id ?? 0;
+        // The church a middleware resolved (staff: the address's satellite's; parents: their own), else the address's.
+        $churchId = (RequestContext::church(request()) ?? RouteSatellite::from(request())?->church)->id ?? 0;
 
         return [
             'home_satellite_id' => ['required', 'integer', Rule::exists('satellites', 'id')->where('church_id', $churchId)],

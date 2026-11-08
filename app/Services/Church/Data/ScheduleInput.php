@@ -11,7 +11,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
  * Editing a class (Schedule): a name, and an optional day and start/end time (HH:MM). The end must come after
- * the start when both are given. Adding one also says where: AddScheduleInput.
+ * the start when both are given. Adding one adds it at the satellite in the address.
  */
 #[TypeScript]
 final class ScheduleInput extends Data
@@ -24,7 +24,7 @@ final class ScheduleInput extends Data
     ) {}
 
     /**
-     * Shared with AddScheduleInput. With `date_format`, Laravel's `after:starts_at` compares the two times, and
+     * With `date_format`, Laravel's `after:starts_at` compares the two times, and
      * passes when there is no start to come after.
      *
      * @return array<string, list<mixed>>

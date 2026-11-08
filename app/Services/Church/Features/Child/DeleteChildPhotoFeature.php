@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Child;
 
+use App\Data\Models\Child;
 use App\Domains\Family\Jobs\DeleteChildPhotoJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -27,11 +28,11 @@ use Illuminate\Support\Facades\DB;
 #[AccessRow(AccessRowEnum::DeleteChildPhoto)]
 final class DeleteChildPhotoFeature extends BaseChurchFeature
 {
-    public function __construct(private readonly int $childId) {}
+    public function __construct(private readonly Child $child) {}
 
     public function handle(): RedirectResponse
     {
-        $child = $this->scopedChild($this->childId, $this->scope()->canEditFamily(...));
+        $child = $this->scopedChild($this->child, $this->scope()->canEditFamily(...));
         $staff = $this->staff();
 
         return DB::transaction(fn (): bool => $this->run(new DeleteChildPhotoJob(child: $child, by: $staff)))

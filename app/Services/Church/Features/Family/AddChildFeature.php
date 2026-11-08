@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Family;
 
-use App\Domains\Family\Jobs\GetFamilyByIdJob;
+use App\Data\Models\Family;
 use App\Enums\AccessRowEnum;
 use App\Enums\RegistrationSourceEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -33,19 +33,19 @@ use Illuminate\Http\RedirectResponse;
 #[AccessRow(AccessRowEnum::AddChild)]
 final class AddChildFeature extends BaseChurchFeature
 {
-    public function __construct(private readonly int $familyId) {}
+    public function __construct(private readonly Family $family) {}
 
     public function handle(ChildInput $input): RedirectResponse
     {
         abort_unless($this->scope()->canRegisterFamilies(), 404);
-        $family = $this->run(new GetFamilyByIdJob(church: $this->church(), id: $this->familyId));
+        $family = $this->family;
 
         $child = $this->run(new AddChildToFamilyOperation(family: $family, details: $input->toDetails(), source: RegistrationSourceEnum::Staff));
 
         $message = "{$child->displayName()} is added to the family.";
 
         return ($this->scope()->canSeeFamily($family)
-            ? $this->toArea('families.show', [$this->church(), $family])
+            ? $this->toArea('families.show', [$family])
             : back()
         )->with('success', $message);
     }

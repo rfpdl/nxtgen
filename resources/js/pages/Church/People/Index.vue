@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { useSatellite } from '@/composables/useSatellite'
 import PageHeader from '@/components/atoms/PageHeader.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import StaffMemberCard from '@/components/molecules/StaffMemberCard.vue'
 import AddStaffForm from '@/components/organisms/AddStaffForm.vue'
-import { useChurch } from '@/composables/useChurch'
 import type { GrantOption, StaffMember } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
@@ -14,10 +14,10 @@ defineProps<{
     grant_options: GrantOption[]
 }>()
 
-const church = useChurch()
+const satellite = useSatellite()
 
 function remove(roleId: number): void {
-    router.delete(route('admin.people.roles.destroy', [church.value.slug, roleId]), {
+    router.delete(route('admin.people.roles.destroy', [satellite.value.slug, roleId]), {
         preserveScroll: true,
     })
 }
@@ -27,7 +27,10 @@ function remove(roleId: number): void {
     <Head title="People" />
     <ChurchShell>
         <PageHeader :title="`People who serve (${people.length})`" />
-        <AddStaffForm :action="route('admin.people.store', church.slug)" :options="grant_options" />
+        <AddStaffForm
+            :action="route('admin.people.store', satellite.slug)"
+            :options="grant_options"
+        />
         <div class="grid gap-3 md:grid-cols-2">
             <StaffMemberCard
                 v-for="person in people"

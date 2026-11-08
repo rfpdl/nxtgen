@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\CardRequest;
 
+use App\Data\Models\Child;
 use App\Domains\Card\DataObjects\CardRequestData;
 use App\Domains\Card\Jobs\CreateCardRequestJob;
 use App\Enums\AccessRowEnum;
@@ -30,11 +31,11 @@ use Illuminate\Http\RedirectResponse;
 #[AccessRow(AccessRowEnum::CardRequest)]
 final class FileCardRequestFeature extends BaseChurchFeature
 {
-    public function __construct(private readonly int $childId) {}
+    public function __construct(private readonly Child $child) {}
 
     public function handle(CardRequestInput $input): RedirectResponse
     {
-        $child = $this->scopedChild($this->childId, $this->scope()->canSeeFamily(...));
+        $child = $this->scopedChild($this->child, $this->scope()->canSeeFamily(...));
 
         $request = $this->run(new CreateCardRequestJob(child: $child, reason: $input->reason, note: $input->note, by: $this->staff()));
 

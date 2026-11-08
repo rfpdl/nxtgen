@@ -61,7 +61,7 @@ describe('CardRequestRow', () => {
         expect(wrapper.find('[data-testid="card-child"]').text()).toBe('Amara Joy Reyes')
         expect(wrapper.find('[data-testid="card-family"]').text()).toBe('Ana Reyes · CCF DXB')
         expect(wrapper.find('[data-testid="card-family"]').attributes('href')).toBe(
-            '/#nxtgen.serve.families.show/ccf/3',
+            '/#serve.families.show/dubai/3',
         )
         expect(wrapper.find('[data-testid="card-reason"]').text()).toBe('Lost — Lost at the park')
         expect(wrapper.find('[data-testid="card-fee"]').text()).toBe('AED 10 · not paid')
@@ -96,10 +96,10 @@ describe('CardRequestRow', () => {
                 link(m).attributes('href'),
             ]),
         ).toEqual([
-            ['Mark paid', '/#nxtgen.admin.card-requests.mark-paid/ccf/9'],
-            ['Approve', '/#nxtgen.admin.card-requests.approve/ccf/9'],
-            ['Mark printed', '/#nxtgen.admin.card-requests.mark-printed/ccf/9'],
-            ['Given', '/#nxtgen.serve.card-requests.give/ccf/9'],
+            ['Mark paid', '/#admin.card-requests.mark-paid/dubai/9'],
+            ['Approve', '/#admin.card-requests.approve/dubai/9'],
+            ['Mark printed', '/#admin.card-requests.mark-printed/dubai/9'],
+            ['Given', '/#serve.card-requests.give/dubai/9'],
         ])
     })
 
@@ -122,7 +122,7 @@ describe('CardRequestRow', () => {
 
         expect(form.reason).toBe('Found it at home')
         expect(put).toHaveBeenCalledWith(
-            '/#nxtgen.admin.card-requests.refuse/ccf/9',
+            '/#admin.card-requests.refuse/dubai/9',
             expect.objectContaining({ preserveScroll: true }),
         )
     })

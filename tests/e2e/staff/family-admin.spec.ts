@@ -1,11 +1,11 @@
 import { savedDownload } from '../support/download'
 import { readFileSync } from 'node:fs'
-import { allNavigation, closeMenu } from '../support/menu'
+import { allNavigation, closeMenu, menuOf } from '../support/menu'
 import { expect, test } from '../support/test'
 import { fillFamily } from '../support/forms'
 import { latestMail, mailCount } from '../support/mailbox'
 import { openEmailedLink } from '../support/sign-in'
-import { CHURCH, SATELLITES, sessionFile, uniqueEmail, uniqueSurname } from '../support/world'
+import { DUBAI, SATELLITES, sessionFile, uniqueEmail, uniqueSurname } from '../support/world'
 
 /*
  * R1 exit criterion (plan §12): a staff member registers a family whose email is not confirmed, and resends.
@@ -23,7 +23,7 @@ test('register for a parent, resend, correct the email, set a status @story#47 @
     const surname = uniqueSurname('Garcia')
 
     // No Register tab: the Families list's button opens the search-first page.
-    await page.goto(`/${CHURCH}/nxtgen/admin/families`)
+    await page.goto(`/${DUBAI}/admin/families`)
     for (const nav of await allNavigation(page))
         await expect(nav).not.toContainText('Register a family')
     await closeMenu(page)
@@ -43,12 +43,12 @@ test('register for a parent, resend, correct the email, set a status @story#47 @
     )
     await page.getByTestId('register-submit').click()
     // Straight to the new family's page, with the message.
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/admin/families/\\d+$`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/admin/families/\\d+$`))
     await expect(page.getByRole('heading', { name: `Lea ${surname}` })).toBeVisible()
     await expect(page.getByTestId('flash-success')).toContainText('Registered.')
 
     // The "not confirmed" filter finds them; open the family.
-    await page.goto(`/${CHURCH}/nxtgen/admin/families`)
+    await page.goto(`/${DUBAI}/admin/families`)
     await page.getByTestId('filter-unconfirmed').check()
     await expect(page).toHaveURL(/unconfirmed=1/)
     // Search narrows further, and the filters stay in the address.
@@ -109,7 +109,7 @@ test('register for a parent, resend, correct the email, set a status @story#47 @
     const guardianContext = await browser.newContext({ storageState: { cookies: [], origins: [] } })
     const guardianPage = await guardianContext.newPage()
     await openEmailedLink(guardianPage, real, beforeReal)
-    await expect(guardianPage).toHaveURL(new RegExp(`/${CHURCH}/family`))
+    await expect(guardianPage).toHaveURL(new RegExp(`/family`))
     await expect(guardianPage.getByTestId('family-child')).toContainText('Carlitos')
     await guardianContext.close()
 })
@@ -118,7 +118,7 @@ test("adds, changes and removes a family's other parents and guardians @story#88
     page,
 }) => {
     const surname = uniqueSurname('Aquino')
-    await page.goto(`/${CHURCH}/nxtgen/admin/families/new`)
+    await page.goto(`/${DUBAI}/admin/families/new`)
     await page.getByTestId('register-new').click()
     await fillFamily(
         page,
@@ -176,7 +176,7 @@ test("adds, changes and removes a family's other parents and guardians @story#88
 })
 
 test('downloads the families list as Excel — what the filters show @story#45', async ({ page }) => {
-    await page.goto(`/${CHURCH}/nxtgen/admin/families?unconfirmed=1`)
+    await page.goto(`/${DUBAI}/admin/families?unconfirmed=1`)
     await expect(page.getByTestId('export')).toHaveAttribute('href', /unconfirmed=1/)
 
     const [download] = await Promise.all([
@@ -190,14 +190,16 @@ test('downloads the families list as Excel — what the filters show @story#45',
     expect(bytes.subarray(0, 2).toString()).toBe('PK')
 })
 
-test('the welcome page is there, and "Register your family" opens the form @story#1', async ({
-    page,
-}) => {
+test('the welcome page is there, with Sign in in the bar @story#1', async ({ browser }) => {
+    // A visitor: no saved sign-in. Empty for now (Roy 2026-11-08) — a family registers at its satellite's own address.
+    const visitor = await browser.newContext()
+    const page = await visitor.newPage()
     await page.goto('/')
     await expect(
         page.getByRole('heading', { name: 'Welcome to CCF NxtGen', exact: true }),
     ).toBeVisible()
-    await page.getByTestId('welcome-register').click()
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/register$`))
-    await expect(page.getByRole('heading', { name: 'Register your family' })).toBeVisible()
+    await expect(page.getByTestId('welcome-register')).toHaveCount(0)
+    await (await menuOf(page)).getByTestId('welcome-sign-in').click()
+    await expect(page).toHaveURL(/\/login$/)
+    await visitor.close()
 })

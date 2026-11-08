@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test'
+import { DUBAI } from './world'
 
 export type Child = {
     first: string
@@ -82,7 +83,7 @@ export async function registerAndConfirm(
     const { openEmailedLink } = await import('./sign-in')
     const email = uniqueEmail(guardian.first.toLowerCase())
     const before = mailCount(email)
-    await page.goto('/ccf/register')
+    await page.goto(`/${DUBAI}/register`)
     await fillFamily(page, { ...guardian, email }, children)
     await page.getByTestId('register-submit').click()
     await openEmailedLink(page, email, before)

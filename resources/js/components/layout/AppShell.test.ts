@@ -2,7 +2,14 @@ import AppShell from '@/components/layout/AppShell.vue'
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const page = { props: { flash: {}, auth: { user: null, can_switch: true } } }
+const page: {
+    props: {
+        flash: object
+        auth: { user: { id: number; name: string } | null; can_switch: boolean }
+    }
+} = {
+    props: { flash: {}, auth: { user: { id: 1, name: 'Roy' }, can_switch: true } },
+}
 
 vi.mock('@inertiajs/vue3', () => ({
     Link: { props: ['href', 'method', 'as'], template: '<a :href="href"><slot /></a>' },
@@ -193,6 +200,22 @@ describe('AppShell', () => {
         expect(wrapper.find('[data-testid="menu-open"]').exists()).toBe(false)
         expect(wrapper.find('[data-testid="menu-row"]').exists()).toBe(false)
         expect(wrapper.find('[data-testid="sign-out"]').exists()).toBe(false)
+    })
+
+    it('gives a visitor (welcome) the menu without Sign out — there is nobody to sign out', () => {
+        page.props.auth.user = null
+        const wrapper = mount(AppShell, {
+            props: {
+                place: 'Kids church',
+                items: [{ label: 'Sign in', href: '/login', testid: 'welcome-sign-in' }],
+            },
+        })
+
+        expect(
+            wrapper.find('[data-testid="menu-row"] [data-testid="welcome-sign-in"]').exists(),
+        ).toBe(true)
+        expect(wrapper.find('[data-testid="sign-out"]').exists()).toBe(false)
+        page.props.auth.user = { id: 1, name: 'Roy' }
     })
 
     it('keeps a narrow page to one easy column on a wide screen, the bar lined up with it', () => {

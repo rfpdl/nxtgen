@@ -1,6 +1,6 @@
 import { type Locator, type Page } from '@playwright/test'
 import { expect, test } from '../support/test'
-import { CHURCH, CLASSES, DOOR, ROLL_CALL, sessionFile, type DoorProject } from '../support/world'
+import { DUBAI, CLASSES, DOOR, ROLL_CALL, sessionFile, type DoorProject } from '../support/world'
 
 /*
  * Journey — a Squad leader's roll call, on their phone (DECISIONS 2026-10-28): check two girls in at 1PM, switch to
@@ -38,11 +38,13 @@ async function present(squad: Locator): Promise<[number, number]> {
 test("marks children present by Squad on Who's in, keeps the class across the tabs, and drops a child undone at the door; confirms the Squad's head count @story#117 @story#119 @story#121 @story#122", async ({
     page,
 }, info) => {
+    // A long journey: on Safari, late in a full run, it needs more than the default 30s.
+    test.setTimeout(60_000)
     const project = info.project.name as DoorProject
     const [sofia, isabel] = ROLL_CALL.girls[project]
 
     // At the door, 1PM: check this browser's two Reyes girls in.
-    await page.goto(`/${CHURCH}/nxtgen/serve/door`)
+    await page.goto(`/${DUBAI}/serve/door`)
     await onePm(page).click()
     await expect(onePm(page)).toHaveAttribute('aria-checked', 'true')
     await page.getByTestId('door-search').fill('Reyes')

@@ -6,22 +6,20 @@ import type { Draft, SatelliteLink, SatelliteLinkInput } from '@/types'
 import { useForm } from '@inertiajs/vue3'
 
 /**
- * Add or change a Link (GLOSSARY): what the poster says under its QR, and the address it opens. Given a
- * `satelliteId` it ADDS one there (POST), with "Facebook group" and "WhatsApp group" a tap away as the label; given a
+ * Add or change a Link (GLOSSARY): what the poster says under its QR, and the address it opens. Without a saved
+ * `link` it ADDS one (POST) at the satellite in the address (DECISIONS 2026-11-08), with "Facebook group" and "WhatsApp group" a tap away as the label; given a
  * saved `link` it CHANGES that one (PUT). The server takes only an https address. `done` says it was saved or
  * cancelled, so the page can close it.
  */
 const props = defineProps<{
     action: string
     submitLabel: string
-    satelliteId?: number
     link?: SatelliteLink
 }>()
 
 const emit = defineEmits<{ done: [] }>()
 
-const form = useForm<Draft<SatelliteLinkInput> & { satellite_id?: number }>({
-    ...(props.satelliteId !== undefined ? { satellite_id: props.satelliteId } : {}),
+const form = useForm<Draft<SatelliteLinkInput>>({
     label: props.link?.label ?? '',
     url: props.link?.url ?? '',
 })

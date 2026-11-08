@@ -1,7 +1,7 @@
 import { menuOf } from '../support/menu'
 import { signInByEmail } from '../support/sign-in'
 import { expect, test } from '../support/test'
-import { CHURCH, volunteer } from '../support/world'
+import { DUBAI, volunteer } from '../support/world'
 
 /*
  * The staff backup password (plan D7): a staff member sets one from the menu, then — the morning the email is
@@ -19,7 +19,7 @@ test('a staff member sets a backup password, signs in with it on /loginp — nev
     const password = `church-morning-${Date.now()}`
 
     await signInByEmail(page, email)
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/serve/door`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/door`))
     await (await menuOf(page)).getByTestId('backup-password').click()
     await page.getByTestId('new-password').fill(password)
     await page.getByTestId('new-password-confirm').fill(password)
@@ -41,14 +41,14 @@ test('a staff member sets a backup password, signs in with it on /loginp — nev
 
     await phone.getByTestId('password-password').fill(password)
     await phone.getByTestId('password-submit').click()
-    await expect(phone).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/serve/door`))
+    await expect(phone).toHaveURL(new RegExp(`/${DUBAI}/serve/door`))
 
     await phone.goto('/loginc')
     await expect(phone).toHaveURL(/\/login$/)
     await expect(phone.getByTestId('flash-success')).toHaveText(
         'Signed out. This device is cleared.',
     )
-    await phone.goto(`/${CHURCH}/nxtgen/serve/door`)
+    await phone.goto(`/${DUBAI}/serve/door`)
     await expect(phone).toHaveURL(/\/login$/)
     await other.close()
 })

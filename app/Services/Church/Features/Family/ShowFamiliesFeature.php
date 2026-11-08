@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace App\Services\Church\Features\Family;
 
 use App\Data\Models\Family;
-use App\Domains\Church\DataObjects\SatelliteOptionData;
-use App\Domains\Church\Jobs\GetSatellitesJob;
 use App\Domains\Family\DataObjects\FamilyListRowData;
 use App\Domains\Family\DataObjects\ListFiltersData;
 use App\Domains\Family\Jobs\GetFamiliesJob;
@@ -22,15 +20,15 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * The registration list, with search and filters (plan §6). Only satellites the viewer can see are offered,
- * and a filter can only narrow their scope.
+ * The registration list, with search and filters (plan §6): the families of the satellite in the address only
+ * (DECISIONS 2026-11-08); a filter can only narrow it.
  *
  * @extends BaseChurchFeature<Response>
  */
 #[UserStory(
     title: 'See the families list',
     persona: 'staff',
-    happyPaths: ['story#43' => 'A church admin sees every Family; others their own Satellites, with emails masked; searched and filtered'],
+    happyPaths: ['story#43' => 'Staff see the Families of the Satellite in the address, with emails masked; searched and filtered'],
     unhappyPaths: ['story#44' => 'Someone with no Role in this church sees nothing, and filters never widen a view'],
 )]
 #[AccessRow(AccessRowEnum::FamilyList)]
@@ -41,20 +39,14 @@ final class ShowFamiliesFeature extends BaseChurchFeature
         $church = $this->church();
         $scope = $this->scope();
         $filters = FamilyListQuery::from(request());
-        $visible = $scope->visibleSatelliteIds();
 
-        $page = $this->run(new GetFamiliesJob(church: $church, satelliteIds: $visible, filters: $filters, page: request()->integer('page', 1)));
-        $satellites = array_values(array_filter(
-            $this->run(new GetSatellitesJob(church: $church)),
-            fn (SatelliteOptionData $s): bool => $visible === null || in_array($s->id, $visible, true),
-        ));
+        $page = $this->run(new GetFamiliesJob(church: $church, satelliteIds: $scope->visibleSatelliteIds(), filters: $filters, page: request()->integer('page', 1)));
 
         return Inertia::render('Church/Families/Index', [
             'families' => array_map(fn (Family $f) => FamilyListRowData::fromModel($f, fullEmail: $scope->canEditFamily($f), mayResend: $scope->canResendLink($f)), $page->items),
             'pagination' => $page->meta(),
             'filters' => ListFiltersData::fromFamilyFilters($filters),
             'options' => [
-                'satellites' => $satellites,
                 'levels' => [...$this->run(new GetLevelsJob), LevelOptionData::none()],
             ],
             'enums' => ['child_status' => ChildStatusEnum::toFrontend()],

@@ -1,7 +1,7 @@
 import { type Locator, type Page } from '@playwright/test'
 import { expect, test } from '../support/test'
 import {
-    CHURCH,
+    DUBAI,
     CLASSES,
     DOOR,
     SATELLITES,
@@ -23,7 +23,7 @@ function guardian(project: string): string {
 }
 
 async function openDoor(page: Page): Promise<void> {
-    await page.goto(`/${CHURCH}/nxtgen/serve/door`)
+    await page.goto(`/${DUBAI}/serve/door`)
     // The class picker is a row of chips, a radio group (the Bold look): pick 1PM.
     const chip = page.getByTestId('door-class').getByRole('radio', { name: CLASSES.onePm.name })
     await chip.click()
@@ -254,7 +254,7 @@ test('never lets a Graduated child be ticked @story#108', async ({ page }, info)
     await expect(gabe).toContainText('Graduated — cannot be checked in')
 })
 
-test('checks in a child visiting from House Church, in a CCF DXB Squad @story#106', async ({
+test('checks in a child visiting from CCF Sharjah, in a CCF Dubai Squad @story#106', async ({
     page,
 }, info) => {
     await openDoor(page)

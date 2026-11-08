@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Door;
 
-use App\Domains\CheckIn\Jobs\GetCheckInJob;
+use App\Data\Models\CheckIn;
 use App\Domains\CheckIn\Jobs\UpdateCheckInAsUndoneJob;
 use App\Domains\Church\Jobs\GetChurchTodayJob;
 use App\Enums\AccessRowEnum;
@@ -28,12 +28,12 @@ use Illuminate\Http\RedirectResponse;
 #[AccessRow(AccessRowEnum::CheckIn)]
 final class UndoCheckInFeature extends BaseChurchFeature
 {
-    public function __construct(private readonly int $checkInId) {}
+    public function __construct(private readonly CheckIn $checkIn) {}
 
     public function handle(): RedirectResponse
     {
         $church = $this->church();
-        $checkIn = $this->run(new GetCheckInJob(church: $church, id: $this->checkInId));
+        $checkIn = $this->checkIn;
         abort_unless($this->scope()->canCheckInTo($checkIn->session->schedule), 404);
         abort_unless($checkIn->session->date->isSameDay($this->run(new GetChurchTodayJob(church: $church))), 404);
 

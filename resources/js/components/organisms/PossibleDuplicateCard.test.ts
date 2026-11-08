@@ -1,10 +1,11 @@
 import PossibleDuplicateCard from '@/components/organisms/PossibleDuplicateCard.vue'
 import type { DuplicatePair, FamilySearchResult } from '@/types'
+import { makeSatellite } from '@/tests/satellite'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@inertiajs/vue3', () => ({
-    usePage: () => ({ props: { church: { name: 'CCF', slug: 'ccf' } } }),
+    usePage: () => ({ props: { satellite: makeSatellite() } }),
 }))
 
 vi.mock('ziggy-js', () => ({
@@ -42,7 +43,7 @@ describe('PossibleDuplicateCard', () => {
         expect(wrapper.text()).toContain('ma•••@new.com')
         expect(wrapper.text()).toContain('Maria Santos')
         // Each side opens only when the viewer may open it.
-        expect(wrapper.findAll('a').map((a) => a.attributes('href'))).toEqual(['/ccf/families/2'])
+        expect(wrapper.findAll('a').map((a) => a.attributes('href'))).toEqual(['/dubai/families/2'])
     })
 
     it('answers "not the same" to clear a false flag, or "the same" to flag it for merging', async () => {

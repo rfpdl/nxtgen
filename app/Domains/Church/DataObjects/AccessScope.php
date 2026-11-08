@@ -11,8 +11,11 @@ use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
 
 /**
- * What one staff member may do in one church (plan §3.2) — the ONE owner of these answers. Features ask it;
- * nothing else compares roles. Built from active role assignments in this church only.
+ * What one staff member may do at ONE satellite — the one in the address (plan §3.2; spec item 10) — the ONE owner of
+ * these answers. Features ask it; nothing else compares roles. Built from active role assignments there only
+ * (GetAccessScopeJob), so every satellite list below is that satellite or nothing (DECISIONS 2026-11-08). A
+ * church-wide Role counts as the same Role at this satellite; a church admin keeps the church-wide acts (Level,
+ * Moving-Up, granting) until issue 06.
  *
  *   church admin     → everything in the church
  *   satellite admin  → see + edit families whose home satellite is theirs; manage that satellite's Schedules (classes);
@@ -35,7 +38,6 @@ final readonly class AccessScope
     public function __construct(
         public int $churchId,
         public bool $isChurchAdmin,
-        public bool $isChurchLifeshaper,
         public array $adminSatelliteIds,
         public array $lifeshaperSatelliteIds,
         public array $adminSchedules,
@@ -43,21 +45,16 @@ final readonly class AccessScope
 
     public function canWorkHere(): bool
     {
-        return $this->isChurchAdmin || $this->isChurchLifeshaper
-            || $this->adminSatelliteIds !== [] || $this->lifeshaperSatelliteIds !== [] || $this->isClassAdmin();
+        return $this->adminSatelliteIds !== [] || $this->lifeshaperSatelliteIds !== [] || $this->isClassAdmin();
     }
 
     /**
-     * Satellites whose families this person can list. Null = every satellite (church-wide role).
+     * Satellites whose families this person can list: this one, or none.
      *
-     * @return list<int>|null
+     * @return list<int>
      */
-    public function visibleSatelliteIds(): ?array
+    public function visibleSatelliteIds(): array
     {
-        if ($this->isChurchAdmin || $this->isChurchLifeshaper) {
-            return null;
-        }
-
         // A class admin works at their class's satellite, as a Lifeshaper there (TODO #9).
         return array_values(array_unique([...$this->adminSatelliteIds, ...$this->lifeshaperSatelliteIds, ...array_values($this->adminSchedules)]));
     }
@@ -68,15 +65,13 @@ final readonly class AccessScope
             return false;
         }
 
-        $visible = $this->visibleSatelliteIds();
-
-        return $visible === null || in_array($family->home_satellite_id, $visible, true);
+        return in_array($family->home_satellite_id, $this->visibleSatelliteIds(), true);
     }
 
     public function canEditFamily(Family $family): bool
     {
         return $family->church_id === $this->churchId
-            && ($this->isChurchAdmin || in_array($family->home_satellite_id, $this->adminSatelliteIds, true));
+            && in_array($family->home_satellite_id, $this->adminSatelliteIds, true);
     }
 
     /**
@@ -152,20 +147,18 @@ final readonly class AccessScope
     }
 
     /**
-     * The satellites whose Links this person manages: null = every satellite (church admin); a satellite admin's own.
+     * The satellites whose Links this person manages: an admin's own (this one), or none.
      *
-     * @return list<int>|null
+     * @return list<int>
      */
-    public function linkSatelliteIds(): ?array
+    public function linkSatelliteIds(): array
     {
         return $this->classSatelliteIds();
     }
 
     public function canManageLinksAt(Satellite $satellite): bool
     {
-        $ids = $this->linkSatelliteIds();
-
-        return $satellite->church_id === $this->churchId && ($ids === null || in_array($satellite->id, $ids, true));
+        return $satellite->church_id === $this->churchId && in_array($satellite->id, $this->linkSatelliteIds(), true);
     }
 
     /**
@@ -193,19 +186,18 @@ final readonly class AccessScope
     }
 
     /**
-     * The satellites whose families' Card requests this person sees on Cards: null = every satellite (church admin);
-     * a satellite admin's own; nobody else's.
+     * The satellites whose families' Card requests this person sees on Cards: an admin's own (this one), or none.
      *
-     * @return list<int>|null
+     * @return list<int>
      */
-    public function cardSatelliteIds(): ?array
+    public function cardSatelliteIds(): array
     {
-        return $this->isChurchAdmin ? null : $this->adminSatelliteIds;
+        return $this->adminSatelliteIds;
     }
 
     private function isAnyAdmin(): bool
     {
-        return $this->isChurchAdmin || $this->adminSatelliteIds !== [];
+        return $this->adminSatelliteIds !== [];
     }
 
     /**

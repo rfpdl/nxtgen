@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Http\Controllers\Link;
 
+use App\Data\Models\SatelliteLink;
 use App\Services\Church\Features\Link\AddLinkFeature;
 use App\Services\Church\Features\Link\MoveLinkFeature;
 use App\Services\Church\Features\Link\RemoveLinkFeature;
@@ -25,18 +26,18 @@ final class Controller extends \Lucid\Units\Controller
         return $this->serve(AddLinkFeature::class);
     }
 
-    public function update(string $church, int $link): RedirectResponse
+    public function update(SatelliteLink $link): RedirectResponse
     {
-        return $this->serve(UpdateLinkFeature::class, ['linkId' => $link]);
+        return $this->serve(UpdateLinkFeature::class, ['link' => $link]);
     }
 
-    public function move(string $church, int $link): RedirectResponse
+    public function move(SatelliteLink $link): RedirectResponse
     {
-        return $this->serve(MoveLinkFeature::class, ['linkId' => $link]);
+        return $this->serve(MoveLinkFeature::class, ['link' => $link]);
     }
 
-    public function destroy(string $church, int $link): RedirectResponse
+    public function destroy(SatelliteLink $link): RedirectResponse
     {
-        return $this->serve(RemoveLinkFeature::class, ['linkId' => $link]);
+        return $this->serve(RemoveLinkFeature::class, ['link' => $link]);
     }
 }

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useSatellite } from '@/composables/useSatellite'
 import AppButton from '@/components/atoms/AppButton.vue'
 import EmailText from '@/components/atoms/EmailText.vue'
 import EmptyState from '@/components/atoms/EmptyState.vue'
@@ -9,8 +10,7 @@ import RowList from '@/components/atoms/RowList.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import Pager from '@/components/molecules/Pager.vue'
 import RegistrationListFilters from '@/components/molecules/RegistrationListFilters.vue'
-import { useChurch } from '@/composables/useChurch'
-import type { FamilyListRow, LevelOption, ListFilters, Pagination, SatelliteOption } from '@/types'
+import type { FamilyListRow, LevelOption, ListFilters, Pagination } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { route } from 'ziggy-js'
@@ -27,27 +27,25 @@ defineProps<{
     families: FamilyListRow[]
     filters: ListFilters
     pagination: Pagination
-    options: { satellites: SatelliteOption[]; levels: LevelOption[] }
+    options: { levels: LevelOption[] }
 }>()
 
-const church = useChurch()
+const satellite = useSatellite()
 
 /** Another page of the same filtered list: the filters stay in the address. */
 function goTo(page: number): void {
     const current = Object.fromEntries(new URLSearchParams(window.location.search))
-    router.get(areaRoute('families.index', church.value.slug), { ...current, page })
+    router.get(areaRoute('families.index', satellite.value.slug), { ...current, page })
 }
 
 function apply(params: Record<string, string | number>): void {
-    router.get(areaRoute('families.index', church.value.slug), params, { preserveScroll: true })
+    router.get(areaRoute('families.index', satellite.value.slug), params, { preserveScroll: true })
 }
 
 /** The download is what the list shows: the same filters, as the same address parameters. */
 const exportHref = computed(() => {
     const query = new URLSearchParams(window.location.search).toString()
-    return (
-        route('nxtgen.admin.families.export', church.value.slug) + (query === '' ? '' : `?${query}`)
-    )
+    return route('admin.families.export', satellite.value.slug) + (query === '' ? '' : `?${query}`)
 })
 </script>
 
@@ -57,7 +55,7 @@ const exportHref = computed(() => {
         <PageHeader :title="`Families (${pagination.total})`">
             <template #actions>
                 <AppButton
-                    :href="areaRoute('families.register', church.slug)"
+                    :href="areaRoute('families.register', satellite.slug)"
                     data-testid="register-family"
                     >Register a family</AppButton
                 >
@@ -82,7 +80,7 @@ const exportHref = computed(() => {
             v-if="families.length > 0"
             :items="families"
             :item-key="(f) => f.id"
-            :href="(f) => areaRoute('families.show', [church.slug, f.id])"
+            :href="(f) => areaRoute('families.show', [satellite.slug, f.id])"
             row-testid="family-row"
         >
             <template #default="{ item: family }">

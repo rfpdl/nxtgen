@@ -11,7 +11,7 @@ use App\Foundation\Jobs\BaseJob;
 
 /**
  * A Print list's cards as the viewer may see them (name cards 04): its own members only, whatever step each is at now,
- * of the families of `$satelliteIds` (null = every satellite) — a list never shows a card its viewer may not see —
+ * of the families of `$satelliteIds` — a list never shows a card its viewer may not see —
  * with each child, in the order filed. What its Excel lists.
  *
  *
@@ -22,11 +22,11 @@ use App\Foundation\Jobs\BaseJob;
  */
 final class GetPrintListCardsJob extends BaseJob
 {
-    /** @param list<int>|null $satelliteIds */
+    /** @param list<int> $satelliteIds */
     public function __construct(
         private readonly Church $church,
         private readonly PrintList $printList,
-        private readonly ?array $satelliteIds,
+        private readonly array $satelliteIds,
     ) {}
 
     /** @return list<CardRequest> */

@@ -25,10 +25,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('church_id')->comment('Church this satellite belongs to')->constrained()->restrictOnDelete();
             $table->string('name')->comment('Satellite name, e.g. Holy Trinity Church');
-            $table->string('slug')->comment('URL key within the church');
+            $table->string('slug')->unique()->comment('Its address, /{slug}/… — the church is never in the address (Roy 2026-11-07)');
             $table->timestampsTz();
-
-            $table->unique(['church_id', 'slug']);
         });
 
         Schema::create('role_assignments', function (Blueprint $table): void {

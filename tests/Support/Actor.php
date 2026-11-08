@@ -6,7 +6,9 @@ namespace Tests\Support;
 
 /**
  * Everyone who might ask for a staff or parent page (plan §3.2's actor kinds, TODO #18), as AccessWorld makes them.
- * "Home" is the satellite the world's family lives at; "away" is the other one.
+ * "Home" is the satellite the world's family lives at, and the one in every staff address the matrix opens
+ * (`/home-sat/…`); "away" is the other one — its staff have no Role at Home, so Home's pages are 404 for them (spec
+ * item 10).
  */
 enum Actor: string
 {
@@ -31,13 +33,13 @@ enum Actor: string
     case AwayLifeshaper = 'other-satellite Lifeshaper';
     /** The Admin Role at Home's 1PM — the world's class — only (TODO #9): a class admin. */
     case ClassAdmin = 'class admin of Home 1PM';
-    /** An admin of another church ("other"), who is also a parent there. */
+    /** An admin of another church ("other", at its satellite `/other`). */
     case OtherChurch = 'other-church admin';
 
-    /** @return list<self> anyone with an active role in the world's church */
+    /** @return list<self> anyone with an active Role at Home — who may open Home's staff pages (`/home-sat/…`) */
     public static function staff(): array
     {
-        return [self::ChurchAdmin, self::HomeAdmin, self::ChurchLifeshaper, self::HomeLifeshaper, self::BothHats, self::HomeParentLifeshaper, self::AwayAdmin, self::AwayLifeshaper, self::ClassAdmin];
+        return [self::ChurchAdmin, self::HomeAdmin, self::ChurchLifeshaper, self::HomeLifeshaper, self::BothHats, self::HomeParentLifeshaper, self::ClassAdmin];
     }
 
     /** @return list<self> staff who can see the world's family (AccessScope::canSeeFamily) — a class admin at Home too */
@@ -62,17 +64,17 @@ enum Actor: string
     }
 
     /**
-     * @return list<self> anyone with an active church or satellite admin Role in the world's church — who may open the
-     *                    Admin areas (a class admin opens only Classes and Attendance there)
+     * @return list<self> anyone with an active admin Role at Home (a church admin's counts there) — who may open Home's
+     *                    Admin (a class admin opens only Classes and Attendance there)
      */
     public static function admins(): array
     {
-        return [self::ChurchAdmin, self::HomeAdmin, self::AwayAdmin];
+        return [self::ChurchAdmin, self::HomeAdmin];
     }
 
     /**
-     * Those of `$actors` who may open the Admin areas (Roy 2026-11-06): an Admin address is 404 for everyone else, on
-     * top of its own row.
+     * Those of `$actors` who may open the Admin area (Roy 2026-11-06): anyone else serving at Home is sent to Serve
+     * (AccessMatrix::expected), on top of its own row.
      *
      * @param  list<self>  $actors
      * @return list<self>

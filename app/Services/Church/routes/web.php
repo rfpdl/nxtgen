@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 /*
 |--------------------------------------------------------------------------
-| Church — the church's staff pages (prefix /{church}, RequireAssignment)
+| Church — a satellite's staff pages (prefix /{satellite}, RequireAssignment)
 |--------------------------------------------------------------------------
 |
-| By area (Roy 2026-11-06, tasks/2026-11-06-admin-serve): /{church}/admin (church-wide: People), and the ministry's
-| two — /{church}/nxtgen/admin (managing families, children, classes, cards…) and /{church}/nxtgen/serve (the
-| everyday app: the door, registering). Every admin address is 404 for anyone without an admin Role
-| (RequireAdminArea); what each person may do inside is still AccessScope's (plan §3.2), never the URL's. An action
-| is under each area whose pages use it, so a page never leaves its area; route names follow the address. Ids in
-| the URL are looked up within this church only.
+| The satellite is in the address and the church never is (Roy 2026-11-07, spec items 5–6): /{satellite}/admin
+| (managing families, children, classes, cards, People…) and /{satellite}/serve (the everyday app: the door,
+| registering). A page shows that satellite only (DECISIONS 2026-11-08). The admin area sends someone who only serves
+| here to Serve (RequireAdminArea); what each person may do inside is still AccessScope's (plan §3.2), never the
+| URL's. An action is under each area whose pages use it, so a page never leaves its area; route names follow the
+| address. Ids in the URL are looked up within this church only.
 */
 
 use App\Services\Church\Http\Controllers\Attendance\Controller as AttendanceController;
@@ -31,7 +31,7 @@ use App\Services\Church\Http\Middleware\RequireAdminArea;
 use Illuminate\Support\Facades\Route;
 
 // The person's area: Admin for an admin, else Serve.
-Route::get('/', [HomeController::class, 'show'])->name('church.home');
+Route::get('/', [HomeController::class, 'show'])->name('satellite.home');
 
 /** The family pages and actions both areas use: registering, the list, one family, its children's details. */
 $familyPages = function (bool $withExport): void {
@@ -54,15 +54,8 @@ $familyPages = function (bool $withExport): void {
     Route::put('/card-requests/{cardRequest}/give', [CardRequestController::class, 'give'])->whereNumber('cardRequest')->name('card-requests.give');
 };
 
-// ── Church-wide admin ────────────────────────────────────────────────────────────────────────────────────────────
-Route::prefix('admin')->name('admin.')->middleware(RequireAdminArea::class)->group(function (): void {
-    Route::get('/people', [PeopleController::class, 'index'])->name('people.index');
-    Route::post('/people', [PeopleController::class, 'store'])->middleware('throttle:per-device')->name('people.store');
-    Route::delete('/people/roles/{assignment}', [PeopleController::class, 'removeRole'])->whereNumber('assignment')->name('people.roles.destroy');
-});
-
-// ── NxtGen Admin ─────────────────────────────────────────────────────────────────────────────────────────────────
-Route::prefix('nxtgen/admin')->name('nxtgen.admin.')->group(function () use ($familyPages): void {
+// ── Admin ────────────────────────────────────────────────────────────────────────────────────────────────────────
+Route::prefix('admin')->name('admin.')->group(function () use ($familyPages): void {
     // A class admin (TODO #9) opens only these two in Admin: their class, and its Attendance.
     Route::middleware(RequireAdminArea::class.':class')->group(function (): void {
         // Classes (GLOSSARY "Schedule"): admins make a satellite's classes (DECISIONS 2026-10-26).
@@ -109,11 +102,16 @@ Route::prefix('nxtgen/admin')->name('nxtgen.admin.')->group(function () use ($fa
         Route::put('/links/{link}', [LinkController::class, 'update'])->whereNumber('link')->name('links.update');
         Route::put('/links/{link}/move', [LinkController::class, 'move'])->whereNumber('link')->name('links.move');
         Route::delete('/links/{link}', [LinkController::class, 'destroy'])->whereNumber('link')->name('links.destroy');
+
+        // People: the satellite's staff and their Roles.
+        Route::get('/people', [PeopleController::class, 'index'])->name('people.index');
+        Route::post('/people', [PeopleController::class, 'store'])->middleware('throttle:per-device')->name('people.store');
+        Route::delete('/people/roles/{assignment}', [PeopleController::class, 'removeRole'])->whereNumber('assignment')->name('people.roles.destroy');
     });
 });
 
-// ── NxtGen Serve ─────────────────────────────────────────────────────────────────────────────────────────────────
-Route::prefix('nxtgen/serve')->name('nxtgen.serve.')->group(function () use ($familyPages): void {
+// ── Serve ────────────────────────────────────────────────────────────────────────────────────────────────────────
+Route::prefix('serve')->name('serve.')->group(function () use ($familyPages): void {
     // The door (DECISIONS 2026-10-26): pick today's class, find a family, check children in; undo a mistake.
     Route::get('/door', [DoorController::class, 'show'])->name('door.show');
     Route::post('/classes/{schedule}/check-ins', [DoorController::class, 'checkIn'])->whereNumber('schedule')->name('door.check-in');

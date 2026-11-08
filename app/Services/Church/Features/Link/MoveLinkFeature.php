@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Link;
 
+use App\Data\Models\SatelliteLink;
 use App\Domains\Church\Jobs\GetSatelliteForUpdateJob;
 use App\Domains\Church\Jobs\GetSatelliteLinkJob;
 use App\Domains\Church\Jobs\UpdateSatelliteLinkPositionJob;
@@ -30,11 +31,11 @@ use Illuminate\Support\Facades\DB;
 #[AccessRow(AccessRowEnum::ManageLinks)]
 final class MoveLinkFeature extends BaseLinkFeature
 {
-    public function __construct(private readonly int $linkId) {}
+    public function __construct(private readonly SatelliteLink $link) {}
 
     public function handle(MoveSatelliteLinkInput $input): RedirectResponse
     {
-        $link = $this->scopedLink($this->linkId);
+        $link = $this->scopedLink($this->link);
 
         DB::transaction(function () use ($link, $input): void {
             $this->run(new GetSatelliteForUpdateJob(satellite: $link->satellite));

@@ -44,9 +44,9 @@ it('seeds exactly what the browser journeys expect', function (): void {
     expect($world)->toContain("phone: '0501000001'")
         ->and(substr((string) preg_replace('/\D+/', '', (string) $dxb?->primaryGuardian?->phone), -9))->toBe('501000001');
 
-    // The classes journey finds CCF DXB's Saturday classes, and House Church with none.
+    // The classes journey finds CCF Dubai's Saturday classes, and CCF Sharjah with none.
     $classes = Schedule::query()->with('satellite')->where('is_active', true)->get();
-    expect($classes->map(fn (Schedule $s): string => $s->satellite->name)->unique()->values()->all())->toBe(['CCF DXB']);
+    expect($classes->map(fn (Schedule $s): string => $s->satellite->name)->unique()->values()->all())->toBe(['CCF Dubai']);
     foreach ($classes as $class) {
         expect($world)->toContain("name: '{$class->name}', when: '{$class->weekday?->everyLabel()} · {$class->startsAt()}–{$class->endsAt()}'");
     }
@@ -59,7 +59,7 @@ it('seeds exactly what the browser journeys expect', function (): void {
         }
     }
 
-    // The door journeys: each browser's own Cruz family at CCF DXB and visiting Villa family at House Church.
+    // The door journeys: each browser's own Cruz family at CCF Dubai and visiting Villa family at CCF Sharjah.
     foreach (E2ESeeder::DOOR_GUARDIANS as $project => $first) {
         expect($world)->toMatch(worldKey($project, "'{$first}'"));
         $cruz = Family::query()->with(['children', 'homeSatellite'])->whereHas('primaryGuardian', fn ($g) => $g->where('first_name', $first)->where('last_name', 'Cruz'))->sole();
@@ -74,18 +74,18 @@ it('seeds exactly what the browser journeys expect', function (): void {
             ->and(substr((string) preg_replace('/\D+/', '', (string) $cruz->primaryGuardian?->phone), -9))->toBe('5030000'.sprintf('%02d', $place))
             ->and($world)->toContain('email: `cruz-${first.toLowerCase()}@nxtgen.test`')
             ->and($world)->toContain("phone: `05030000\${String(PROJECTS.indexOf(project as Project) + 1).padStart(2, '0')}`");
-        expect($cruz->homeSatellite->name)->toBe('CCF DXB')
+        expect($cruz->homeSatellite->name)->toBe('CCF Dubai')
             ->and([$kid('Amara')->allergies, $kid('Noah')->status->value, $kid('Lola')->level, $kid('Gabe')->status->value, $kid('Ben')->level])
             ->toBe(['Peanuts', 'inactive', null, 'graduated', 1]);
         $villa = Family::query()->with(['children', 'homeSatellite'])->whereHas('primaryGuardian', fn ($g) => $g->where('first_name', $first)->where('last_name', 'Villa'))->sole();
-        expect([$villa->homeSatellite->name, $villa->children->sole()->nickname])->toBe(['House Church', 'Pia']);
+        expect([$villa->homeSatellite->name, $villa->children->sole()->nickname])->toBe(['CCF Sharjah', 'Pia']);
 
-        // Who's in: the browser's own Reyes girls, both in Level 2 Girls at CCF DXB.
+        // Who's in: the browser's own Reyes girls, both in Level 2 Girls at CCF Dubai.
         $girls = E2ESeeder::ROLL_CALL_GIRLS[$project];
         expect($world)->toMatch(worldKey($project, "['".implode("', '", $girls)."']"));
         $reyes = Family::query()->with(['children', 'homeSatellite'])->whereHas('primaryGuardian', fn ($g) => $g->where('first_name', $first)->where('last_name', 'Reyes'))->sole();
         expect([$reyes->homeSatellite->name, $reyes->children->map(fn (Child $c): array => [$c->nickname, $c->level, $c->gender->value])->all()])
-            ->toBe(['CCF DXB', [...array_map(fn (string $girl): array => [$girl, 2, 'girl'], $girls), ['Amara', 2, 'girl']]]);
+            ->toBe(['CCF Dubai', [...array_map(fn (string $girl): array => [$girl, 2, 'girl'], $girls), ['Amara', 2, 'girl']]]);
 
         // The scan journey: this browser's Reyes Amara, whose name card it types — her key is the browser's own.
         $middle = E2ESeeder::SCAN_MIDDLE_NAMES[$project];
@@ -95,7 +95,7 @@ it('seeds exactly what the browser journeys expect', function (): void {
 
         // Name cards: the browser's Ocampo family — imported, so no Card request for any of them.
         $lim = Family::query()->with(['children', 'homeSatellite'])->whereHas('primaryGuardian', fn ($g) => $g->where('first_name', $first)->where('last_name', 'Ocampo'))->sole();
-        expect([$lim->homeSatellite->name, $lim->children->pluck('nickname')->all()])->toBe(['CCF DXB', E2ESeeder::CARD_CHILDREN])
+        expect([$lim->homeSatellite->name, $lim->children->pluck('nickname')->all()])->toBe(['CCF Dubai', E2ESeeder::CARD_CHILDREN])
             ->and(CardRequest::query()->whereIn('child_id', $lim->children->pluck('id'))->count())->toBe(0);
     }
     expect($world)->toContain("children: ['".implode("', '", E2ESeeder::CARD_CHILDREN)."']")

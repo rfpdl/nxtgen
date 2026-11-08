@@ -12,16 +12,14 @@ use App\Domains\CheckIn\Jobs\GetReportableSchedulesJob;
 use App\Domains\CheckIn\Jobs\GetSessionAttendanceJob;
 use App\Domains\CheckIn\Jobs\GetSessionHeadCountsJob;
 use App\Domains\CheckIn\Jobs\GetSessionJob;
-use App\Domains\Church\DataObjects\SatelliteOptionData;
 use App\Domains\Church\Jobs\GetChurchTodayJob;
-use App\Domains\Church\Jobs\GetSatellitesJob;
 use App\Services\Church\Features\BaseChurchFeature;
 
 /**
- * What the Attendance page and its Excel share (DECISIONS 2026-10-26: reports are admins only): the satellites this
- * admin sees (a church admin every one, a satellite admin their own) with the classes that can be reported on, the
- * Session `?satellite=`, `?class=` and `?date=` pick (GetAttendanceSelectionJob — a 404 for anything not offered), and
- * its children by Squad with the roll call (each child's present mark, each Squad's head count).
+ * What the Attendance page and its Excel share (DECISIONS 2026-10-26: reports are admins only): the classes of the
+ * satellite in the address (DECISIONS 2026-11-08) that this admin may report on, the Session `?class=` and `?date=`
+ * pick (GetAttendanceSelectionJob — a 404 for anything not offered), and its children by Squad with the roll call
+ * (each child's present mark, each Squad's head count).
  *
  * @template-covariant TResult
  *
@@ -31,8 +29,7 @@ abstract class BaseAttendanceFeature extends BaseChurchFeature
 {
     /**
      * @return array{
-     *     satellites: list<SatelliteOptionData>,
-     *     schedules: array<int, list<Schedule>>,
+     *     schedules: list<Schedule>,
      *     selection: AttendanceSelectionData,
      *     squads: list<AttendanceSquadData>,
      * }
@@ -43,23 +40,16 @@ abstract class BaseAttendanceFeature extends BaseChurchFeature
         $scope = $this->scope();
         abort_unless($scope->canSeeAttendance(), 404);
 
-        $ids = $scope->attendanceSatelliteIds();
-        $satellites = array_values(array_filter(
-            $this->run(new GetSatellitesJob(church: $church)),
-            fn (SatelliteOptionData $s): bool => $ids === null || in_array($s->id, $ids, true),
+        $satellite = $this->satellite();
+        // A class admin (TODO #9) sees only their class's Sessions; an admin of the satellite, all of them.
+        $schedules = array_values(array_filter(
+            $this->run(new GetReportableSchedulesJob(church: $church, satelliteIds: [$satellite->id]))[$satellite->id] ?? [],
+            fn (Schedule $c): bool => $scope->canSeeAttendanceOf($c),
         ));
-        $satelliteIds = array_map(fn (SatelliteOptionData $s): int => $s->id, $satellites);
-        // A class admin (TODO #9) sees only their class's Sessions; an admin of the satellite or church, all of them.
-        $schedules = array_map(
-            fn (array $classes): array => array_values(array_filter($classes, fn (Schedule $c): bool => $scope->canSeeAttendanceOf($c))),
-            $this->run(new GetReportableSchedulesJob(church: $church, satelliteIds: $satelliteIds)),
-        );
 
         $selection = $this->run(new GetAttendanceSelectionJob(
             church: $church,
-            satelliteIds: $satelliteIds,
             schedules: $schedules,
-            satellite: request()->filled('satellite') ? request()->integer('satellite') : null,
             class: request()->filled('class') ? request()->integer('class') : null,
             date: request()->filled('date') ? request()->string('date')->value() : null,
             today: $this->run(new GetChurchTodayJob(church: $church)),
@@ -68,7 +58,6 @@ abstract class BaseAttendanceFeature extends BaseChurchFeature
         $session = $selection->schedule === null ? null : $this->run(new GetSessionJob(schedule: $selection->schedule, date: $selection->date));
 
         return [
-            'satellites' => $satellites,
             'schedules' => $schedules,
             'selection' => $selection,
             'squads' => $session === null ? [] : AttendanceSquadData::groupsOf(

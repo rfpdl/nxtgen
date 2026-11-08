@@ -49,11 +49,6 @@ declare namespace App {
                     name: string
                     retired: boolean
                 }
-                export type AttendanceSatelliteData = {
-                    id: number
-                    name: string
-                    classes: App.Domains.CheckIn.DataObjects.AttendanceClassData[]
-                }
                 export type AttendanceSquadData = {
                     name: string
                     level: App.Foundation.DataObjects.LevelData
@@ -177,6 +172,11 @@ declare namespace App {
                     label: string
                     url: string
                     qr: string
+                }
+                export type SatelliteData = {
+                    id: number
+                    name: string
+                    slug: string
                 }
                 export type SatelliteLinkData = {
                     id: number
@@ -316,7 +316,6 @@ declare namespace App {
                 }
                 export type ListFiltersData = {
                     q: string
-                    satellite: number | null
                     status: App.Enums.ChildStatusEnum | null
                     level: number | null
                     unconfirmed: boolean
@@ -542,18 +541,6 @@ declare namespace App {
         }
         namespace Church {
             namespace Data {
-                export type AddSatelliteLinkInput = {
-                    satellite_id: number
-                    label: string
-                    url: string
-                }
-                export type AddScheduleInput = {
-                    satellite_id: number
-                    name: string
-                    weekday: App.Enums.WeekdayEnum | null
-                    starts_at: string | null
-                    ends_at: string | null
-                }
                 export type AddStaffInput = {
                     name: string
                     email: string

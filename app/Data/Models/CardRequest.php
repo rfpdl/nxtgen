@@ -79,15 +79,15 @@ final class CardRequest extends Model
     }
 
     /**
-     * Only requests whose child's family lives at one of `$satelliteIds` — null = every satellite (a church admin):
-     * the requests an admin sees on Cards, and marks printed all at once.
+     * Only requests whose child's family lives at one of `$satelliteIds` (the address satellite, or none —
+     * DECISIONS 2026-11-08): the requests an admin sees on Cards, and marks printed all at once.
      *
      * @param  Builder<self>  $query
-     * @param  list<int>|null  $satelliteIds
+     * @param  list<int>  $satelliteIds
      */
-    public function scopeOfFamiliesAt(Builder $query, ?array $satelliteIds): void
+    public function scopeOfFamiliesAt(Builder $query, array $satelliteIds): void
     {
-        $query->when($satelliteIds !== null, fn (Builder $q) => $q->whereHas('child.family', fn (Builder $f) => $f->whereIn('home_satellite_id', $satelliteIds ?? [])));
+        $query->whereHas('child.family', fn (Builder $f) => $f->whereIn('home_satellite_id', $satelliteIds));
     }
 
     /**

@@ -30,7 +30,7 @@ function churchSettings(array $overrides = []): void
         'slug' => 'ccf',
         'name' => 'CCF',
         'timezone' => 'Asia/Dubai',
-        'satellites' => 'CCF DXB|House Church',
+        'satellites' => 'dubai=CCF Dubai|sharjah=CCF Sharjah',
         'first_admin_email' => 'Roy@Example.com',
         'first_admin_name' => 'Roy',
     ], $overrides)]);
@@ -45,7 +45,8 @@ it('creates the church, its satellites, each satellite\'s Squads and the first c
     $admin = User::query()->where('email', 'roy@example.com')->firstOrFail();
 
     expect($church->name)->toBe('CCF')
-        ->and(Satellite::query()->where('church_id', $church->id)->orderBy('name')->pluck('name')->all())->toBe(['CCF DXB', 'House Church'])
+        ->and(Satellite::query()->where('church_id', $church->id)->orderBy('name')->pluck('name')->all())->toBe(['CCF Dubai', 'CCF Sharjah'])
+        ->and(Satellite::query()->orderBy('slug')->pluck('slug')->all())->toBe(['dubai', 'sharjah'])
         ->and($admin->password)->toBeNull()
         ->and($admin->is_platform_admin)->toBeFalse()
         ->and(RoleAssignment::query()->where('user_id', $admin->id)->where('role', RoleEnum::Admin)
@@ -89,11 +90,12 @@ it('refuses to start without a first admin', function (): void {
     expect(Church::query()->count())->toBe(0);
 });
 
-it('refuses a church address that clashes with a page of the app', function (): void {
-    churchSettings(['slug' => 'login']);
+it('refuses a satellite address that clashes with a page of the app, or one without a name', function (string $satellites): void {
+    churchSettings(['satellites' => $satellites]);
 
-    expect(fn () => seed(ChurchSeeder::class))->toThrow(RuntimeException::class, 'reserved');
-});
+    expect(fn () => seed(ChurchSeeder::class))->toThrow(RuntimeException::class, 'address=name');
+    expect(Church::query()->count())->toBe(0);
+})->with(['an app page' => ['login=CCF Login'], 'no name' => ['dubai'], 'not an address' => ['Dubai City=CCF Dubai']]);
 
 it('never puts the demo accounts into production', function (): void {
     churchSettings();
@@ -133,24 +135,24 @@ it('adds what is missing on a second run, and changes nothing that exists', func
     $church->forceFill(['timezone' => 'Asia/Manila'])->save();
     RoleAssignment::query()->update(['is_active' => false]);          // the church removed that admin
 
-    churchSettings(['satellites' => 'CCF DXB|House Church|Al Quoz']);
+    churchSettings(['satellites' => 'dubai=CCF Dubai|sharjah=CCF Sharjah|abu-dhabi=CCF Abu Dhabi']);
     seed(ChurchSeeder::class);
 
     expect($church->fresh()?->timezone)->toBe('Asia/Manila')
         ->and(Squad::query()->count())->toBe(21)           // the new satellite got its own seven
         ->and(RoleAssignment::query()->where('is_active', true)->count())->toBe(0)
-        ->and(Satellite::query()->pluck('name')->sort()->values()->all())->toBe(['Al Quoz', 'CCF DXB', 'House Church']);
+        ->and(Satellite::query()->pluck('name')->sort()->values()->all())->toBe(['CCF Abu Dhabi', 'CCF Dubai', 'CCF Sharjah']);
 });
 
-it('gives the demo church\'s CCF DXB its Saturday classes, 1PM and 7PM — and is safe to run again', function (): void {
+it('gives the demo church\'s CCF Dubai its Saturday classes, 1PM and 7PM — and is safe to run again', function (): void {
     seed(DemoChurchSeeder::class);
     seed(DemoChurchSeeder::class);
 
     $classes = Schedule::query()->with('satellite')->orderBy('starts_at')->get();
 
     expect($classes->map(fn (Schedule $s): array => [$s->satellite->name, $s->name, $s->weekday, $s->startsAt(), $s->endsAt(), $s->is_active])->all())->toBe([
-        ['CCF DXB', '1PM', WeekdayEnum::Saturday, '13:00', '15:00', true],
-        ['CCF DXB', '7PM', WeekdayEnum::Saturday, '19:00', '21:00', true],
+        ['CCF Dubai', '1PM', WeekdayEnum::Saturday, '13:00', '15:00', true],
+        ['CCF Dubai', '7PM', WeekdayEnum::Saturday, '19:00', '21:00', true],
     ]);
 });
 

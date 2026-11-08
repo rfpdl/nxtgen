@@ -38,20 +38,21 @@ use function Tests\Support\withCommittedWorld;
 function peopleChurch(): array
 {
     $church = church(['slug' => 'ccf', 'name' => 'CCF']);
-    $htc = satelliteOf($church, ['name' => 'Holy Trinity Church']);
-    $house = satelliteOf($church, ['name' => 'House Church']);
+    $htc = satelliteOf($church, ['name' => 'Holy Trinity Church', 'slug' => 'htc']);
+    $house = satelliteOf($church, ['name' => 'House Church', 'slug' => 'house']);
     $admin = staffMember(RoleEnum::Admin, atChurch($church), ['name' => 'Ana Admin']);
 
     return ['church' => $church, 'htc' => $htc, 'house' => $house, 'admin' => $admin];
 }
 
 /**
- * One admin removes a role through the whole request; what they are told: "removed" or "refused". Refused is also
- * a 404: when the other admin's removal commits first, this one is no longer an admin at all.
+ * One admin removes a role through the whole request, from `$at`'s address (People's behaviour is unchanged for now —
+ * only its address moved under a satellite, DECISIONS 2026-11-08); what they are told: "removed" or "refused". Refused
+ * is also a 404: when the other admin's removal commits first, this one is no longer an admin at all.
  */
-function removeAndSay(User $admin, RoleAssignment $role): string
+function removeAndSay(User $admin, RoleAssignment $role, string $at = 'htc'): string
 {
-    $response = actingAs($admin)->delete("/ccf/admin/people/roles/{$role->id}");
+    $response = actingAs($admin)->delete("/{$at}/admin/people/roles/{$role->id}");
     if ($response->status() === 404) {
         return 'refused';
     }
@@ -73,7 +74,7 @@ describe('the People page', function (): void {
         $other = church();
         staffMember(RoleEnum::Admin, atChurch($other), ['name' => 'Other Church Admin']);
 
-        actingAs($admin)->get('/ccf/admin/people')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($admin)->get('/htc/admin/people')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
             ->component('Church/People/Index')
             ->has('people', 2)
             ->where('people.0.name', 'Ana Admin')
@@ -90,7 +91,7 @@ describe('the People page', function (): void {
         staffMember(RoleEnum::Lifeshaper, atSatellite($htc), ['name' => 'Leo Lifeshaper']);
         staffMember(RoleEnum::Lifeshaper, atSatellite($house), ['name' => 'Hana House']);
 
-        actingAs($satAdmin)->get('/ccf/admin/people')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($satAdmin)->get('/htc/admin/people')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
             ->has('people', 2)
             ->where('people.0.name', 'Leo Lifeshaper')
             ->where('people.1.name', 'Sam Satellite')
@@ -103,15 +104,20 @@ describe('the People page', function (): void {
         ['church' => $church, 'admin' => $admin] = peopleChurch();
         $lifeshaper = staffMember(RoleEnum::Lifeshaper, atChurch($church));
 
-        actingAs($admin)->get('/ccf/nxtgen/serve/families')->assertInertia(fn (AssertableInertia $page) => $page->where('church_nav.can_manage_people', true));
-        actingAs($lifeshaper)->get('/ccf/nxtgen/serve/families')->assertInertia(fn (AssertableInertia $page) => $page->where('church_nav.can_manage_people', false));
+        actingAs($admin)->get('/htc/serve/families')->assertInertia(fn (AssertableInertia $page) => $page->where('church_nav.can_manage_people', true));
+        actingAs($lifeshaper)->get('/htc/serve/families')->assertInertia(fn (AssertableInertia $page) => $page->where('church_nav.can_manage_people', false));
     });
 
+    // DECISIONS 2026-11-08: a Lifeshaper who opens an Admin page is sent to their door; any Admin act is a 404.
     it('is not there for a Lifeshaper @story#75', function (): void {
-        ['church' => $church] = peopleChurch();
+        ['church' => $church, 'htc' => $htc] = peopleChurch();
+        $lifeshaper = staffMember(RoleEnum::Lifeshaper, atChurch($church));
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))
-            ->get('/ccf/admin/people')->assertNotFound();
+        actingAs($lifeshaper)->get('/htc/admin/people')->assertRedirect('/htc/serve/door');
+        actingAs($lifeshaper)->post('/htc/admin/people', addPerson('new@example.com', RoleEnum::Lifeshaper, ScopeTypeEnum::Satellite, $htc->id))
+            ->assertNotFound();
+
+        expect(User::query()->where('email', 'new@example.com')->exists())->toBeFalse();
     });
 });
 
@@ -120,7 +126,7 @@ describe('adding someone', function (): void {
         Notification::fake();
         ['church' => $church, 'htc' => $htc, 'admin' => $admin] = peopleChurch();
 
-        actingAs($admin)->post('/ccf/admin/people', addPerson('Leo@Example.com', RoleEnum::Lifeshaper, ScopeTypeEnum::Satellite, $htc->id))
+        actingAs($admin)->post('/htc/admin/people', addPerson('Leo@Example.com', RoleEnum::Lifeshaper, ScopeTypeEnum::Satellite, $htc->id))
             ->assertRedirect()->assertSessionHas('success');
 
         $leo = User::query()->where('email', 'leo@example.com')->firstOrFail();
@@ -141,7 +147,7 @@ describe('adding someone', function (): void {
         $guardian = guardianOf($family, $guardianUser);
 
         // The reply names the email the admin typed, never the account's own name (SECURITY #16).
-        actingAs($admin)->post('/ccf/admin/people', addPerson('pia@example.com', RoleEnum::Lifeshaper, ScopeTypeEnum::Satellite, $htc->id, 'Typed Differently'))
+        actingAs($admin)->post('/htc/admin/people', addPerson('pia@example.com', RoleEnum::Lifeshaper, ScopeTypeEnum::Satellite, $htc->id, 'Typed Differently'))
             ->assertRedirect()
             ->assertSessionHas('success', fn (string $reply): bool => str_contains($reply, 'pia@example.com') && ! str_contains($reply, 'Pia Parent'));
 
@@ -150,8 +156,8 @@ describe('adding someone', function (): void {
             ->and(RoleAssignment::query()->where('user_id', $guardianUser->id)->count())->toBe(1);
 
         // One login, both places.
-        actingAs($guardianUser)->get('/ccf/family')->assertOk();
-        actingAs($guardianUser)->get('/ccf/nxtgen/serve/families')->assertOk();
+        actingAs($guardianUser)->get('/family')->assertOk();
+        actingAs($guardianUser)->get('/htc/serve/families')->assertOk();
     });
 
     it('says so when the person already has that role', function (): void {
@@ -159,7 +165,7 @@ describe('adding someone', function (): void {
         ['church' => $church, 'htc' => $htc, 'admin' => $admin] = peopleChurch();
         $leo = staffMember(RoleEnum::Lifeshaper, atSatellite($htc), ['name' => 'Leo Lifeshaper']);
 
-        actingAs($admin)->post('/ccf/admin/people', addPerson($leo->email, RoleEnum::Lifeshaper, ScopeTypeEnum::Satellite, $htc->id))
+        actingAs($admin)->post('/htc/admin/people', addPerson($leo->email, RoleEnum::Lifeshaper, ScopeTypeEnum::Satellite, $htc->id))
             ->assertRedirect()
             ->assertSessionHas('error', fn (string $reply): bool => str_contains($reply, $leo->email) && ! str_contains($reply, $leo->name));
         expect(RoleAssignment::query()->where('user_id', $leo->id)->count())->toBe(1);
@@ -172,7 +178,7 @@ describe('adding someone', function (): void {
         $leo = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
         RoleAssignment::query()->where('user_id', $leo->id)->update(['is_active' => false]);
 
-        actingAs($admin)->post('/ccf/admin/people', addPerson($leo->email, RoleEnum::Lifeshaper, ScopeTypeEnum::Satellite, $htc->id))
+        actingAs($admin)->post('/htc/admin/people', addPerson($leo->email, RoleEnum::Lifeshaper, ScopeTypeEnum::Satellite, $htc->id))
             ->assertSessionHas('success');
 
         expect(RoleAssignment::query()->where('user_id', $leo->id)->where('is_active', true)->count())->toBe(1);
@@ -188,7 +194,7 @@ describe('adding someone', function (): void {
             default => [ScopeTypeEnum::Satellite, $htc->id],
         };
 
-        actingAs($satAdmin)->post('/ccf/admin/people', addPerson('new@example.com', $role, $type, $id))->assertNotFound();
+        actingAs($satAdmin)->post('/htc/admin/people', addPerson('new@example.com', $role, $type, $id))->assertNotFound();
 
         expect(User::query()->where('email', 'new@example.com')->exists())->toBeFalse();
     })->with([
@@ -201,14 +207,14 @@ describe('adding someone', function (): void {
         ['admin' => $admin] = peopleChurch();
         $foreign = Satellite::factory()->create();
 
-        actingAs($admin)->post('/ccf/admin/people', addPerson('new@example.com', RoleEnum::Lifeshaper, ScopeTypeEnum::Satellite, $foreign->id))
+        actingAs($admin)->post('/htc/admin/people', addPerson('new@example.com', RoleEnum::Lifeshaper, ScopeTypeEnum::Satellite, $foreign->id))
             ->assertNotFound();
     });
 
     it('needs a name and a real email', function (): void {
         ['church' => $church, 'admin' => $admin] = peopleChurch();
 
-        actingAs($admin)->post('/ccf/admin/people', ['name' => '', 'email' => 'nope', 'role' => 'lifeshaper', 'scope_type' => 'church', 'scope_id' => $church->id])
+        actingAs($admin)->post('/htc/admin/people', ['name' => '', 'email' => 'nope', 'role' => 'lifeshaper', 'scope_type' => 'church', 'scope_id' => $church->id])
             ->assertSessionHasErrors(['name', 'email']);
     });
 });
@@ -219,17 +225,17 @@ describe('removing a role', function (): void {
         $leo = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
         $role = RoleAssignment::query()->where('user_id', $leo->id)->firstOrFail();
 
-        actingAs($admin)->delete("/ccf/admin/people/roles/{$role->id}")->assertRedirect()->assertSessionHas('success');
+        actingAs($admin)->delete("/htc/admin/people/roles/{$role->id}")->assertRedirect()->assertSessionHas('success');
 
         expect($role->fresh()?->is_active)->toBeFalse();
-        actingAs($leo)->get('/ccf/nxtgen/serve/families')->assertNotFound();
+        actingAs($leo)->get('/htc/serve/families')->assertNotFound();
     });
 
     it('will not remove the last church admin @story#79', function (): void {
         ['admin' => $admin] = peopleChurch();
         $role = RoleAssignment::query()->where('user_id', $admin->id)->firstOrFail();
 
-        actingAs($admin)->delete("/ccf/admin/people/roles/{$role->id}")->assertSessionHas('error');
+        actingAs($admin)->delete("/htc/admin/people/roles/{$role->id}")->assertSessionHas('error');
 
         expect($role->fresh()?->is_active)->toBeTrue();
     });
@@ -239,7 +245,7 @@ describe('removing a role', function (): void {
         $satAdmin = staffMember(RoleEnum::Admin, atSatellite($htc));
         $role = RoleAssignment::query()->where('user_id', $admin->id)->firstOrFail();
 
-        actingAs($satAdmin)->delete("/ccf/admin/people/roles/{$role->id}")->assertNotFound();
+        actingAs($satAdmin)->delete("/htc/admin/people/roles/{$role->id}")->assertNotFound();
 
         expect($role->fresh()?->is_active)->toBeTrue();
     });
@@ -250,7 +256,7 @@ describe('removing a role', function (): void {
         $foreign = staffMember(RoleEnum::Lifeshaper, atChurch($other));
         $role = RoleAssignment::query()->where('user_id', $foreign->id)->firstOrFail();
 
-        actingAs($admin)->delete("/ccf/admin/people/roles/{$role->id}")->assertNotFound();
+        actingAs($admin)->delete("/htc/admin/people/roles/{$role->id}")->assertNotFound();
     });
 
     it('keeps one church admin when the last two remove each other at the same moment @story#79', function (): void {
@@ -285,12 +291,12 @@ describe('class admins', function (): void {
         $tenAm = scheduleAt($house, ['name' => '10AM']);
         $satAdmin = staffMember(RoleEnum::Admin, atSatellite($htc), ['name' => 'Sam Satellite']);
 
-        actingAs($admin)->post('/ccf/admin/people', addPerson('cleo@example.com', RoleEnum::Admin, ScopeTypeEnum::Schedule, $tenAm->id, 'Cleo Class'))
+        actingAs($admin)->post('/htc/admin/people', addPerson('cleo@example.com', RoleEnum::Admin, ScopeTypeEnum::Schedule, $tenAm->id, 'Cleo Class'))
             ->assertSessionHas('success');
-        actingAs($satAdmin)->post('/ccf/admin/people', addPerson('kai@example.com', RoleEnum::Admin, ScopeTypeEnum::Schedule, $onePm->id, 'Kai Class'))
+        actingAs($satAdmin)->post('/htc/admin/people', addPerson('kai@example.com', RoleEnum::Admin, ScopeTypeEnum::Schedule, $onePm->id, 'Kai Class'))
             ->assertSessionHas('success');
 
-        actingAs($satAdmin)->get('/ccf/admin/people')->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($satAdmin)->get('/htc/admin/people')->assertInertia(fn (AssertableInertia $page) => $page
             ->where('people.0.name', 'Kai Class')
             ->where('people.0.roles.0.label', 'Admin · Holy Trinity Church · 1PM')
             ->where('people.0.roles.0.can_remove', true)
@@ -307,10 +313,10 @@ describe('class admins', function (): void {
         $theirs = scheduleAt(satelliteOf(church()));
         $satAdmin = staffMember(RoleEnum::Admin, atSatellite($htc));
 
-        actingAs($satAdmin)->post('/ccf/admin/people', addPerson('a@example.com', RoleEnum::Admin, ScopeTypeEnum::Schedule, $tenAm->id))->assertNotFound();
-        actingAs($admin)->post('/ccf/admin/people', addPerson('b@example.com', RoleEnum::Admin, ScopeTypeEnum::Schedule, $theirs->id))->assertNotFound();
-        actingAs($admin)->post('/ccf/admin/people', addPerson('c@example.com', RoleEnum::Admin, ScopeTypeEnum::Schedule, $retired->id))->assertNotFound();
-        actingAs($admin)->post('/ccf/admin/people', addPerson('d@example.com', RoleEnum::Lifeshaper, ScopeTypeEnum::Schedule, $tenAm->id))->assertNotFound();
+        actingAs($satAdmin)->post('/htc/admin/people', addPerson('a@example.com', RoleEnum::Admin, ScopeTypeEnum::Schedule, $tenAm->id))->assertNotFound();
+        actingAs($admin)->post('/htc/admin/people', addPerson('b@example.com', RoleEnum::Admin, ScopeTypeEnum::Schedule, $theirs->id))->assertNotFound();
+        actingAs($admin)->post('/htc/admin/people', addPerson('c@example.com', RoleEnum::Admin, ScopeTypeEnum::Schedule, $retired->id))->assertNotFound();
+        actingAs($admin)->post('/htc/admin/people', addPerson('d@example.com', RoleEnum::Lifeshaper, ScopeTypeEnum::Schedule, $tenAm->id))->assertNotFound();
 
         expect(RoleAssignment::query()->where('scope_type', ScopeTypeEnum::Schedule)->count())->toBe(0);
     });
@@ -321,7 +327,7 @@ describe('class admins', function (): void {
         $classAdmin = classAdminOf($onePm);
         $role = RoleAssignment::query()->where('user_id', $classAdmin->id)->sole();
 
-        expect(removeAndSay(staffMember(RoleEnum::Admin, atSatellite($house)), $role))->toBe('refused')
+        expect(removeAndSay(staffMember(RoleEnum::Admin, atSatellite($house)), $role, 'house'))->toBe('refused')
             ->and(removeAndSay(staffMember(RoleEnum::Admin, atSatellite($htc)), $role))->toBe('removed');
     });
 });

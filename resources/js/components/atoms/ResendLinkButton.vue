@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { useSatellite } from '@/composables/useSatellite'
 import AppButton from '@/components/atoms/AppButton.vue'
-import { useChurch } from '@/composables/useChurch'
 import { areaRoute } from '@/composables/useArea'
 
 /**
@@ -10,13 +10,13 @@ import { areaRoute } from '@/composables/useArea'
  */
 defineProps<{ familyId: number }>()
 
-const church = useChurch()
+const satellite = useSatellite()
 </script>
 
 <template>
     <AppButton
         variant="secondary"
-        :href="areaRoute('families.resend', [church.slug, familyId])"
+        :href="areaRoute('families.resend', [satellite.slug, familyId])"
         method="post"
         :preserve-scroll="true"
         class="self-start"

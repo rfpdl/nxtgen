@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Http\Controllers\Door;
 
+use App\Data\Models\CheckIn;
+use App\Data\Models\Schedule;
 use App\Services\Church\Features\Door\CheckInChildrenFeature;
 use App\Services\Church\Features\Door\ConfirmHeadCountFeature;
 use App\Services\Church\Features\Door\MarkPresentFeature;
@@ -24,14 +26,14 @@ final class Controller extends \Lucid\Units\Controller
         return $this->serve(ShowDoorFeature::class);
     }
 
-    public function checkIn(string $church, int $schedule): RedirectResponse
+    public function checkIn(Schedule $schedule): RedirectResponse
     {
-        return $this->serve(CheckInChildrenFeature::class, ['scheduleId' => $schedule]);
+        return $this->serve(CheckInChildrenFeature::class, ['schedule' => $schedule]);
     }
 
-    public function undo(string $church, int $checkIn): RedirectResponse
+    public function undo(CheckIn $checkIn): RedirectResponse
     {
-        return $this->serve(UndoCheckInFeature::class, ['checkInId' => $checkIn]);
+        return $this->serve(UndoCheckInFeature::class, ['checkIn' => $checkIn]);
     }
 
     public function whosIn(): Response
@@ -39,13 +41,13 @@ final class Controller extends \Lucid\Units\Controller
         return $this->serve(ShowWhosInFeature::class);
     }
 
-    public function present(string $church, int $checkIn): RedirectResponse
+    public function present(CheckIn $checkIn): RedirectResponse
     {
-        return $this->serve(MarkPresentFeature::class, ['checkInId' => $checkIn]);
+        return $this->serve(MarkPresentFeature::class, ['checkIn' => $checkIn]);
     }
 
-    public function headCount(string $church, int $schedule, int $squad): RedirectResponse
+    public function headCount(Schedule $schedule, int $squad): RedirectResponse
     {
-        return $this->serve(ConfirmHeadCountFeature::class, ['scheduleId' => $schedule, 'squadId' => $squad]);
+        return $this->serve(ConfirmHeadCountFeature::class, ['schedule' => $schedule, 'squadId' => $squad]);
     }
 }

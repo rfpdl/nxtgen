@@ -26,19 +26,22 @@ it('gives the list\'s own cards the viewer may see — whatever step they are at
     $list->cards()->attach([$a->id, $b->id, $theirs->id]);
 
     $dxbCards = (new GetPrintListCardsJob(church: $church, printList: $list, satelliteIds: [$dxb->id]))->handle();
-    $all = (new GetPrintListCardsJob(church: $church, printList: $list, satelliteIds: null))->handle();
+    $houseCards = (new GetPrintListCardsJob(church: $church, printList: $list, satelliteIds: [$house->id]))->handle();
 
     expect(array_map(fn (CardRequest $r): int => $r->id, $dxbCards))->toBe([$a->id, $b->id])
         ->and($dxbCards[0]->relationLoaded('child'))->toBeTrue()
-        ->and(array_map(fn (CardRequest $r): int => $r->id, $all))->toBe([$a->id, $b->id, $theirs->id]);
+        ->and(array_map(fn (CardRequest $r): int => $r->id, $houseCards))->toBe([$theirs->id]);
 });
 
 it('leaves out a card of another church, should one ever be on the list', function (): void {
     $church = church();
-    $mine = CardRequest::factory()->for(childOf(familyAt(satelliteOf($church))))->create(['step' => CardStepEnum::Approved]);
-    $foreign = CardRequest::factory()->for(childOf(familyAt(satelliteOf(church()))))->create(['step' => CardStepEnum::Approved]);
+    $here = satelliteOf($church);
+    $there = satelliteOf(church());
+    $mine = CardRequest::factory()->for(childOf(familyAt($here)))->create(['step' => CardStepEnum::Approved]);
+    $foreign = CardRequest::factory()->for(childOf(familyAt($there)))->create(['step' => CardStepEnum::Approved]);
     $list = PrintList::factory()->for($church)->create();
     $list->cards()->attach([$mine->id, $foreign->id]);
 
-    expect(array_map(fn (CardRequest $r): int => $r->id, (new GetPrintListCardsJob(church: $church, printList: $list, satelliteIds: null))->handle()))->toBe([$mine->id]);
+    // Even handed the other church's satellite id, the acting church still holds.
+    expect(array_map(fn (CardRequest $r): int => $r->id, (new GetPrintListCardsJob(church: $church, printList: $list, satelliteIds: [$here->id, $there->id]))->handle()))->toBe([$mine->id]);
 });

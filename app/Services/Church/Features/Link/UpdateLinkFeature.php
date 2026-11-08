@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Link;
 
+use App\Data\Models\SatelliteLink;
 use App\Domains\Church\Jobs\UpdateSatelliteLinkJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -25,11 +26,11 @@ use Illuminate\Http\RedirectResponse;
 #[AccessRow(AccessRowEnum::ManageLinks)]
 final class UpdateLinkFeature extends BaseLinkFeature
 {
-    public function __construct(private readonly int $linkId) {}
+    public function __construct(private readonly SatelliteLink $link) {}
 
     public function handle(SatelliteLinkInput $input): RedirectResponse
     {
-        $link = $this->scopedLink($this->linkId);
+        $link = $this->scopedLink($this->link);
 
         $this->run(new UpdateSatelliteLinkJob(link: $link, label: $input->label, url: $input->url));
 

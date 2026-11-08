@@ -29,8 +29,8 @@ use function Tests\Support\staffMember;
 function classesChurch(): array
 {
     $church = church(['slug' => 'ccf', 'name' => 'CCF']);
-    $dxb = satelliteOf($church, ['name' => 'CCF DXB']);
-    $house = satelliteOf($church, ['name' => 'House Church']);
+    $dxb = satelliteOf($church, ['name' => 'CCF DXB', 'slug' => 'dxb']);
+    $house = satelliteOf($church, ['name' => 'House Church', 'slug' => 'house']);
     $onePm = scheduleAt($dxb, ['name' => '1PM', 'weekday' => WeekdayEnum::Saturday, 'starts_at' => '13:00', 'ends_at' => '15:00']);
     scheduleAt($dxb, ['name' => '7PM', 'weekday' => WeekdayEnum::Saturday, 'starts_at' => '19:00', 'ends_at' => '21:00']);
     scheduleAt($house, ['name' => '10AM', 'weekday' => WeekdayEnum::Sunday, 'starts_at' => '10:00', 'ends_at' => null]);
@@ -52,9 +52,10 @@ describe('the Classes page', function (): void {
     it('shows a church admin every satellite\'s active classes, in the order of the week @story#95', function (): void {
         ['admin' => $admin] = classesChurch();
 
-        actingAs($admin)->get('/ccf/nxtgen/admin/classes')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        // DECISIONS 2026-11-08: the page shows only the satellite in its address — a church admin sees each at its own.
+        actingAs($admin)->get('/dxb/admin/classes')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
             ->component('Church/Schedules/Index')
-            ->has('satellites', 2)
+            ->has('satellites', 1)
             ->where('satellites.0.name', 'CCF DXB')
             ->where('satellites.0.schedules.0.name', '1PM')
             ->where('satellites.0.schedules.0.weekday', 'saturday')
@@ -63,33 +64,38 @@ describe('the Classes page', function (): void {
             ->where('satellites.0.schedules.0.ends_at', '15:00')
             ->where('satellites.0.schedules.1.name', '7PM')
             ->has('satellites.0.schedules', 2)
-            ->where('satellites.1.name', 'House Church')
-            ->where('satellites.1.schedules.0.ends_at', null)
             ->has('enums.weekday', 7));
+        actingAs($admin)->get('/house/admin/classes')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('satellites', 1)
+            ->where('satellites.0.name', 'House Church')
+            ->where('satellites.0.schedules.0.ends_at', null));
     });
 
     it('shows a satellite admin only their own satellite\'s classes @story#95', function (): void {
         ['house' => $house] = classesChurch();
 
-        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->get('/ccf/nxtgen/admin/classes')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        $houseAdmin = staffMember(RoleEnum::Admin, atSatellite($house));
+        actingAs($houseAdmin)->get('/house/admin/classes')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
             ->has('satellites', 1)
             ->where('satellites.0.name', 'House Church')
             ->where('satellites.0.schedules.0.name', '10AM'));
+        actingAs($houseAdmin)->get('/dxb/admin/classes')->assertNotFound();
     });
 
     it('puts Classes in the menu for admins only', function (): void {
         ['church' => $church, 'admin' => $admin] = classesChurch();
 
-        actingAs($admin)->get('/ccf/nxtgen/serve/families')->assertInertia(fn (AssertableInertia $page) => $page->where('church_nav.can_manage_classes', true));
-        actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get('/ccf/nxtgen/serve/families')
+        actingAs($admin)->get('/dxb/serve/families')->assertInertia(fn (AssertableInertia $page) => $page->where('church_nav.can_manage_classes', true));
+        actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get('/dxb/serve/families')
             ->assertInertia(fn (AssertableInertia $page) => $page->where('church_nav.can_manage_classes', false));
     });
 
     it('is not there for a Lifeshaper @story#96', function (): void {
         ['church' => $church, 'dxb' => $dxb] = classesChurch();
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get('/ccf/nxtgen/admin/classes')->assertNotFound();
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->get('/ccf/nxtgen/admin/classes')->assertNotFound();
+        // DECISIONS 2026-11-08: a Lifeshaper opening an Admin page is sent to the door.
+        actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get('/dxb/admin/classes')->assertRedirect('/dxb/serve/door');
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->get('/dxb/admin/classes')->assertRedirect('/dxb/serve/door');
     });
 });
 
@@ -97,7 +103,7 @@ describe('adding a class', function (): void {
     it('adds a class with no day and no times @story#97', function (): void {
         ['dxb' => $dxb, 'admin' => $admin] = classesChurch();
 
-        actingAs($admin)->post('/ccf/nxtgen/admin/classes', classForm(['satellite_id' => $dxb->id]))
+        actingAs($admin)->post('/dxb/admin/classes', classForm())
             ->assertRedirect()->assertSessionHas('success', 'Added "Special class" at CCF DXB.');
 
         $added = Schedule::query()->where('name', 'Special class')->sole();
@@ -109,7 +115,7 @@ describe('adding a class', function (): void {
         ['house' => $house] = classesChurch();
 
         actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))
-            ->post('/ccf/nxtgen/admin/classes', classForm(['satellite_id' => $house->id, 'name' => '4PM', 'weekday' => 'saturday', 'starts_at' => '16:00', 'ends_at' => '17:30']))
+            ->post('/house/admin/classes', classForm(['name' => '4PM', 'weekday' => 'saturday', 'starts_at' => '16:00', 'ends_at' => '17:30']))
             ->assertSessionHas('success');
 
         $added = Schedule::query()->where('name', '4PM')->sole();
@@ -119,25 +125,35 @@ describe('adding a class', function (): void {
     it('accepts an end with no start — there is nothing for it to come after @story#97', function (): void {
         ['dxb' => $dxb, 'admin' => $admin] = classesChurch();
 
-        actingAs($admin)->post('/ccf/nxtgen/admin/classes', classForm(['satellite_id' => $dxb->id, 'ends_at' => '15:00']))->assertSessionHas('success');
+        actingAs($admin)->post('/dxb/admin/classes', classForm(['ends_at' => '15:00']))->assertSessionHas('success');
 
         expect(Schedule::query()->where('name', 'Special class')->sole()->endsAt())->toBe('15:00');
     });
 
-    it('refuses a satellite admin another satellite, and anyone another church\'s satellite @story#98', function (): void {
+    it('refuses a satellite admin another satellite @story#98', function (): void {
+        ['house' => $house] = classesChurch();
+
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->post('/dxb/admin/classes', classForm())->assertNotFound();
+
+        expect(Schedule::query()->where('name', 'Special class')->exists())->toBeFalse();
+    });
+
+    it('adds at the satellite in the address only — a satellite named in the form, this church\'s or another\'s, is not read (DECISIONS 2026-11-08) @story#98', function (): void {
         ['dxb' => $dxb, 'house' => $house, 'admin' => $admin] = classesChurch();
         $elsewhere = satelliteOf(church());
 
-        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->post('/ccf/nxtgen/admin/classes', classForm(['satellite_id' => $dxb->id]))->assertNotFound();
-        actingAs($admin)->post('/ccf/nxtgen/admin/classes', classForm(['satellite_id' => $elsewhere->id]))->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->post('/house/admin/classes', classForm(['satellite_id' => $dxb->id, 'name' => 'At house']))->assertSessionHas('success');
+        actingAs($admin)->post('/dxb/admin/classes', classForm(['satellite_id' => $elsewhere->id, 'name' => 'At dxb']))->assertSessionHas('success');
 
-        expect(Schedule::query()->where('name', 'Special class')->exists())->toBeFalse();
+        expect(Schedule::query()->where('name', 'At house')->sole()->satellite_id)->toBe($house->id)
+            ->and(Schedule::query()->where('name', 'At dxb')->sole()->satellite_id)->toBe($dxb->id)
+            ->and(Schedule::query()->where('satellite_id', $elsewhere->id)->exists())->toBeFalse();
     });
 
     it('asks for a name, times as HH:MM, and an end after the start @story#98', function (array $form, string $field, string $message): void {
         ['dxb' => $dxb, 'admin' => $admin] = classesChurch();
 
-        actingAs($admin)->post('/ccf/nxtgen/admin/classes', classForm([...$form, 'satellite_id' => $dxb->id]))
+        actingAs($admin)->post('/dxb/admin/classes', classForm($form))
             ->assertSessionHasErrors([$field => $message]);
 
         expect(Schedule::query()->count())->toBe(4);
@@ -153,9 +169,9 @@ describe('adding a class', function (): void {
     it('refuses a name another class at the satellite already has, but not a retired one\'s @story#98', function (): void {
         ['dxb' => $dxb, 'admin' => $admin] = classesChurch();
 
-        actingAs($admin)->post('/ccf/nxtgen/admin/classes', classForm(['satellite_id' => $dxb->id, 'name' => '1PM']))
+        actingAs($admin)->post('/dxb/admin/classes', classForm(['name' => '1PM']))
             ->assertSessionHasErrors(['name' => 'CCF DXB already has a class called "1PM".']);
-        actingAs($admin)->post('/ccf/nxtgen/admin/classes', classForm(['satellite_id' => $dxb->id, 'name' => 'Old class']))
+        actingAs($admin)->post('/dxb/admin/classes', classForm(['name' => 'Old class']))
             ->assertSessionHas('success');
 
         expect(Schedule::query()->where('name', '1PM')->count())->toBe(1);
@@ -166,7 +182,7 @@ describe('editing a class', function (): void {
     it('changes a class\'s name, day and times @story#99', function (): void {
         ['admin' => $admin, 'onePm' => $onePm] = classesChurch();
 
-        actingAs($admin)->put("/ccf/nxtgen/admin/classes/{$onePm->id}", classForm(['name' => '1PM', 'weekday' => 'saturday', 'starts_at' => '13:30', 'ends_at' => '15:00']))
+        actingAs($admin)->put("/dxb/admin/classes/{$onePm->id}", classForm(['name' => '1PM', 'weekday' => 'saturday', 'starts_at' => '13:30', 'ends_at' => '15:00']))
             ->assertRedirect()->assertSessionHas('success', 'Saved "1PM".');
 
         expect([$onePm->fresh()?->startsAt(), $onePm->fresh()?->endsAt()])->toBe(['13:30', '15:00']);
@@ -176,12 +192,13 @@ describe('editing a class', function (): void {
         ['church' => $church, 'dxb' => $dxb, 'house' => $house, 'admin' => $admin, 'onePm' => $onePm] = classesChurch();
         $retired = Schedule::query()->where('name', 'Old class')->sole();
 
-        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->put("/ccf/nxtgen/admin/classes/{$onePm->id}", classForm(['name' => 'Taken']))->assertNotFound();
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->put("/ccf/nxtgen/admin/classes/{$onePm->id}", classForm(['name' => 'Taken']))->assertNotFound();
-        actingAs($admin)->put("/ccf/nxtgen/admin/classes/{$retired->id}", classForm(['name' => 'Back']))->assertNotFound();
-        actingAs($admin)->put("/ccf/nxtgen/admin/classes/{$onePm->id}", classForm(['name' => '7PM']))
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->put("/house/admin/classes/{$onePm->id}", classForm(['name' => 'Taken']))->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->put("/dxb/admin/classes/{$onePm->id}", classForm(['name' => 'Taken']))->assertNotFound();
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->put("/dxb/admin/classes/{$onePm->id}", classForm(['name' => 'Taken']))->assertNotFound();
+        actingAs($admin)->put("/dxb/admin/classes/{$retired->id}", classForm(['name' => 'Back']))->assertNotFound();
+        actingAs($admin)->put("/dxb/admin/classes/{$onePm->id}", classForm(['name' => '7PM']))
             ->assertSessionHasErrors(['name' => 'CCF DXB already has a class called "7PM".']);
-        actingAs($admin)->put("/ccf/nxtgen/admin/classes/{$onePm->id}", classForm(['name' => '1PM', 'starts_at' => '15:00', 'ends_at' => '14:00']))
+        actingAs($admin)->put("/dxb/admin/classes/{$onePm->id}", classForm(['name' => '1PM', 'starts_at' => '15:00', 'ends_at' => '14:00']))
             ->assertSessionHasErrors(['ends_at' => 'The class must end after it starts.']);
 
         expect([$onePm->fresh()?->name, $onePm->fresh()?->startsAt()])->toBe(['1PM', '13:00'])
@@ -193,11 +210,11 @@ describe('retiring a class', function (): void {
     it('retires a class: it leaves the page and its name is free again @story#101', function (): void {
         ['dxb' => $dxb, 'admin' => $admin, 'onePm' => $onePm] = classesChurch();
 
-        actingAs(staffMember(RoleEnum::Admin, atSatellite($dxb)))->put("/ccf/nxtgen/admin/classes/{$onePm->id}/retire")
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($dxb)))->put("/dxb/admin/classes/{$onePm->id}/retire")
             ->assertRedirect()->assertSessionHas('success', 'Retired "1PM". It no longer shows at the door.');
 
         expect($onePm->fresh()?->is_active)->toBeFalse();
-        actingAs($admin)->get('/ccf/nxtgen/admin/classes')->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($admin)->get('/dxb/admin/classes')->assertInertia(fn (AssertableInertia $page) => $page
             ->has('satellites.0.schedules', 1)
             ->where('satellites.0.schedules.0.name', '7PM'));
     });
@@ -206,9 +223,12 @@ describe('retiring a class', function (): void {
         ['house' => $house, 'onePm' => $onePm] = classesChurch();
         $otherChurch = church(['slug' => 'other']);
 
-        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->put("/ccf/nxtgen/admin/classes/{$onePm->id}/retire")->assertNotFound();
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($house)))->put("/ccf/nxtgen/admin/classes/{$onePm->id}/retire")->assertNotFound();
-        actingAs(staffMember(RoleEnum::Admin, atChurch($otherChurch)))->put("/other/nxtgen/admin/classes/{$onePm->id}/retire")->assertNotFound();
+        $otherSatellite = satelliteOf($otherChurch, ['slug' => 'other']);
+
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->put("/house/admin/classes/{$onePm->id}/retire")->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->put("/dxb/admin/classes/{$onePm->id}/retire")->assertNotFound();
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($house)))->put("/house/admin/classes/{$onePm->id}/retire")->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atChurch($otherChurch)))->put("/{$otherSatellite->slug}/admin/classes/{$onePm->id}/retire")->assertNotFound();
 
         expect($onePm->fresh()?->is_active)->toBeTrue();
     });
@@ -223,15 +243,15 @@ describe('a class admin', function (): void {
         ['church' => $church, 'dxb' => $dxb, 'onePm' => $onePm] = classesChurch();
         $classAdmin = classAdminOf($onePm);
 
-        actingAs($classAdmin)->get('/ccf/nxtgen/admin/classes')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
+        actingAs($classAdmin)->get('/dxb/admin/classes')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
             ->has('satellites', 1)
             ->where('satellites.0.name', 'CCF DXB')
             ->where('satellites.0.can_add', false)
             ->has('satellites.0.schedules', 1)
             ->where('satellites.0.schedules.0.name', '1PM'));
-        actingAs($classAdmin)->put("/ccf/nxtgen/admin/classes/{$onePm->id}", ['name' => '1:30PM', 'weekday' => 'saturday', 'starts_at' => '13:30', 'ends_at' => '15:00'])
+        actingAs($classAdmin)->put("/dxb/admin/classes/{$onePm->id}", ['name' => '1:30PM', 'weekday' => 'saturday', 'starts_at' => '13:30', 'ends_at' => '15:00'])
             ->assertSessionHas('success');
-        actingAs($classAdmin)->put("/ccf/nxtgen/admin/classes/{$onePm->id}/retire")->assertSessionHas('success');
+        actingAs($classAdmin)->put("/dxb/admin/classes/{$onePm->id}/retire")->assertSessionHas('success');
 
         expect([$onePm->fresh()?->name, $onePm->fresh()?->is_active])->toBe(['1:30PM', false]);
     });
@@ -241,11 +261,12 @@ describe('a class admin', function (): void {
         $sevenPm = Schedule::query()->where('name', '7PM')->sole();
         $classAdmin = classAdminOf($onePm);
 
-        actingAs($classAdmin)->put("/ccf/nxtgen/admin/classes/{$sevenPm->id}", ['name' => 'Nope', 'weekday' => null, 'starts_at' => null, 'ends_at' => null])->assertNotFound();
-        actingAs($classAdmin)->put("/ccf/nxtgen/admin/classes/{$sevenPm->id}/retire")->assertNotFound();
-        actingAs($classAdmin)->post('/ccf/nxtgen/admin/classes', ['satellite_id' => $dxb->id, 'name' => 'Nope', 'weekday' => null, 'starts_at' => null, 'ends_at' => null])->assertNotFound();
-        foreach (['/ccf/nxtgen/admin/families', '/ccf/nxtgen/admin/children', '/ccf/nxtgen/admin/card-requests', '/ccf/nxtgen/admin/links', '/ccf/admin/people'] as $page) {
-            actingAs($classAdmin)->get($page)->assertNotFound();
+        actingAs($classAdmin)->put("/dxb/admin/classes/{$sevenPm->id}", ['name' => 'Nope', 'weekday' => null, 'starts_at' => null, 'ends_at' => null])->assertNotFound();
+        actingAs($classAdmin)->put("/dxb/admin/classes/{$sevenPm->id}/retire")->assertNotFound();
+        actingAs($classAdmin)->post('/dxb/admin/classes', ['name' => 'Nope', 'weekday' => null, 'starts_at' => null, 'ends_at' => null])->assertNotFound();
+        // DECISIONS 2026-11-08: a class admin opening a full-Admin page is sent to the door.
+        foreach (['/dxb/admin/families', '/dxb/admin/children', '/dxb/admin/card-requests', '/dxb/admin/links', '/dxb/admin/people'] as $page) {
+            actingAs($classAdmin)->get($page)->assertRedirect('/dxb/serve/door');
         }
 
         expect([$sevenPm->fresh()?->name, Schedule::query()->where('name', 'Nope')->exists()])->toBe(['7PM', false]);

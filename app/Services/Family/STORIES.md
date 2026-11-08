@@ -1,6 +1,6 @@
 # Family service
 
-A parent's own family page (`/{church}/family`) and a child's photo link.
+A parent's own family page (`/family`) and a child's photo link.
 
 > What each Feature is for lives on it as `#[UserStory]`; tests name their `story#N`. This file holds only
 > domain knowledge.

@@ -2,7 +2,9 @@
  * What `E2ESeeder` puts in the e2e database. `E2EWorldTest` (Pest, inside `make check`) asserts these
  * against the seeder, so the two cannot drift silently.
  */
-export const CHURCH = 'ccf'
+/** The satellites' addresses (Roy 2026-11-07): the church is never in the address. */
+export const DUBAI = 'dubai'
+export const SHARJAH = 'sharjah'
 
 export const STAFF = {
     churchAdmin: 'admin@nxtgen.test',
@@ -19,19 +21,19 @@ export const FAMILIES = {
         // Matches E2ESeeder; a new family with this phone is a "possible duplicate" of this one.
         phone: '0501000001',
         child: 'Migs',
-        satellite: 'CCF DXB',
+        satellite: 'CCF Dubai',
     },
     house: {
         guardian: 'Grace Santos',
         email: 'santos@nxtgen.test',
         child: 'Bea',
-        satellite: 'House Church',
+        satellite: 'CCF Sharjah',
     },
 } as const
 
-export const SATELLITES = { dxb: 'CCF DXB', house: 'House Church' } as const
+export const SATELLITES = { dxb: 'CCF Dubai', house: 'CCF Sharjah' } as const
 
-/** CCF DXB's Saturday classes (DemoChurchSeeder). House Church has none. */
+/** CCF Dubai's Saturday classes (DemoChurchSeeder). CCF Sharjah has none. */
 export const CLASSES = {
     onePm: { name: '1PM', when: 'Saturdays · 13:00–15:00' },
     sevenPm: { name: '7PM', when: 'Saturdays · 19:00–21:00' },
@@ -84,8 +86,8 @@ export const projectPhone = (base: string, project: string): string =>
 
 /**
  * The door journeys' own families, one set per browser project (E2ESeeder::DOOR_GUARDIANS), so the browsers in
- * one database never check in the same child. At CCF DXB: the Cruz family — Amara (allergic: Peanuts), Ben, Noah
- * (inactive), Lola (no Level yet; her age suggests Level 1), Gabe (Graduated). Visiting from House Church: the Villa
+ * one database never check in the same child. At CCF Dubai: the Cruz family — Amara (allergic: Peanuts), Ben, Noah
+ * (inactive), Lola (no Level yet; her age suggests Level 1), Gabe (Graduated). Visiting from CCF Sharjah: the Villa
  * family's Pia.
  */
 export const DOOR = {
@@ -134,7 +136,7 @@ export const doorFamily = (project: string): { guardian: string; email: string; 
 }
 
 /**
- * Who's in (roll call): each browser project's Reyes family at CCF DXB (E2ESeeder::ROLL_CALL_GIRLS) — Level 2 girls
+ * Who's in (roll call): each browser project's Reyes family at CCF Dubai (E2ESeeder::ROLL_CALL_GIRLS) — Level 2 girls
  * named apart, because the browsers share today's 1PM Session and its Level 2 Girls Squad. The first two are the
  * Who's in journey's; the last two, the Attendance journey's (one ticked present, one not).
  */
@@ -185,7 +187,7 @@ export const SCAN = {
 } as const
 
 /**
- * Name cards: each browser project's Ocampo family at CCF DXB (E2ESeeder::CARD_CHILDREN), parent DOOR.guardians' name —
+ * Name cards: each browser project's Ocampo family at CCF Dubai (E2ESeeder::CARD_CHILDREN), parent DOOR.guardians' name —
  * imported, so none has a Card request. Each card journey takes the first still offering "New card…" (support/cards.ts),
  * so a retry uses the next child without a reseed.
  */
@@ -195,7 +197,7 @@ export const CARDS = {
 } as const
 
 /**
- * The Level journey: each browser project's Torres family at CCF DXB (E2ESeeder::LEVEL_CHILDREN), parent
+ * The Level journey: each browser project's Torres family at CCF Dubai (E2ESeeder::LEVEL_CHILDREN), parent
  * DOOR.guardians' name — girls whose age suggests Level 3. The journey moves the first still at Level 3.
  */
 export const LEVELS = {
@@ -205,7 +207,7 @@ export const LEVELS = {
 } as const
 
 /**
- * Moving-Up: each browser project's Navarro family at CCF DXB (E2ESeeder::MOVING_UP_CHILDREN) — Mika at Level 1 and Theo
+ * Moving-Up: each browser project's Navarro family at CCF Dubai (E2ESeeder::MOVING_UP_CHILDREN) — Mika at Level 1 and Theo
  * at Level 4, with the project's middle name (SCAN's: AMARAJOYREYES → "Joy"), so the journey ticks only its own two.
  */
 export const MOVING_UP = {

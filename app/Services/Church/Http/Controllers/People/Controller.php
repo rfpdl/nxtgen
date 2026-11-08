@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Http\Controllers\People;
 
+use App\Data\Models\RoleAssignment;
 use App\Services\Church\Features\People\AddStaffFeature;
 use App\Services\Church\Features\People\RemoveStaffRoleFeature;
 use App\Services\Church\Features\People\ShowPeopleFeature;
@@ -22,8 +23,8 @@ final class Controller extends \Lucid\Units\Controller
         return $this->serve(AddStaffFeature::class);
     }
 
-    public function removeRole(string $church, int $assignment): RedirectResponse
+    public function removeRole(RoleAssignment $assignment): RedirectResponse
     {
-        return $this->serve(RemoveStaffRoleFeature::class, ['assignmentId' => $assignment]);
+        return $this->serve(RemoveStaffRoleFeature::class, ['assignment' => $assignment]);
     }
 }

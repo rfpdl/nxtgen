@@ -28,11 +28,11 @@ use Illuminate\Http\RedirectResponse;
 #[AccessRow(AccessRowEnum::MovingUp)]
 final class PutBackEveryoneFeature extends BaseMovingUpFeature
 {
-    public function __construct(private readonly int $movingUpId) {}
+    public function __construct(private readonly MovingUp $movingUp) {}
 
     public function handle(): RedirectResponse
     {
-        [$putBack, $left] = $this->withLastMovingUp($this->movingUpId, function (MovingUp $movingUp): array {
+        [$putBack, $left] = $this->withLastMovingUp($this->movingUp, function (MovingUp $movingUp): array {
             $waiting = $movingUp->children->filter(fn (MovingUpChild $m): bool => $m->put_back_at === null);
             $putBack = 0;
             $left = [];

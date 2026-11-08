@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useSatellite } from '@/composables/useSatellite'
 import Card from '@/components/atoms/Card.vue'
 import EmailText from '@/components/atoms/EmailText.vue'
 import PageHeader from '@/components/atoms/PageHeader.vue'
@@ -18,7 +19,6 @@ import ChildPhotoForm from '@/components/organisms/ChildPhotoForm.vue'
 import CorrectEmailForm from '@/components/organisms/CorrectEmailForm.vue'
 import EditChildForm from '@/components/organisms/EditChildForm.vue'
 import FamilyDetailsForm from '@/components/organisms/FamilyDetailsForm.vue'
-import { useChurch } from '@/composables/useChurch'
 import type {
     CardRequest,
     ChildAttendance,
@@ -63,7 +63,7 @@ const props = defineProps<{
     levels: LevelOption[]
 }>()
 
-const church = useChurch()
+const satellite = useSatellite()
 
 /** A child's Check-ins, newest first ([] = not checked in yet). */
 function checkInsOf(childId: number): ChildCheckIn[] {
@@ -89,7 +89,7 @@ const lastLevelChild = ref<number | null>(null)
 
 /** One of Admin's own changes to this family (Level, status, a duplicate), keeping the scroll. */
 function adminPut(name: string, id: number, body: Record<string, string | number>): void {
-    router.put(route(`nxtgen.admin.${name}`, [church.value.slug, id]), body, {
+    router.put(route(`admin.${name}`, [satellite.value.slug, id]), body, {
         preserveScroll: true,
     })
 }
@@ -120,7 +120,7 @@ function setStatus(childId: number, status: ChildStatus): void {
             <ResendLinkButton v-if="!family.email_confirmed" :family-id="family.id" />
             <CorrectEmailForm
                 v-if="admin_controls && !family.email_confirmed"
-                :action="route('nxtgen.admin.families.email', [church.slug, family.id])"
+                :action="route('admin.families.email', [satellite.slug, family.id])"
             />
         </Card>
         <section v-if="duplicates.length > 0" class="flex flex-col gap-3">
@@ -137,7 +137,7 @@ function setStatus(childId: number, status: ChildStatus): void {
             <GuardianList :guardians="family.guardians" />
             <FamilyDetailsForm
                 v-if="details && primary"
-                :action="areaRoute('families.update', [church.slug, family.id])"
+                :action="areaRoute('families.update', [satellite.slug, family.id])"
                 :details="details"
                 :guardian="primary"
                 :others="other_guardians"
@@ -150,7 +150,7 @@ function setStatus(childId: number, status: ChildStatus): void {
                 <ChildAttendanceList :check-ins="checkInsOf(child.id)" />
                 <ChildCardRequest
                     :request="cardRequestOf(child.id)"
-                    :action="areaRoute('card-requests.store', [church.slug, child.id])"
+                    :action="areaRoute('card-requests.store', [satellite.slug, child.id])"
                 />
                 <ChildAdminControls
                     :child="child"
@@ -164,22 +164,24 @@ function setStatus(childId: number, status: ChildStatus): void {
                 <ChildPhotoForm
                     :child="child"
                     who="staff"
-                    :action="areaRoute('children.photo', [church.slug, child.id])"
-                    :consent-action="areaRoute('children.photo-consent', [church.slug, child.id])"
+                    :action="areaRoute('children.photo', [satellite.slug, child.id])"
+                    :consent-action="
+                        areaRoute('children.photo-consent', [satellite.slug, child.id])
+                    "
                     :delete-action="
                         admin_controls
-                            ? route('nxtgen.admin.children.photo.destroy', [church.slug, child.id])
+                            ? route('admin.children.photo.destroy', [satellite.slug, child.id])
                             : undefined
                     "
                 />
                 <EditChildForm
                     v-if="family.can_edit"
-                    :action="areaRoute('children.update', [church.slug, child.id])"
+                    :action="areaRoute('children.update', [satellite.slug, child.id])"
                     :child="child"
                 />
             </FamilyChildCard>
             <AddChildForm
-                :action="areaRoute('families.children.store', [church.slug, family.id])"
+                :action="areaRoute('families.children.store', [satellite.slug, family.id])"
             />
         </section>
         <section v-if="notes.length > 0" class="flex flex-col gap-3" data-testid="history">

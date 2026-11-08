@@ -11,15 +11,15 @@ use App\Services\Church\Features\BaseChurchFeature;
 use Illuminate\Http\RedirectResponse;
 
 /**
- * The church's address opens the person's area (Roy 2026-11-06): an admin's is NxtGen Admin (the families list),
- * everyone else's NxtGen Serve (the door).
+ * The satellite's address opens the person's area there (Roy 2026-11-06): an admin's is Admin (the families list),
+ * everyone else's Serve (the door).
  *
  * @extends BaseChurchFeature<RedirectResponse>
  */
 #[UserStory(
-    title: 'Open the church home',
+    title: 'Open the satellite home',
     persona: 'staff',
-    happyPaths: ['story#42' => 'The church home opens an admin\'s Admin area and everyone else\'s Serve area'],
+    happyPaths: ['story#42' => 'The satellite home opens an admin\'s Admin area and everyone else\'s Serve area'],
 )]
 #[AccessRow(AccessRowEnum::StaffArea)]
 final class ShowChurchHomeFeature extends BaseChurchFeature
@@ -27,7 +27,7 @@ final class ShowChurchHomeFeature extends BaseChurchFeature
     public function handle(): RedirectResponse
     {
         return $this->scope()->canUseFullAdmin()
-            ? redirect()->route('nxtgen.admin.families.index', $this->church())
-            : redirect()->route('nxtgen.serve.door.show', $this->church());
+            ? redirect()->route('admin.families.index', $this->satellite())
+            : redirect()->route('serve.door.show', $this->satellite());
     }
 }

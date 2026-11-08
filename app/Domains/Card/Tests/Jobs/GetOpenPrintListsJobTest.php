@@ -34,15 +34,16 @@ it('lists the lists with a card the viewer may still mark printed, newest first,
     $houseOnly->cards()->attach([$approved($house)->id]);
     $otherChurch = church();
     $theirs = PrintList::factory()->for($otherChurch)->create();
-    $theirs->cards()->attach([$approved(satelliteOf($otherChurch))->id]);
+    $theirs->cards()->attach([$approved($otherSatellite = satelliteOf($otherChurch))->id]);
 
     $lists = (new GetOpenPrintListsJob(church: $church, satelliteIds: [$dxb->id]))->handle();
 
     expect(array_map(fn (PrintList $l): array => [$l->id, $l->cards_count, $l->to_print_count], $lists))
         ->toBe([[$newer->id, 1, 1], [$older->id, 2, 1]]);
 
-    // A church admin (every satellite): this church's open lists only — never the other church's.
-    $all = array_map(fn (PrintList $l): int => $l->id, (new GetOpenPrintListsJob(church: $church, satelliteIds: null))->handle());
-    expect($all)->toEqualCanonicalizing([$newer->id, $older->id, $houseOnly->id])
-        ->and($all)->not->toContain($theirs->id);
+    // House's admin sees House's lists; and this church's lists only — never the other church's, even handed its satellite id.
+    $atHouse = array_map(fn (PrintList $l): int => $l->id, (new GetOpenPrintListsJob(church: $church, satelliteIds: [$house->id, $otherSatellite->id]))->handle());
+    expect($atHouse)->toEqualCanonicalizing([$newer->id, $houseOnly->id])
+        ->and($atHouse)->not->toContain($theirs->id)
+        ->and((new GetOpenPrintListsJob(church: $church, satelliteIds: []))->handle())->toBe([]);
 });

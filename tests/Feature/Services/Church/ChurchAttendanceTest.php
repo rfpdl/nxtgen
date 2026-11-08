@@ -34,9 +34,9 @@ use function Tests\Support\sessionOf;
 use function Tests\Support\staffMember;
 
 /*
- * Attendance (DECISIONS 2026-10-26: reports are admins only, with Excel): an admin picks a satellite, a class and a
- * date and sees the children checked in to that Session, by Squad, with a count per Squad and in total — and
- * downloads the same rows as Excel. A church admin any satellite, a satellite admin their own; a Lifeshaper has no
+ * Attendance (DECISIONS 2026-10-26: reports are admins only, with Excel): an admin picks a class and a date at the
+ * satellite in the address (DECISIONS 2026-11-08: no satellite to pick) and sees the children checked in to that
+ * Session, by Squad, with a count per Squad and in total — and downloads the same rows as Excel. A Lifeshaper has no
  * Attendance. AccessScope::canSeeAttendance owns who may.
  *
  * It is Saturday 31 Oct 2026, 15:00 in Dubai, throughout.
@@ -50,8 +50,8 @@ beforeEach(function (): void {
 function attendanceChurch(): array
 {
     $church = church(['slug' => 'ccf', 'name' => 'CCF', 'timezone' => 'Asia/Dubai']);
-    $dxb = satelliteOf($church, ['name' => 'CCF DXB']);
-    $house = satelliteOf($church, ['name' => 'House Church']);
+    $dxb = satelliteOf($church, ['name' => 'CCF DXB', 'slug' => 'dxb']);
+    $house = satelliteOf($church, ['name' => 'House Church', 'slug' => 'house']);
     $onePm = scheduleAt($dxb, ['name' => '1PM', 'weekday' => WeekdayEnum::Saturday, 'starts_at' => '13:00', 'ends_at' => '15:00']);
     $sevenPm = scheduleAt($dxb, ['name' => '7PM', 'weekday' => WeekdayEnum::Saturday, 'starts_at' => '19:00', 'ends_at' => '21:00']);
     $houseClass = scheduleAt($house, ['name' => '10AM', 'weekday' => WeekdayEnum::Saturday, 'starts_at' => '10:00']);
@@ -80,17 +80,18 @@ function attendanceChurch(): array
 
 describe('the Attendance page', function (): void {
     it('opens on today\'s class with a Session: the children in by Squad, each with name, Level, time and who checked them in, a count per Squad and a total @story#112', function (): void {
-        ['dxb' => $dxb, 'onePm' => $onePm, 'admin' => $admin] = attendanceChurch();
+        ['onePm' => $onePm, 'admin' => $admin] = attendanceChurch();
 
-        actingAs($admin)->get('/ccf/nxtgen/admin/attendance')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        // DECISIONS 2026-11-08: the page shows only the satellite in its address — its classes, no satellite to pick.
+        actingAs($admin)->get('/dxb/admin/attendance')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
             ->component('Church/Attendance/Index')
-            ->where('satellite_id', $dxb->id)
+            ->missing('satellites')
+            ->missing('satellite_id')
             ->where('class_id', $onePm->id)
             ->where('date', '2026-10-31')
             ->where('date_label', 'Sat 31 Oct')
-            ->where('satellites.0.name', 'CCF DXB')
-            ->where('satellites.0.classes.0', ['id' => $onePm->id, 'name' => '1PM', 'retired' => false])
-            ->where('satellites.1.name', 'House Church')
+            ->where('classes.0', ['id' => $onePm->id, 'name' => '1PM', 'retired' => false])
+            ->has('classes', 2)
             ->where('total', 3)
             ->has('squads', 2)
             ->where('squads.0.name', 'Level 1')
@@ -111,7 +112,7 @@ describe('the Attendance page', function (): void {
     it('shows the roll call: each child present or not marked, each Squad\'s head count with when and who, or none — an undone child never, marked or not @story#124', function (): void {
         ['onePm' => $onePm, 'admin' => $admin] = attendanceChurch();
 
-        actingAs($admin)->get("/ccf/nxtgen/admin/attendance?class={$onePm->id}&date=2026-10-31")->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($admin)->get("/dxb/admin/attendance?class={$onePm->id}&date=2026-10-31")->assertInertia(fn (AssertableInertia $page) => $page
             ->where('total', 3)
             ->where('squads.0.name', 'Level 1')
             ->where('squads.0.children.0.present', false)
@@ -129,38 +130,47 @@ describe('the Attendance page', function (): void {
         ['onePm' => $onePm, 'admin' => $admin, 'lifeshaper' => $lifeshaper, 'noahsSquad' => $squad] = attendanceChurch();
         SquadHeadCount::factory()->create(['session_id' => Session::query()->where('schedule_id', $onePm->id)->where('date', '2026-10-31')->sole()->id, 'squad_id' => $squad, 'head_count' => 2, 'counted_at' => '2026-10-31 09:30:00', 'counted_by' => $lifeshaper->id]);
 
-        actingAs($admin)->get("/ccf/nxtgen/admin/attendance?class={$onePm->id}&date=2026-10-31")->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($admin)->get("/dxb/admin/attendance?class={$onePm->id}&date=2026-10-31")->assertInertia(fn (AssertableInertia $page) => $page
             ->where('total', 3)
             ->has('squads', 3)
             ->where('squads.2', ['name' => 'Level 3 Boys', 'level' => ['number' => 3, 'name' => 'Level 3'], 'count' => 0, 'children' => [], 'head_count' => ['count' => 2, 'counted_at' => '13:30', 'counted_by' => 'Liza']]));
 
-        expect(exportedRows(actingAs($admin)->get("/ccf/nxtgen/admin/attendance/export?class={$onePm->id}&date=2026-10-31")))->toContain('Level 3 Boys||||||2');
+        expect(exportedRows(actingAs($admin)->get("/dxb/admin/attendance/export?class={$onePm->id}&date=2026-10-31")))->toContain('Level 3 Boys||||||2');
     });
 
-    it('opens on the latest Session at the first satellite when none is today @story#112', function (): void {
+    it('opens on the latest Session at the satellite when none is today @story#112', function (): void {
         ['onePm' => $onePm, 'admin' => $admin] = attendanceChurch();
         travelTo(CarbonImmutable::parse('2026-11-05 10:00:00', 'Asia/Dubai'));
 
-        actingAs($admin)->get('/ccf/nxtgen/admin/attendance')->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($admin)->get('/dxb/admin/attendance')->assertInertia(fn (AssertableInertia $page) => $page
             ->where('class_id', $onePm->id)->where('date', '2026-10-31')->where('total', 3));
     });
 
-    it('shows the picked satellite, class and date — and says when no one was checked in @story#112', function (): void {
-        ['dxb' => $dxb, 'sevenPm' => $sevenPm, 'admin' => $admin] = attendanceChurch();
+    it('shows the picked class and date — and says when no one was checked in @story#112', function (): void {
+        ['sevenPm' => $sevenPm, 'admin' => $admin] = attendanceChurch();
 
-        actingAs($admin)->get("/ccf/nxtgen/admin/attendance?satellite={$dxb->id}&class={$sevenPm->id}&date=2026-10-24")->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($admin)->get("/dxb/admin/attendance?class={$sevenPm->id}&date=2026-10-24")->assertInertia(fn (AssertableInertia $page) => $page
             ->where('class_id', $sevenPm->id)->where('date', '2026-10-24')->where('total', 1)->where('squads.0.children.0.nickname', 'Lola'));
 
-        actingAs($admin)->get("/ccf/nxtgen/admin/attendance?satellite={$dxb->id}&class={$sevenPm->id}&date=2026-10-31")->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($admin)->get("/dxb/admin/attendance?class={$sevenPm->id}&date=2026-10-31")->assertInertia(fn (AssertableInertia $page) => $page
             ->where('total', 0)->where('squads', []));
     });
 
     it('gives a satellite admin only their own satellite, and opens on it @story#112', function (): void {
         ['house' => $house, 'houseClass' => $houseClass] = attendanceChurch();
 
-        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->get('/ccf/nxtgen/admin/attendance')->assertInertia(fn (AssertableInertia $page) => $page
-            ->has('satellites', 1)->where('satellites.0.name', 'House Church')
-            ->where('satellite_id', $house->id)->where('class_id', $houseClass->id)->where('date', '2026-10-31')->where('total', 0));
+        $houseAdmin = staffMember(RoleEnum::Admin, atSatellite($house));
+        actingAs($houseAdmin)->get('/house/admin/attendance')->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('classes', [['id' => $houseClass->id, 'name' => '10AM', 'retired' => false]])
+            ->where('class_id', $houseClass->id)->where('date', '2026-10-31')->where('total', 0));
+        actingAs($houseAdmin)->get('/dxb/admin/attendance')->assertNotFound();
+    });
+
+    it('reads no satellite from the address but the one in its path — a `?satellite=` changes nothing (DECISIONS 2026-11-08) @story#112', function (): void {
+        ['house' => $house, 'onePm' => $onePm, 'admin' => $admin] = attendanceChurch();
+
+        actingAs($admin)->get("/dxb/admin/attendance?satellite={$house->id}")->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('class_id', $onePm->id)->where('total', 3)->has('classes', 2));
     });
 
     it('keeps a retired class that met in the picker, marked retired, and shows its Sessions; a retired class that never met stays out @story#112 @story#113', function (): void {
@@ -168,14 +178,14 @@ describe('the Attendance page', function (): void {
         $onePm->forceFill(['is_active' => false])->save();
         $never = scheduleAt($dxb, ['name' => 'Never met', 'is_active' => false]);
 
-        actingAs($admin)->get("/ccf/nxtgen/admin/attendance?class={$onePm->id}&date=2026-10-31")->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($admin)->get("/dxb/admin/attendance?class={$onePm->id}&date=2026-10-31")->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
             ->where('class_id', $onePm->id)
             ->where('total', 3)
-            ->has('satellites.0.classes', 2)
-            ->where('satellites.0.classes.0.name', '7PM')
-            ->where('satellites.0.classes.0.retired', false)
-            ->where('satellites.0.classes.1', ['id' => $onePm->id, 'name' => '1PM', 'retired' => true]));
-        actingAs($admin)->get("/ccf/nxtgen/admin/attendance?class={$never->id}")->assertNotFound();
+            ->has('classes', 2)
+            ->where('classes.0.name', '7PM')
+            ->where('classes.0.retired', false)
+            ->where('classes.1', ['id' => $onePm->id, 'name' => '1PM', 'retired' => true]));
+        actingAs($admin)->get("/dxb/admin/attendance?class={$never->id}")->assertNotFound();
     });
 
     it('asks the database the same number of times however many children are in @story#112', function (): void {
@@ -183,7 +193,7 @@ describe('the Attendance page', function (): void {
         $count = function () use ($admin, $onePm): int {
             DB::flushQueryLog();
             DB::enableQueryLog();
-            actingAs($admin)->get("/ccf/nxtgen/admin/attendance?class={$onePm->id}&date=2026-10-31")->assertOk();
+            actingAs($admin)->get("/dxb/admin/attendance?class={$onePm->id}&date=2026-10-31")->assertOk();
             DB::disableQueryLog();
 
             return count(DB::getQueryLog());
@@ -199,36 +209,37 @@ describe('the Attendance page', function (): void {
         expect($count())->toBe($few);
     });
 
-    it('refuses another satellite\'s class or satellite to a satellite admin, another church\'s class, a class not at the picked satellite, and a date that is not one @story#113', function (): void {
-        ['dxb' => $dxb, 'house' => $house, 'onePm' => $onePm, 'houseClass' => $houseClass, 'admin' => $admin] = attendanceChurch();
+    it('refuses another satellite\'s class to a satellite admin, another church\'s class, a class not at the address satellite, and a date that is not one @story#113', function (): void {
+        ['house' => $house, 'onePm' => $onePm, 'houseClass' => $houseClass, 'admin' => $admin] = attendanceChurch();
         $houseAdmin = staffMember(RoleEnum::Admin, atSatellite($house));
         $theirs = scheduleAt(satelliteOf(church(['slug' => 'other'])));
 
-        actingAs($houseAdmin)->get("/ccf/nxtgen/admin/attendance?class={$onePm->id}")->assertNotFound();
-        actingAs($houseAdmin)->get("/ccf/nxtgen/admin/attendance?satellite={$dxb->id}")->assertNotFound();
-        actingAs($admin)->get("/ccf/nxtgen/admin/attendance?class={$theirs->id}")->assertNotFound();
-        actingAs($admin)->get("/ccf/nxtgen/admin/attendance?satellite={$dxb->id}&class={$houseClass->id}")->assertNotFound();
-        actingAs($admin)->get("/ccf/nxtgen/admin/attendance?class={$onePm->id}&date=31-10-2026")->assertNotFound();
+        actingAs($houseAdmin)->get("/house/admin/attendance?class={$onePm->id}")->assertNotFound();
+        // DECISIONS 2026-11-08: a church admin, too, is offered only the address satellite's classes.
+        actingAs($admin)->get("/dxb/admin/attendance?class={$houseClass->id}")->assertNotFound();
+        actingAs($admin)->get("/dxb/admin/attendance?class={$theirs->id}")->assertNotFound();
+        actingAs($admin)->get("/dxb/admin/attendance?class={$onePm->id}&date=31-10-2026")->assertNotFound();
     });
 
     it('is not there for a Lifeshaper, a parent or someone signed out — and a Lifeshaper\'s menu has no Attendance @story#113', function (): void {
         ['lifeshaper' => $lifeshaper, 'admin' => $admin] = attendanceChurch();
         $parent = User::query()->whereHas('guardians')->firstOrFail();
 
-        actingAs($lifeshaper)->get('/ccf/nxtgen/admin/attendance')->assertNotFound();
-        actingAs($lifeshaper)->get('/ccf/nxtgen/serve/door')->assertInertia(fn (AssertableInertia $page) => $page->where('church_nav.can_see_attendance', false));
-        actingAs($admin)->get('/ccf/nxtgen/serve/door')->assertInertia(fn (AssertableInertia $page) => $page->where('church_nav.can_see_attendance', true));
-        actingAs($parent)->get('/ccf/nxtgen/admin/attendance')->assertNotFound();
+        // DECISIONS 2026-11-08: a Lifeshaper opening an Admin page is sent to the door.
+        actingAs($lifeshaper)->get('/dxb/admin/attendance')->assertRedirect('/dxb/serve/door');
+        actingAs($lifeshaper)->get('/dxb/serve/door')->assertInertia(fn (AssertableInertia $page) => $page->where('church_nav.can_see_attendance', false));
+        actingAs($admin)->get('/dxb/serve/door')->assertInertia(fn (AssertableInertia $page) => $page->where('church_nav.can_see_attendance', true));
+        actingAs($parent)->get('/dxb/admin/attendance')->assertNotFound();
         auth()->logout();
-        get('/ccf/nxtgen/admin/attendance')->assertRedirect('/login');
+        get('/dxb/admin/attendance')->assertRedirect('/login');
     });
 });
 
 describe('the Attendance Excel', function (): void {
     it('downloads the same rows as the page, named for the satellite, class and date — with Present and the Squad\'s head count @story#114 @story#125', function (): void {
-        ['dxb' => $dxb, 'onePm' => $onePm, 'admin' => $admin] = attendanceChurch();
+        ['onePm' => $onePm, 'admin' => $admin] = attendanceChurch();
 
-        $response = actingAs($admin)->get("/ccf/nxtgen/admin/attendance/export?satellite={$dxb->id}&class={$onePm->id}&date=2026-10-31")->assertOk();
+        $response = actingAs($admin)->get("/dxb/admin/attendance/export?class={$onePm->id}&date=2026-10-31")->assertOk();
 
         expect($response->headers->get('Content-Disposition'))->toContain('nxtgen-attendance-ccf-dxb-1pm-2026-10-31.xlsx')
             ->and(exportedRows($response))->toBe([
@@ -242,7 +253,7 @@ describe('the Attendance Excel', function (): void {
     it('downloads only the header when no one was checked in @story#114', function (): void {
         ['sevenPm' => $sevenPm, 'admin' => $admin] = attendanceChurch();
 
-        expect(exportedRows(actingAs($admin)->get("/ccf/nxtgen/admin/attendance/export?class={$sevenPm->id}&date=2026-10-31")))
+        expect(exportedRows(actingAs($admin)->get("/dxb/admin/attendance/export?class={$sevenPm->id}&date=2026-10-31")))
             ->toBe(['Squad|Child nickname|Child full name|Checked in at|Checked in by|Present|Squad head count']);
     });
 
@@ -250,31 +261,31 @@ describe('the Attendance Excel', function (): void {
         ['house' => $house, 'onePm' => $onePm, 'admin' => $admin, 'lifeshaper' => $lifeshaper] = attendanceChurch();
         $theirs = scheduleAt(satelliteOf(church(['slug' => 'other'])));
 
-        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->get("/ccf/nxtgen/admin/attendance/export?class={$onePm->id}&date=2026-10-31")->assertNotFound();
-        actingAs($admin)->get("/ccf/nxtgen/admin/attendance/export?class={$theirs->id}&date=2026-10-31")->assertNotFound();
-        actingAs($lifeshaper)->get("/ccf/nxtgen/admin/attendance/export?class={$onePm->id}&date=2026-10-31")->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->get("/house/admin/attendance/export?class={$onePm->id}&date=2026-10-31")->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->get("/dxb/admin/attendance/export?class={$onePm->id}&date=2026-10-31")->assertNotFound();
+        actingAs($admin)->get("/dxb/admin/attendance/export?class={$theirs->id}&date=2026-10-31")->assertNotFound();
+        // DECISIONS 2026-11-08: a Lifeshaper opening an Admin page is sent to the door — never the Excel.
+        actingAs($lifeshaper)->get("/dxb/admin/attendance/export?class={$onePm->id}&date=2026-10-31")->assertRedirect('/dxb/serve/door');
     });
 });
 
 /* A class admin (TODO #9; plan §3.2 "Attendance reports: S"): their own class's Sessions, nothing else. */
 describe('a class admin', function (): void {
     it('sees their own class\'s Attendance, and is offered no other class @story#182', function (): void {
-        ['dxb' => $dxb, 'onePm' => $onePm] = attendanceChurch();
+        ['onePm' => $onePm] = attendanceChurch();
 
-        actingAs(classAdminOf($onePm))->get('/ccf/nxtgen/admin/attendance')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs(classAdminOf($onePm))->get('/dxb/admin/attendance')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
             ->where('class_id', $onePm->id)
             ->where('total', 3)
-            ->has('satellites', 1)
-            ->where('satellites.0.name', 'CCF DXB')
-            ->where('satellites.0.classes', [['id' => $onePm->id, 'name' => '1PM', 'retired' => false]]));
+            ->where('classes', [['id' => $onePm->id, 'name' => '1PM', 'retired' => false]]));
     });
 
     it('never gets another class\'s Attendance, on screen or in Excel: asking for it is not found @story#183', function (): void {
-        ['onePm' => $onePm, 'sevenPm' => $sevenPm, 'house' => $house, 'houseClass' => $houseClass] = attendanceChurch();
+        ['onePm' => $onePm, 'sevenPm' => $sevenPm, 'houseClass' => $houseClass] = attendanceChurch();
         $classAdmin = classAdminOf($onePm);
 
-        actingAs($classAdmin)->get("/ccf/nxtgen/admin/attendance?class={$sevenPm->id}&date=2026-10-24")->assertNotFound();
-        actingAs($classAdmin)->get("/ccf/nxtgen/admin/attendance?satellite={$house->id}&class={$houseClass->id}")->assertNotFound();
-        actingAs($classAdmin)->get("/ccf/nxtgen/admin/attendance/export?class={$sevenPm->id}&date=2026-10-24")->assertNotFound();
+        actingAs($classAdmin)->get("/dxb/admin/attendance?class={$sevenPm->id}&date=2026-10-24")->assertNotFound();
+        actingAs($classAdmin)->get("/dxb/admin/attendance?class={$houseClass->id}")->assertNotFound();
+        actingAs($classAdmin)->get("/dxb/admin/attendance/export?class={$sevenPm->id}&date=2026-10-24")->assertNotFound();
     });
 });

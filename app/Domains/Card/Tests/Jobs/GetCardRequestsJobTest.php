@@ -14,7 +14,7 @@ use function Tests\Support\familyAt;
 use function Tests\Support\satelliteOf;
 
 /*
- * The Cards page's list: one tab's requests, of the satellites the admin sees (null = all), in this church only —
+ * The Cards page's list: one tab's requests, of the satellites the admin sees (the address satellite), in this church only —
  * oldest first while there is something to do, the newest filed first once closed. Paged in the database (ListPage).
  */
 
@@ -33,13 +33,16 @@ it('lists one tab\'s requests of the given satellites, oldest first — never an
         ->and($page->total)->toBe(2);
 });
 
-it('lists every satellite\'s for a church admin, and the closed tab newest filed first — Given and Refused', function (): void {
+it('lists the closed tab newest filed first — Given and Refused — and nothing for no satellite', function (): void {
     $church = church();
-    $given = CardRequest::factory()->for(childOf(familyAt(satelliteOf($church))))->create(['step' => CardStepEnum::Given]);
-    $refused = CardRequest::factory()->for(childOf(familyAt(satelliteOf($church))))->create(['step' => CardStepEnum::Refused]);
-    CardRequest::factory()->for(childOf(familyAt(satelliteOf($church))))->create(['step' => CardStepEnum::Printed]);
+    $dxb = satelliteOf($church);
+    $given = CardRequest::factory()->for(childOf(familyAt($dxb)))->create(['step' => CardStepEnum::Given]);
+    $refused = CardRequest::factory()->for(childOf(familyAt($dxb)))->create(['step' => CardStepEnum::Refused]);
+    CardRequest::factory()->for(childOf(familyAt($dxb)))->create(['step' => CardStepEnum::Printed]);
 
-    $page = (new GetCardRequestsJob(church: $church, satelliteIds: null, tab: CardListTabEnum::Closed, page: 1))->handle();
+    $page = (new GetCardRequestsJob(church: $church, satelliteIds: [$dxb->id], tab: CardListTabEnum::Closed, page: 1))->handle();
+
+    expect((new GetCardRequestsJob(church: $church, satelliteIds: [], tab: CardListTabEnum::Closed, page: 1))->handle()->items)->toBe([]);
 
     expect(array_map(fn (CardRequest $r): int => $r->id, $page->items))->toBe([$refused->id, $given->id]);
 });
@@ -47,10 +50,10 @@ it('lists every satellite\'s for a church admin, and the closed tab newest filed
 it('pages in the database, and asks the same number of times however many rows a page holds', function (): void {
     $church = church();
     $dxb = satelliteOf($church);
-    $count = function () use ($church): int {
+    $count = function () use ($church, $dxb): int {
         DB::flushQueryLog();
         DB::enableQueryLog();
-        $page = (new GetCardRequestsJob(church: $church, satelliteIds: null, tab: CardListTabEnum::Asked, page: 1))->handle();
+        $page = (new GetCardRequestsJob(church: $church, satelliteIds: [$dxb->id], tab: CardListTabEnum::Asked, page: 1))->handle();
         // What a row shows (CardRequestRowData): the child, the family's parent and its satellite.
         $names = array_map(fn (CardRequest $r): string => $r->child->fullName().$r->child->family->contactName().$r->child->family->homeSatellite->name, $page->items);
         expect($names)->toHaveCount(count($page->items));
@@ -63,5 +66,5 @@ it('pages in the database, and asks the same number of times however many rows a
     CardRequest::factory()->count(3)->sequence(fn () => ['child_id' => childOf(familyAt($dxb))->id])->create();
 
     expect($count())->toBe($few)
-        ->and((new GetCardRequestsJob(church: $church, satelliteIds: null, tab: CardListTabEnum::Asked, page: 2, perPage: 3))->handle()->items)->toHaveCount(1);
+        ->and((new GetCardRequestsJob(church: $church, satelliteIds: [$dxb->id], tab: CardListTabEnum::Asked, page: 2, perPage: 3))->handle()->items)->toHaveCount(1);
 });

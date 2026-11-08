@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test'
 import { expect, test } from '../support/test'
 import { fillFamily } from '../support/forms'
 import { latestMail, magicPath, mailCount } from '../support/mailbox'
-import { CHURCH, SATELLITES, projectPhone, uniqueEmail, uniqueSurname } from '../support/world'
+import { DUBAI, SATELLITES, projectPhone, uniqueEmail, uniqueSurname } from '../support/world'
 
 /*
  * Links expire (TODO #13): a confirm link after 7 days, a sign-in link after 2 hours (plan §4.3). A journey cannot
@@ -28,7 +28,7 @@ test('a confirm link a week old and a sign-in link over two hours old say so, an
     const surname = uniqueSurname('Lim')
     const before = mailCount(email)
 
-    await page.goto(`/${CHURCH}/register`)
+    await page.goto(`/${DUBAI}/register`)
     await fillFamily(
         page,
         {
@@ -66,7 +66,7 @@ test('a confirm link a week old and a sign-in link over two hours old say so, an
     // The same sign-in link, an hour and a half in: still in time, and the late try did not use it up.
     await clockAhead(page, 90)
     await pressEmailedLink(page, magicPath(login))
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/family`))
+    await expect(page).toHaveURL(new RegExp(`/family`))
     await expect(page.getByRole('heading', { name: `The ${surname} family` })).toBeVisible()
     await clockAhead(page, 0)
 })

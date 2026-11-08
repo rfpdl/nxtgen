@@ -47,11 +47,11 @@ describe('PrintListCard', () => {
 
         expect([download.text(), download.attributes('href')]).toEqual([
             'Download',
-            '/#nxtgen.admin.card-requests.print-lists.show/ccf/7',
+            '/#admin.card-requests.print-lists.show/dubai/7',
         ])
         expect([mark.text(), mark.attributes('href'), mark.attributes('data-method')]).toEqual([
             'Mark these 10 printed',
-            '/#nxtgen.admin.card-requests.print-lists.mark-printed/ccf/7',
+            '/#admin.card-requests.print-lists.mark-printed/dubai/7',
             'put',
         ])
         expect(

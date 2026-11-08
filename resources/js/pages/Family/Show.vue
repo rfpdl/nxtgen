@@ -8,7 +8,6 @@ import ChildPhotoForm from '@/components/organisms/ChildPhotoForm.vue'
 import EditChildForm from '@/components/organisms/EditChildForm.vue'
 import FamilyDetailsForm from '@/components/organisms/FamilyDetailsForm.vue'
 import GuardianList from '@/components/molecules/GuardianList.vue'
-import { useChurch } from '@/composables/useChurch'
 import type { FamilyDetails, FamilyPortal, GuardianEdit, SatelliteOption } from '@/types'
 import { Head } from '@inertiajs/vue3'
 import { computed } from 'vue'
@@ -26,8 +25,6 @@ const props = defineProps<{
     other_guardians: GuardianEdit[]
     satellites: SatelliteOption[]
 }>()
-
-const church = useChurch()
 
 /** "The Reyes family", with "CCF DXB · Lives in Al Barsha" under it — the bar already says "My family". */
 const title = computed(() => `The ${props.me.last_name} family`)
@@ -50,28 +47,21 @@ const sub = computed(() =>
                 <ChildPhotoForm
                     :child="child"
                     who="guardian"
-                    :action="route('family.children.photo', [church.slug, child.id])"
-                    :consent-action="
-                        route('family.children.photo-consent.give', [church.slug, child.id])
-                    "
-                    :withdraw-action="
-                        route('family.children.photo-consent', [church.slug, child.id])
-                    "
-                    :delete-action="route('family.children.photo.destroy', [church.slug, child.id])"
+                    :action="route('family.children.photo', child.id)"
+                    :consent-action="route('family.children.photo-consent.give', child.id)"
+                    :withdraw-action="route('family.children.photo-consent', child.id)"
+                    :delete-action="route('family.children.photo.destroy', child.id)"
                 />
-                <EditChildForm
-                    :action="route('family.children.update', [church.slug, child.id])"
-                    :child="child"
-                />
+                <EditChildForm :action="route('family.children.update', child.id)" :child="child" />
             </FamilyChildCard>
-            <AddChildForm :action="route('family.children.store', church.slug)" />
+            <AddChildForm :action="route('family.children.store')" />
         </section>
 
         <section class="flex flex-col gap-3">
             <SectionHeading>Parents and guardians</SectionHeading>
             <GuardianList :guardians="family.guardians" />
             <FamilyDetailsForm
-                :action="route('family.update', church.slug)"
+                :action="route('family.update')"
                 :details="details"
                 :guardian="me"
                 :others="other_guardians"

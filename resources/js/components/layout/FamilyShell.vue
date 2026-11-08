@@ -17,7 +17,7 @@ const church = useChurch()
 const items = computed<ShellItem[]>(() => [
     {
         label: 'My family',
-        href: route('family.show', church.value.slug),
+        href: route('family.show'),
         testid: 'nav-family',
         current: true,
     },

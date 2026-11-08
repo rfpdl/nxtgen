@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useSatellite } from '@/composables/useSatellite'
 import AppShell from '@/components/layout/AppShell.vue'
 import { useChurch } from '@/composables/useChurch'
 import type { SharedProps, ShellItem } from '@/types'
@@ -8,9 +9,9 @@ import { route } from 'ziggy-js'
 
 /**
  * The church staff frame (AppShell, the Bold look), one menu per area (Roy 2026-11-06, `church_nav.area`). Serve:
- * Check in (the door), Families, QR poster, and "Admin" for an admin. Admin (NxtGen's and the church-wide People):
- * Families, Children, then Classes, Attendance, Cards, Links and People as the person may, and "Serve". Then Password,
- * Switch and Sign out.
+ * Check in (the door), Families, QR poster, and "Admin" for an admin. Admin: Families, Children, then Classes,
+ * Attendance, Cards, Links and People as the person may, and "Serve". Then Password, Switch and Sign out. Every link
+ * is at the satellite in the address (`/{satellite}/admin|serve/…`, the shared `satellite`).
  * Registering starts from the Families list's button, and possible duplicates from its "duplicates" filter
  * (DECISIONS 2026-10-17, after first look) — neither has a tab.
  * The bar names the page: `title` if given, else the menu item whose address the page is under, else the church.
@@ -19,62 +20,60 @@ import { route } from 'ziggy-js'
 const props = defineProps<{ title?: string }>()
 
 const church = useChurch()
+const satellite = useSatellite()
 const page = usePage<SharedProps>()
 
 const items = computed<ShellItem[]>(() => {
     const nav = page.props.church_nav
-    const slug = church.value.slug
-    const inAdmin = nav?.area === 'nxtgen.admin' || nav?.area === 'admin'
+    const slug = satellite.value.slug
+    const inAdmin = nav?.area === 'admin'
     // A class admin (TODO #9) has only Classes and Attendance in Admin.
     const full = nav?.can_use_full_admin === true
     const all: (ShellItem | false)[] = inAdmin
         ? [
               full && {
                   label: 'Families',
-                  href: route('nxtgen.admin.families.index', slug),
+                  href: route('admin.families.index', slug),
                   testid: 'nav-families',
               },
-              full && { label: 'Children', href: route('nxtgen.admin.children.index', slug) },
+              full && { label: 'Children', href: route('admin.children.index', slug) },
               nav?.can_manage_classes === true && {
                   label: 'Classes',
-                  href: route('nxtgen.admin.schedules.index', slug),
+                  href: route('admin.schedules.index', slug),
               },
               nav?.can_see_attendance === true && {
                   label: 'Attendance',
-                  href: route('nxtgen.admin.attendance.show', slug),
+                  href: route('admin.attendance.show', slug),
               },
               nav?.can_manage_cards === true && {
                   label: 'Cards',
-                  href: route('nxtgen.admin.card-requests.index', slug),
+                  href: route('admin.card-requests.index', slug),
               },
               nav?.can_manage_links === true && {
                   label: 'Links',
-                  href: route('nxtgen.admin.links.index', slug),
+                  href: route('admin.links.index', slug),
               },
               nav?.can_manage_people === true && {
                   label: 'People',
                   href: route('admin.people.index', slug),
               },
-              { label: 'Serve', href: route('nxtgen.serve.door.show', slug), testid: 'nav-serve' },
+              { label: 'Serve', href: route('serve.door.show', slug), testid: 'nav-serve' },
           ]
         : [
               {
                   label: 'Check in',
-                  href: route('nxtgen.serve.door.show', slug),
+                  href: route('serve.door.show', slug),
                   testid: 'nav-door',
               },
               {
                   label: 'Families',
-                  href: route('nxtgen.serve.families.index', slug),
+                  href: route('serve.families.index', slug),
                   testid: 'nav-families',
               },
-              { label: 'QR poster', href: route('nxtgen.serve.poster', slug) },
+              { label: 'QR poster', href: route('serve.poster', slug) },
               nav?.can_use_admin === true && {
                   label: 'Admin',
-                  href: route(
-                      full ? 'nxtgen.admin.families.index' : 'nxtgen.admin.schedules.index',
-                      slug,
-                  ),
+                  href: route(full ? 'admin.families.index' : 'admin.schedules.index', slug),
                   testid: 'nav-admin',
               },
           ]
@@ -93,7 +92,7 @@ function pathOf(href: string): string {
     return new URL(href, 'http://x').pathname
 }
 
-/** `/ccf/families/12` is under `/ccf/families`; `/ccf/families-x` is not. */
+/** `/dubai/admin/families/12` is under `/dubai/admin/families`; `/dubai/admin/families-x` is not. */
 function isUnder(path: string, base: string): boolean {
     return path === base || path.startsWith(`${base}/`)
 }

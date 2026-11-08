@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\CardRequest;
 
+use App\Data\Models\CardRequest;
 use App\Domains\Card\Jobs\UpdateCardRequestAsApprovedJob;
 use App\Enums\AccessRowEnum;
 use App\Enums\CardFeeEnum;
@@ -28,11 +29,11 @@ use Illuminate\Http\RedirectResponse;
 #[AccessRow(AccessRowEnum::Cards)]
 final class ApproveCardRequestFeature extends BaseCardRequestFeature
 {
-    public function __construct(private readonly int $requestId) {}
+    public function __construct(private readonly CardRequest $cardRequest) {}
 
     public function handle(): RedirectResponse
     {
-        $request = $this->scopedRequest($this->requestId, $this->scope()->canEditFamily(...));
+        $request = $this->scopedRequest($this->cardRequest, $this->scope()->canEditFamily(...));
         $name = $request->child->displayName();
         if ($request->step === CardStepEnum::Asked && $request->fee() === CardFeeEnum::NotPaid) {
             return back()->with('error', "{$name}'s card is not paid yet: mark the ".Money::aed($request->fee_minor).' paid first.');

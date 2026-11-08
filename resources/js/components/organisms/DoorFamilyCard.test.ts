@@ -1,5 +1,6 @@
 import DoorFamilyCard from '@/components/organisms/DoorFamilyCard.vue'
 import type { ChildHealth, DoorChild, DoorFamily, LevelOption } from '@/types'
+import { makeSatellite } from '@/tests/satellite'
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -7,7 +8,7 @@ const routerPost = vi.fn()
 const routerPut = vi.fn()
 
 vi.mock('@inertiajs/vue3', () => ({
-    usePage: () => ({ props: { church: { name: 'CCF', slug: 'ccf' } } }),
+    usePage: () => ({ props: { satellite: makeSatellite() } }),
     Link: { props: ['href'], template: '<a :href="href"><slot /></a>' },
     router: {
         post: (...args: unknown[]) => routerPost(...args),
@@ -98,7 +99,7 @@ describe('DoorFamilyCard', () => {
         await button.trigger('click')
 
         expect(routerPost).toHaveBeenCalledWith(
-            'nxtgen.serve.door.check-in:["ccf",5]',
+            'serve.door.check-in:["dubai",5]',
             { children: [{ child_id: 1, level: null, make_active: false }] },
             expect.objectContaining({ preserveScroll: true }),
         )
@@ -116,7 +117,7 @@ describe('DoorFamilyCard', () => {
         await button.trigger('click')
 
         expect(routerPost).toHaveBeenCalledWith(
-            'nxtgen.serve.door.check-in:["ccf",5]',
+            'serve.door.check-in:["dubai",5]',
             { children: [{ child_id: 1, level: null, make_active: false }] },
             expect.objectContaining({ preserveScroll: true }),
         )
@@ -190,7 +191,7 @@ describe('DoorFamilyCard', () => {
 
         await wrapper.find('[data-testid="undo"]').trigger('click')
         expect(routerPut).toHaveBeenCalledWith(
-            'nxtgen.serve.door.undo:["ccf",40]',
+            'serve.door.undo:["dubai",40]',
             {},
             expect.objectContaining({ preserveScroll: true }),
         )
@@ -210,7 +211,7 @@ describe('DoorFamilyCard', () => {
         const may = card(5, { ...cruz, can_open: true })
         await may.find('[data-testid="child-expand"]').trigger('click')
         expect(may.find('[data-testid="open-family"]').attributes('href')).toBe(
-            'nxtgen.serve.families.show:["ccf",7]',
+            'serve.families.show:["dubai",7]',
         )
 
         const mayNot = card()

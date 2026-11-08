@@ -26,22 +26,20 @@ trait ClassRules
     }
 
     /**
-     * The satellites whose classes this person manages — adds, edits, retires: null = every satellite (church admin);
-     * a satellite admin's own; nobody else's. A class admin's class is canManageSchedule's.
+     * The satellites whose classes this person manages — adds, edits, retires: an admin's own (this one), or none. A
+     * class admin's class is canManageSchedule's.
      *
-     * @return list<int>|null
+     * @return list<int>
      */
-    public function classSatelliteIds(): ?array
+    public function classSatelliteIds(): array
     {
-        return $this->isChurchAdmin ? null : $this->adminSatelliteIds;
+        return $this->adminSatelliteIds;
     }
 
-    /** Add a class at a satellite: a church admin anywhere in this church, a satellite admin at their own. */
+    /** Add a class at a satellite: an admin at their own. */
     public function canManageClassesAt(Satellite $satellite): bool
     {
-        $ids = $this->classSatelliteIds();
-
-        return $satellite->church_id === $this->churchId && ($ids === null || in_array($satellite->id, $ids, true));
+        return $satellite->church_id === $this->churchId && in_array($satellite->id, $this->classSatelliteIds(), true);
     }
 
     /** Edit or retire this class: whoever manages its satellite's classes, or its own class admin. */
@@ -59,27 +57,21 @@ trait ClassRules
 
     /**
      * The satellites whose classes this person checks children into at the door (DECISIONS 2026-10-26): those an Admin
-     * or Lifeshaper Role covers — null = every satellite (a church-wide Role). A class admin's own class comes on top
-     * (classAdminScheduleIds), not its satellite's other classes. Which CHILDREN is not limited: any child of the church.
+     * or Lifeshaper Role covers (this one, or none). A class admin's own class comes on top (classAdminScheduleIds),
+     * not its satellite's other classes. Which CHILDREN is not limited: any child of the church.
      *
-     * @return list<int>|null
+     * @return list<int>
      */
-    public function doorSatelliteIds(): ?array
+    public function doorSatelliteIds(): array
     {
-        if ($this->isChurchAdmin || $this->isChurchLifeshaper) {
-            return null;
-        }
-
         return array_values(array_unique([...$this->adminSatelliteIds, ...$this->lifeshaperSatelliteIds]));
     }
 
     /** Check children in (and undo, mark present, confirm a head count) at this class. */
     public function canCheckInTo(Schedule $schedule): bool
     {
-        $ids = $this->doorSatelliteIds();
-
         return $schedule->church_id === $this->churchId && $this->canWorkHere()
-            && ($ids === null || in_array($schedule->satellite_id, $ids, true) || isset($this->adminSchedules[$schedule->id]));
+            && (in_array($schedule->satellite_id, $this->doorSatelliteIds(), true) || isset($this->adminSchedules[$schedule->id]));
     }
 
     /** Attendance (reports are admins only — DECISIONS 2026-10-26): church, satellite and class admins. */
@@ -89,20 +81,20 @@ trait ClassRules
     }
 
     /**
-     * The satellites whose Attendance this person may pick: null = every satellite (church admin); a satellite admin's
-     * own and a class admin's class's satellite. Which CLASS there is canSeeAttendanceOf.
+     * The satellites whose Attendance this person may pick: an admin's own and a class admin's class's satellite (this
+     * one), or none. Which CLASS there is canSeeAttendanceOf.
      *
-     * @return list<int>|null
+     * @return list<int>
      */
-    public function attendanceSatelliteIds(): ?array
+    public function attendanceSatelliteIds(): array
     {
-        return $this->isChurchAdmin ? null : array_values(array_unique([...$this->adminSatelliteIds, ...array_values($this->adminSchedules)]));
+        return array_values(array_unique([...$this->adminSatelliteIds, ...array_values($this->adminSchedules)]));
     }
 
-    /** This class's Attendance: an admin of its satellite (or the church), or its own class admin. */
+    /** This class's Attendance: an admin of its satellite, or its own class admin. */
     public function canSeeAttendanceOf(Schedule $schedule): bool
     {
         return $schedule->church_id === $this->churchId
-            && ($this->isChurchAdmin || in_array($schedule->satellite_id, $this->adminSatelliteIds, true) || isset($this->adminSchedules[$schedule->id]));
+            && (in_array($schedule->satellite_id, $this->adminSatelliteIds, true) || isset($this->adminSchedules[$schedule->id]));
     }
 }

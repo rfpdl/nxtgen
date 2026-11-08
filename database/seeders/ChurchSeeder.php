@@ -11,10 +11,9 @@ use App\Data\Models\Squad;
 use App\Data\Models\User;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
-use App\Foundation\Support\RouteChurch;
+use App\Foundation\Support\RouteSatellite;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use RuntimeException;
 
 /**
@@ -38,8 +37,8 @@ final class ChurchSeeder extends Seeder
                 'settings' => ['satellite_label' => 'Satellite', 'lifeshapers_can_open' => true],
             ]);
 
-            foreach ($settings['satellites'] as $name) {
-                Squad::createChartFor(Satellite::query()->firstOrCreate(['church_id' => $church->id, 'slug' => Str::slug($name)], ['name' => $name]));
+            foreach ($settings['satellites'] as $slug => $name) {
+                Squad::createChartFor(Satellite::query()->firstOrCreate(['church_id' => $church->id, 'slug' => $slug], ['name' => $name]));
             }
 
             $admin = User::query()->firstOrCreate(['email' => $settings['first_admin_email']], ['name' => $settings['first_admin_name']]);
@@ -48,7 +47,7 @@ final class ChurchSeeder extends Seeder
     }
 
     /**
-     * @return array{slug: string, name: string, timezone: string, satellites: list<string>, first_admin_email: string, first_admin_name: string}
+     * @return array{slug: string, name: string, timezone: string, satellites: array<string, string>, first_admin_email: string, first_admin_name: string}
      */
     private static function settings(): array
     {
@@ -61,15 +60,18 @@ final class ChurchSeeder extends Seeder
             return trim($value);
         };
 
-        $slug = mb_strtolower($text('slug'));
-        if (preg_match('/^'.RouteChurch::pattern().'$/', $slug) !== 1) {
-            throw new RuntimeException("Church address \"{$slug}\" is reserved by the app or not a valid address.");
+        $satellites = [];
+        foreach (array_filter(array_map('trim', explode('|', $text('satellites'))), fn (string $s): bool => $s !== '') as $entry) {
+            [$address, $name] = array_map('trim', explode('=', $entry, 2) + [1 => '']);
+            $address = mb_strtolower($address);
+            if ($name === '' || preg_match('/^'.RouteSatellite::pattern().'$/', $address) !== 1) {
+                throw new RuntimeException("Satellite \"{$entry}\" needs address=name, and an address the app does not use itself.");
+            }
+            $satellites[$address] = $name;
         }
 
-        $satellites = array_values(array_filter(array_map('trim', explode('|', $text('satellites'))), fn (string $s): bool => $s !== ''));
-
         return [
-            'slug' => $slug,
+            'slug' => mb_strtolower($text('slug')),
             'name' => $text('name'),
             'timezone' => $text('timezone'),
             'satellites' => $satellites,

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Http\Controllers\MovingUp;
 
+use App\Data\Models\Child;
+use App\Data\Models\MovingUp;
 use App\Services\Church\Features\MovingUp\MoveChildrenUpFeature;
 use App\Services\Church\Features\MovingUp\PutBackChildFeature;
 use App\Services\Church\Features\MovingUp\PutBackEveryoneFeature;
@@ -23,13 +25,13 @@ final class Controller extends \Lucid\Units\Controller
         return $this->serve(MoveChildrenUpFeature::class);
     }
 
-    public function putBackChild(string $church, int $movingUp, int $child): RedirectResponse
+    public function putBackChild(MovingUp $movingUp, Child $child): RedirectResponse
     {
-        return $this->serve(PutBackChildFeature::class, ['movingUpId' => $movingUp, 'childId' => $child]);
+        return $this->serve(PutBackChildFeature::class, ['movingUp' => $movingUp, 'child' => $child]);
     }
 
-    public function putBackEveryone(string $church, int $movingUp): RedirectResponse
+    public function putBackEveryone(MovingUp $movingUp): RedirectResponse
     {
-        return $this->serve(PutBackEveryoneFeature::class, ['movingUpId' => $movingUp]);
+        return $this->serve(PutBackEveryoneFeature::class, ['movingUp' => $movingUp]);
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\CardRequest;
 
+use App\Data\Models\CardRequest;
 use App\Domains\Card\Jobs\UpdateCardRequestAsGivenJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -25,11 +26,11 @@ use Illuminate\Http\RedirectResponse;
 #[AccessRow(AccessRowEnum::CardRequest)]
 final class GiveCardRequestFeature extends BaseCardRequestFeature
 {
-    public function __construct(private readonly int $requestId) {}
+    public function __construct(private readonly CardRequest $cardRequest) {}
 
     public function handle(): RedirectResponse
     {
-        $request = $this->scopedRequest($this->requestId, $this->scope()->canSeeFamily(...));
+        $request = $this->scopedRequest($this->cardRequest, $this->scope()->canSeeFamily(...));
         $moved = $this->run(new UpdateCardRequestAsGivenJob(request: $request, by: $this->staff()));
 
         return $this->answer($moved, $request, "{$request->child->displayName()}'s new card is given.");

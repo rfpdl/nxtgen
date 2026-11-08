@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { useSatellite } from '@/composables/useSatellite'
 import AppButton from '@/components/atoms/AppButton.vue'
 import ChoiceChips from '@/components/atoms/ChoiceChips.vue'
 import Pill from '@/components/atoms/Pill.vue'
 import TextArea from '@/components/atoms/TextArea.vue'
-import { useChurch } from '@/composables/useChurch'
 import { useEnum } from '@/composables/useEnum'
 import type { CardFee, CardRequest, CardRequestInput, Draft } from '@/types'
 import { useForm } from '@inertiajs/vue3'
@@ -26,7 +26,7 @@ const FEE_VARIANTS: Record<CardFee, 'warning' | 'info'> = {
     free: 'info',
 }
 
-const church = useChurch()
+const satellite = useSatellite()
 const { options: reasons } = useEnum('card_reason')
 const chips = computed(() =>
     reasons.value.map((r) => ({
@@ -59,7 +59,7 @@ function submit(): void {
             >
             <AppButton
                 v-if="request.moves.includes('give')"
-                :href="areaRoute('card-requests.give', [church.slug, request.id])"
+                :href="areaRoute('card-requests.give', [satellite.slug, request.id])"
                 method="put"
                 :preserve-scroll="true"
                 data-testid="card-given"

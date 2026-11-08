@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useSatellite } from '@/composables/useSatellite'
 import AppButton from '@/components/atoms/AppButton.vue'
 import EmptyState from '@/components/atoms/EmptyState.vue'
 import PageHeader from '@/components/atoms/PageHeader.vue'
@@ -7,21 +8,13 @@ import RowList from '@/components/atoms/RowList.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import Pager from '@/components/molecules/Pager.vue'
 import RegistrationListFilters from '@/components/molecules/RegistrationListFilters.vue'
-import { useChurch } from '@/composables/useChurch'
-import type {
-    ChildListRow,
-    LevelOption,
-    ListFilters,
-    Pagination,
-    SatelliteOption,
-    SharedProps,
-} from '@/types'
+import type { ChildListRow, LevelOption, ListFilters, Pagination, SharedProps } from '@/types'
 import { Head, router, usePage } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 import { areaRoute } from '@/composables/useArea'
 
 /**
- * The children list (plan §6): every child in the satellites the viewer can see — Level, age, status, an allergy
+ * The children list (plan §6): every child of the satellite in the address — Level, age, status, an allergy
  * flag — with the same search and filters as the families list. Each child opens their family; a child whose family's
  * email is unconfirmed offers "Send the confirmation link again" (DECISIONS 2026-10-17).
  * On the kit (the Bold look): one stacked row per child — the whole row opens the family — the Level a Pill in its
@@ -31,20 +24,20 @@ defineProps<{
     children: ChildListRow[]
     filters: ListFilters
     pagination: Pagination
-    options: { satellites: SatelliteOption[]; levels: LevelOption[] }
+    options: { levels: LevelOption[] }
 }>()
 
-const church = useChurch()
+const satellite = useSatellite()
 const nav = usePage<SharedProps>().props.church_nav
 
 /** Another page of the same filtered list: the filters stay in the address. */
 function goTo(page: number): void {
     const current = Object.fromEntries(new URLSearchParams(window.location.search))
-    router.get(route('nxtgen.admin.children.index', church.value.slug), { ...current, page })
+    router.get(route('admin.children.index', satellite.value.slug), { ...current, page })
 }
 
 function apply(params: Record<string, string | number>): void {
-    router.get(route('nxtgen.admin.children.index', church.value.slug), params, {
+    router.get(route('admin.children.index', satellite.value.slug), params, {
         preserveScroll: true,
     })
 }
@@ -57,7 +50,7 @@ function apply(params: Record<string, string | number>): void {
             <template v-if="nav?.can_move_up" #actions>
                 <AppButton
                     variant="secondary"
-                    :href="route('nxtgen.admin.moving-up.index', church.slug)"
+                    :href="route('admin.moving-up.index', satellite.slug)"
                     data-testid="children-moving-up"
                     >Moving-Up</AppButton
                 >
@@ -73,7 +66,7 @@ function apply(params: Record<string, string | number>): void {
             v-if="children.length > 0"
             :items="children"
             :item-key="(c) => c.id"
-            :href="(c) => areaRoute('families.show', [church.slug, c.family_id])"
+            :href="(c) => areaRoute('families.show', [satellite.slug, c.family_id])"
             row-testid="child-row"
         >
             <template #default="{ item: child }">

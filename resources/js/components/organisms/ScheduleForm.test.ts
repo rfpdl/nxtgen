@@ -36,7 +36,7 @@ describe('ScheduleForm', () => {
 
     it('offers "no set day" and every day from the page\'s weekday enum', () => {
         const wrapper = mount(ScheduleForm, {
-            props: { action: '/ccf/classes', satelliteId: 3, submitLabel: 'Add class' },
+            props: { action: '/dubai/admin/classes', submitLabel: 'Add class' },
         })
 
         const labels = wrapper.find('[data-testid="schedule-weekday"]').findAll('option')
@@ -52,28 +52,28 @@ describe('ScheduleForm', () => {
         ])
     })
 
-    it('adds a class at its satellite, with no day or times if none are given', async () => {
+    it('adds a class — at the satellite in the address, never one it names — with no day or times if none are given', async () => {
         const wrapper = mount(ScheduleForm, {
-            props: { action: '/ccf/classes', satelliteId: 3, submitLabel: 'Add class' },
+            props: { action: '/dubai/admin/classes', submitLabel: 'Add class' },
         })
 
         await wrapper.find('[data-testid="schedule-name"]').setValue('Special class')
         await wrapper.find('form').trigger('submit')
 
+        expect(form).not.toHaveProperty('satellite_id')
         expect(form).toMatchObject({
-            satellite_id: 3,
             name: 'Special class',
             weekday: '',
             starts_at: '',
             ends_at: '',
         })
-        expect(post).toHaveBeenCalledWith('/ccf/classes', expect.anything())
+        expect(post).toHaveBeenCalledWith('/dubai/admin/classes', expect.anything())
         expect(put).not.toHaveBeenCalled()
     })
 
     it('edits a class from what is saved, and can be cancelled', async () => {
         const wrapper = mount(ScheduleForm, {
-            props: { action: '/ccf/classes/4', schedule: onePm, submitLabel: 'Save' },
+            props: { action: '/dubai/admin/classes/4', schedule: onePm, submitLabel: 'Save' },
         })
 
         expect(form).toMatchObject({ name: '1PM', weekday: 'saturday', starts_at: '13:00' })
@@ -81,7 +81,7 @@ describe('ScheduleForm', () => {
         await wrapper.find('form').trigger('submit')
 
         expect(form.starts_at).toBe('13:30')
-        expect(put).toHaveBeenCalledWith('/ccf/classes/4', expect.anything())
+        expect(put).toHaveBeenCalledWith('/dubai/admin/classes/4', expect.anything())
 
         await wrapper.find('[data-testid="schedule-cancel"]').trigger('click')
         expect(wrapper.emitted('done')).toHaveLength(1)
@@ -89,7 +89,7 @@ describe('ScheduleForm', () => {
 
     it('adds a class and says it is done, so the page can close the form', async () => {
         const wrapper = mount(ScheduleForm, {
-            props: { action: '/ccf/classes', satelliteId: 3, submitLabel: 'Add class' },
+            props: { action: '/dubai/admin/classes', submitLabel: 'Add class' },
         })
 
         await wrapper.find('form').trigger('submit')
@@ -101,7 +101,7 @@ describe('ScheduleForm', () => {
 
     it('can be cancelled while adding, too', async () => {
         const wrapper = mount(ScheduleForm, {
-            props: { action: '/ccf/classes', satelliteId: 3, submitLabel: 'Add class' },
+            props: { action: '/dubai/admin/classes', submitLabel: 'Add class' },
         })
 
         await wrapper.find('[data-testid="schedule-cancel"]').trigger('click')
@@ -111,7 +111,7 @@ describe('ScheduleForm', () => {
 
     it("shows the server's words beside the field they are about", async () => {
         const wrapper = mount(ScheduleForm, {
-            props: { action: '/ccf/classes', satelliteId: 3, submitLabel: 'Add class' },
+            props: { action: '/dubai/admin/classes', submitLabel: 'Add class' },
         })
 
         form.errors = { ends_at: 'The class must end after it starts.' }

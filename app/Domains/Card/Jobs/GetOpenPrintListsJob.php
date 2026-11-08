@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 /**
  * The Print lists still to print, for Cards' Approved tab (name cards 04): this church's lists holding a card the
- * viewer may still mark printed (Approved, of the families of `$satelliteIds`; null = every satellite), newest first,
+ * viewer may still mark printed (Approved, of the families of `$satelliteIds`), newest first,
  * each counted as the viewer sees it — `cards_count` (its cards they may see) and `to_print_count` (those still
  * Approved) — with who made it.
  *
@@ -21,10 +21,10 @@ use Illuminate\Database\Eloquent\Builder;
  */
 final class GetOpenPrintListsJob extends BaseJob
 {
-    /** @param list<int>|null $satelliteIds */
+    /** @param list<int> $satelliteIds */
     public function __construct(
         private readonly Church $church,
-        private readonly ?array $satelliteIds,
+        private readonly array $satelliteIds,
     ) {}
 
     /** @return list<PrintList> */

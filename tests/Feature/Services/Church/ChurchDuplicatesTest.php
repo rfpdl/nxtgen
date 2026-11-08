@@ -33,8 +33,8 @@ use function Tests\Support\staffMember;
 function dupChurch(): array
 {
     $church = church(['slug' => 'ccf']);
-    $htc = satelliteOf($church, ['name' => 'Holy Trinity Church']);
-    $house = satelliteOf($church, ['name' => 'House Church']);
+    $htc = satelliteOf($church, ['name' => 'Holy Trinity Church', 'slug' => 'htc']);
+    $house = satelliteOf($church, ['name' => 'House Church', 'slug' => 'house']);
     $old = dupFamily($house, 'Maria', 'maria@old.com');
     $new = dupFamily($htc, 'Mary', 'mary@new.com');
     (new CreateDuplicateCandidatesJob($new))->handle();
@@ -52,27 +52,31 @@ function dupFamily(Satellite $satellite, string $name, string $email): Family
     return $family;
 }
 
-it('shows a family\'s open possible duplicates on its page, both sides in the lite view, to an admin who may answer @story#92', function (): void {
+it('shows a family\'s open possible duplicates on its page, both sides in the lite view, to an admin who may answer at its satellite @story#92', function (): void {
     ['church' => $church, 'new' => $new, 'old' => $old] = dupChurch();
     $admin = staffMember(RoleEnum::Admin, atChurch($church));
 
-    // On either side's page: the new family's, and the existing one it may duplicate.
-    foreach ([$new, $old] as $family) {
-        actingAs($admin)->get("/ccf/nxtgen/admin/families/{$family->id}")
-            ->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
-            ->component('Church/Families/Show')
-            ->has('duplicates', 1)
-            ->where('duplicates.0.reason_label', 'Same phone')
-            ->where('duplicates.0.subject.primary_name', 'Mary Santos')
-            ->where('duplicates.0.subject.masked_email', 'ma•••@new.com')
-            ->where('duplicates.0.candidate.primary_name', 'Maria Santos')
-            ->where('duplicates.0.candidate.children.0.nickname', "Maria's kid"));
-    }
+    // On the new family's page, at its satellite: the pair to answer.
+    actingAs($admin)->get("/htc/admin/families/{$new->id}")
+        ->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
+        ->component('Church/Families/Show')
+        ->has('duplicates', 1)
+        ->where('duplicates.0.reason_label', 'Same phone')
+        ->where('duplicates.0.subject.primary_name', 'Mary Santos')
+        ->where('duplicates.0.subject.masked_email', 'ma•••@new.com')
+        ->where('duplicates.0.candidate.primary_name', 'Maria Santos')
+        ->where('duplicates.0.candidate.children.0.nickname', "Maria's kid"));
+
+    // The existing family lives at another satellite: its page there shows only that satellite (DECISIONS 2026-11-08),
+    // so the pair is answered at the new family's satellite, not from here. Two families at one satellite show the pair
+    // on both pages (next test).
+    actingAs($admin)->get("/house/admin/families/{$old->id}")
+        ->assertOk()->assertInertia(fn (AssertableInertia $p) => $p->has('duplicates', 0));
 });
 
 it('shows a pair of children on both children\'s families\' pages @story#92', function (): void {
     $church = church(['slug' => 'ccf']);
-    $htc = satelliteOf($church);
+    $htc = satelliteOf($church, ['slug' => 'htc']);
     $old = familyAt($htc);
     $new = familyAt($htc);
     guardianOf($old, User::factory()->create(), ['phone' => '0501111111']);
@@ -83,7 +87,7 @@ it('shows a pair of children on both children\'s families\' pages @story#92', fu
     $admin = staffMember(RoleEnum::Admin, atChurch($church));
 
     foreach ([$new, $old] as $family) {
-        actingAs($admin)->get("/ccf/nxtgen/admin/families/{$family->id}")
+        actingAs($admin)->get("/htc/admin/families/{$family->id}")
             ->assertInertia(fn (AssertableInertia $p) => $p->has('duplicates', 1)->where('duplicates.0.reason_label', 'Same name and birthday'));
     }
 });
@@ -92,21 +96,21 @@ it('shows a family no possible duplicates its viewer may not answer, nor answere
     ['church' => $church, 'htc' => $htc, 'house' => $house, 'new' => $new, 'old' => $old] = dupChurch();
 
     // The House admin sees the existing family, but may not edit the new one, so cannot answer.
-    actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->get("/ccf/nxtgen/admin/families/{$old->id}")
+    actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->get("/house/admin/families/{$old->id}")
         ->assertInertia(fn (AssertableInertia $p) => $p->has('duplicates', 0));
     // A Lifeshaper never answers.
-    actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get("/ccf/nxtgen/serve/families/{$new->id}")
+    actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get("/htc/serve/families/{$new->id}")
         ->assertInertia(fn (AssertableInertia $p) => $p->has('duplicates', 0));
 
     DuplicateCandidate::query()->update(['status' => DuplicateStatusEnum::Dismissed]);
-    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get("/ccf/nxtgen/admin/families/{$new->id}")
+    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get("/htc/admin/families/{$new->id}")
         ->assertInertia(fn (AssertableInertia $p) => $p->has('duplicates', 0));
 });
 
 it('has no possible-duplicates page of its own: the families list\'s filter finds them', function (): void {
     ['church' => $church] = dupChurch();
 
-    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/nxtgen/admin/duplicates')->assertNotFound();
+    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/htc/admin/duplicates')->assertNotFound();
 });
 
 it('dismisses a pair, records who, and notes it on the new family @story#72', function (): void {
@@ -114,7 +118,7 @@ it('dismisses a pair, records who, and notes it on the new family @story#72', fu
     $admin = staffMember(RoleEnum::Admin, atChurch($church));
     $pair = DuplicateCandidate::query()->sole();
 
-    actingAs($admin)->put("/ccf/nxtgen/admin/duplicates/{$pair->id}", ['status' => 'dismissed'])->assertRedirect()->assertSessionHas('success');
+    actingAs($admin)->put("/htc/admin/duplicates/{$pair->id}", ['status' => 'dismissed'])->assertRedirect()->assertSessionHas('success');
 
     $pair->refresh();
     expect($pair->status)->toBe(DuplicateStatusEnum::Dismissed)
@@ -129,7 +133,7 @@ it('confirms a pair as the same family — flagged for the merge, nothing merged
     $pair = DuplicateCandidate::query()->sole();
 
     actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
-        ->put("/ccf/nxtgen/admin/duplicates/{$pair->id}", ['status' => 'confirmed'])->assertSessionHas('success');
+        ->put("/htc/admin/duplicates/{$pair->id}", ['status' => 'confirmed'])->assertSessionHas('success');
 
     expect($pair->fresh()?->status)->toBe(DuplicateStatusEnum::Confirmed)
         ->and(Family::query()->count())->toBe(2);
@@ -140,11 +144,11 @@ it('refuses to review a pair outside the reviewer\'s satellite, or one already r
     $pair = DuplicateCandidate::query()->sole();
 
     actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))
-        ->put("/ccf/nxtgen/admin/duplicates/{$pair->id}", ['status' => 'dismissed'])->assertNotFound();
+        ->put("/house/admin/duplicates/{$pair->id}", ['status' => 'dismissed'])->assertNotFound();
 
     $pair->forceFill(['status' => DuplicateStatusEnum::Dismissed])->save();
     actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
-        ->put("/ccf/nxtgen/admin/duplicates/{$pair->id}", ['status' => 'confirmed'])->assertNotFound();
+        ->put("/htc/admin/duplicates/{$pair->id}", ['status' => 'confirmed'])->assertNotFound();
 });
 
 it('only takes "dismissed" or "confirmed" @story#73', function (): void {
@@ -152,14 +156,14 @@ it('only takes "dismissed" or "confirmed" @story#73', function (): void {
     $pair = DuplicateCandidate::query()->sole();
 
     actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
-        ->put("/ccf/nxtgen/admin/duplicates/{$pair->id}", ['status' => 'open'])->assertSessionHasErrors('status');
+        ->put("/htc/admin/duplicates/{$pair->id}", ['status' => 'open'])->assertSessionHasErrors('status');
 });
 
 it('flags a child added to an older family that matches a newer family\'s child, the added child to answer for', function (): void {
     ['church' => $church, 'htc' => $htc, 'new' => $new, 'old' => $old] = dupChurch();
     $first = childOf($new, ['first_name' => 'Ana', 'last_name' => 'Santos', 'date_of_birth' => '2018-01-01']);
 
-    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->post("/ccf/nxtgen/serve/families/{$old->id}/children", [
+    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->post("/house/serve/families/{$old->id}/children", [
         'first_name' => 'Ana', 'last_name' => 'Santos', 'nickname' => 'Ana', 'gender' => 'girl', 'date_of_birth' => '2018-01-01', 'has_allergies' => false,
     ])->assertSessionHas('success');
 

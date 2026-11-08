@@ -11,10 +11,10 @@ use Tests\Support\TestMap;
 
 it('shows each staff route with its rule, who gets in, and each story\'s tests', function (): void {
     $map = TestMap::export(base_path());
-    $route = collect($map['routes'])->firstWhere('name', 'nxtgen.admin.moving-up.store') ?? throw new LogicException('No Moving-Up route on the map.');
+    $route = collect($map['routes'])->firstWhere('name', 'admin.moving-up.store') ?? throw new LogicException('No Moving-Up route on the map.');
 
     expect($route['method'])->toBe('POST')
-        ->and($route['uri'])->toBe('/{church}/nxtgen/admin/moving-up')
+        ->and($route['uri'])->toBe('/{satellite}/admin/moving-up')
         ->and($route['feature'])->toBe('MoveChildrenUpFeature')
         ->and($route['rule'])->toContain('church admin only')
         ->and($route['cells'])->toMatchArray(['church admin' => 'ok', 'satellite admin' => '404', 'anonymous' => 'login']);

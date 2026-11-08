@@ -7,9 +7,7 @@ namespace App\Services\Church\Features\Poster;
 use App\Data\Models\SatelliteLink;
 use App\Domains\Card\Jobs\CreateQrCodeSvgJob;
 use App\Domains\Church\DataObjects\PosterLinkData;
-use App\Domains\Church\DataObjects\SatelliteOptionData;
 use App\Domains\Church\Jobs\GetSatelliteLinksJob;
-use App\Domains\Church\Jobs\GetSatellitesJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
@@ -18,9 +16,9 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * The printable QR poster (plan §6 R1; Roy 2026-11-06): this church's registration address as a QR code, then the
- * satellite's own Links (its Facebook group, its WhatsApp group…), each a QR code with its label. A satellite the
- * person is assigned to (`?satellite=`; church-wide Roles: any) — anything else falls back to the first of theirs.
+ * The printable QR poster (plan §6 R1; Roy 2026-11-06): the satellite's registration address as a QR code, then the
+ * satellite's own Links (its Facebook group, its WhatsApp group…), each a QR code with its label. The satellite is
+ * the one in the address (DECISIONS 2026-11-08); another is picked by switching in the bar, not `?satellite=`.
  * Codes are sent as images (data URIs), never as markup to inject.
  *
  * @extends BaseChurchFeature<Response>
@@ -42,24 +40,14 @@ final class ShowPosterFeature extends BaseChurchFeature
 {
     public function handle(): Response
     {
-        $church = $this->church();
-        $url = route('public.register', $church->slug);
-
-        // The satellites the person is assigned to (Roy: "assign you to satellite A, you can only do stuff in satellite A").
-        $ids = $this->scope()->visibleSatelliteIds();
-        $satellites = array_values(array_filter(
-            $this->run(new GetSatellitesJob(church: $church)),
-            fn (SatelliteOptionData $s): bool => $ids === null || in_array($s->id, $ids, true),
-        ));
-        $asked = request()->integer('satellite');
-        $satellite = array_values(array_filter($satellites, fn (SatelliteOptionData $s): bool => $s->id === $asked))[0] ?? $satellites[0] ?? null;
-        $links = $satellite === null ? [] : $this->run(new GetSatelliteLinksJob(church: $church, satelliteIds: [$satellite->id]))[$satellite->id] ?? [];
+        // The poster of the satellite in the address (DECISIONS 2026-11-08): its registration link and its own Links.
+        $satellite = $this->satellite();
+        $url = route('public.register', $satellite);
+        $links = $this->run(new GetSatelliteLinksJob(church: $this->church(), satelliteIds: [$satellite->id]))[$satellite->id] ?? [];
 
         return Inertia::render('Church/Poster', [
             'register_url' => $url,
             'qr' => $this->qr($url),
-            'satellite' => $satellite,
-            'satellites' => $satellites,
             'links' => array_map(fn (SatelliteLink $l): PosterLinkData => new PosterLinkData(label: $l->label, url: $l->url, qr: $this->qr($l->url)), $links),
         ]);
     }

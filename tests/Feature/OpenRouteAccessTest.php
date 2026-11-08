@@ -58,15 +58,17 @@ function openMatrix(): array
         'auth.magic.login' => $all('302 /home'),
         'auth.magic.verify' => $all('302 /home'),
         'auth.magic.claim' => $all('302 /home'),
-        // One place: go there. The other church's admin is a parent there too, so they are asked to choose.
-        'home' => ['302 /login', '302 /ccf/family', '302 /ccf', '200'],
-        // Only a place on the person's own landing list: a church admin with no family has no "/ccf/family".
-        'home.choice' => ['302 /login', '302 /ccf/family', '404', '404'],
+        // One place: go there — a parent to /family, staff to their first satellite's home (/{satellite}, the church
+        // is never in the address — Roy 2026-11-07). The other church's admin is no parent any more (AccessWorld), so
+        // they go straight to their own satellite rather than being asked to choose.
+        'home' => ['302 /login', '302 /family', '302 /home-sat', '302 /other'],
+        // Only a place on the person's own landing list: an admin with no family has no "/family".
+        'home.choice' => ['302 /login', '302 /family', '404', '404'],
         // The backup password is for staff (anywhere), never a parent.
         'account.password' => ['302 /login', '404', '200', '200'],
         'account.password.update' => ['302 /login', '404', '302 /', '302 /'],
         'public.register' => $all('200'),
-        'public.register.store' => $all('302 /ccf/register/thanks'),
+        'public.register.store' => $all('302 /home-sat/register/thanks'),
         'public.register.thanks' => $all('200'),
     ];
 }
@@ -97,16 +99,17 @@ function openRequest(string $route, AccessWorld $w): array
         'auth.magic.verify' => ['POST', '/magic/verify/'.$link(MagicLinkPurposeEnum::VerifyEmail), []],
         'auth.magic.claim' => ['POST', '/magic/claim/'.$link(MagicLinkPurposeEnum::ClaimFamily, FamilyClaim::factory()->create(['email_normalised' => $parent->email])), []],
         'home' => ['GET', '/home', []],
-        'home.choice' => ['POST', '/home/choice', ['url' => '/ccf/family']],
+        'home.choice' => ['POST', '/home/choice', ['url' => '/family']],
         'account.password' => ['GET', '/account/password', []],
         'account.password.update' => ['PUT', '/account/password', $password],
-        'public.register' => ['GET', '/ccf/register', []],
-        'public.register.store' => ['POST', '/ccf/register', [
+        // A satellite's registration link (spec item 7): the satellite in the address, never the church.
+        'public.register' => ['GET', '/home-sat/register', []],
+        'public.register.store' => ['POST', '/home-sat/register', [
             'home_satellite_id' => $w->home->id, 'area_text' => 'Al Barsha', 'privacy_consented' => true,
             'guardian' => ['first_name' => 'Zara', 'last_name' => 'Cruz', 'relationship' => 'mother', 'phone' => '0544897346', 'email' => 'zara@example.com', 'ministries' => []],
             'children' => [['first_name' => 'Ana', 'middle_name' => null, 'last_name' => 'Cruz', 'nickname' => 'Ana', 'gender' => 'girl', 'date_of_birth' => '2019-05-10', 'has_allergies' => false, 'allergies' => null]],
         ]],
-        'public.register.thanks' => ['GET', '/ccf/register/thanks', []],
+        'public.register.thanks' => ['GET', '/home-sat/register/thanks', []],
         default => throw new LogicException("No request for {$route} — add it to openRequest()."),
     };
 }

@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { useSatellite } from '@/composables/useSatellite'
 import AppButton from '@/components/atoms/AppButton.vue'
 import PageHeader from '@/components/atoms/PageHeader.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import SatelliteLinks from '@/components/organisms/SatelliteLinks.vue'
-import { useChurch } from '@/composables/useChurch'
 import type { SatelliteLinks as SatelliteLinksProp } from '@/types'
 import { Head } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
@@ -14,7 +14,7 @@ import { route } from 'ziggy-js'
  */
 defineProps<{ satellites: SatelliteLinksProp[]; max: number }>()
 
-const church = useChurch()
+const here = useSatellite()
 </script>
 
 <template>
@@ -26,7 +26,7 @@ const church = useChurch()
         >
             <template #actions>
                 <AppButton
-                    :href="route('nxtgen.serve.poster', church.slug)"
+                    :href="route('serve.poster', here.slug)"
                     variant="secondary"
                     data-testid="open-poster"
                     >See the poster</AppButton

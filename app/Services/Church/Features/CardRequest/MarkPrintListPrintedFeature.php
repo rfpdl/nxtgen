@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\CardRequest;
 
+use App\Data\Models\PrintList;
 use App\Domains\Card\Jobs\UpdatePrintListAsPrintedJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -26,11 +27,11 @@ use Illuminate\Http\RedirectResponse;
 #[AccessRow(AccessRowEnum::Cards)]
 final class MarkPrintListPrintedFeature extends BasePrintListFeature
 {
-    public function __construct(private readonly int $printListId) {}
+    public function __construct(private readonly PrintList $printList) {}
 
     public function handle(): RedirectResponse
     {
-        [$list, $cards] = $this->scopedPrintList($this->printListId);
+        [$list, $cards] = $this->scopedPrintList($this->printList);
 
         $marked = $this->run(new UpdatePrintListAsPrintedJob(church: $this->church(), printList: $list, satelliteIds: $this->scope()->cardSatelliteIds(), by: $this->staff()));
         $movedOn = count($cards) - $marked;

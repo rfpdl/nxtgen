@@ -4,7 +4,7 @@ import { expect, test } from '../support/test'
 import { xlsxRows } from '../support/xlsx'
 import { menuOf, navTo } from '../support/menu'
 import {
-    CHURCH,
+    DUBAI,
     CLASSES,
     DOOR,
     ROLL_CALL,
@@ -16,7 +16,7 @@ import {
 /*
  * Journey — Attendance (DECISIONS 2026-10-26: reports are admins only, with Excel). A church admin checks a child in
  * at the door first (so the journey never depends on another having run), then opens Attendance from the menu,
- * picks CCF DXB · 1PM · the door's Saturday, sees the children by Squad with a count per Squad and a total, and
+ * picks CCF Dubai · 1PM · the door's Saturday, sees the children by Squad with a count per Squad and a total, and
  * downloads the Excel — which has the same rows. The roll call (DECISIONS 2026-10-28): after ticking a child present on
  * Who's in and counting her Squad one too many, Attendance shows her present ✓, the head count and the warning, and
  * the Excel's Present and Squad head count columns say the same. A Lifeshaper has no Attendance.
@@ -32,7 +32,7 @@ function doorSaturday(): string {
 
 /** Ben of this browser's own Cruz family is in at 1PM (checked in now, unless an earlier try already did). */
 async function checkInBen(page: Page, project: string): Promise<void> {
-    await page.goto(`/${CHURCH}/nxtgen/serve/door`)
+    await page.goto(`/${DUBAI}/serve/door`)
     // The class picker is a row of chips, a radio group (the Bold look): pick 1PM.
     const chip = page.getByTestId('door-class').getByRole('radio', { name: CLASSES.onePm.name })
     await chip.click()
@@ -64,11 +64,9 @@ test('an admin sees 1PM by Squad with counts, and downloads the same rows as Exc
 
     // From the door (Serve) to Admin, then Attendance.
     await navTo(page, 'Admin')
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/admin/families`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/admin/families`))
     await navTo(page, 'Attendance')
     await expect(page.getByRole('heading', { name: 'Attendance', level: 1 })).toBeVisible()
-    await page.getByTestId('attendance-satellite').selectOption({ label: SATELLITES.dxb })
-    await expect(page).toHaveURL(/satellite=\d+/)
     await page.getByTestId('attendance-class').selectOption({ label: CLASSES.onePm.name })
     await expect(page).toHaveURL(/class=\d+/)
     await expect(page.getByTestId('attendance-class').locator('option:checked')).toHaveText(
@@ -114,7 +112,7 @@ test('an admin sees 1PM by Squad with counts, and downloads the same rows as Exc
         page.waitForEvent('download'),
         page.getByTestId('attendance-export').click(),
     ])
-    expect(download.suggestedFilename()).toBe(`nxtgen-attendance-ccf-dxb-1pm-${day}.xlsx`)
+    expect(download.suggestedFilename()).toBe(`nxtgen-attendance-ccf-dubai-1pm-${day}.xlsx`)
     expect(xlsxRows(await savedDownload(download))).toEqual([
         'Squad|Child nickname|Child full name|Checked in at|Checked in by|Present|Squad head count',
         ...rows,
@@ -122,13 +120,11 @@ test('an admin sees 1PM by Squad with counts, and downloads the same rows as Exc
     await admin.close()
 })
 
-/** Opens Attendance from the door's menu (Serve → Admin) on CCF DXB · 1PM · the door's Saturday. */
+/** Opens Attendance from the door's menu (Serve → Admin) on CCF Dubai · 1PM · the door's Saturday. */
 async function openAttendance(page: Page): Promise<string> {
     await navTo(page, 'Admin')
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/admin/families`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/admin/families`))
     await navTo(page, 'Attendance')
-    await page.getByTestId('attendance-satellite').selectOption({ label: SATELLITES.dxb })
-    await expect(page).toHaveURL(/satellite=\d+/)
     await page.getByTestId('attendance-class').selectOption({ label: CLASSES.onePm.name })
     await expect(page).toHaveURL(/class=\d+/)
     const day = doorSaturday()
@@ -152,7 +148,7 @@ test("an admin sees the roll call — present ✓, the Squad's head count and th
     const [, , tala, faith] = ROLL_CALL.girls[project]
 
     // At the door, 1PM: this browser's Tala and Faith.
-    await page.goto(`/${CHURCH}/nxtgen/serve/door`)
+    await page.goto(`/${DUBAI}/serve/door`)
     await page.getByTestId('door-class').getByRole('radio', { name: CLASSES.onePm.name }).click()
     await page.getByTestId('door-search').fill('Reyes')
     await page.getByTestId('door-search').press('Enter')
@@ -225,7 +221,7 @@ test("an admin sees the roll call — present ✓, the Squad's head count and th
         page.waitForEvent('download'),
         page.getByTestId('attendance-export').click(),
     ])
-    expect(download.suggestedFilename()).toBe(`nxtgen-attendance-ccf-dxb-1pm-${day}.xlsx`)
+    expect(download.suggestedFilename()).toBe(`nxtgen-attendance-ccf-dubai-1pm-${day}.xlsx`)
     const talaRows = xlsxRows(await savedDownload(download)).filter((r) =>
         r.includes(`|${tala}|${tala} Reyes|`),
     )
@@ -237,12 +233,13 @@ test("an admin sees the roll call — present ✓, the Squad's head count and th
 test('a Lifeshaper has no Attendance @story#113', async ({ browser }) => {
     const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const page = await lifeshaper.newPage()
-    await page.goto(`/${CHURCH}/nxtgen/serve/door`)
+    await page.goto(`/${DUBAI}/serve/door`)
     // The menu opened (a sheet on a narrow screen), then the whole page: no Attendance anywhere.
     await expect((await menuOf(page)).getByTestId('nav-door')).toBeVisible()
     await expect(page.getByRole('link', { name: 'Attendance' })).toHaveCount(0)
 
-    const response = await page.goto(`/${CHURCH}/nxtgen/admin/attendance`)
-    expect(response?.status()).toBe(404)
+    await page.goto(`/${DUBAI}/admin/attendance`)
+    // Only serving here: an Admin page sends them to this satellite's Serve (spec item 10).
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/door$`))
     await lifeshaper.close()
 })

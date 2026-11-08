@@ -1,21 +1,23 @@
 # NxtGen
 
-The kids ministry app for CCF Dubai: families register their children, staff look after them, and children are
-checked in to classes.
+The kids ministry app for CCF's NxtGen, at several satellites: families register their children, staff look after
+them, and children are checked in to classes.
 
 ## Who and where
 
 **Church**:
-The body that runs the app for its people (e.g. CCF Dubai). Everything in the app belongs to one Church.
+The body that runs the app for its people (CCF). Everything in the app belongs to one Church. It is kept in the data
+and never in an address.
 _Avoid_: Organization, tenant, account
 
 **Satellite**:
-One place where a Church meets (e.g. CCF Dxb). Each Satellite keeps its own Squads and Schedules.
+One place where a Church meets (e.g. CCF Dubai). Each Satellite keeps its own Squads and Schedules, and has its own
+address: `/dubai/…`. A staff page shows the Satellite in its address and nothing else.
 _Avoid_: Branch, campus, site
 
 **Ministry**:
-A part of the Church with its own people and classes (e.g. NxtGen kids). Planned: today there is only one. Its
-pages sit under its name in the address: `/ccf/nxtgen/…`.
+A part of the Church with its own people and classes (e.g. NxtGen kids). Today the app is NxtGen's only, so the
+ministry is not in the address.
 _Avoid_: Department, program
 
 **Link**:
@@ -24,13 +26,14 @@ the poster says under its QR code. Up to 6 a Satellite; https only.
 _Avoid_: URL (in copy), social link, bookmark
 
 **Serve** (area):
-The everyday pages for everyone who serves — the door, Who's in, Families, the QR poster (`/ccf/nxtgen/serve/…`).
+The everyday pages for everyone who serves — the door, Who's in, Families, the QR poster (`/dubai/serve/…`).
 Where anyone without an Admin Role lands.
 _Avoid_: client, front desk, app
 
 **Admin** (area):
-The pages for managing — families, children, classes, Attendance, Cards, Moving-Up (`/ccf/nxtgen/admin/…`), and
-the church-wide People (`/ccf/admin/…`). Only for someone with an Admin Role.
+The pages for managing — families, children, classes, Attendance, Cards, Moving-Up, Links, People
+(`/dubai/admin/…`). Only for someone with an Admin Role at that Satellite; someone who only serves there is sent to
+its Serve.
 _Avoid_: back office, dashboard
 
 ## Families

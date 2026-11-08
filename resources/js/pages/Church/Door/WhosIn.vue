@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useSatellite } from '@/composables/useSatellite'
 import AppButton from '@/components/atoms/AppButton.vue'
 import ChoiceChips from '@/components/atoms/ChoiceChips.vue'
 import EmptyState from '@/components/atoms/EmptyState.vue'
@@ -6,7 +7,6 @@ import ChurchShell from '@/components/layout/ChurchShell.vue'
 import DoorClassPicker from '@/components/molecules/DoorClassPicker.vue'
 import DoorTabs from '@/components/molecules/DoorTabs.vue'
 import WhosInSquadCard from '@/components/molecules/WhosInSquadCard.vue'
-import { useChurch } from '@/composables/useChurch'
 import { useRollCall } from '@/composables/useRollCall'
 import type { DoorClass, WhosInSquad } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
@@ -29,9 +29,9 @@ const props = defineProps<{
 }>()
 
 const ALL = 'all'
-const church = useChurch()
+const satellite = useSatellite()
 const { pending, confirming, countErrors, mark, confirm, stop } = useRollCall(
-    () => church.value.slug,
+    () => satellite.value.slug,
 )
 
 const squadChips = computed(() => [
@@ -50,8 +50,8 @@ const shown = computed(() =>
 )
 
 const checkInHref = computed(() =>
-    route('nxtgen.serve.door.show', {
-        church: church.value.slug,
+    route('serve.door.show', {
+        satellite: satellite.value.slug,
         class: props.class_id ?? undefined,
     }),
 )
@@ -60,7 +60,7 @@ const checkInHref = computed(() =>
 function visit(params: { class?: number; squad?: number | null }): void {
     stop()
     router.get(
-        route('nxtgen.serve.door.whos-in', church.value.slug),
+        route('serve.door.whos-in', satellite.value.slug),
         { class: params.class ?? props.class_id ?? undefined, squad: params.squad ?? undefined },
         { preserveScroll: true },
     )

@@ -41,7 +41,7 @@ function runCommand(string $command, array $args, bool $expectSuccess = true): v
 function proposeSample(): array
 {
     $church = church(['slug' => 'ccf']);
-    satelliteOf($church, ['name' => 'CCF DXB']);
+    satelliteOf($church, ['name' => 'CCF DXB', 'slug' => 'dubai']);
     satelliteOf($church, ['name' => 'House Church']);
     $out = sys_get_temp_dir().'/nxtgen-review-'.uniqid().'.xlsx';
 
@@ -439,7 +439,7 @@ it('reports families waiting for an existing login to confirm, and the resend ge
     expect(Guardian::query()->where('user_id', $lifeshaper->id)->exists())->toBeFalse();
 
     // An admin sends the link from the family page; the parent opens it and the family is theirs.
-    actingAs($admin)->post("/ccf/nxtgen/serve/families/{$family->id}/resend")->assertSessionHas('success');
+    actingAs($admin)->post("/dubai/serve/families/{$family->id}/resend")->assertSessionHas('success');
     $url = '';
     Notification::assertSentOnDemand(MagicLinkNotification::class, function (MagicLinkNotification $n) use (&$url): bool {
         $url = $n->url;

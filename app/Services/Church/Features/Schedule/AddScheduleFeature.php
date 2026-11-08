@@ -4,20 +4,19 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Schedule;
 
-use App\Domains\Church\Jobs\GetSatelliteJob;
 use App\Domains\Schedule\Jobs\CreateScheduleJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
-use App\Services\Church\Data\AddScheduleInput;
+use App\Services\Church\Data\ScheduleInput;
 use App\Services\Church\Features\BaseChurchFeature;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Add a class at a satellite (DECISIONS 2026-10-26): a name, an optional day and start/end time. A satellite this
- * admin does not look after — or another church's — is a 404; a name an active class there already has is
+ * Add a class at the satellite in the address (DECISIONS 2026-10-26, 2026-11-08): a name, an optional day and
+ * start/end time. A satellite this admin does not look after is a 404; a name an active class there already has is
  * refused on the name field (the database holds it).
  *
  * @extends BaseChurchFeature<RedirectResponse>
@@ -31,13 +30,12 @@ use Illuminate\Validation\ValidationException;
 #[AccessRow(AccessRowEnum::ManageClasses)]
 final class AddScheduleFeature extends BaseChurchFeature
 {
-    public function handle(AddScheduleInput $input): RedirectResponse
+    public function handle(ScheduleInput $input): RedirectResponse
     {
-        $church = $this->church();
         $scope = $this->scope();
         abort_unless($scope->canManageClasses(), 404);
 
-        $satellite = $this->run(new GetSatelliteJob(church: $church, id: $input->satellite_id));
+        $satellite = $this->satellite();
         abort_unless($scope->canManageClassesAt($satellite), 404);
 
         try {

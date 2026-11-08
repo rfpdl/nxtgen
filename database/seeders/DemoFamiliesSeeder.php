@@ -26,7 +26,7 @@ use Illuminate\Database\Seeder;
  * families). Families go through RegisterFamilyOperation without emails, so every row is one the app itself makes.
  *
  * Every case the door and the lists show: each Level and Squad, an allergy, an inactive child, a Graduated one, one
- * with no Level, a visiting House Church family, a second guardian (no login). Ages are worked out from today, so
+ * with no Level, a visiting CCF Sharjah family, a second guardian (no login). Ages are worked out from today, so
  * the suggested Levels stay right whenever it runs. Plus "Any day (demo)": a class with no set day, so the door has
  * something to check into on any day of the week.
  */
@@ -35,8 +35,8 @@ final class DemoFamiliesSeeder extends Seeder
     public function run(): void
     {
         $ccf = Church::query()->where('slug', 'ccf')->firstOrFail();
-        $dxb = Satellite::query()->where('church_id', $ccf->id)->where('slug', 'ccf-dxb')->firstOrFail();
-        $house = Satellite::query()->where('church_id', $ccf->id)->where('slug', 'house-church')->firstOrFail();
+        $dxb = Satellite::query()->where('church_id', $ccf->id)->where('slug', 'dubai')->firstOrFail();
+        $house = Satellite::query()->where('church_id', $ccf->id)->where('slug', 'sharjah')->firstOrFail();
 
         Schedule::query()->firstOrCreate(
             ['church_id' => $ccf->id, 'satellite_id' => $dxb->id, 'name' => 'Any day (demo)', 'is_active' => true],

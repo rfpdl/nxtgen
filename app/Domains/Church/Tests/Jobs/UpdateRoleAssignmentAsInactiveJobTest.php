@@ -9,6 +9,7 @@ use App\Enums\RoleEnum;
 
 use function Tests\Support\atChurch;
 use function Tests\Support\church;
+use function Tests\Support\satelliteOf;
 use function Tests\Support\staffMember;
 
 /* Removing a role keeps its row, switched off — and the person loses the access it gave. */
@@ -22,7 +23,7 @@ it('switches the role off, keeps the row, and takes the access away', function (
 
     expect($removed->is_active)->toBeFalse()
         ->and(RoleAssignment::query()->whereKey($role->id)->sole()->is_active)->toBeFalse()
-        ->and((new GetAccessScopeJob(user: $user, church: $church))->handle()->canWorkHere())->toBeFalse();
+        ->and((new GetAccessScopeJob(user: $user, satellite: satelliteOf($church)))->handle()->canWorkHere())->toBeFalse();
 });
 
 it('leaves the person\'s other roles alone', function (): void {

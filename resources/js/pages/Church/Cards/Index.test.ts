@@ -77,7 +77,7 @@ describe('Cards', () => {
 
         expect(posts).toEqual([
             {
-                url: 'nxtgen.admin.card-requests.print-lists.store:"ccf"',
+                url: 'admin.card-requests.print-lists.store:"dubai"',
                 data: { q: 'jon' },
                 options: expect.objectContaining({ preserveScroll: true }),
             },
@@ -111,7 +111,7 @@ describe('Cards', () => {
         ])
         expect(tabs[2]?.attributes('aria-current')).toBe('page')
         expect(tabs[0]?.attributes('href')).toBe(
-            'nxtgen.admin.card-requests.index:{"church":"ccf","tab":"asked","q":"amara"}',
+            'admin.card-requests.index:{"satellite":"dubai","tab":"asked","q":"amara"}',
         )
     })
 
@@ -123,7 +123,7 @@ describe('Cards', () => {
 
         expect(gets).toEqual([
             {
-                url: 'nxtgen.admin.card-requests.index:"ccf"',
+                url: 'admin.card-requests.index:"dubai"',
                 data: { tab: 'approved', q: 'Jon Ocampo' },
             },
         ])
@@ -136,7 +136,7 @@ describe('Cards', () => {
 
         expect(gets).toEqual([
             {
-                url: 'nxtgen.admin.card-requests.index:"ccf"',
+                url: 'admin.card-requests.index:"dubai"',
                 data: { tab: 'closed', q: 'jon', page: 2 },
             },
         ])

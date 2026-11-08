@@ -6,7 +6,6 @@ namespace App\Services\Family\Features\Photo;
 
 use App\Data\Models\Child;
 use App\Domains\Church\Jobs\GetAccessScopeJob;
-use App\Domains\Family\Jobs\GetChildWithFamilyJob;
 use App\Domains\Family\Jobs\GetGuardianForUserJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -33,18 +32,18 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 #[AccessRow(AccessRowEnum::SeeChildPhoto)]
 final class ShowChildPhotoFeature extends BaseChildPhotoFeature
 {
-    public function __construct(private readonly int $childId) {}
+    public function __construct(private readonly Child $child) {}
 
     public function handle(): StreamedResponse
     {
         $user = $this->viewer();
-        $child = $this->run(new GetChildWithFamilyJob(id: $this->childId));
+        $child = $this->child;
         // No consent, no photo — even one already stored (e.g. an upload that raced a withdrawal).
-        abort_unless($child instanceof Child && $child->photo_path !== null && $child->photo_consent_at !== null, 404);
+        abort_unless($child->photo_path !== null && $child->photo_consent_at !== null, 404);
 
-        $church = $child->family->church;
-        $mine = $this->run(new GetGuardianForUserJob(user: $user, church: $church))?->family_id === $child->family_id;
-        abort_unless($mine || $this->run(new GetAccessScopeJob(user: $user, church: $church))->canSeeFamily($child->family), 404);
+        $mine = $this->run(new GetGuardianForUserJob(user: $user, church: $child->family->church))?->family_id === $child->family_id;
+        // Staff who can see the family at its own satellite (a Role there, spec item 10).
+        abort_unless($mine || $this->run(new GetAccessScopeJob(user: $user, satellite: $child->family->homeSatellite))->canSeeFamily($child->family), 404);
 
         return Storage::disk('photos')->response($child->photo_path, null, [
             'Content-Type' => 'image/jpeg',

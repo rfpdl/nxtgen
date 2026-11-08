@@ -32,8 +32,8 @@ use function Tests\Support\staffMember;
 function kidsChurch(): array
 {
     $church = church(['slug' => 'ccf']);
-    $dxb = satelliteOf($church, ['name' => 'CCF DXB']);
-    $house = satelliteOf($church, ['name' => 'House Church']);
+    $dxb = satelliteOf($church, ['name' => 'CCF DXB', 'slug' => 'dxb']);
+    $house = satelliteOf($church, ['name' => 'House Church', 'slug' => 'house']);
     $a = familyAt($dxb);
     $b = familyAt($house);
     $amara = childOf($a, ['first_name' => 'Alexis', 'nickname' => 'Amara', 'gender' => GenderEnum::Girl, 'allergies' => 'Peanuts', 'level' => 2, 'date_of_birth' => now()->subYears(7)->toDateString()]);
@@ -43,13 +43,18 @@ function kidsChurch(): array
 }
 
 describe('the children list', function (): void {
+    // DECISIONS 2026-11-08: every page shows only the satellite in the address — a church admin sees each satellite's
+    // children at that satellite's address.
     it('lists every child a church admin can see, with Level, age, status and an allergy flag @story#58', function (): void {
         ['church' => $church, 'amara' => $amara] = kidsChurch();
+        $admin = staffMember(RoleEnum::Admin, atChurch($church));
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/nxtgen/admin/children')
+        actingAs($admin)->get('/house/admin/children')
+            ->assertOk()->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Bea'));
+        actingAs($admin)->get('/dxb/admin/children')
             ->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
             ->component('Church/Children/Index')
-            ->has('children', 2)
+            ->has('children', 1)
             ->where('children.0.nickname', 'Amara')
             ->where('children.0.level', ['number' => 2, 'name' => 'Level 2'])
             ->where('children.0.age', 7)
@@ -57,28 +62,35 @@ describe('the children list', function (): void {
             ->where('children.0.has_allergies', true)
             ->where('children.0.satellite', 'CCF DXB')
             ->where('children.0.family_id', $amara->family_id)
-            ->has('options.levels', 5)->where('options.levels.4', ['level' => 0, 'name' => 'No Level'])->has('options.satellites', 2)->has('enums.child_status', 3));
+            ->has('options.levels', 5)->where('options.levels.4', ['level' => 0, 'name' => 'No Level'])->missing('options.satellites')->has('enums.child_status', 3));
     });
 
     it('shows a satellite admin only their satellite @story#58', function (): void {
         ['church' => $church, 'house' => $house] = kidsChurch();
 
-        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->get('/ccf/nxtgen/admin/children')
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->get('/house/admin/children')
             ->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Bea'));
     });
 
-    it('searches and filters by Level (or No Level), status and satellite — never widening the viewer\'s scope @story#58', function (): void {
+    it('searches and filters by Level (or No Level) and status — never widening the viewer\'s scope @story#58', function (): void {
         ['church' => $church, 'dxb' => $dxb, 'house' => $house] = kidsChurch();
         $admin = staffMember(RoleEnum::Admin, atChurch($church));
 
-        actingAs($admin)->get('/ccf/nxtgen/admin/children?q=bea')->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Bea')->where('filters.q', 'bea'));
-        actingAs($admin)->get('/ccf/nxtgen/admin/children?level=2')->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Amara')->where('filters.level', 2));
-        actingAs($admin)->get('/ccf/nxtgen/admin/children?level=0')->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Bea')->where('filters.level', 0));
-        actingAs($admin)->get('/ccf/nxtgen/admin/children?status=inactive')->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Bea'));
-        actingAs($admin)->get("/ccf/nxtgen/admin/children?satellite={$house->id}")->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1));
+        childOf(familyAt($house), ['first_name' => 'Amara', 'nickname' => 'Amara H', 'level' => 2]);
 
-        actingAs(staffMember(RoleEnum::Admin, atSatellite($dxb)))->get("/ccf/nxtgen/admin/children?satellite={$house->id}")
-            ->assertInertia(fn (AssertableInertia $p) => $p->has('children', 0));
+        actingAs($admin)->get('/house/admin/children?q=bea')->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Bea')->where('filters.q', 'bea'));
+        actingAs($admin)->get('/dxb/admin/children?q=bea')->assertInertia(fn (AssertableInertia $p) => $p->has('children', 0));
+        actingAs($admin)->get('/dxb/admin/children?level=2')->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Amara')->where('filters.level', 2));
+        actingAs($admin)->get('/house/admin/children?level=0')->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Bea')->where('filters.level', 0));
+        actingAs($admin)->get('/house/admin/children?status=inactive')->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Bea'));
+
+        // DECISIONS 2026-11-08: the satellite filter is gone — the address satellite is the only one. A `?satellite=`
+        // naming another is not read: the list stays the address's, for a church admin as for a satellite admin.
+        actingAs($admin)->get("/house/admin/children?satellite={$dxb->id}")->assertInertia(fn (AssertableInertia $p) => $p->has('children', 2)->missing('filters.satellite'));
+        actingAs($admin)->get("/dxb/admin/children?satellite={$house->id}")
+            ->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Amara'));
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($dxb)))->get("/dxb/admin/children?satellite={$house->id}")
+            ->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Amara'));
     });
 
     // Found in review 4.
@@ -88,18 +100,18 @@ describe('the children list', function (): void {
         $admin = staffMember(RoleEnum::Admin, atChurch($church));
 
         foreach (['Janice', 'janice@exam', '4489734'] as $q) {
-            actingAs($admin)->get('/ccf/nxtgen/admin/children?q='.urlencode($q))->assertInertia(fn (AssertableInertia $p) => $p
+            actingAs($admin)->get('/dxb/admin/children?q='.urlencode($q))->assertInertia(fn (AssertableInertia $p) => $p
                 ->has('children', 1)->where('children.0.nickname', 'Amara'));
         }
         // A child's own name finds that child, not their brothers and sisters.
         childOf($amara->family()->firstOrFail(), ['first_name' => 'Ben', 'nickname' => 'Ben', 'gender' => GenderEnum::Boy]);
-        actingAs($admin)->get('/ccf/nxtgen/admin/children?q=Amara')->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Amara'));
+        actingAs($admin)->get('/dxb/admin/children?q=Amara')->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->where('children.0.nickname', 'Amara'));
     });
 
     it('is not there for someone with no role in the church @story#59', function (): void {
         kidsChurch();
 
-        actingAs(User::factory()->create())->get('/ccf/nxtgen/admin/children')->assertNotFound();
+        actingAs(User::factory()->create())->get('/dxb/admin/children')->assertNotFound();
     });
 });
 
@@ -108,7 +120,7 @@ describe('correcting a child\'s Level', function (): void {
         ['church' => $church, 'bea' => $bea] = kidsChurch();
         $admin = staffMember(RoleEnum::Admin, atChurch($church), ['name' => 'Ana Admin']);
 
-        actingAs($admin)->put("/ccf/nxtgen/admin/children/{$bea->id}/level", ['level' => 1])->assertRedirect()->assertSessionHas('success', 'Bea is now in Level 1.');
+        actingAs($admin)->put("/house/admin/children/{$bea->id}/level", ['level' => 1])->assertRedirect()->assertSessionHas('success', 'Bea is now in Level 1.');
 
         $bea->refresh();
         expect($bea->level)->toBe(1)
@@ -121,7 +133,7 @@ describe('correcting a child\'s Level', function (): void {
     it('notes the Level the child moved from @story#64', function (): void {
         ['church' => $church, 'amara' => $amara] = kidsChurch();
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->put("/ccf/nxtgen/admin/children/{$amara->id}/level", ['level' => 3])->assertSessionHas('success');
+        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->put("/dxb/admin/children/{$amara->id}/level", ['level' => 3])->assertSessionHas('success');
 
         expect($amara->fresh()?->level)->toBe(3)
             ->and(Note::query()->sole()->body)->toBe('Amara: Level changed from Level 2 to Level 3.');
@@ -131,7 +143,7 @@ describe('correcting a child\'s Level', function (): void {
         ['church' => $church, 'amara' => $amara] = kidsChurch();
 
         actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
-            ->put("/ccf/nxtgen/admin/children/{$amara->id}/level", ['level' => $level])
+            ->put("/dxb/admin/children/{$amara->id}/level", ['level' => $level])
             ->assertSessionHasErrors(['level' => 'Please choose one of the church\'s Levels.']);
 
         expect($amara->fresh()?->level)->toBe(2)->and(Note::query()->count())->toBe(0);
@@ -140,7 +152,7 @@ describe('correcting a child\'s Level', function (): void {
     it('refuses a missing Level @story#65', function (): void {
         ['church' => $church, 'amara' => $amara] = kidsChurch();
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->put("/ccf/nxtgen/admin/children/{$amara->id}/level", [])
+        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->put("/dxb/admin/children/{$amara->id}/level", [])
             ->assertSessionHasErrors(['level' => 'Please choose one of the church\'s Levels.']);
 
         expect($amara->fresh()?->level)->toBe(2);
@@ -149,14 +161,14 @@ describe('correcting a child\'s Level', function (): void {
     it('has no gender rule — a girl at Level 2 moves to Level 3 like anyone (her Squad follows from her gender)', function (): void {
         ['church' => $church, 'amara' => $amara] = kidsChurch();
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->put("/ccf/nxtgen/admin/children/{$amara->id}/level", ['level' => 3])->assertSessionHasNoErrors();
+        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->put("/dxb/admin/children/{$amara->id}/level", ['level' => 3])->assertSessionHasNoErrors();
     });
 
     it('does not reach a child of another church @story#65', function (): void {
         ['church' => $church] = kidsChurch();
         $foreign = childOf(familyAt(satelliteOf(church(['slug' => 'other']))), ['level' => 1]);
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->put("/ccf/nxtgen/admin/children/{$foreign->id}/level", ['level' => 2])->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->put("/dxb/admin/children/{$foreign->id}/level", ['level' => 2])->assertNotFound();
 
         expect($foreign->fresh()?->level)->toBe(1);
     });
@@ -165,7 +177,7 @@ describe('correcting a child\'s Level', function (): void {
         ['dxb' => $dxb, 'amara' => $amara] = kidsChurch();
 
         actingAs(staffMember($role, atSatellite($dxb)))
-            ->put("/ccf/nxtgen/admin/children/{$amara->id}/level", ['level' => 1])->assertNotFound();
+            ->put("/dxb/admin/children/{$amara->id}/level", ['level' => 1])->assertNotFound();
 
         expect($amara->fresh()?->level)->toBe(2);
     })->with([RoleEnum::Admin, RoleEnum::Lifeshaper]);
@@ -173,11 +185,11 @@ describe('correcting a child\'s Level', function (): void {
     it('tells the family page who may change Levels, and offers the church\'s Levels', function (): void {
         ['church' => $church, 'dxb' => $dxb, 'amara' => $amara] = kidsChurch();
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get("/ccf/nxtgen/admin/families/{$amara->family_id}")
+        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get("/dxb/admin/families/{$amara->family_id}")
             ->assertInertia(fn (AssertableInertia $p) => $p->where('can_set_level', true)->has('levels', 4)
                 ->where('levels.1', ['level' => 2, 'name' => 'Level 2'])
                 ->where('family.children.0.level', ['number' => 2, 'name' => 'Level 2']));
-        actingAs(staffMember(RoleEnum::Admin, atSatellite($dxb)))->get("/ccf/nxtgen/serve/families/{$amara->family_id}")
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($dxb)))->get("/dxb/serve/families/{$amara->family_id}")
             ->assertInertia(fn (AssertableInertia $p) => $p->where('can_set_level', false)->where('levels', []));
     });
 });
@@ -189,8 +201,8 @@ it('shows the children list 50 at a time, filters and all', function (): void {
     Child::factory()->count(58)->for($family)->create(['church_id' => $family->church_id, 'status' => ChildStatusEnum::Active]);
     $admin = staffMember(RoleEnum::Admin, atChurch($church));
 
-    actingAs($admin)->get('/ccf/nxtgen/admin/children?status=active')->assertInertia(fn (AssertableInertia $p) => $p
+    actingAs($admin)->get('/dxb/admin/children?status=active')->assertInertia(fn (AssertableInertia $p) => $p
         ->has('children', 50)->where('pagination.total', 59)->where('pagination.page', 1)->where('pagination.last_page', 2));
-    actingAs($admin)->get('/ccf/nxtgen/admin/children?status=active&page=2')->assertInertia(fn (AssertableInertia $p) => $p
+    actingAs($admin)->get('/dxb/admin/children?status=active&page=2')->assertInertia(fn (AssertableInertia $p) => $p
         ->has('children', 9)->where('pagination.page', 2));
 });

@@ -7,10 +7,6 @@ vi.mock('@inertiajs/vue3', async (original) =>
 )
 
 const options = {
-    satellites: [
-        { id: 7, name: 'CCF DXB' },
-        { id: 8, name: 'House Church' },
-    ],
     levels: [
         { level: 1, name: 'Level 1' },
         { level: 2, name: 'Level 2' },
@@ -19,7 +15,6 @@ const options = {
 }
 const empty = {
     q: '',
-    satellite: null,
     status: null,
     level: null,
     unconfirmed: false,
@@ -30,7 +25,7 @@ describe('RegistrationListFilters', () => {
     it('shows the current filters', () => {
         const wrapper = mount(RegistrationListFilters, {
             props: {
-                filters: { ...empty, q: 'Ramos', satellite: 8, unconfirmed: true },
+                filters: { ...empty, q: 'Ramos', unconfirmed: true },
                 options,
                 familyToggles: true,
             },
@@ -39,9 +34,6 @@ describe('RegistrationListFilters', () => {
         expect((wrapper.find('[data-testid="filter-q"]').element as HTMLInputElement).value).toBe(
             'Ramos',
         )
-        expect(
-            (wrapper.find('[data-testid="filter-satellite"]').element as HTMLSelectElement).value,
-        ).toBe('8')
         expect(wrapper.find('[data-testid="filter-unconfirmed"]').attributes('aria-checked')).toBe(
             'true',
         )
@@ -55,12 +47,9 @@ describe('RegistrationListFilters', () => {
         ).toEqual(['Any status', 'Active', 'Inactive', 'Graduated'])
     })
 
-    it('hides the satellite choice when there is only one', () => {
+    it('offers no satellite choice — a list shows only the satellite in its address (DECISIONS 2026-11-08)', () => {
         const wrapper = mount(RegistrationListFilters, {
-            props: {
-                filters: empty,
-                options: { ...options, satellites: [options.satellites[0]!] },
-            },
+            props: { filters: empty, options, familyToggles: true },
         })
 
         expect(wrapper.find('[data-testid="filter-satellite"]').exists()).toBe(false)

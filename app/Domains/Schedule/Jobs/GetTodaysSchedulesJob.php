@@ -12,8 +12,8 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * The classes meeting `$today` (the church's date) at the asked-for satellites of this church — null = every
- * satellite (a church-wide Role) — and `$alsoScheduleIds`, a class admin's own classes (TODO #9). A class with a day meets only on that day; one with no day meets every day
+ * The classes meeting `$today` (the church's date) at the asked-for satellites of this church (the address satellite,
+ * or none) and `$alsoScheduleIds`, a class admin's own classes (TODO #9). A class with a day meets only on that day; one with no day meets every day
  * (DECISIONS 2026-10-26). Active classes only, with their satellite, by satellite name then start time (a class with
  * no time last) then name.
  *
@@ -22,12 +22,12 @@ use Illuminate\Database\Eloquent\Builder;
 final class GetTodaysSchedulesJob extends BaseJob
 {
     /**
-     * @param  list<int>|null  $satelliteIds
+     * @param  list<int>  $satelliteIds
      * @param  list<int>  $alsoScheduleIds
      */
     public function __construct(
         private readonly Church $church,
-        private readonly ?array $satelliteIds,
+        private readonly array $satelliteIds,
         private readonly CarbonImmutable $today,
         private readonly array $alsoScheduleIds = [],
     ) {}
@@ -38,9 +38,9 @@ final class GetTodaysSchedulesJob extends BaseJob
         $schedules = Schedule::query()
             ->where('church_id', $this->church->id)
             ->where('is_active', true)
-            ->when($this->satelliteIds !== null, fn (Builder $q) => $q->where(fn (Builder $w) => $w
-                ->whereIn('satellite_id', $this->satelliteIds ?? [])
-                ->orWhereIn('id', $this->alsoScheduleIds)))
+            ->where(fn (Builder $w) => $w
+                ->whereIn('satellite_id', $this->satelliteIds)
+                ->orWhereIn('id', $this->alsoScheduleIds))
             ->where(fn (Builder $q) => $q->whereNull('weekday')->orWhere('weekday', WeekdayEnum::of($this->today)->value))
             ->with('satellite')
             ->get()

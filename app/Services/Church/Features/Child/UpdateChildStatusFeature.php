@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Child;
 
+use App\Data\Models\Child;
 use App\Domains\Church\Jobs\GetChurchForUpdateJob;
 use App\Domains\Family\Jobs\UpdateChildStatusJob;
 use App\Enums\AccessRowEnum;
@@ -28,11 +29,11 @@ use Illuminate\Support\Facades\DB;
 #[AccessRow(AccessRowEnum::SetChildStatus)]
 final class UpdateChildStatusFeature extends BaseChurchFeature
 {
-    public function __construct(private readonly int $childId) {}
+    public function __construct(private readonly Child $child) {}
 
     public function handle(UpdateChildStatusInput $input): RedirectResponse
     {
-        $child = $this->scopedChild($this->childId, $this->scope()->canEditFamily(...));
+        $child = $this->scopedChild($this->child, $this->scope()->canEditFamily(...));
 
         // The status and its history note together, or neither — after the church's row, as Moving-Up takes it, so the
         // two queue instead of overwriting each other (Astra, Moving-Up).

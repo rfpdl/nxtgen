@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import { useSatellite } from '@/composables/useSatellite'
 import AppButton from '@/components/atoms/AppButton.vue'
 import EmptyState from '@/components/atoms/EmptyState.vue'
 import SectionHeading from '@/components/atoms/SectionHeading.vue'
 import LinkCard from '@/components/molecules/LinkCard.vue'
 import LinkForm from '@/components/organisms/LinkForm.vue'
-import { useChurch } from '@/composables/useChurch'
 import type { MoveSatelliteLinkInput, SatelliteLinks } from '@/types'
 import { router } from '@inertiajs/vue3'
 import { ref } from 'vue'
@@ -16,19 +16,19 @@ import { route } from 'ziggy-js'
  */
 defineProps<{ satellite: SatelliteLinks; max: number }>()
 
-const church = useChurch()
+const here = useSatellite()
 const editing = ref<number | null>(null)
 const adding = ref(false)
 
 function move(linkId: number, direction: 'up' | 'down'): void {
     const body: MoveSatelliteLinkInput = { direction }
-    router.put(route('nxtgen.admin.links.move', [church.value.slug, linkId]), body, {
+    router.put(route('admin.links.move', [here.value.slug, linkId]), body, {
         preserveScroll: true,
     })
 }
 
 function remove(linkId: number): void {
-    router.delete(route('nxtgen.admin.links.destroy', [church.value.slug, linkId]), {
+    router.delete(route('admin.links.destroy', [here.value.slug, linkId]), {
         preserveScroll: true,
     })
 }
@@ -43,7 +43,7 @@ function remove(linkId: number): void {
         <template v-for="(link, i) in satellite.links" :key="link.id">
             <LinkForm
                 v-if="editing === link.id"
-                :action="route('nxtgen.admin.links.update', [church.slug, link.id])"
+                :action="route('admin.links.update', [here.slug, link.id])"
                 :link="link"
                 submit-label="Save"
                 @done="editing = null"
@@ -61,8 +61,7 @@ function remove(linkId: number): void {
         <div v-if="adding" class="flex flex-col gap-2" data-testid="add-link">
             <SectionHeading level="3">Add a link to {{ satellite.name }}'s poster</SectionHeading>
             <LinkForm
-                :action="route('nxtgen.admin.links.store', [church.slug])"
-                :satellite-id="satellite.id"
+                :action="route('admin.links.store', [here.slug])"
                 submit-label="Add link"
                 @done="adding = false"
             />

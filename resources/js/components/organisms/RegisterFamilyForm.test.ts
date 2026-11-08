@@ -15,7 +15,7 @@ vi.mock('@inertiajs/vue3', async () => {
 })
 
 const props = {
-    action: '/ccf/register',
+    action: '/dubai/register',
     satellites: [
         { id: 7, name: 'CCF DXB' },
         { id: 8, name: 'House Church' },
@@ -50,12 +50,24 @@ describe('RegisterFamilyForm', () => {
         expect(options.map((o) => o.text())).toEqual(['Choose…', 'CCF DXB', 'House Church'])
     })
 
+    it('starts on the satellite in the address when given one, else on "Choose…"', () => {
+        const select = (extra: { satelliteId?: number }) =>
+            (
+                mount(RegisterFamilyForm, { props: { ...props, ...extra } }).find(
+                    '[data-testid="home-satellite"]',
+                ).element as HTMLSelectElement
+            ).value
+
+        expect(select({ satelliteId: 8 })).toBe('8')
+        expect(select({})).toBe('')
+    })
+
     it('posts to the action it was given', async () => {
         const wrapper = mount(RegisterFamilyForm, { props })
 
         await wrapper.find('form').trigger('submit')
 
-        expect(post).toHaveBeenCalledWith('/ccf/register', expect.anything())
+        expect(post).toHaveBeenCalledWith('/dubai/register', expect.anything())
     })
 
     it('keeps the submit button big and labelled for a phone', () => {

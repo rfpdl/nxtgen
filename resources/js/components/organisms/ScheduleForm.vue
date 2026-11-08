@@ -9,15 +9,14 @@ import { useForm } from '@inertiajs/vue3'
 import { computed } from 'vue'
 
 /**
- * Add or edit a class (GLOSSARY "Schedule"): a name, and a day and start/end time if it has them. Given a
- * `satelliteId` it ADDS a class there (POST); given a saved `schedule` it EDITS that one (PUT, satellite never
- * changes). The days come from the page's `enums.weekday`; the server checks the times (HH:MM, end after start).
+ * Add or edit a class (GLOSSARY "Schedule"): a name, and a day and start/end time if it has them. Without a saved
+ * `schedule` it ADDS a class (POST) — at the satellite in the address, which the server reads from `action`
+ * (DECISIONS 2026-11-08); given one it EDITS that one (PUT, satellite never changes). The days come from the page's `enums.weekday`; the server checks the times (HH:MM, end after start).
  * `done` says it was saved or cancelled, so the page can close it.
  */
 const props = defineProps<{
     action: string
     submitLabel: string
-    satelliteId?: number
     schedule?: Schedule
 }>()
 
@@ -25,8 +24,7 @@ const emit = defineEmits<{ done: [] }>()
 
 const { options: weekdays } = useEnum('weekday')
 
-const form = useForm<Draft<ScheduleInput> & { satellite_id?: number }>({
-    ...(props.satelliteId !== undefined ? { satellite_id: props.satelliteId } : {}),
+const form = useForm<Draft<ScheduleInput>>({
     name: props.schedule?.name ?? '',
     weekday: props.schedule?.weekday ?? '',
     starts_at: props.schedule?.starts_at ?? '',

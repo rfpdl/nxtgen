@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Http\Controllers\Child;
 
+use App\Data\Models\Child;
 use App\Services\Church\Features\Child\DeleteChildPhotoFeature;
 use App\Services\Church\Features\Child\RecordPhotoConsentFeature;
 use App\Services\Church\Features\Child\ShowChildrenFeature;
@@ -21,33 +22,33 @@ final class Controller extends \Lucid\Units\Controller
         return $this->serve(ShowChildrenFeature::class);
     }
 
-    public function updateLevel(string $church, int $child): RedirectResponse
+    public function updateLevel(Child $child): RedirectResponse
     {
-        return $this->serve(UpdateChildLevelFeature::class, ['childId' => $child]);
+        return $this->serve(UpdateChildLevelFeature::class, ['child' => $child]);
     }
 
-    public function update(string $church, int $child): RedirectResponse
+    public function update(Child $child): RedirectResponse
     {
-        return $this->serve(UpdateChildDetailsFeature::class, ['childId' => $child]);
+        return $this->serve(UpdateChildDetailsFeature::class, ['child' => $child]);
     }
 
-    public function updateStatus(string $church, int $child): RedirectResponse
+    public function updateStatus(Child $child): RedirectResponse
     {
-        return $this->serve(UpdateChildStatusFeature::class, ['childId' => $child]);
+        return $this->serve(UpdateChildStatusFeature::class, ['child' => $child]);
     }
 
-    public function addPhoto(string $church, int $child): RedirectResponse
+    public function addPhoto(Child $child): RedirectResponse
     {
-        return $this->serve(StaffAddChildPhotoFeature::class, ['childId' => $child]);
+        return $this->serve(StaffAddChildPhotoFeature::class, ['child' => $child]);
     }
 
-    public function recordPhotoConsent(string $church, int $child): RedirectResponse
+    public function recordPhotoConsent(Child $child): RedirectResponse
     {
-        return $this->serve(RecordPhotoConsentFeature::class, ['childId' => $child]);
+        return $this->serve(RecordPhotoConsentFeature::class, ['child' => $child]);
     }
 
-    public function deletePhoto(string $church, int $child): RedirectResponse
+    public function deletePhoto(Child $child): RedirectResponse
     {
-        return $this->serve(DeleteChildPhotoFeature::class, ['childId' => $child]);
+        return $this->serve(DeleteChildPhotoFeature::class, ['child' => $child]);
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Church\Features\Family;
 
 use App\Data\Models\DuplicateCandidate;
+use App\Data\Models\Family;
 use App\Domains\Card\DataObjects\CardRequestData;
 use App\Domains\Card\Jobs\GetFamilyOpenCardRequestsJob;
 use App\Domains\CheckIn\DataObjects\ChildAttendanceData;
@@ -60,17 +61,17 @@ use Inertia\Response;
 #[AccessRow(AccessRowEnum::ViewFamily)]
 final class ShowFamilyFeature extends BaseChurchFeature
 {
-    public function __construct(private readonly int $familyId) {}
+    public function __construct(private readonly Family $family) {}
 
     public function handle(): Response
     {
         $church = $this->church();
         $scope = $this->scope();
-        $family = $this->scopedFamily($this->familyId, $scope->canSeeFamily(...));
+        $family = $this->scopedFamily($this->family, $scope->canSeeFamily(...));
         $canEdit = $scope->canEditFamily($family);
         // The details forms (Roy 2026-11-06): a Lifeshaper of its satellite too — the email still masked for them.
         $canEditDetails = $scope->canEditFamilyDetails($family);
-        $inAdmin = RouteArea::of(request()) === 'nxtgen.admin';
+        $inAdmin = RouteArea::of(request()) === 'admin';
         $canSetLevel = $inAdmin && $scope->canSetLevel();
         $primary = $family->primaryGuardian;
 

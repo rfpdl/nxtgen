@@ -146,7 +146,7 @@ describe('ChildCardRequest', () => {
         }).find('[data-testid="card-given"]')
 
         expect(printed.text()).toBe('Given')
-        expect(printed.attributes('href')).toBe('/#nxtgen.serve.card-requests.give/ccf/9')
+        expect(printed.attributes('href')).toBe('/#serve.card-requests.give/dubai/9')
         expect(printed.attributes('data-method')).toBe('put')
         expect(printed.attributes('data-preserve-scroll')).toBe('true')
 

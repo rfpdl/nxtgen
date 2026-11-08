@@ -1,5 +1,6 @@
 import SatelliteSchedules from '@/components/organisms/SatelliteSchedules.vue'
 import type { SatelliteSchedules as SatelliteSchedulesProp } from '@/types'
+import { makeSatellite } from '@/tests/satellite'
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -9,7 +10,7 @@ vi.mock('@inertiajs/vue3', async () => {
     const { reactive } = await import('vue')
     const { enums } = await import('@/tests/enumPage')
     return {
-        usePage: () => ({ props: { enums, church: { name: 'CCF', slug: 'ccf' } } }),
+        usePage: () => ({ props: { enums, satellite: makeSatellite() } }),
         useForm: (data: Record<string, unknown>) =>
             reactive({ ...data, errors: {}, processing: false, post: vi.fn(), put: vi.fn() }),
         router: { put: (...args: unknown[]) => routerPut(...args) },
@@ -95,7 +96,7 @@ describe('SatelliteSchedules', () => {
         await wrapper.find('[data-testid="confirm-retire"]').trigger('click')
 
         expect(routerPut).toHaveBeenCalledWith(
-            'nxtgen.admin.schedules.retire:["ccf",4]',
+            'admin.schedules.retire:["dubai",4]',
             {},
             expect.anything(),
         )

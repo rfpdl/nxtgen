@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\People;
 
+use App\Data\Models\RoleAssignment;
 use App\Domains\Church\DataObjects\RoleScope;
 use App\Domains\Church\Jobs\GetChurchAdminCountJob;
-use App\Domains\Church\Jobs\GetRoleAssignmentJob;
 use App\Domains\Church\Jobs\UpdateRoleAssignmentAsInactiveJob;
 use App\Domains\Schedule\Jobs\GetSchedulesByIdJob;
 use App\Enums\AccessRowEnum;
@@ -33,7 +33,7 @@ use Illuminate\Support\Facades\DB;
 #[AccessRow(AccessRowEnum::GrantRoles)]
 final class RemoveStaffRoleFeature extends BaseChurchFeature
 {
-    public function __construct(private readonly int $assignmentId) {}
+    public function __construct(private readonly RoleAssignment $assignment) {}
 
     public function handle(): RedirectResponse
     {
@@ -41,7 +41,7 @@ final class RemoveStaffRoleFeature extends BaseChurchFeature
         $scope = $this->scope();
         abort_unless($scope->canManagePeople(), 404);
 
-        $assignment = $this->run(new GetRoleAssignmentJob(church: $church, id: $this->assignmentId));
+        $assignment = $this->assignment;
         // A class admin's Role (TODO #9) is removed by whoever may give it: the class's satellite says who.
         $class = $assignment->scope_type === ScopeTypeEnum::Schedule
             ? $this->run(new GetSchedulesByIdJob(church: $church, ids: [$assignment->scope_id]))[$assignment->scope_id] ?? null

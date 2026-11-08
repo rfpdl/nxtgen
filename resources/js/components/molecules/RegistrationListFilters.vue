@@ -4,7 +4,7 @@ import CheckRow from '@/components/atoms/CheckRow.vue'
 import SelectField from '@/components/atoms/SelectField.vue'
 import TextField from '@/components/atoms/TextField.vue'
 import { useEnum } from '@/composables/useEnum'
-import type { LevelOption, ListFilters, SatelliteOption } from '@/types'
+import type { LevelOption, ListFilters } from '@/types'
 import { Search } from 'lucide-vue-next'
 import { computed, reactive } from 'vue'
 
@@ -12,15 +12,14 @@ import { computed, reactive } from 'vue'
  * Search and filters for the registration lists — families and children (plan §6). The two family-only filters
  * (unconfirmed email, possible duplicate) show only with `familyToggles`. Emits `apply` with only the filters in use, shaped as
  * the address parameters the server reads (FamilyListQuery), so a filtered list can be bookmarked and the Excel
- * download matches it. The satellite choice appears only when there is more than one to choose. The statuses
- * come from the page's `enums.child_status`. On the kit (the Bold look): the search with its button first, then the
+ * download matches it. There is no satellite choice: a list shows only the satellite in its address (DECISIONS
+ * 2026-11-08). The statuses come from the page's `enums.child_status`. On the kit (the Bold look): the search with its button first, then the
  * pick-one lists (each applies at once) and the ticks; phone first, side by side on a wide screen.
  */
 const props = defineProps<{
     familyToggles?: boolean
     filters: ListFilters
     options: {
-        satellites: SatelliteOption[]
         levels: LevelOption[]
     }
 }>()
@@ -34,7 +33,6 @@ const f = reactive({ ...props.filters })
 function apply(): void {
     const params: Record<string, string | number> = {}
     if (f.q.trim() !== '') params.q = f.q.trim()
-    if (f.satellite !== null) params.satellite = f.satellite
     if (f.status !== null) params.status = f.status
     if (f.level !== null) params.level = f.level
     if (f.unconfirmed) params.unconfirmed = 1
@@ -46,9 +44,6 @@ function clear(): void {
     emit('apply', {})
 }
 
-const satelliteOptions = computed(() =>
-    props.options.satellites.map((s) => ({ value: s.id, label: s.name })),
-)
 const statusOptions = computed(() =>
     statuses.value.map((s) => ({ value: s.value, label: s.label })),
 )
@@ -57,7 +52,7 @@ const levelOptions = computed(() =>
 )
 
 /** A pick or a tick applies straight away, as the old dropdowns did on change. */
-function set<K extends 'satellite' | 'status' | 'level' | 'unconfirmed' | 'duplicates'>(
+function set<K extends 'status' | 'level' | 'unconfirmed' | 'duplicates'>(
     key: K,
     value: unknown,
 ): void {
@@ -82,16 +77,7 @@ function set<K extends 'satellite' | 'status' | 'level' | 'unconfirmed' | 'dupli
             </TextField>
             <AppButton type="submit" variant="secondary" size="lg">Search</AppButton>
         </div>
-        <div class="grid gap-3 sm:grid-cols-3">
-            <SelectField
-                v-if="options.satellites.length > 1"
-                label="Satellite"
-                placeholder="All satellites"
-                :options="satelliteOptions"
-                :model-value="f.satellite"
-                data-testid="filter-satellite"
-                @update:model-value="set('satellite', $event)"
-            />
+        <div class="grid gap-3 sm:grid-cols-2">
             <SelectField
                 label="Child status"
                 placeholder="Any status"

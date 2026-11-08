@@ -56,6 +56,6 @@ final class UpdateMyFamilyFeature extends BaseFamilyFeature
             }
         });
 
-        return redirect()->route('family.show', $family->church)->with('success', 'Your family details are saved.');
+        return redirect()->route('family.show')->with('success', 'Your family details are saved.');
     }
 }

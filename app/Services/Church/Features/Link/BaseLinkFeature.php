@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services\Church\Features\Link;
 
 use App\Data\Models\SatelliteLink;
-use App\Domains\Church\Jobs\GetSatelliteLinkJob;
 use App\Services\Church\Features\BaseChurchFeature;
 
 /**
@@ -18,12 +17,10 @@ use App\Services\Church\Features\BaseChurchFeature;
  */
 abstract class BaseLinkFeature extends BaseChurchFeature
 {
-    protected function scopedLink(int $id): SatelliteLink
+    protected function scopedLink(SatelliteLink $link): SatelliteLink
     {
         $scope = $this->scope();
         abort_unless($scope->canManageLinks(), 404);
-
-        $link = $this->run(new GetSatelliteLinkJob(church: $this->church(), id: $id));
         abort_unless($scope->canManageLinksAt($link->satellite), 404);
 
         return $link;

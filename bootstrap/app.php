@@ -7,6 +7,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Routing\Middleware\ValidateSignature;
 use Sentry\Laravel\Integration;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -21,6 +23,10 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
+
+        // A signed link is checked before its ids are looked up (route binding): otherwise "not found" vs "bad
+        // signature" would say whether a child id exists, in any church (Astra 2026-11-08, the photo link).
+        $middleware->prependToPriorityList(before: SubstituteBindings::class, prepend: ValidateSignature::class);
 
         // Laravel Cloud terminates TLS at its load balancer. Without this the app thinks it is on
         // http, and the camera (getUserMedia) refuses to start on the real domain (PoC lesson).

@@ -47,7 +47,7 @@ function adminChurch(): array
 {
     $church = church(['slug' => 'ccf']);
 
-    return ['church' => $church, 'htc' => satelliteOf($church, ['name' => 'Holy Trinity Church']), 'house' => satelliteOf($church, ['name' => 'House Church'])];
+    return ['church' => $church, 'htc' => satelliteOf($church, ['name' => 'Holy Trinity Church', 'slug' => 'htc']), 'house' => satelliteOf($church, ['name' => 'House Church', 'slug' => 'house'])];
 }
 
 function registeredFamily(Satellite $satellite, string $guardianName, string $email, bool $verified = true): Family
@@ -63,21 +63,21 @@ function registeredFamily(Satellite $satellite, string $guardianName, string $em
 describe('who gets in', function (): void {
     it('sends a guest to sign in', function (): void {
         adminChurch();
-        get('/ccf/nxtgen/serve/families')->assertRedirect('/login');
+        get('/htc/serve/families')->assertRedirect('/login');
     });
 
     it('404s for a parent with no staff role @story#44', function (): void {
         ['church' => $church, 'htc' => $htc] = adminChurch();
         $family = registeredFamily($htc, 'Janice', 'janice@example.com');
 
-        actingAs($family->primaryGuardian->user ?? User::factory()->create())->get('/ccf/nxtgen/serve/families')->assertNotFound();
+        actingAs($family->primaryGuardian->user ?? User::factory()->create())->get('/htc/serve/families')->assertNotFound();
     });
 
     it('404s for staff of another church @story#44', function (): void {
         adminChurch();
         $other = church();
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($other)))->get('/ccf/nxtgen/serve/families')->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atChurch($other)))->get('/htc/serve/families')->assertNotFound();
     });
 });
 
@@ -86,9 +86,14 @@ describe('the family list', function (): void {
         ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
         registeredFamily($htc, 'Janice', 'janice@example.com');
         registeredFamily($house, 'Mira', 'mira@example.com');
+        $admin = staffMember(RoleEnum::Admin, atChurch($church));
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/nxtgen/serve/families')
-            ->assertOk()->assertInertia(fn (AssertableInertia $p) => $p->component('Church/Families/Index')->has('families', 2));
+        // Every family, one satellite at a time: the list shows only the satellite in the address (DECISIONS 2026-11-08).
+        actingAs($admin)->get('/htc/serve/families')
+            ->assertOk()->assertInertia(fn (AssertableInertia $p) => $p->component('Church/Families/Index')
+            ->has('families', 1)->where('families.0.primary_name', 'Janice Ramos'));
+        actingAs($admin)->get('/house/serve/families')
+            ->assertOk()->assertInertia(fn (AssertableInertia $p) => $p->has('families', 1)->where('families.0.primary_name', 'Mira Ramos'));
     });
 
     it('shows a Lifeshaper only their satellite, with emails masked @story#43', function (): void {
@@ -96,11 +101,15 @@ describe('the family list', function (): void {
         registeredFamily($htc, 'Janice', 'janice@example.com');
         registeredFamily($house, 'Mira', 'mira@example.com');
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get('/ccf/nxtgen/serve/families')
+        $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
+
+        actingAs($lifeshaper)->get('/htc/serve/families')
             ->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
             ->has('families', 1)
             ->where('families.0.primary_name', 'Janice Ramos')
             ->where('families.0.email', 'ja•••@example.com'));
+        // Another satellite's list is not theirs to open (DECISIONS 2026-11-08: no Role at the address satellite).
+        actingAs($lifeshaper)->get('/house/serve/families')->assertNotFound();
     });
 
     it('filters to families whose email is not confirmed yet', function (): void {
@@ -108,7 +117,7 @@ describe('the family list', function (): void {
         registeredFamily($htc, 'Janice', 'janice@example.com', verified: false);
         registeredFamily($htc, 'Mira', 'mira@example.com');
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/nxtgen/serve/families?unconfirmed=1')
+        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/htc/serve/families?unconfirmed=1')
             ->assertInertia(fn (AssertableInertia $p) => $p->has('families', 1)->where('families.0.email_confirmed', false));
     });
 });
@@ -118,7 +127,7 @@ describe('registering for a parent', function (): void {
         ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
         registeredFamily($house, 'Janice', 'janice@example.com');
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get('/ccf/nxtgen/serve/families/new?q=ramos')
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get('/htc/serve/families/new?q=ramos')
             ->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
             ->component('Church/Families/Register')
             ->has('results', 1)
@@ -132,8 +141,8 @@ describe('registering for a parent', function (): void {
         registeredFamily($htc, 'Janice', 'janice@example.com');
         $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
 
-        actingAs($lifeshaper)->get('/ccf/nxtgen/serve/families/new?q=Janice-kid')->assertInertia(fn (AssertableInertia $p) => $p->has('results', 1));
-        actingAs($lifeshaper)->get('/ccf/nxtgen/serve/families/new?q=897346')->assertInertia(fn (AssertableInertia $p) => $p->has('results', 1));
+        actingAs($lifeshaper)->get('/htc/serve/families/new?q=Janice-kid')->assertInertia(fn (AssertableInertia $p) => $p->has('results', 1));
+        actingAs($lifeshaper)->get('/htc/serve/families/new?q=897346')->assertInertia(fn (AssertableInertia $p) => $p->has('results', 1));
     });
 
     it('registers a new family with an unconfirmed email and records who did it @story#47', function (): void {
@@ -141,7 +150,7 @@ describe('registering for a parent', function (): void {
         ['church' => $church, 'htc' => $htc] = adminChurch();
         $staffMember = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
 
-        actingAs($staffMember)->post('/ccf/nxtgen/serve/families', [
+        actingAs($staffMember)->post('/htc/serve/families', [
             'home_satellite_id' => $htc->id, 'area_text' => 'Deira', 'privacy_consented' => true,
             'guardian' => ['first_name' => 'Mira', 'last_name' => 'Bonza', 'relationship' => 'mother', 'phone' => '0523508443', 'email' => 'mira@example.com'],
             'children' => [['first_name' => 'Clarion', 'middle_name' => null, 'last_name' => 'Bonza', 'nickname' => 'Clarion', 'gender' => 'boy', 'date_of_birth' => '2018-02-03', 'has_allergies' => false, 'allergies' => null]],
@@ -159,7 +168,7 @@ describe('registering for a parent', function (): void {
         ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
         $family = registeredFamily($house, 'Janice', 'janice@example.com');
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->post("/ccf/nxtgen/serve/families/{$family->id}/children", [
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->post("/htc/serve/families/{$family->id}/children", [
             'first_name' => 'Baby', 'middle_name' => null, 'last_name' => 'Ramos', 'nickname' => 'Baby', 'gender' => 'girl', 'date_of_birth' => '2021-01-01', 'has_allergies' => false, 'allergies' => null,
         ])->assertRedirect()->assertSessionHas('success');
 
@@ -170,9 +179,9 @@ describe('registering for a parent', function (): void {
         Notification::fake();
         ['church' => $church, 'htc' => $htc] = adminChurch();
 
-        $response = actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->post('/ccf/nxtgen/serve/families', familyRegistration($htc, 'mira@example.com'));
+        $response = actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->post('/htc/serve/families', familyRegistration($htc, 'mira@example.com'));
 
-        $response->assertRedirect('/ccf/nxtgen/serve/families/'.Family::query()->sole()->id)
+        $response->assertRedirect('/htc/serve/families/'.Family::query()->sole()->id)
             ->assertSessionHas('success', 'Registered. The parent will get an email to confirm. The children can check in now.');
     });
 
@@ -180,8 +189,8 @@ describe('registering for a parent', function (): void {
         Notification::fake();
         ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->post('/ccf/nxtgen/serve/families', familyRegistration($house, 'mira@example.com'))
-            ->assertRedirect('/ccf/nxtgen/serve/families/new')->assertSessionHas('success');
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->post('/htc/serve/families', familyRegistration($house, 'mira@example.com'))
+            ->assertRedirect('/htc/serve/families/new')->assertSessionHas('success');
     });
 
     it('takes staff to the family\'s page after adding a child, or back where they were if they cannot open it @story#86', function (): void {
@@ -192,10 +201,10 @@ describe('registering for a parent', function (): void {
         $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
         $child = ['first_name' => 'Baby', 'last_name' => 'Ramos', 'nickname' => 'Baby', 'gender' => 'girl', 'date_of_birth' => '2021-01-01', 'has_allergies' => false];
 
-        actingAs($lifeshaper)->from('/ccf/nxtgen/serve/families/new?q=ramos')->post("/ccf/nxtgen/serve/families/{$mine->id}/children", $child)
-            ->assertRedirect("/ccf/nxtgen/serve/families/{$mine->id}")->assertSessionHas('success', 'Baby is added to the family.');
-        actingAs($lifeshaper)->from('/ccf/nxtgen/serve/families/new?q=ramos')->post("/ccf/nxtgen/serve/families/{$visiting->id}/children", $child)
-            ->assertRedirect('/ccf/nxtgen/serve/families/new?q=ramos')->assertSessionHas('success', 'Baby is added to the family.');
+        actingAs($lifeshaper)->from('/htc/serve/families/new?q=ramos')->post("/htc/serve/families/{$mine->id}/children", $child)
+            ->assertRedirect("/htc/serve/families/{$mine->id}")->assertSessionHas('success', 'Baby is added to the family.');
+        actingAs($lifeshaper)->from('/htc/serve/families/new?q=ramos')->post("/htc/serve/families/{$visiting->id}/children", $child)
+            ->assertRedirect('/htc/serve/families/new?q=ramos')->assertSessionHas('success', 'Baby is added to the family.');
     });
 
     it('registers the family\'s other guardians too, and flags a family one of them shares a phone with @story#88', function (): void {
@@ -203,7 +212,7 @@ describe('registering for a parent', function (): void {
         ['church' => $church, 'htc' => $htc] = adminChurch();
         $existing = registeredFamily($htc, 'Janice', 'janice@example.com');
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->post('/ccf/nxtgen/serve/families', familyRegistration($htc, 'mira@example.com', [
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->post('/htc/serve/families', familyRegistration($htc, 'mira@example.com', [
             'guardians' => [['first_name' => 'Lolo', 'last_name' => 'Bonza', 'relationship' => 'grandparent', 'phone' => '+971 54 489 7346']],
         ]))->assertSessionHas('success');
 
@@ -217,7 +226,7 @@ describe('registering for a parent', function (): void {
         ['church' => $church, 'htc' => $htc] = adminChurch();
         $foreign = Family::factory()->create();
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->post("/ccf/nxtgen/serve/families/{$foreign->id}/children", [
+        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->post("/htc/serve/families/{$foreign->id}/children", [
             'first_name' => 'X', 'last_name' => 'Y', 'nickname' => 'X', 'gender' => 'boy', 'date_of_birth' => '2018-01-01', 'has_allergies' => false,
         ])->assertNotFound();
     });
@@ -230,9 +239,9 @@ describe('a family\'s page', function (): void {
         $theirs = registeredFamily($house, 'Mira', 'mira@example.com');
         $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
 
-        actingAs($lifeshaper)->get("/ccf/nxtgen/serve/families/{$mine->id}")->assertOk()
+        actingAs($lifeshaper)->get("/htc/serve/families/{$mine->id}")->assertOk()
             ->assertInertia(fn (AssertableInertia $p) => $p->component('Church/Families/Show')->where('family.children.0.nickname', 'Janice-kid'));
-        actingAs($lifeshaper)->get("/ccf/nxtgen/serve/families/{$theirs->id}")->assertNotFound();
+        actingAs($lifeshaper)->get("/htc/serve/families/{$theirs->id}")->assertNotFound();
     });
 
     it('keeps the admin-only controls — email, status, Level, duplicates — to the Admin area; Serve shows the family without them (Astra) @story#50', function (): void {
@@ -240,9 +249,9 @@ describe('a family\'s page', function (): void {
         $family = registeredFamily($htc, 'Janice', 'janice@example.com');
         $admin = staffMember(RoleEnum::Admin, atChurch($church));
 
-        actingAs($admin)->get("/ccf/nxtgen/admin/families/{$family->id}")->assertInertia(fn (AssertableInertia $p) => $p
+        actingAs($admin)->get("/htc/admin/families/{$family->id}")->assertInertia(fn (AssertableInertia $p) => $p
             ->where('admin_controls', true)->where('can_set_level', true)->where('family.can_edit', true));
-        actingAs($admin)->get("/ccf/nxtgen/serve/families/{$family->id}")->assertInertia(fn (AssertableInertia $p) => $p
+        actingAs($admin)->get("/htc/serve/families/{$family->id}")->assertInertia(fn (AssertableInertia $p) => $p
             ->where('admin_controls', false)->where('can_set_level', false)->where('levels', [])->where('duplicates', [])
             ->where('family.can_edit', true));
     });
@@ -260,7 +269,7 @@ describe('a family\'s page', function (): void {
         checkedIn(sessionOf($onePm, '2025-12-27'), $amara);
         checkedIn(sessionOf($onePm, '2026-10-24'), $amara, ['undone_at' => now()]);
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get("/ccf/nxtgen/serve/families/{$family->id}")
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get("/htc/serve/families/{$family->id}")
             ->assertInertia(fn (AssertableInertia $p) => $p->where('attendance', [
                 ['child_id' => $amara->id, 'check_ins' => [
                     ['id' => CheckIn::query()->whereHas('session', fn ($s) => $s->where('date', '2026-10-31'))->sole()->id, 'date' => 'Sat 31 Oct', 'class' => '1PM', 'satellite' => 'Holy Trinity Church', 'squad' => 'Level 2 Girls', 'present' => true],
@@ -278,7 +287,7 @@ describe('a family\'s page', function (): void {
         $amara = childOf($family, ['nickname' => 'Amara', 'level' => 2, 'gender' => GenderEnum::Girl]);
         checkedIn(sessionOf(scheduleAt($htc), '2026-10-31'), $amara);
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get("/ccf/nxtgen/serve/families/{$family->id}")
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get("/htc/serve/families/{$family->id}")
             ->assertInertia(fn (AssertableInertia $p) => $p->where('attendance.0.check_ins.0.date', 'Sat 31 Oct 2026'));
     });
 
@@ -293,7 +302,7 @@ describe('a family\'s page', function (): void {
         $count = function () use ($admin, $family): int {
             DB::flushQueryLog();
             DB::enableQueryLog();
-            actingAs($admin)->get("/ccf/nxtgen/serve/families/{$family->id}")->assertOk();
+            actingAs($admin)->get("/htc/serve/families/{$family->id}")->assertOk();
             DB::disableQueryLog();
 
             return count(DB::getQueryLog());
@@ -311,7 +320,7 @@ describe('a family\'s page', function (): void {
         ['church' => $church, 'htc' => $htc] = adminChurch();
         $family = registeredFamily($htc, 'Janice', 'janice@example.com', verified: false);
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->post("/ccf/nxtgen/serve/families/{$family->id}/resend")
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->post("/htc/serve/families/{$family->id}/resend")
             ->assertRedirect()->assertSessionHas('success', 'We sent the confirmation link to ja•••@example.com again.');
 
         expect(MagicLink::query()->latest('id')->first()?->purpose)->toBe(MagicLinkPurposeEnum::VerifyEmail);
@@ -322,7 +331,7 @@ it('downloads the visible families as an Excel file @story#45', function (): voi
     ['church' => $church, 'htc' => $htc] = adminChurch();
     registeredFamily($htc, 'Janice', 'janice@example.com');
 
-    $response = actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/nxtgen/admin/families/export');
+    $response = actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/htc/admin/families/export');
 
     $response->assertOk();
     expect((string) $response->headers->get('content-type'))->toContain('spreadsheetml')
@@ -339,7 +348,7 @@ describe('re-sending from the lists', function (): void {
         registeredFamily($htc, 'Ana', 'ana@example.com');
         registeredFamily($htc, 'Bianca', 'bianca@example.com', verified: false);
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get('/ccf/nxtgen/serve/families')
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get('/htc/serve/families')
             ->assertInertia(fn (AssertableInertia $p) => $p->has('families', 2)
                 ->where('families', fn (Collection $rows): bool => $rows->pluck('can_resend', 'primary_name')->sortKeys()->all() === ['Ana Ramos' => false, 'Bianca Ramos' => true]));
     });
@@ -348,7 +357,7 @@ describe('re-sending from the lists', function (): void {
         ['church' => $church, 'htc' => $htc] = adminChurch();
         registeredFamily($htc, 'Bianca', 'bianca@example.com', verified: false);
 
-        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->get('/ccf/nxtgen/admin/children')
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->get('/htc/admin/children')
             ->assertInertia(fn (AssertableInertia $p) => $p->has('children', 1)->missing('children.0.can_resend'));
     });
 
@@ -357,7 +366,7 @@ describe('re-sending from the lists', function (): void {
         registeredFamily($house, 'Ana', 'ana@example.com');
         registeredFamily($house, 'Bianca', 'bianca@example.com', verified: false);
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get('/ccf/nxtgen/serve/families/new?q=ramos')
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->get('/htc/serve/families/new?q=ramos')
             ->assertInertia(fn (AssertableInertia $p) => $p->has('results', 2)
                 ->where('results', fn (Collection $rows): bool => $rows->pluck('can_resend', 'primary_name')->sortKeys()->all() === ['Ana Ramos' => false, 'Bianca Ramos' => true]
                     && $rows->pluck('can_open')->unique()->all() === [false]));
@@ -369,7 +378,7 @@ describe('re-sending from the lists', function (): void {
         $new = registeredFamily($htc, 'Anna', 'anna@example.com', verified: false);
         (new CreateDuplicateCandidatesJob(family: $new))->handle();
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get("/ccf/nxtgen/admin/families/{$new->id}")
+        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get("/htc/admin/families/{$new->id}")
             ->assertInertia(fn (AssertableInertia $p) => $p->where('duplicates.0.subject.can_resend', false)->where('duplicates.0.candidate.can_resend', false));
     });
 
@@ -381,11 +390,11 @@ describe('re-sending from the lists', function (): void {
         $admin = staffMember(RoleEnum::Admin, atSatellite($htc));
 
         DB::enableQueryLog();
-        actingAs($admin)->get('/ccf/nxtgen/admin/children')->assertOk();
+        actingAs($admin)->get('/htc/admin/children')->assertOk();
         $six = count(DB::getQueryLog());
         registeredFamily($htc, 'Parent7', 'p7@example.com', verified: false);
         DB::flushQueryLog();
-        actingAs($admin)->get('/ccf/nxtgen/admin/children')->assertOk();
+        actingAs($admin)->get('/htc/admin/children')->assertOk();
 
         expect(count(DB::getQueryLog()))->toBe($six);
     });
@@ -399,7 +408,7 @@ describe('resending a link and registering for a parent, at the edges', function
         ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
         $visiting = registeredFamily($house, 'Mira', 'mira@example.com', verified: false);
 
-        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->post("/ccf/nxtgen/serve/families/{$visiting->id}/resend")
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->post("/htc/serve/families/{$visiting->id}/resend")
             ->assertSessionHas('success', 'We sent the confirmation link to mi•••@example.com again.');
     });
 
@@ -412,7 +421,7 @@ describe('resending a link and registering for a parent, at the edges', function
         grantRole($revoked, RoleEnum::Lifeshaper, atSatellite($htc), active: false);
         $before = MagicLink::query()->count();
 
-        actingAs($revoked)->post("/ccf/nxtgen/serve/families/{$family->id}/resend")->assertNotFound();
+        actingAs($revoked)->post("/htc/serve/families/{$family->id}/resend")->assertNotFound();
 
         expect(MagicLink::query()->count())->toBe($before);
         Notification::assertNothingSent();
@@ -426,10 +435,10 @@ describe('resending a link and registering for a parent, at the edges', function
         $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
 
         foreach (range(1, 5) as $_) {
-            actingAs($lifeshaper)->post("/ccf/nxtgen/serve/families/{$family->id}/resend");
+            actingAs($lifeshaper)->post("/htc/serve/families/{$family->id}/resend");
         }
 
-        actingAs($lifeshaper)->post("/ccf/nxtgen/serve/families/{$family->id}/resend")
+        actingAs($lifeshaper)->post("/htc/serve/families/{$family->id}/resend")
             ->assertSessionHas('error', 'Too many emails were sent to this address recently. Please try again in 10 minutes.');
     });
 
@@ -438,7 +447,7 @@ describe('resending a link and registering for a parent, at the edges', function
         Notification::fake();
         ['church' => $church, 'htc' => $htc] = adminChurch();
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->post('/ccf/nxtgen/serve/families', [
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($htc)))->post('/htc/serve/families', [
             'home_satellite_id' => $htc->id, 'area_text' => 'Deira', 'privacy_consented' => true,
             'dgroup_area_text' => 'Barsha', 'dgroup_leader_phone' => '0501234567', 'lifestage' => 'ksp',
             'guardian' => ['first_name' => 'Mira', 'last_name' => 'Bonza', 'relationship' => 'mother', 'phone' => '0523508443', 'email' => 'mira2@example.com'],
@@ -464,12 +473,12 @@ describe('searching and filtering the list', function (): void {
         $admin = staffMember(RoleEnum::Admin, atChurch($church));
 
         foreach (['Janice', 'janice@exa', 'Janice-kid'] as $q) {
-            actingAs($admin)->get('/ccf/nxtgen/serve/families?q='.urlencode($q))->assertInertia(fn (AssertableInertia $p) => $p
+            actingAs($admin)->get('/htc/serve/families?q='.urlencode($q))->assertInertia(fn (AssertableInertia $p) => $p
                 ->has('families', 1)->where('families.0.primary_name', 'Janice Ramos')->where('filters.q', $q));
         }
     });
 
-    it('filters by satellite, child status and Level, and offers those choices @story#43', function (): void {
+    it('filters by child status and Level, and offers those choices — the satellite is the address\'s @story#43', function (): void {
         ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
         $a = registeredFamily($htc, 'Janice', 'janice@example.com');
         registeredFamily($house, 'Mira', 'mira@example.com');
@@ -477,17 +486,22 @@ describe('searching and filtering the list', function (): void {
         Child::query()->where('family_id', $a->id)->update(['status' => ChildStatusEnum::Inactive, 'level' => 2]);
         $admin = staffMember(RoleEnum::Admin, atChurch($church));
 
-        actingAs($admin)->get("/ccf/nxtgen/serve/families?satellite={$house->id}")->assertInertia(fn (AssertableInertia $p) => $p
+        // The satellite is the address's, not a filter (DECISIONS 2026-11-08): a church admin sees House at /house, and
+        // a `?satellite=House` at /htc is not read — the list stays htc's; no satellite is offered to pick.
+        actingAs($admin)->get('/house/serve/families')->assertInertia(fn (AssertableInertia $p) => $p
             ->has('families', 1)->where('families.0.primary_name', 'Mira Ramos')
-            ->has('options.satellites', 2)->has('options.levels', 5)->has('enums.child_status', 3));
-        actingAs($admin)->get('/ccf/nxtgen/serve/families?status=inactive')->assertInertia(fn (AssertableInertia $p) => $p
+            ->missing('options.satellites')->has('options.levels', 5)->has('enums.child_status', 3));
+        actingAs($admin)->get("/htc/serve/families?satellite={$house->id}")->assertInertia(fn (AssertableInertia $p) => $p
             ->has('families', 1)->where('families.0.primary_name', 'Janice Ramos'));
-        actingAs($admin)->get('/ccf/nxtgen/serve/families?level=2')->assertInertia(fn (AssertableInertia $p) => $p
+        actingAs($admin)->get('/house/serve/families?status=inactive')->assertInertia(fn (AssertableInertia $p) => $p->has('families', 0));
+        actingAs($admin)->get('/htc/serve/families?status=inactive')->assertInertia(fn (AssertableInertia $p) => $p
+            ->has('families', 1)->where('families.0.primary_name', 'Janice Ramos'));
+        actingAs($admin)->get('/htc/serve/families?level=2')->assertInertia(fn (AssertableInertia $p) => $p
             ->has('families', 1)->where('families.0.primary_name', 'Janice Ramos')->where('filters.level', 2));
 
         // "No Level": the families with a child who has none yet (plan §13 q5).
         Child::query()->where('family_id', $a->id)->firstOrFail()->forceFill(['level' => null])->save();
-        actingAs($admin)->get('/ccf/nxtgen/serve/families?level=0')->assertInertia(fn (AssertableInertia $p) => $p
+        actingAs($admin)->get('/htc/serve/families?level=0')->assertInertia(fn (AssertableInertia $p) => $p
             ->has('families', 1)->where('families.0.primary_name', 'Janice Ramos')->where('filters.level', 0));
     });
 
@@ -498,18 +512,19 @@ describe('searching and filtering the list', function (): void {
         registeredFamily($htc, 'Mira', 'mira@example.com')->guardians()->update(['phone' => '0500000099']);
         (new CreateDuplicateCandidatesJob($new))->handle();
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/nxtgen/serve/families?duplicates=1')
+        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/htc/serve/families?duplicates=1')
             // Newest first: the new family, then the one it may duplicate; Mira (different phone) is not listed.
             ->assertInertia(fn (AssertableInertia $p) => $p->has('families', 2)
                 ->where('families.0.id', $new->id)->where('families.1.id', $old->id));
     });
 
-    it('never widens a satellite admin\'s view by picking another satellite @story#44', function (): void {
+    it('never widens a satellite admin\'s view by naming another satellite in the address @story#44', function (): void {
         ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
         registeredFamily($house, 'Mira', 'mira@example.com');
 
-        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->get("/ccf/nxtgen/serve/families?satellite={$house->id}")
-            ->assertInertia(fn (AssertableInertia $p) => $p->has('families', 0)->has('options.satellites', 1));
+        // DECISIONS 2026-11-08: no satellite filter — `?satellite=` is not read, and no satellite is offered.
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->get("/htc/serve/families?satellite={$house->id}")
+            ->assertInertia(fn (AssertableInertia $p) => $p->has('families', 0)->missing('options.satellites'));
     });
 
     it('downloads what the filters show @story#45', function (): void {
@@ -517,7 +532,8 @@ describe('searching and filtering the list', function (): void {
         registeredFamily($htc, 'Janice', 'janice@example.com');
         registeredFamily($house, 'Mira', 'mira@example.com');
 
-        $response = actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get("/ccf/nxtgen/admin/families/export?satellite={$house->id}");
+        // The download is the address satellite's, as the list (DECISIONS 2026-11-08).
+        $response = actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/house/admin/families/export');
 
         $rows = exportedRows($response);
 
@@ -532,9 +548,9 @@ it('shows the families list 50 at a time; the Excel download still has every fam
     Family::factory()->count(55)->create(['church_id' => $church->id, 'home_satellite_id' => $htc->id]);
     $admin = staffMember(RoleEnum::Admin, atChurch($church));
 
-    actingAs($admin)->get('/ccf/nxtgen/serve/families')->assertInertia(fn (AssertableInertia $p) => $p
+    actingAs($admin)->get('/htc/serve/families')->assertInertia(fn (AssertableInertia $p) => $p
         ->has('families', 50)->where('pagination.total', 55)->where('pagination.last_page', 2));
-    actingAs($admin)->get('/ccf/nxtgen/serve/families?page=2')->assertInertia(fn (AssertableInertia $p) => $p->has('families', 5));
+    actingAs($admin)->get('/htc/serve/families?page=2')->assertInertia(fn (AssertableInertia $p) => $p->has('families', 5));
 });
 
 it('downloads every filtered family, not only the page on screen @story#45', function (): void {
@@ -543,7 +559,7 @@ it('downloads every filtered family, not only the page on screen @story#45', fun
         childOf(familyAt($htc), ['nickname' => "Kid {$n}"]);
     }
 
-    $rows = exportedRows(actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/ccf/nxtgen/admin/families/export'));
+    $rows = exportedRows(actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/htc/admin/families/export'));
 
     expect($rows)->toHaveCount(56); // the heading + one row per child
 });

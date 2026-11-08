@@ -11,8 +11,10 @@ export type Church = App.Domains.Church.DataObjects.ChurchData
 export type SharedProps = {
     auth: { user: { id: number; name: string } | null; can_switch?: boolean }
     flash: { success?: string | null; error?: string | null }
-    /** The church the address names; null on a page outside one. */
+    /** The church the page is about: the address's satellite's, or a parent's own; null elsewhere. */
     church: Church | null
+    /** The satellite the address names (`/{satellite}/…`); null on a page outside one. */
+    satellite: App.Domains.Church.DataObjects.SatelliteData | null
     /** The staff menu: set on church staff pages (from RequireAssignment's scope), null on every other page. */
     church_nav: App.Domains.Church.DataObjects.ChurchNavData | null
 }
@@ -110,7 +112,7 @@ export type ChildCheckIn = App.Domains.CheckIn.DataObjects.ChildCheckInData
 /** Attendance (DECISIONS 2026-10-26): a Squad of a Session, one child checked in to it, a satellite in the picker. */
 export type AttendanceSquad = App.Domains.CheckIn.DataObjects.AttendanceSquadData
 export type AttendanceChild = App.Domains.CheckIn.DataObjects.AttendanceChildData
-export type AttendanceSatellite = App.Domains.CheckIn.DataObjects.AttendanceSatelliteData
+export type AttendanceClass = App.Domains.CheckIn.DataObjects.AttendanceClassData
 /** A child's open Card request on the staff family page (name cards): its step, fee state and THE words for it ("Asked · not paid"). */
 export type CardRequest = App.Domains.Card.DataObjects.CardRequestData
 /** One row of the Cards page (admins): whose card, family, why, the fee, and a refusal's reason. */
@@ -143,9 +145,7 @@ export type ResolveDuplicateInput = App.Services.Church.Data.ResolveDuplicateInp
 export type UpdateChildStatusInput = App.Services.Church.Data.UpdateChildStatusInput
 export type UpdateChildLevelInput = App.Services.Church.Data.UpdateChildLevelInput
 export type ScheduleInput = App.Services.Church.Data.ScheduleInput
-export type AddScheduleInput = App.Services.Church.Data.AddScheduleInput
 export type SatelliteLinkInput = App.Services.Church.Data.SatelliteLinkInput
-export type AddSatelliteLinkInput = App.Services.Church.Data.AddSatelliteLinkInput
 export type MoveSatelliteLinkInput = App.Services.Church.Data.MoveSatelliteLinkInput
 export type CheckInInput = App.Services.Church.Data.CheckInInput
 export type CheckInChildInput = App.Services.Church.Data.CheckInChildInput

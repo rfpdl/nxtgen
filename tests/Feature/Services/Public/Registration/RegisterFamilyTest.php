@@ -25,7 +25,7 @@ function ccf(): array
 {
     $church = church(['slug' => 'ccf', 'name' => 'CCF']);
 
-    return [$church, satelliteOf($church, ['name' => 'CCF DXB'])];
+    return [$church, satelliteOf($church, ['name' => 'CCF DXB', 'slug' => 'dubai'])];
 }
 
 /**
@@ -52,9 +52,12 @@ function validForm(Satellite $satellite): array
 it('shows the registration form with the church satellites @story#2', function (): void {
     [, $satellite] = ccf();
 
-    get('/ccf/register')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
+    get('/dubai/register')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
         ->component('Public/Register')
         ->where('church.name', 'CCF')
+        // The form starts on the shared `satellite` — the one in the address; no separate prop says it again.
+        ->where('satellite.id', $satellite->id)
+        ->missing('satellite_id')
         ->where('satellites.0.id', $satellite->id)
         ->where('satellites.0.name', 'CCF DXB')
         ->has('enums.relationship')
@@ -71,8 +74,8 @@ it('registers a family and thanks the parent @story#4', function (): void {
     Notification::fake();
     [, $satellite] = ccf();
 
-    post('/ccf/register', validForm($satellite))
-        ->assertRedirect('/ccf/register/thanks')
+    post('/dubai/register', validForm($satellite))
+        ->assertRedirect('/dubai/register/thanks')
         ->assertSessionHas('success', RegistrationOutcomeEnum::Registered->guardianMessage());
 
     expect(Family::query()->count())->toBe(1)
@@ -87,7 +90,7 @@ it('registers several children at once @story#4', function (): void {
     $form = validForm($satellite);
     $form['children'][] = ['first_name' => 'Aaron', 'middle_name' => null, 'last_name' => 'Ramos', 'nickname' => 'Aaron', 'gender' => 'boy', 'date_of_birth' => '2017-01-02', 'has_allergies' => false, 'allergies' => null];
 
-    post('/ccf/register', $form)->assertRedirect('/ccf/register/thanks');
+    post('/dubai/register', $form)->assertRedirect('/dubai/register/thanks');
 
     expect(Child::query()->count())->toBe(2);
 });
@@ -95,10 +98,10 @@ it('registers several children at once @story#4', function (): void {
 it('does not register an already-registered email twice, and says nothing that reveals it @story#5', function (): void {
     Notification::fake();
     [, $satellite] = ccf();
-    post('/ccf/register', validForm($satellite));
+    post('/dubai/register', validForm($satellite));
 
-    post('/ccf/register', validForm($satellite))
-        ->assertRedirect('/ccf/register/thanks')
+    post('/dubai/register', validForm($satellite))
+        ->assertRedirect('/dubai/register/thanks')
         ->assertSessionHas('success', RegistrationOutcomeEnum::Registered->guardianMessage());
 
     expect(Family::query()->count())->toBe(1);
@@ -108,11 +111,11 @@ it('does not register an already-registered email twice, and says nothing that r
 it('sends a parent who registers again with an unconfirmed email a fresh link that confirms it @story#5', function (): void {
     Notification::fake();
     [, $satellite] = ccf();
-    post('/ccf/register', validForm($satellite));
+    post('/dubai/register', validForm($satellite));
     $user = User::query()->sole();
     expect($user->email_verified_at)->toBeNull();
 
-    post('/ccf/register', validForm($satellite))->assertRedirect('/ccf/register/thanks');
+    post('/dubai/register', validForm($satellite))->assertRedirect('/dubai/register/thanks');
 
     $sent = [];
     Notification::assertSentOnDemand(MagicLinkNotification::class, function (MagicLinkNotification $n) use (&$sent): bool {
@@ -137,7 +140,7 @@ it('gives the same public answer for every registration outcome (no membership o
 it('shows the thank-you page @story#7', function (): void {
     ccf();
 
-    get('/ccf/register/thanks')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p->component('Public/RegisterThanks'));
+    get('/dubai/register/thanks')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p->component('Public/RegisterThanks'));
 });
 
 it('requires the privacy agreement', function (): void {
@@ -146,7 +149,7 @@ it('requires the privacy agreement', function (): void {
     $form = validForm($satellite);
     $form['privacy_consented'] = false;
 
-    post('/ccf/register', $form)->assertSessionHasErrors('privacy_consented');
+    post('/dubai/register', $form)->assertSessionHasErrors('privacy_consented');
 });
 
 it('requires at least one child', function (): void {
@@ -154,7 +157,7 @@ it('requires at least one child', function (): void {
     $form = validForm($satellite);
     $form['children'] = [];
 
-    post('/ccf/register', $form)->assertSessionHasErrors('children');
+    post('/dubai/register', $form)->assertSessionHasErrors('children');
 });
 
 it('requires the parent email, name and phone and each child\'s name, gender and birthday', function (): void {
@@ -166,7 +169,7 @@ it('requires the parent email, name and phone and each child\'s name, gender and
     $form['children'][0]['gender'] = 'dragon';
     $form['children'][0]['date_of_birth'] = '2999-01-01';
 
-    post('/ccf/register', $form)->assertSessionHasErrors([
+    post('/dubai/register', $form)->assertSessionHasErrors([
         'guardian.email', 'guardian.phone', 'children.0.first_name', 'children.0.gender', 'children.0.date_of_birth',
     ]);
 });
@@ -180,7 +183,7 @@ it('registers the family\'s other parents and guardians, who get no login — th
         ['first_name' => 'Lola', 'last_name' => 'Ramos', 'relationship' => 'grandparent', 'phone' => '0508887777', 'ministries' => ['Ushers']],
     ];
 
-    post('/ccf/register', $form)->assertRedirect('/ccf/register/thanks');
+    post('/dubai/register', $form)->assertRedirect('/dubai/register/thanks');
 
     $family = Family::query()->sole();
     $others = Guardian::query()->whereKeyNot((int) $family->primary_guardian_id)->orderBy('id')->get();
@@ -194,7 +197,7 @@ it('asks for each other guardian\'s name, relationship and phone, in words about
     $form = validForm($satellite);
     $form['guardians'] = [['first_name' => '', 'last_name' => '', 'relationship' => 'dragon', 'phone' => '']];
 
-    post('/ccf/register', $form)->assertSessionHasErrors([
+    post('/dubai/register', $form)->assertSessionHasErrors([
         'guardians.0.first_name' => 'Please enter their first name.',
         'guardians.0.last_name' => 'Please enter their last name.',
         'guardians.0.phone' => 'Please enter their mobile number.',
@@ -207,7 +210,7 @@ it('refuses a satellite from another church @story#6', function (): void {
     ccf();
     $foreign = Satellite::factory()->create();
 
-    post('/ccf/register', validForm($foreign))->assertSessionHasErrors('home_satellite_id');
+    post('/dubai/register', validForm($foreign))->assertSessionHasErrors('home_satellite_id');
 
     expect(Family::query()->count())->toBe(0);
 });
@@ -222,7 +225,7 @@ describe('allergies are an explicit yes or no', function (): void {
         $form = validForm($satellite);
         unset($form['children'][0]['has_allergies']);
 
-        post('/ccf/register', $form)->assertSessionHasErrors(['children.0.has_allergies' => 'Please answer: does your child have any allergies?']);
+        post('/dubai/register', $form)->assertSessionHasErrors(['children.0.has_allergies' => 'Please answer: does your child have any allergies?']);
     });
 
     it('needs the details when the answer is yes', function (): void {
@@ -230,7 +233,7 @@ describe('allergies are an explicit yes or no', function (): void {
         $form = validForm($satellite);
         $form['children'][0]['allergies'] = '';
 
-        post('/ccf/register', $form)->assertSessionHasErrors(['children.0.allergies' => 'Please tell us what your child is allergic to.']);
+        post('/dubai/register', $form)->assertSessionHasErrors(['children.0.allergies' => 'Please tell us what your child is allergic to.']);
     });
 
     it('keeps no details when the answer is no, whatever was typed', function (): void {
@@ -240,7 +243,7 @@ describe('allergies are an explicit yes or no', function (): void {
         $form['children'][0]['has_allergies'] = false;
         $form['children'][0]['allergies'] = 'typed then changed mind';
 
-        post('/ccf/register', $form)->assertRedirect();
+        post('/dubai/register', $form)->assertRedirect();
 
         expect(Child::query()->sole()->allergies)->toBeNull();
     });
@@ -251,7 +254,7 @@ it('requires each child\'s nickname — it is the name on their card', function 
     $form = validForm($satellite);
     $form['children'][0]['nickname'] = '';
 
-    post('/ccf/register', $form)->assertSessionHasErrors(['children.0.nickname' => 'Please enter the name your child goes by.']);
+    post('/dubai/register', $form)->assertSessionHasErrors(['children.0.nickname' => 'Please enter the name your child goes by.']);
 });
 
 it('keeps the rest of the Google Form: DGroup area and leader phone, lifestage, ministry', function (): void {
@@ -265,7 +268,7 @@ it('keeps the rest of the Google Form: DGroup area and leader phone, lifestage, 
         'lifestage' => 'married',
     ];
 
-    post('/ccf/register', $form)->assertRedirect();
+    post('/dubai/register', $form)->assertRedirect();
 
     $family = Family::query()->with('primaryGuardian')->sole();
     expect($family->dgroup_area_text)->toBe('Barsha')
@@ -279,7 +282,7 @@ it('keeps Laravel\'s own words for a too-long "Anything else we should know" (re
     $form = validForm($satellite);
     $form['children'][0]['guardian_notes'] = str_repeat('a', 1001);
 
-    post('/ccf/register', $form)
+    post('/dubai/register', $form)
         ->assertSessionHasErrors(['children.0.guardian_notes' => 'The children.0.parent notes field must not be greater than 1000 characters.']);
 });
 
@@ -288,7 +291,7 @@ it('keeps Laravel\'s own words when "Anything else we should know" is not text',
     $form = validForm($satellite);
     $form['children'][0]['guardian_notes'] = ['not', 'text'];
 
-    post('/ccf/register', $form)
+    post('/dubai/register', $form)
         ->assertSessionHasErrors(['children.0.guardian_notes' => 'The children.0.parent notes field must be a string.']);
 });
 
@@ -296,7 +299,7 @@ it('takes KSP as a lifestage @story#184', function (): void {
     Notification::fake();
     [, $satellite] = ccf();
 
-    post('/ccf/register', validForm($satellite) + ['lifestage' => 'ksp'])->assertRedirect();
+    post('/dubai/register', validForm($satellite) + ['lifestage' => 'ksp'])->assertRedirect();
 
     expect(Family::query()->sole()->lifestage)->toBe(LifestageEnum::Ksp);
 });
@@ -304,6 +307,6 @@ it('takes KSP as a lifestage @story#184', function (): void {
 it('refuses any other lifestage @story#185', function (): void {
     [, $satellite] = ccf();
 
-    post('/ccf/register', validForm($satellite) + ['lifestage' => 'widowed'])->assertSessionHasErrors('lifestage');
+    post('/dubai/register', validForm($satellite) + ['lifestage' => 'widowed'])->assertSessionHasErrors('lifestage');
     expect(Family::query()->count())->toBe(0);
 });

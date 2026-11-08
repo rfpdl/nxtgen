@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { useSatellite } from '@/composables/useSatellite'
 import LinkTabs from '@/components/atoms/LinkTabs.vue'
-import { useChurch } from '@/composables/useChurch'
 import { computed } from 'vue'
 import { route } from 'ziggy-js'
 
@@ -10,7 +10,7 @@ import { route } from 'ziggy-js'
  */
 const props = defineProps<{ current: 'check-in' | 'whos-in'; classId: number | null }>()
 
-const church = useChurch()
+const satellite = useSatellite()
 
 const tabs = computed(() => {
     const query = props.classId === null ? {} : { class: props.classId }
@@ -18,12 +18,12 @@ const tabs = computed(() => {
         {
             key: 'check-in',
             label: 'Check in',
-            href: route('nxtgen.serve.door.show', { church: church.value.slug, ...query }),
+            href: route('serve.door.show', { satellite: satellite.value.slug, ...query }),
         },
         {
             key: 'whos-in',
             label: "Who's in",
-            href: route('nxtgen.serve.door.whos-in', { church: church.value.slug, ...query }),
+            href: route('serve.door.whos-in', { satellite: satellite.value.slug, ...query }),
         },
     ]
 })

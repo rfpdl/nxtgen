@@ -30,14 +30,14 @@ abstract class BaseMovingUpFeature extends BaseChurchFeature
      * @param  Closure(MovingUp): T  $then
      * @return T
      */
-    protected function withLastMovingUp(int $id, Closure $then): mixed
+    protected function withLastMovingUp(MovingUp $movingUp, Closure $then): mixed
     {
         abort_unless($this->scope()->canMoveUp(), 404);
 
-        return DB::transaction(function () use ($id, $then): mixed {
+        return DB::transaction(function () use ($movingUp, $then): mixed {
             $this->run(new GetChurchForUpdateJob(church: $this->church()));
             $last = $this->run(new GetLastMovingUpJob(church: $this->church()));
-            abort_unless($last instanceof MovingUp && $last->id === $id, 404);
+            abort_unless($last instanceof MovingUp && $last->id === $movingUp->id, 404);
 
             return $then($last);
         });

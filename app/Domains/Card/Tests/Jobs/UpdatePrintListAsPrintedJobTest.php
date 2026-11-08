@@ -34,7 +34,7 @@ it('marks the list\'s still-approved cards printed, saying who and when, and how
     $list->cards()->attach([$a->id, $b->id, $given->id]);
     $grace = User::factory()->create();
 
-    expect((new UpdatePrintListAsPrintedJob(church: $church, printList: $list, satelliteIds: null, by: $grace))->handle())->toBe(2)
+    expect((new UpdatePrintListAsPrintedJob(church: $church, printList: $list, satelliteIds: [$dxb->id], by: $grace))->handle())->toBe(2)
         ->and([$a->fresh()?->step, $a->fresh()?->printed_by, $b->fresh()?->step, $given->fresh()?->step])
         ->toBe([CardStepEnum::Printed, $grace->id, CardStepEnum::Printed, CardStepEnum::Given]);
 });
@@ -92,14 +92,15 @@ it('leaves a card whose family moved out of the admin\'s satellites between find
 
 it('never both prints and refuses a card refused at the same moment as its list is marked printed', function (): void {
     $church = church();
-    $card = CardRequest::factory()->for(childOf(familyAt(satelliteOf($church))))->create(['step' => CardStepEnum::Approved]);
+    $dxb = satelliteOf($church);
+    $card = CardRequest::factory()->for(childOf(familyAt($dxb)))->create(['step' => CardStepEnum::Approved]);
     $list = PrintList::factory()->for($church)->create();
     $list->cards()->attach([$card->id]);
     $grace = User::factory()->create();
 
-    withCommittedWorld(function () use ($church, $list, $card, $grace): void {
+    withCommittedWorld(function () use ($church, $dxb, $list, $card, $grace): void {
         [$printed, $refused] = atTheSameTime(
-            fn (): int => (new UpdatePrintListAsPrintedJob(church: $church, printList: $list, satelliteIds: null, by: $grace))->handle(),
+            fn (): int => (new UpdatePrintListAsPrintedJob(church: $church, printList: $list, satelliteIds: [$dxb->id], by: $grace))->handle(),
             fn (): bool => (new UpdateCardRequestAsRefusedJob(request: $card, reason: 'Found it', by: $grace))->handle(),
         );
 
@@ -111,11 +112,14 @@ it('never both prints and refuses a card refused at the same moment as its list 
 
 it('skips a card of another church, should one ever be on the list — the acting church is a second guard', function (): void {
     $church = church();
-    $mine = CardRequest::factory()->for(childOf(familyAt(satelliteOf($church))))->create(['step' => CardStepEnum::Approved]);
-    $foreign = CardRequest::factory()->for(childOf(familyAt(satelliteOf(church()))))->create(['step' => CardStepEnum::Approved]);
+    $here = satelliteOf($church);
+    $there = satelliteOf(church());
+    $mine = CardRequest::factory()->for(childOf(familyAt($here)))->create(['step' => CardStepEnum::Approved]);
+    $foreign = CardRequest::factory()->for(childOf(familyAt($there)))->create(['step' => CardStepEnum::Approved]);
     $list = PrintList::factory()->for($church)->create();
     $list->cards()->attach([$mine->id, $foreign->id]);
 
-    expect((new UpdatePrintListAsPrintedJob(church: $church, printList: $list, satelliteIds: null, by: User::factory()->create()))->handle())->toBe(1)
+    // Even handed the other church's satellite id, the acting church still holds.
+    expect((new UpdatePrintListAsPrintedJob(church: $church, printList: $list, satelliteIds: [$here->id, $there->id], by: User::factory()->create()))->handle())->toBe(1)
         ->and($foreign->fresh()?->step)->toBe(CardStepEnum::Approved);
 });

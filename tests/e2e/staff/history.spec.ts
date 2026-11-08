@@ -1,7 +1,7 @@
 import { expect, test } from '../support/test'
 import { registerAndConfirm } from '../support/forms'
 import {
-    CHURCH,
+    DUBAI,
     CLASSES,
     SATELLITES,
     projectPhone,
@@ -11,7 +11,7 @@ import {
 
 /*
  * Child history (slice 3, DECISIONS 2026-10-28 night): a parent registers Amara; a Lifeshaper checks her in at 1PM and
- * ticks her present on Who's in; the family page shows staff the line "Sat … · 1PM · CCF DXB · Level 2 Girls ·
+ * ticks her present on Who's in; the family page shows staff the line "Sat … · 1PM · CCF Dubai · Level 2 Girls ·
  * Present ✓"; undone at the door, the line is gone. The parent's own My family page never shows attendance.
  */
 test("staff see a child's attendance on the family page; the parent never does @story#126 @story#127", async ({
@@ -29,12 +29,12 @@ test("staff see a child's attendance on the family page; the parent never does @
         },
         [{ first: 'Amara', last: surname, nickname: 'Amara', gender: 'girl', dob: '2019-05-05' }],
     )
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/family`))
+    await expect(page).toHaveURL(new RegExp(`/family`))
 
     // A Lifeshaper checks Amara in at 1PM and ticks her present on Who's in.
     const staff = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const door = await staff.newPage()
-    await door.goto(`/${CHURCH}/nxtgen/serve/door`)
+    await door.goto(`/${DUBAI}/serve/door`)
     await door.getByTestId('door-class').getByRole('radio', { name: CLASSES.onePm.name }).click()
     await door.getByTestId('door-search').fill(surname)
     await door.getByTestId('door-search').press('Enter')
@@ -52,7 +52,7 @@ test("staff see a child's attendance on the family page; the parent never does @
     ])
 
     // Her family page shows the line, under Amara.
-    await door.goto(`/${CHURCH}/nxtgen/serve/families?q=${surname}`)
+    await door.goto(`/${DUBAI}/serve/families?q=${surname}`)
     await door.getByTestId('family-row').getByRole('link').click()
     const history = door
         .getByTestId('family-child')
@@ -69,7 +69,7 @@ test("staff see a child's attendance on the family page; the parent never does @
 
     // Undone at the door: the line is gone.
     const familyPage = door.url()
-    await door.goto(`/${CHURCH}/nxtgen/serve/door`)
+    await door.goto(`/${DUBAI}/serve/door`)
     await door.getByTestId('door-class').getByRole('radio', { name: CLASSES.onePm.name }).click()
     await door.getByTestId('door-search').fill(surname)
     await door.getByTestId('door-search').press('Enter')

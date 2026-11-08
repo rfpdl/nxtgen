@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Http\Controllers\CardRequest;
 
+use App\Data\Models\CardRequest;
+use App\Data\Models\Child;
+use App\Data\Models\PrintList;
 use App\Services\Church\Features\CardRequest\ApproveCardRequestFeature;
 use App\Services\Church\Features\CardRequest\ExportPrintListFeature;
 use App\Services\Church\Features\CardRequest\FileCardRequestFeature;
@@ -30,43 +33,43 @@ final class Controller extends \Lucid\Units\Controller
         return $this->serve(MakePrintListFeature::class);
     }
 
-    public function downloadPrintList(string $church, int $printList): BinaryFileResponse
+    public function downloadPrintList(PrintList $printList): BinaryFileResponse
     {
-        return $this->serve(ExportPrintListFeature::class, ['printListId' => $printList]);
+        return $this->serve(ExportPrintListFeature::class, ['printList' => $printList]);
     }
 
-    public function markPrintListPrinted(string $church, int $printList): RedirectResponse
+    public function markPrintListPrinted(PrintList $printList): RedirectResponse
     {
-        return $this->serve(MarkPrintListPrintedFeature::class, ['printListId' => $printList]);
+        return $this->serve(MarkPrintListPrintedFeature::class, ['printList' => $printList]);
     }
 
-    public function store(string $church, int $child): RedirectResponse
+    public function store(Child $child): RedirectResponse
     {
-        return $this->serve(FileCardRequestFeature::class, ['childId' => $child]);
+        return $this->serve(FileCardRequestFeature::class, ['child' => $child]);
     }
 
-    public function markPaid(string $church, int $cardRequest): RedirectResponse
+    public function markPaid(CardRequest $cardRequest): RedirectResponse
     {
-        return $this->serve(MarkCardRequestPaidFeature::class, ['requestId' => $cardRequest]);
+        return $this->serve(MarkCardRequestPaidFeature::class, ['cardRequest' => $cardRequest]);
     }
 
-    public function approve(string $church, int $cardRequest): RedirectResponse
+    public function approve(CardRequest $cardRequest): RedirectResponse
     {
-        return $this->serve(ApproveCardRequestFeature::class, ['requestId' => $cardRequest]);
+        return $this->serve(ApproveCardRequestFeature::class, ['cardRequest' => $cardRequest]);
     }
 
-    public function refuse(string $church, int $cardRequest): RedirectResponse
+    public function refuse(CardRequest $cardRequest): RedirectResponse
     {
-        return $this->serve(RefuseCardRequestFeature::class, ['requestId' => $cardRequest]);
+        return $this->serve(RefuseCardRequestFeature::class, ['cardRequest' => $cardRequest]);
     }
 
-    public function markPrinted(string $church, int $cardRequest): RedirectResponse
+    public function markPrinted(CardRequest $cardRequest): RedirectResponse
     {
-        return $this->serve(MarkCardRequestPrintedFeature::class, ['requestId' => $cardRequest]);
+        return $this->serve(MarkCardRequestPrintedFeature::class, ['cardRequest' => $cardRequest]);
     }
 
-    public function give(string $church, int $cardRequest): RedirectResponse
+    public function give(CardRequest $cardRequest): RedirectResponse
     {
-        return $this->serve(GiveCardRequestFeature::class, ['requestId' => $cardRequest]);
+        return $this->serve(GiveCardRequestFeature::class, ['cardRequest' => $cardRequest]);
     }
 }

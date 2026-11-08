@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Storage;
 
 /**
  * The church the access matrix and the response allowlists ask about (TODO #18): church "ccf" with satellites
- * "Home" and "Away"; one family at Home whose child Amara has a photo on file (consent given) and whose parent's
+ * "Home" (`/home-sat/…`, the address every staff page is asked at) and "Away" (`/away/…`); one family at Home whose child Amara has a photo on file (consent given) and whose parent's
  * email is not yet confirmed, with another guardian (Jun, no login) and a staff note; another family at Home; a possible duplicate of the first family;
  * a Home Lifeshaper's role to remove; a class at each satellite on Saturdays (Home's "1PM" is the one changed, and
  * the one checked into: Amara is in it on Saturday 31 Oct 2026, AccessWorld::SATURDAY); another church "other" — and
@@ -51,8 +51,8 @@ final readonly class AccessWorld
     public static function make(): self
     {
         $church = church(['slug' => 'ccf']);
-        $home = satelliteOf($church, ['name' => 'Home']);
-        $away = satelliteOf($church, ['name' => 'Away']);
+        $home = satelliteOf($church, ['name' => 'Home', 'slug' => 'home-sat']);
+        $away = satelliteOf($church, ['name' => 'Away', 'slug' => 'away']);
 
         $family = familyAt($home, ['area_text' => 'Deira', 'notes' => 'Prefers Tagalog']);
         $parent = User::factory()->unverified()->create(['email' => 'janice@example.com']);
@@ -88,10 +88,10 @@ final readonly class AccessWorld
         guardianOf($rosas, $revokedParent, ['first_name' => 'Rosa']);
         childOf($rosas, ['nickname' => 'Rio']);
 
-        // Another church, whose admin is also a parent there — so they can try ccf's ids from their own addresses.
+        // Another church, whose admin tries ccf's ids from their own satellite's address (/other/…).
         $otherChurch = church(['slug' => 'other']);
+        satelliteOf($otherChurch, ['slug' => 'other']);
         $otherAdmin = staffMember(RoleEnum::Admin, atChurch($otherChurch));
-        guardianOf(familyAt(satelliteOf($otherChurch)), $otherAdmin, ['first_name' => 'Olga']);
 
         // A new family at Home with the same phone: its possible-duplicate pair is the one answered.
         $newcomer = familyAt($home);

@@ -4,6 +4,46 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-11-08 (Batch B, before the overnight run — Roy)
+
+- **The platform admin is not on any satellite's People list, but can open every satellite's Admin and Serve** (Roy:
+  "doesn't appear in satellite admin list but we can have access just in case"). The first person the setup makes is
+  the platform admin, with no satellite Role.
+- **Switching satellite from the bar lands on that satellite's home** (Roy): Admin → its Families list, Serve → its door.
+- **A satellite's registration code is 8 lowercase letters and digits** (Roy), e.g. `/k7m2q9xa/register`; no
+  look-alike characters; never the same as a satellite address.
+
+## 2026-11-08 (Issue 05 built — satellites in the address)
+
+- **Every address names its satellite, never the church**: staff `/{satellite}/admin/…` and `/{satellite}/serve/…`
+  (People too), parents `/family/…`, registration `/{satellite}/register`. Satellites `dubai`, `sharjah`, `abu-dhabi`
+  ("CCF Dubai", "CCF Sharjah", "CCF Abu Dhabi"); a satellite's address is unique. `NXTGEN_SATELLITES` is
+  `address=name|…`. Guarded by `tests/Architecture/AddressRuleTest.php`.
+- **Controllers take models, never ids** (Roy: "if we do it right, we have less code to manage"): every id in an
+  address is bound within the address satellite's church (`RouteBindingServiceProvider`); `RequireAssignment` checks the
+  Role there and takes `{satellite}` off the route. Signed links are checked before any binding (Astra, SECURITY #23).
+- **Someone who only serves at a satellite and opens one of its Admin pages is sent to its Serve** (spec item 10);
+  any other act there is 404. Staff of another satellite get 404 — except the two acts for a visiting family, from
+  their own satellite's address: resend its link, add a child to it.
+- **A possible-duplicate pair is answered at the new family's satellite**: when the two families live at different
+  satellites, the older one's page (at its address) no longer lists the pair.
+- **The welcome page is empty for now** (Roy): the bar with Sign in. A family registers at its satellite's own
+  address (its QR code or link); nothing on `/` picks a satellite.
+- **Until the satellite picker (issue 08), a person lands at the first satellite their Roles cover, in the order
+  satellites were added** (Claude's call, reversible): Dubai first.
+- Until issue 06, a church-wide Role counts as the same Role at every satellite, and a church admin keeps Moving-Up,
+  Level fixes and granting.
+
+## 2026-11-08 (Batch B questions — Roy)
+
+- **Satellite admins do everything a church admin did, for their own satellite** (Roy, Batch B start): Moving-Up
+  and its put back run per satellite (that satellite's children only); fixing a child's Level by hand and full
+  emails in the Excel download, for their satellite's families. There is no church-wide admin (spec item 9).
+- **An Admin or Serve page shows only the satellite in its address** (Roy): Families, Children, Cards and print
+  lists, Attendance, classes, Links, People. The satellite filter goes; to see another satellite, switch in the bar.
+  The door still finds any child of the church (a visiting family is checked in).
+- **The last satellite used is saved on the person's account** (Roy), so it follows them to every device.
+
 ## 2026-11-08 (Classes and Sessions — Roy)
 
 - **A Session's check-in is opened and closed** (Roy, reversing 2026-10-26 "never opened or closed"): so the door

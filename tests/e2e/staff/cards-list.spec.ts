@@ -4,7 +4,7 @@ import { expect, test } from '../support/test'
 import { askForNewCard, freshCardChild, openCardFamily } from '../support/cards'
 import { openMenu } from '../support/menu'
 import { xlsxRows } from '../support/xlsx'
-import { CARDS, CHURCH, DOOR, sessionFile, type DoorProject } from '../support/world'
+import { CARDS, DUBAI, DOOR, sessionFile, type DoorProject } from '../support/world'
 
 /*
  * Cards (name cards 03, DECISIONS 2026-10-29). At the desk a Lifeshaper asks for new cards for three Ocampo boys (the
@@ -18,7 +18,7 @@ import { CARDS, CHURCH, DOOR, sessionFile, type DoorProject } from '../support/w
  * closed tab (his history) the newest filed comes first.
  */
 async function find(page: Page, tab: string, name: string): Promise<void> {
-    await page.goto(`/${CHURCH}/nxtgen/admin/card-requests?tab=${tab}`)
+    await page.goto(`/${DUBAI}/admin/card-requests?tab=${tab}`)
     await page.getByTestId('cards-search').fill(`${name} ${CARDS.surname}`)
     await page.getByTestId('cards-search-go').click()
     await expect(page).toHaveURL(new RegExp(`[?&]q=${name}`))
@@ -45,7 +45,7 @@ test('an admin finds, pays, approves, prints, gives and refuses new cards on Car
         const familyPage = desk.url()
 
         const office = await admin.newPage()
-        await office.goto(`/${CHURCH}/nxtgen/admin/families`)
+        await office.goto(`/${DUBAI}/admin/families`)
         await openMenu(office)
         await office.getByRole('link', { name: 'Cards', exact: true }).first().click()
         await expect(office.getByTestId('card-tab-asked')).toHaveAttribute('aria-current', 'page')

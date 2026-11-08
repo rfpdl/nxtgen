@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useSatellite } from '@/composables/useSatellite'
 import AppButton from '@/components/atoms/AppButton.vue'
 import Card from '@/components/atoms/Card.vue'
 import CheckRow from '@/components/atoms/CheckRow.vue'
@@ -9,7 +10,6 @@ import Pill from '@/components/atoms/Pill.vue'
 import SectionHeading from '@/components/atoms/SectionHeading.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import MovingUpLastCard from '@/components/molecules/MovingUpLastCard.vue'
-import { useChurch } from '@/composables/useChurch'
 import type { MoveChildrenUpInput, MovingUp, MovingUpCandidate } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
@@ -30,7 +30,7 @@ const props = defineProps<{
     last: MovingUp | null
 }>()
 
-const church = useChurch()
+const satellite = useSatellite()
 
 /** Child id → ticked. Everyone starts ticked; a fresh list (after a move) starts again. */
 const ticked = ref<Record<number, boolean>>({})
@@ -74,7 +74,7 @@ function moveUp(): void {
     const body: MoveChildrenUpInput = {
         children: chosen.value.map((c) => ({ child_id: c.id, level: c.level.number })),
     }
-    router.post(route('nxtgen.admin.moving-up.store', church.value.slug), body, {
+    router.post(route('admin.moving-up.store', satellite.value.slug), body, {
         preserveScroll: true,
         onStart: () => (moving.value = true),
         onFinish: () => {

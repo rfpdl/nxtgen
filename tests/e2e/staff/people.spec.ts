@@ -3,7 +3,14 @@ import { expect, test } from '../support/test'
 import { latestMail, mailCount } from '../support/mailbox'
 import { fillFamily } from '../support/forms'
 import { openEmailedLink, signInByEmail } from '../support/sign-in'
-import { CHURCH, SATELLITES, sessionFile, uniqueEmail, uniqueSurname } from '../support/world'
+import {
+    DUBAI,
+    SATELLITES,
+    SHARJAH,
+    sessionFile,
+    uniqueEmail,
+    uniqueSurname,
+} from '../support/world'
 
 /*
  * Journey 3 — a church admin adds a new Lifeshaper on People; the Lifeshaper gets an email, signs in from
@@ -18,13 +25,13 @@ test('an admin adds a Lifeshaper who then signs in from the email @story#76', as
 
     const admin = await browser.newContext({ storageState: sessionFile('churchAdmin') })
     const adminPage = await admin.newPage()
-    await adminPage.goto(`/${CHURCH}/admin/people`)
+    await adminPage.goto(`/${DUBAI}/admin/people`)
     await adminPage.getByTestId('staff-name').fill('Nina New')
     await adminPage.getByTestId('staff-email').fill(email)
-    await adminPage.getByTestId('staff-role').selectOption({ label: 'Lifeshaper · House Church' })
+    await adminPage.getByTestId('staff-role').selectOption({ label: 'Lifeshaper · CCF Sharjah' })
     await adminPage.getByTestId('add-staff-submit').click()
     await expect(adminPage.getByTestId('flash-success')).toContainText(
-        `${email} is now Lifeshaper · House Church`,
+        `${email} is now Lifeshaper · CCF Sharjah`,
     )
     await expect(
         adminPage.getByTestId('staff-member').filter({ hasText: 'Nina New' }),
@@ -36,7 +43,8 @@ test('an admin adds a Lifeshaper who then signs in from the email @story#76', as
 
     // Nina, on her own device.
     await openEmailedLink(page, email, before)
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/serve/door`))
+    // A Lifeshaper at CCF Sharjah lands at Sharjah's door.
+    await expect(page).toHaveURL(new RegExp(`/${SHARJAH}/serve/door`))
 
     // The admin takes the role away; Nina loses access on her next page.
     await adminPage
@@ -46,7 +54,7 @@ test('an admin adds a Lifeshaper who then signs in from the email @story#76', as
         .click()
     await expect(adminPage.getByTestId('flash-success')).toContainText('Role removed')
 
-    const gone = await page.goto(`/${CHURCH}/nxtgen/serve/door`)
+    const gone = await page.goto(`/${DUBAI}/serve/door`)
     expect(gone?.status()).toBe(404)
 
     // Signing in again, with no family and no role left, she is told plainly there is nothing here yet.
@@ -65,21 +73,23 @@ test('a Lifeshaper who registers their own family can reach both, from one login
     page,
     browser,
 }) => {
+    // Two sign-ins, a registration and four landings: long on Safari.
+    test.setTimeout(60_000)
     const email = uniqueEmail('servingparent')
     const surname = uniqueSurname('Tan')
 
     const admin = await browser.newContext({ storageState: sessionFile('churchAdmin') })
     const adminPage = await admin.newPage()
-    await adminPage.goto(`/${CHURCH}/admin/people`)
+    await adminPage.goto(`/${DUBAI}/admin/people`)
     await adminPage.getByTestId('staff-name').fill(`Ben ${surname}`)
     await adminPage.getByTestId('staff-email').fill(email)
-    await adminPage.getByTestId('staff-role').selectOption({ label: 'Lifeshaper · CCF DXB' })
+    await adminPage.getByTestId('staff-role').selectOption({ label: 'Lifeshaper · CCF Dubai' })
     await adminPage.getByTestId('add-staff-submit').click()
     await expect(adminPage.getByTestId('flash-success')).toBeVisible()
     await admin.close()
 
     const beforeClaim = mailCount(email)
-    await page.goto(`/${CHURCH}/register`)
+    await page.goto(`/${DUBAI}/register`)
     await fillFamily(
         page,
         { first: 'Ben', last: surname, email, phone: '0503334444', satellite: SATELLITES.dxb },
@@ -101,12 +111,12 @@ test('a Lifeshaper who registers their own family can reach both, from one login
 
     // The choice is remembered: signing in again goes straight to the family page…
     await page.goto('/home')
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/family`))
+    await expect(page).toHaveURL(new RegExp(`/family`))
 
     // …and "Switch" asks again.
     await (await menuOf(page)).getByTestId('switch-place').click()
     await page.getByTestId('landing-option').filter({ hasText: 'Serve' }).click()
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/serve/door`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/door`))
     await page.goto('/home')
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/nxtgen/serve/door`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/door`))
 })

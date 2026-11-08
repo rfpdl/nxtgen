@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domains\Church\Jobs;
 
-use App\Data\Models\Church;
 use App\Data\Models\RoleAssignment;
+use App\Data\Models\Satellite;
 use App\Data\Models\Schedule;
 use App\Data\Models\User;
 use App\Domains\Church\DataObjects\AccessScope;
@@ -13,52 +13,58 @@ use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
 use App\Foundation\Jobs\BaseJob;
 
-/** @extends BaseJob<AccessScope> */
+/**
+ * What one person may do at ONE satellite — the one in the address (spec item 10, Roy 2026-11-07): only their Roles
+ * there count, so a page shows that satellite and nothing else (DECISIONS 2026-11-08). A church-wide Role works here
+ * as the same Role at this satellite.
+ *
+ * @extends BaseJob<AccessScope>
+ */
 final class GetAccessScopeJob extends BaseJob
 {
     public function __construct(
         private readonly User $user,
-        private readonly Church $church,
+        private readonly Satellite $satellite,
     ) {}
 
     public function handle(): AccessScope
     {
         $assignments = RoleAssignment::query()
-            ->where('church_id', $this->church->id)
+            ->where('church_id', $this->satellite->church_id)
             ->where('user_id', $this->user->id)
             ->where('is_active', true)
             ->get();
 
-        $ids = fn (RoleEnum $role, ScopeTypeEnum $type): array => array_values($assignments
-            ->filter(fn (RoleAssignment $a): bool => $a->role === $role && $a->scope_type === $type)
-            ->map(fn (RoleAssignment $a): int => $a->scope_id)
-            ->all());
+        $has = fn (RoleEnum $role, ScopeTypeEnum $type, ?int $id = null): bool => $assignments
+            ->contains(fn (RoleAssignment $a): bool => $a->role === $role && $a->scope_type === $type && ($id === null || $a->scope_id === $id));
+        $here = fn (RoleEnum $role): array => $has($role, ScopeTypeEnum::Church) || $has($role, ScopeTypeEnum::Satellite, $this->satellite->id) ? [$this->satellite->id] : [];
 
         return new AccessScope(
-            churchId: $this->church->id,
-            isChurchAdmin: $ids(RoleEnum::Admin, ScopeTypeEnum::Church) !== [],
-            isChurchLifeshaper: $ids(RoleEnum::Lifeshaper, ScopeTypeEnum::Church) !== [],
-            adminSatelliteIds: $ids(RoleEnum::Admin, ScopeTypeEnum::Satellite),
-            lifeshaperSatelliteIds: $ids(RoleEnum::Lifeshaper, ScopeTypeEnum::Satellite),
-            adminSchedules: $this->classesOf($ids(RoleEnum::Admin, ScopeTypeEnum::Schedule)),
+            churchId: $this->satellite->church_id,
+            isChurchAdmin: $has(RoleEnum::Admin, ScopeTypeEnum::Church),
+            adminSatelliteIds: $here(RoleEnum::Admin),
+            lifeshaperSatelliteIds: $here(RoleEnum::Lifeshaper),
+            adminSchedules: $this->classesHere(array_values($assignments
+                ->filter(fn (RoleAssignment $a): bool => $a->role === RoleEnum::Admin && $a->scope_type === ScopeTypeEnum::Schedule)
+                ->map(fn (RoleAssignment $a): int => $a->scope_id)
+                ->all())),
         );
     }
 
     /**
-     * A class admin's classes (TODO #9) with each one's satellite — this church's, still active: a retired class's
-     * Role gives nothing.
+     * A class admin's classes (TODO #9) at this satellite, still active: a retired class's Role gives nothing.
      *
      * @param  list<int>  $scheduleIds
      * @return array<int, int> schedule id => satellite id
      */
-    private function classesOf(array $scheduleIds): array
+    private function classesHere(array $scheduleIds): array
     {
         if ($scheduleIds === []) {
             return [];
         }
 
         $classes = [];
-        foreach (Schedule::query()->where('church_id', $this->church->id)->whereIn('id', $scheduleIds)->where('is_active', true)->get(['id', 'satellite_id']) as $schedule) {
+        foreach (Schedule::query()->where('church_id', $this->satellite->church_id)->where('satellite_id', $this->satellite->id)->whereIn('id', $scheduleIds)->where('is_active', true)->get(['id', 'satellite_id']) as $schedule) {
             $classes[$schedule->id] = $schedule->satellite_id;
         }
 

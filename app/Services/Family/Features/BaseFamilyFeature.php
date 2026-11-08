@@ -8,7 +8,6 @@ use App\Data\Models\Child;
 use App\Data\Models\Family;
 use App\Data\Models\Guardian;
 use App\Data\Models\User;
-use App\Domains\Family\Jobs\GetFamilyChildJob;
 use App\Foundation\Support\RequestContext;
 use Lucid\Units\Feature;
 
@@ -37,10 +36,12 @@ abstract class BaseFamilyFeature extends Feature
         return $this->guardian()->family;
     }
 
-    /** A child of the parent's OWN family by id; any other id is a 404. */
-    protected function ownChild(int $id): Child
+    /** The address's child, if it is of the parent's OWN family; any other is a 404. */
+    protected function ownChild(Child $child): Child
     {
-        return $this->run(new GetFamilyChildJob(family: $this->family(), id: $id));
+        abort_unless($child->family_id === $this->family()->id, 404);
+
+        return $child;
     }
 
     /** The signed-in parent's login — who a consent or a change is recorded as. */

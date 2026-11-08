@@ -1,6 +1,6 @@
 import { expect, test } from '../support/test'
 import { registerAndConfirm } from '../support/forms'
-import { CHURCH, SATELLITES, sessionFile, uniqueSurname } from '../support/world'
+import { DUBAI, SATELLITES, sessionFile, uniqueSurname } from '../support/world'
 
 /*
  * Photos (Roy 2026-10-16): a parent or a Lifeshaper can take or upload one, once the parent agrees. The parent
@@ -19,13 +19,13 @@ test('a parent agrees; a Lifeshaper takes the first photo; the parent replaces i
         { first: 'Rhea', last: surname, phone: '0504440000', satellite: SATELLITES.dxb },
         [{ first: 'Noah', last: surname, nickname: 'Noah', gender: 'boy', dob: '2018-02-02' }],
     )
-    await expect(page).toHaveURL(new RegExp(`/${CHURCH}/family`))
+    await expect(page).toHaveURL(new RegExp(`/family`))
     const card = page.getByTestId('family-child').filter({ hasText: 'Noah' })
 
     // A Lifeshaper cannot add one before the parent agrees.
     const staff = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const door = await staff.newPage()
-    await door.goto(`/${CHURCH}/nxtgen/serve/families?q=${surname}`)
+    await door.goto(`/${DUBAI}/serve/families?q=${surname}`)
     await door.getByTestId('family-row').getByRole('link').click()
     const staffCard = door.getByTestId('family-child').filter({ hasText: 'Noah' })
     await expect(staffCard).toContainText('The parent has not agreed to a photo yet')
@@ -66,7 +66,7 @@ test('a parent agrees; a Lifeshaper takes the first photo; the parent replaces i
     await expect(card.getByTestId('delete-photo')).toHaveCount(0)
     const later = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const desk = await later.newPage()
-    await desk.goto(`/${CHURCH}/nxtgen/serve/families?q=${surname}`)
+    await desk.goto(`/${DUBAI}/serve/families?q=${surname}`)
     await desk.getByTestId('family-row').getByRole('link').click()
     await expect(desk.getByTestId('history')).toContainText('Noah: photo deleted for good by Rhea')
     await later.close()

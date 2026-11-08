@@ -14,7 +14,7 @@ use App\Foundation\Jobs\BaseJob;
 
 /**
  * "Mark these N printed" for a Print list (name cards 04; Astra's fix to 03): its own cards only — those still
- * Approved, in its church, of the families of `$satelliteIds` (the acting admin's; null = every satellite) — printed,
+ * Approved, in its church, of the families of `$satelliteIds` (the acting admin's) — printed,
  * saying who and when. A card that was never on the list is never touched, however its name, family or approval time
  * changed; one that moved on meanwhile (given, refused, printed by someone else) is skipped. A conditional UPDATE from
  * CardMoveEnum::MarkPrinted's steps (see CardMoveEnum). Returns how many it marked.
@@ -29,11 +29,11 @@ use App\Foundation\Jobs\BaseJob;
  */
 final class UpdatePrintListAsPrintedJob extends BaseJob
 {
-    /** @param list<int>|null $satelliteIds */
+    /** @param list<int> $satelliteIds */
     public function __construct(
         private readonly Church $church,
         private readonly PrintList $printList,
-        private readonly ?array $satelliteIds,
+        private readonly array $satelliteIds,
         private readonly User $by,
     ) {}
 

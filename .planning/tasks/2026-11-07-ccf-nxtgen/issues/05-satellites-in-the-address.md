@@ -1,5 +1,5 @@
 # 05 — Satellites in the address
-Status: ready-for-agent
+Status: done 2026-11-08
 Spec items 5, 6, 10. Staff routes lose `{church:slug}` and become `/{satellite}/serve/…` and `/{satellite}/admin/…`;
 parents `/family/…`. Seeds CCF with `dubai`, `sharjah`, `abu-dhabi`. The base church feature checks the satellite in
 the address: Admin pages need the Admin Role there (or the class admin's pages); Lifeshaper only → that satellite's

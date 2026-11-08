@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Family\Features\Child;
 
+use App\Data\Models\Child;
 use App\Domains\Family\Jobs\UpdateChildDetailsJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -22,14 +23,14 @@ use Illuminate\Http\RedirectResponse;
 #[AccessRow(AccessRowEnum::OwnFamily)]
 final class UpdateChildFeature extends BaseFamilyFeature
 {
-    public function __construct(private readonly int $childId) {}
+    public function __construct(private readonly Child $child) {}
 
     public function handle(ChildInput $input): RedirectResponse
     {
         $family = $this->family();
-        $child = $this->ownChild($this->childId);
+        $child = $this->ownChild($this->child);
         $this->run(new UpdateChildDetailsJob(child: $child, details: $input->toDetails()));
 
-        return redirect()->route('family.show', $family->church)->with('success', "{$child->displayName()}'s details are saved.");
+        return redirect()->route('family.show')->with('success', "{$child->displayName()}'s details are saved.");
     }
 }

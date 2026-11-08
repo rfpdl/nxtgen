@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { useSatellite } from '@/composables/useSatellite'
 import AppButton from '@/components/atoms/AppButton.vue'
 import Card from '@/components/atoms/Card.vue'
 import Pill from '@/components/atoms/Pill.vue'
 import TextField from '@/components/atoms/TextField.vue'
-import { useChurch } from '@/composables/useChurch'
 import { useEnum } from '@/composables/useEnum'
 import type { CardMove, CardRequestRow, Draft, RefuseCardRequestInput } from '@/types'
 import { useForm } from '@inertiajs/vue3'
@@ -19,22 +19,25 @@ import { areaRoute } from '@/composables/useArea'
  */
 const props = defineProps<{ request: CardRequestRow }>()
 
-const church = useChurch()
+const satellite = useSatellite()
 const { options: moveNames } = useEnum('card_move')
 
 /** Each move's action (Refuse is a form, below). */
 const ROUTES: Record<Exclude<CardMove, 'refuse'>, string> = {
-    mark_paid: 'nxtgen.admin.card-requests.mark-paid',
-    approve: 'nxtgen.admin.card-requests.approve',
-    mark_printed: 'nxtgen.admin.card-requests.mark-printed',
-    give: 'nxtgen.serve.card-requests.give',
+    mark_paid: 'admin.card-requests.mark-paid',
+    approve: 'admin.card-requests.approve',
+    mark_printed: 'admin.card-requests.mark-printed',
+    give: 'serve.card-requests.give',
 }
 
 const buttons = computed(() =>
     props.request.moves.map((move) => ({
         move,
         label: moveNames.value.find((o) => o.value === move)?.label ?? move,
-        href: move === 'refuse' ? null : route(ROUTES[move], [church.value.slug, props.request.id]),
+        href:
+            move === 'refuse'
+                ? null
+                : route(ROUTES[move], [satellite.value.slug, props.request.id]),
     })),
 )
 
@@ -48,7 +51,7 @@ function closeRefuse(): void {
 }
 
 function refuse(): void {
-    form.put(route('nxtgen.admin.card-requests.refuse', [church.value.slug, props.request.id]), {
+    form.put(route('admin.card-requests.refuse', [satellite.value.slug, props.request.id]), {
         preserveScroll: true,
         onSuccess: closeRefuse,
     })
@@ -61,7 +64,7 @@ function refuse(): void {
         <AppButton
             variant="link"
             class="self-start"
-            :href="areaRoute('families.show', [church.slug, request.family_id])"
+            :href="areaRoute('families.show', [satellite.slug, request.family_id])"
             data-testid="card-family"
             >{{ request.family_name }} · {{ request.satellite }}</AppButton
         >

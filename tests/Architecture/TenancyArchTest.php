@@ -41,6 +41,8 @@ function crossChurchOnPurpose(): array
         'GetUserIsFamilyOnlyJob.php — RoleAssignment' => 'Same question: a staff role in ANY church means the login is not family-only.',
         'GetLandingOptionsJob.php — Guardian' => 'After sign-in: which churches is this login a parent in? The answer is a list of churches (plan §4.5).',
         'GetLandingOptionsJob.php — RoleAssignment' => 'After sign-in: which churches does this login serve in?',
+        'GetOwnGuardianJob.php — Guardian' => 'The parent\'s own page, `/family`: the address names no church, so the church is read FROM the login\'s own guardian row (RequireGuardian).',
+        'GetSatelliteBySlugJob.php — Satellite' => 'The address names a satellite and never a church (spec item 5): the church is read FROM the satellite (its slug is unique), then every id in the address is looked up within it (RouteBindingServiceProvider).',
         'GetChildWithFamilyJob.php — Child' => 'A photo link carries only the child id: the church is read FROM the child, then the viewer is checked against it (ShowChildPhotoFeature).',
         'GetUserIsStaffJob.php — RoleAssignment' => 'Backup password (plan D7): does this login serve in ANY church right now? Parents never get one.',
         'NameKey.php — DB::table(children)' => 'The name-card keys\' backfill (NameKey::fillIn, run by a migration): every child of every church gets the keys of their OWN names, row by row — nothing is read across to another row.',

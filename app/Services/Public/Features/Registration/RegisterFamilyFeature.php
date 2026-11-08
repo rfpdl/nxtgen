@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Public\Features\Registration;
 
-use App\Data\Models\Church;
+use App\Data\Models\Satellite;
 use App\Domains\Church\Jobs\GetSatelliteJob;
 use App\Enums\RegistrationSourceEnum;
 use App\Foundation\Attributes\UserStory;
@@ -35,13 +35,14 @@ use Illuminate\Http\RedirectResponse;
 )]
 final class RegisterFamilyFeature extends BasePublicFeature
 {
-    public function __construct(private readonly Church $church) {}
+    public function __construct(private readonly Satellite $satellite) {}
 
     public function handle(RegisterFamilyInput $input): RedirectResponse
     {
-        $satellite = $this->run(new GetSatelliteJob(church: $this->church, id: $input->home_satellite_id));
-        $result = $this->run(new RegisterFamilyOperation($input->toRegistration($this->church, $satellite, RegistrationSourceEnum::Self)));
+        $church = $this->satellite->church;
+        $home = $this->run(new GetSatelliteJob(church: $church, id: $input->home_satellite_id));
+        $result = $this->run(new RegisterFamilyOperation($input->toRegistration($church, $home, RegistrationSourceEnum::Self)));
 
-        return redirect()->route('public.register.thanks', $this->church)->with('success', $result->outcome->guardianMessage());
+        return redirect()->route('public.register.thanks', $this->satellite)->with('success', $result->outcome->guardianMessage());
     }
 }

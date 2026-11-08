@@ -1,9 +1,10 @@
 import DoorTabs from '@/components/molecules/DoorTabs.vue'
+import { makeSatellite } from '@/tests/satellite'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@inertiajs/vue3', () => ({
-    usePage: () => ({ props: { church: { name: 'CCF', slug: 'ccf' } } }),
+    usePage: () => ({ props: { satellite: makeSatellite() } }),
     Link: { props: ['href'], template: '<a :href="href"><slot /></a>' },
 }))
 
@@ -19,8 +20,8 @@ describe('DoorTabs', () => {
         const tabs = wrapper.findAll('a')
         expect(tabs.map((t) => t.text())).toEqual(['Check in', "Who's in"])
         expect(tabs.map((t) => t.attributes('href'))).toEqual([
-            'nxtgen.serve.door.show:{"church":"ccf","class":7}',
-            'nxtgen.serve.door.whos-in:{"church":"ccf","class":7}',
+            'serve.door.show:{"satellite":"dubai","class":7}',
+            'serve.door.whos-in:{"satellite":"dubai","class":7}',
         ])
     })
 
@@ -38,7 +39,7 @@ describe('DoorTabs', () => {
         const wrapper = mount(DoorTabs, { props: { current: 'whos-in', classId: null } })
 
         expect(wrapper.findAll('a')[0]?.attributes('href')).toBe(
-            'nxtgen.serve.door.show:{"church":"ccf"}',
+            'serve.door.show:{"satellite":"dubai"}',
         )
     })
 })

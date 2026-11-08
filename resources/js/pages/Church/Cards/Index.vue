@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useSatellite } from '@/composables/useSatellite'
 import AppButton from '@/components/atoms/AppButton.vue'
 import EmptyState from '@/components/atoms/EmptyState.vue'
 import TextField from '@/components/atoms/TextField.vue'
@@ -9,7 +10,6 @@ import ChurchShell from '@/components/layout/ChurchShell.vue'
 import Pager from '@/components/molecules/Pager.vue'
 import PrintListCard from '@/components/molecules/PrintListCard.vue'
 import CardRequestRow from '@/components/organisms/CardRequestRow.vue'
-import { useChurch } from '@/composables/useChurch'
 import { useEnum } from '@/composables/useEnum'
 import type {
     CardListTab,
@@ -38,15 +38,15 @@ const props = defineProps<{
     print_lists: PrintList[]
 }>()
 
-const church = useChurch()
+const satellite = useSatellite()
 const { options } = useEnum('card_tab')
 
 const tabs = computed(() =>
     options.value.map((t) => ({
         key: t.value,
         label: t.label,
-        href: route('nxtgen.admin.card-requests.index', {
-            church: church.value.slug,
+        href: route('admin.card-requests.index', {
+            satellite: satellite.value.slug,
             ...where(t.value),
         }),
     })),
@@ -69,7 +69,7 @@ const search = ref(props.q ?? '')
 function find(): void {
     const q = search.value.trim()
     router.get(
-        route('nxtgen.admin.card-requests.index', church.value.slug),
+        route('admin.card-requests.index', satellite.value.slug),
         q ? { tab: props.tab, q } : { tab: props.tab },
     )
 }
@@ -77,13 +77,13 @@ function find(): void {
 /** "Make print list": the approved cards this tab shows — its search — kept as a list (name cards 04). */
 function makePrintList(): void {
     const body: MakePrintListInput = { q: props.q }
-    router.post(route('nxtgen.admin.card-requests.print-lists.store', church.value.slug), body, {
+    router.post(route('admin.card-requests.print-lists.store', satellite.value.slug), body, {
         preserveScroll: true,
     })
 }
 
 function goTo(page: number): void {
-    router.get(route('nxtgen.admin.card-requests.index', church.value.slug), {
+    router.get(route('admin.card-requests.index', satellite.value.slug), {
         ...where(props.tab),
         page,
     })

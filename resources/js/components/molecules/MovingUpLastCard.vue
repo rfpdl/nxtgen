@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { useSatellite } from '@/composables/useSatellite'
 import AppButton from '@/components/atoms/AppButton.vue'
 import Card from '@/components/atoms/Card.vue'
 import RowList from '@/components/atoms/RowList.vue'
 import SectionHeading from '@/components/atoms/SectionHeading.vue'
-import { useChurch } from '@/composables/useChurch'
 import type { MovingUp, MovingUpChild } from '@/types'
 import { computed } from 'vue'
 import { route } from 'ziggy-js'
@@ -15,7 +15,7 @@ import { route } from 'ziggy-js'
  */
 const props = defineProps<{ movingUp: MovingUp }>()
 
-const church = useChurch()
+const satellite = useSatellite()
 
 const waiting = computed(() => props.movingUp.children.filter((c) => c.put_back === null).length)
 const when = computed(
@@ -23,8 +23,8 @@ const when = computed(
 )
 
 function putBack(child: MovingUpChild): string {
-    return route('nxtgen.admin.moving-up.children.put-back', [
-        church.value.slug,
+    return route('admin.moving-up.children.put-back', [
+        satellite.value.slug,
         props.movingUp.id,
         child.child_id,
     ])
@@ -41,7 +41,7 @@ function putBack(child: MovingUpChild): string {
             <AppButton
                 v-if="waiting > 0"
                 variant="secondary"
-                :href="route('nxtgen.admin.moving-up.put-back', [church.slug, movingUp.id])"
+                :href="route('admin.moving-up.put-back', [satellite.slug, movingUp.id])"
                 method="put"
                 :preserve-scroll="true"
                 data-testid="moving-up-put-back-everyone"
