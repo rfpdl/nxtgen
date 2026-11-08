@@ -16,7 +16,7 @@ import {
  * admin answers on the family's page, looking at both families side by side. Nothing is merged; the answer is on
  * the family's history.
  */
-test.use({ storageState: sessionFile('churchAdmin') })
+test.use({ storageState: sessionFile('admin') })
 
 test('an admin finds a possible duplicate with the list filter and clears it on the family page @story#72 @story#92', async ({
     page,

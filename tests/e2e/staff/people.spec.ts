@@ -13,7 +13,7 @@ import {
 } from '../support/world'
 
 /*
- * Journey 3 — a church admin adds a new Lifeshaper on People; the Lifeshaper gets an email, signs in from
+ * Journey 3 — an admin adds a new Lifeshaper on People; the Lifeshaper gets an email, signs in from
  * it, and can work in the church straight away. Then the admin removes the role again.
  */
 test('an admin adds a Lifeshaper who then signs in from the email @story#76', async ({
@@ -23,9 +23,10 @@ test('an admin adds a Lifeshaper who then signs in from the email @story#76', as
     const email = uniqueEmail('newlifeshaper')
     const before = mailCount(email)
 
-    const admin = await browser.newContext({ storageState: sessionFile('churchAdmin') })
+    const admin = await browser.newContext({ storageState: sessionFile('admin') })
     const adminPage = await admin.newPage()
-    await adminPage.goto(`/${DUBAI}/admin/people`)
+    // At Sharjah's People: a satellite's People gives Roles at that satellite only (spec item 9).
+    await adminPage.goto(`/${SHARJAH}/admin/people`)
     await adminPage.getByTestId('staff-name').fill('Nina New')
     await adminPage.getByTestId('staff-email').fill(email)
     await adminPage.getByTestId('staff-role').selectOption({ label: 'Lifeshaper · CCF Sharjah' })
@@ -78,7 +79,7 @@ test('a Lifeshaper who registers their own family can reach both, from one login
     const email = uniqueEmail('servingparent')
     const surname = uniqueSurname('Tan')
 
-    const admin = await browser.newContext({ storageState: sessionFile('churchAdmin') })
+    const admin = await browser.newContext({ storageState: sessionFile('admin') })
     const adminPage = await admin.newPage()
     await adminPage.goto(`/${DUBAI}/admin/people`)
     await adminPage.getByTestId('staff-name').fill(`Ben ${surname}`)

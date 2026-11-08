@@ -26,7 +26,7 @@ use Illuminate\Validation\ValidationException;
  */
 #[UserStory(
     title: 'Add a Link',
-    persona: 'church admin or satellite admin',
+    persona: 'satellite admin',
     happyPaths: ['story#166' => 'An Admin adds a Link — a label and an address — last on a satellite\'s poster'],
     unhappyPaths: ['story#167' => 'Only at a satellite they look after; a label and an https address are needed; at most 6 a satellite'],
 )]

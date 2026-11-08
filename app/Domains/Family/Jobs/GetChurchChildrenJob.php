@@ -28,7 +28,7 @@ final class GetChurchChildrenJob extends BaseJob
     public function handle(): array
     {
         $ids = array_values(array_unique($this->ids));
-        $found = Child::query()->where('church_id', $this->church->id)->whereIn('id', $ids)->get()->keyBy('id');
+        $found = Child::query()->with('family')->where('church_id', $this->church->id)->whereIn('id', $ids)->get()->keyBy('id');
 
         if ($found->count() !== count($ids)) {
             throw (new ModelNotFoundException)->setModel(Child::class, array_values(array_diff($ids, $found->keys()->all())));

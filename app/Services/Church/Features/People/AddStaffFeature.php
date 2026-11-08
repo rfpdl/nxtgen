@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\People;
 
+use App\Data\Models\Schedule;
 use App\Domains\Auth\Jobs\CreateMagicLinkJob;
 use App\Domains\Auth\Jobs\SendMagicLinkJob;
 use App\Domains\Church\DataObjects\RoleScope;
@@ -32,13 +33,13 @@ use Illuminate\Support\Facades\DB;
  */
 #[UserStory(
     title: 'Add someone to serve',
-    persona: 'church admin or satellite admin',
+    persona: 'satellite admin',
     happyPaths: [
         'story#76' => 'An Admin adds someone: the login is made or reused, the Role given, a sign-in link emailed',
-        'story#180' => 'An Admin makes someone class admin of a class they look after (TODO #9): a church admin any class, a Satellite admin one at their Satellite',
+        'story#180' => 'An Admin makes someone class admin of a class at their Satellite (TODO #9)',
     ],
     unhappyPaths: [
-        'story#77' => 'A Satellite admin gives only Lifeshaper, in their own Satellite; another church\'s Satellite is refused',
+        'story#77' => 'A Satellite admin gives a Role only at their own Satellite; another Satellite or another church\'s is refused',
         'story#181' => 'Not at a class they do not look after, another church\'s, or a retired one; never Lifeshaper of a class',
     ],
 )]
@@ -51,26 +52,23 @@ final class AddStaffFeature extends BaseChurchFeature
         $scope = $this->scope();
         abort_unless($scope->canManagePeople(), 404);
 
-        $satellite = $input->scope_type === ScopeTypeEnum::Satellite
-            ? $this->run(new GetSatelliteJob(church: $church, id: $input->scope_id))
-            : null;
-        // A class admin (TODO #9): an active class of this church — its satellite says who may give it.
-        $class = $input->scope_type === ScopeTypeEnum::Schedule
+        // At a satellite, or a class admin at an active class (TODO #9) — whose satellite says who may give it.
+        $at = $input->scope_type === ScopeTypeEnum::Schedule
             ? $this->run(new GetScheduleJob(church: $church, id: $input->scope_id))
-            : null;
-        $place = $class === null ? $input->scope() : RoleScope::of($class);
+            : $this->run(new GetSatelliteJob(church: $church, id: $input->scope_id));
+        $place = RoleScope::of($at);
         abort_unless($scope->canGrant($input->role, $place), 404);
 
-        $label = StaffRoleData::label($input->role, $place, $class === null ? $satellite?->name : StaffRoleData::className($class));
+        $label = StaffRoleData::label($input->role, $place, $at instanceof Schedule ? StaffRoleData::className($at) : $at->name);
 
-        $result = DB::transaction(function () use ($church, $satellite, $class, $input) {
+        $result = DB::transaction(function () use ($at, $input) {
             $user = $this->run(new GetUserByEmailJob(email: $input->email))
                 ?? $this->run(new CreateUserJob(name: $input->name, email: $input->email));
 
             $added = $this->run(new CreateRoleAssignmentJob(
                 user: $user,
                 role: $input->role,
-                place: $class ?? $satellite ?? $church,
+                place: $at,
                 grantedBy: $this->staff(),
             ));
 

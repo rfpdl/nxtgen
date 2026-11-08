@@ -19,7 +19,7 @@ trait ClassRules
         return $this->adminSchedules !== [];
     }
 
-    /** The Classes page: church admins, satellite admins (DECISIONS 2026-10-26) and class admins (their class only). */
+    /** The Classes page: satellite admins (DECISIONS 2026-10-26) and class admins (their class only). */
     public function canManageClasses(): bool
     {
         return $this->isAnyAdmin() || $this->isClassAdmin();
@@ -74,21 +74,10 @@ trait ClassRules
             && (in_array($schedule->satellite_id, $this->doorSatelliteIds(), true) || isset($this->adminSchedules[$schedule->id]));
     }
 
-    /** Attendance (reports are admins only — DECISIONS 2026-10-26): church, satellite and class admins. */
+    /** Attendance (reports are admins only — DECISIONS 2026-10-26): the satellite's admins and class admins. */
     public function canSeeAttendance(): bool
     {
         return $this->isAnyAdmin() || $this->isClassAdmin();
-    }
-
-    /**
-     * The satellites whose Attendance this person may pick: an admin's own and a class admin's class's satellite (this
-     * one), or none. Which CLASS there is canSeeAttendanceOf.
-     *
-     * @return list<int>
-     */
-    public function attendanceSatelliteIds(): array
-    {
-        return array_values(array_unique([...$this->adminSatelliteIds, ...array_values($this->adminSchedules)]));
     }
 
     /** This class's Attendance: an admin of its satellite, or its own class admin. */

@@ -131,12 +131,15 @@ Anyone given a Role in the Church.
 _Avoid_: Volunteer (in code), user, worker
 
 **Role**:
-What a Staff member may do, and where (the whole Church, one Satellite, or one Schedule).
+What a Staff member may do, and where: one Satellite, or one Schedule. There is no church-wide Role; one person may
+hold Roles at several Satellites.
 _Avoid_: Permission, access level
 
 **Admin**:
-The Role that manages people, families and settings for its scope — the whole Church, one Satellite, or one class
-(a **class admin**: that class's door, Who's in, Attendance, and editing it).
+The Role that manages its Satellite — people (any Role there), families, children, classes, Cards, Links,
+Moving-Up — or one class (a **class admin**: that class's door, Who's in, Attendance, and editing it). A Satellite
+has any number of admins and always at least one.
+_Platform admin_: set by a command, not a Role — opens any Satellite and manages the Satellites themselves.
 _Avoid_: Super user, manager
 
 **Lifeshaper**:

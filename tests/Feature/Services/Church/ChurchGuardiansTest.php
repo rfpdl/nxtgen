@@ -13,7 +13,6 @@ use App\Enums\RoleEnum;
 use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
-use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
 use function Tests\Support\church;
 use function Tests\Support\familyAt;
@@ -103,7 +102,7 @@ it('flags a possible duplicate when a guardian\'s phone comes in or changes — 
     $newer = familyAt($satellite);
     guardianOf($newer, User::factory()->create(), ['phone' => '+971 55 777 8888']);
 
-    actingAs(staffMember(RoleEnum::Admin, atChurch($satellite->church()->firstOrFail())))->put("/htc/serve/families/{$family->id}", familyEdit($satellite, [
+    actingAs(staffMember(RoleEnum::Admin, atSatellite($satellite)))->put("/htc/serve/families/{$family->id}", familyEdit($satellite, [
         'guardians' => [otherRow('Lola', $lola->id), otherRow('Tito', relationship: 'aunt_uncle', phone: '0557778888')],
     ]))->assertSessionHas('success');
 

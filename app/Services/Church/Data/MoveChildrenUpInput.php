@@ -9,7 +9,7 @@ use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** "Move up N children": the children the church admin left ticked on the Moving-Up page. */
+/** "Move up N children": the children the satellite admin left ticked on the Moving-Up page. */
 #[TypeScript]
 final class MoveChildrenUpInput extends Data
 {

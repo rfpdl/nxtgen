@@ -8,7 +8,7 @@ use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
-use function Tests\Support\atChurch;
+use function Tests\Support\atSatellite;
 use function Tests\Support\church;
 use function Tests\Support\classAdminOf;
 use function Tests\Support\familyAt;
@@ -27,7 +27,7 @@ use function Tests\Support\staffMember;
 it('gives a staff page the church it is about', function (): void {
     $church = church(['slug' => 'ccf', 'name' => 'CCF']);
     $dubai = satelliteOf($church, ['name' => 'CCF Dubai', 'slug' => 'dubai']);
-    $admin = staffMember(RoleEnum::Admin, atChurch($church));
+    $admin = staffMember(RoleEnum::Admin, atSatellite($dubai));
 
     actingAs($admin)->get('/dubai/serve/families')->assertInertia(fn (AssertableInertia $p) => $p
         ->where('church', ['name' => 'CCF', 'slug' => 'ccf'])
@@ -46,13 +46,13 @@ it('gives a class admin the Admin area for their class only (TODO #9)', function
 
 it('tells the staff menu which area the page is in (Roy 2026-11-06)', function (): void {
     $church = church(['slug' => 'ccf']);
-    satelliteOf($church, ['slug' => 'dubai']);
-    $admin = staffMember(RoleEnum::Admin, atChurch($church));
+    $dubai = satelliteOf($church, ['slug' => 'dubai']);
+    $admin = staffMember(RoleEnum::Admin, atSatellite($dubai));
 
     // People is now a satellite's Admin page like the rest (DECISIONS 2026-11-08): area `admin`, no church-wide area.
     actingAs($admin)->get('/dubai/admin/families')->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav.area', 'admin'));
     actingAs($admin)->get('/dubai/admin/people')->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav.area', 'admin'));
-    actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get('/dubai/serve/door')
+    actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dubai)))->get('/dubai/serve/door')
         ->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav.area', 'serve')->where('church_nav.can_use_admin', false));
 });
 
@@ -81,9 +81,10 @@ it('shares no church on a page whose address names none', function (): void {
 it('gives the staff menu only to a staff page — never to the next request in the same app', function (): void {
     $church = church(['slug' => 'ccf']);
     $parent = User::factory()->create();
-    guardianOf(familyAt(satelliteOf($church, ['slug' => 'dubai'])), $parent);
+    $dubai = satelliteOf($church, ['slug' => 'dubai']);
+    guardianOf(familyAt($dubai), $parent);
 
-    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/dubai/serve/families')
+    actingAs(staffMember(RoleEnum::Admin, atSatellite($dubai)))->get('/dubai/serve/families')
         ->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav.can_manage_people', true));
     actingAs($parent)->get('/family')->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav', null));
 });

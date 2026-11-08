@@ -22,7 +22,7 @@ use Illuminate\Http\RedirectResponse;
  */
 #[UserStory(
     title: 'Approve a new card',
-    persona: 'church admin or satellite admin',
+    persona: 'satellite admin',
     happyPaths: ['story#138' => 'An Admin approves an Asked Card request that is paid or free, for printing'],
     unhappyPaths: ['story#139' => 'Not unpaid (it says to mark it paid first), not twice, and not by a Lifeshaper, another Satellite\'s Admin or a parent'],
 )]

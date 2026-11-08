@@ -49,12 +49,20 @@ final class GetLandingOptionsJob extends BaseJob
             }
         }
 
+        // The platform admin (spec item 12), with no Role: the first satellite, until their own page (issue 09).
+        if ($this->user->is_platform_admin && ! in_array('Serve', array_map(fn (LandingOptionData $o): string => $o->label, $options), true)) {
+            $first = Satellite::query()->with('church')->orderBy('id')->first();
+            if ($first !== null) {
+                $options[] = new LandingOptionData(church_name: $first->church->name, label: 'Serve', url: "/{$first->slug}");
+            }
+        }
+
         return $options;
     }
 
     /**
-     * The first satellite, in the order they were added, that these Roles cover: a satellite Role's own, a class Role's class's, any of the
-     * church's for a church-wide Role.
+     * The first satellite, in the order they were added, that these Roles cover: a satellite Role's own, a class Role's
+     * class's.
      *
      * @param  list<RoleAssignment>  $roles
      */
@@ -65,13 +73,12 @@ final class GetLandingOptionsJob extends BaseJob
         }
 
         $of = fn (ScopeTypeEnum $type): array => array_values(array_map(fn (RoleAssignment $r): int => $r->scope_id, array_filter($roles, fn (RoleAssignment $r): bool => $r->scope_type === $type)));
-        $churchWide = $of(ScopeTypeEnum::Church) !== [];
 
         return Satellite::query()
             ->where('church_id', $church->id)
-            ->when(! $churchWide, fn ($q) => $q->where(fn ($q) => $q
+            ->where(fn ($q) => $q
                 ->whereIn('id', $of(ScopeTypeEnum::Satellite))
-                ->orWhereIn('id', Schedule::query()->where('church_id', $church->id)->where('is_active', true)->whereIn('id', $of(ScopeTypeEnum::Schedule))->select('satellite_id'))))
+                ->orWhereIn('id', Schedule::query()->where('church_id', $church->id)->where('is_active', true)->whereIn('id', $of(ScopeTypeEnum::Schedule))->select('satellite_id')))
             ->orderBy('id')
             ->first();
     }

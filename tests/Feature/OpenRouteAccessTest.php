@@ -31,7 +31,7 @@ use function Pest\Laravel\call;
 /** @return list<Actor> */
 function openActors(): array
 {
-    return [Actor::Anonymous, Actor::Parent, Actor::ChurchAdmin, Actor::OtherChurch];
+    return [Actor::Anonymous, Actor::Parent, Actor::HomeAndAwayAdmin, Actor::OtherChurch];
 }
 
 /**
@@ -89,7 +89,7 @@ function openRequest(string $route, AccessWorld $w): array
     return match ($route) {
         'public.welcome' => ['GET', '/', []],
         'login' => ['GET', '/login', []],
-        'auth.password.login' => ['POST', '/login/password', ['email' => (string) $w->user(Actor::ChurchAdmin)?->email, 'password' => 'a-long-passphrase']],
+        'auth.password.login' => ['POST', '/login/password', ['email' => (string) $w->user(Actor::HomeAndAwayAdmin)?->email, 'password' => 'a-long-passphrase']],
         'auth.link.request' => ['POST', '/login/link', ['email' => 'someone@example.com']],
         'logout' => ['POST', '/logout', []],
         'login.password' => ['GET', '/loginp', []],
@@ -150,7 +150,7 @@ it('opens public pages to everyone, signed-in pages to the signed in, the passwo
     Notification::fake();
     Storage::fake('photos');
     $world = AccessWorld::make();
-    $world->user(Actor::ChurchAdmin)?->forceFill(['password' => 'a-long-passphrase'])->save();
+    $world->user(Actor::HomeAndAwayAdmin)?->forceFill(['password' => 'a-long-passphrase'])->save();
     [$method, $uri, $payload] = openRequest($route, $world);
     $user = $world->user($actor);
     if ($user !== null) {

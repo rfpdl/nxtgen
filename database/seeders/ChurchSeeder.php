@@ -17,10 +17,10 @@ use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
 /**
- * Production start (D-R2): the church, its satellites (each with its Squads) and ONE first church admin, from
+ * Production start (D-R2): the church, its satellites (each with its Squads) and ONE first person, the platform admin, from
  * `config('nxtgen.church')` (NXTGEN_* in .env). Safe to run again: it adds what is missing and changes NOTHING
- * that exists — edited settings stay, squads are only ever added, and a removed admin stays removed (review 3). The admin has no password: they sign in by
- * email link and add everyone else on People.
+ * that exists — edited settings stay, squads are only ever added, and a removed platform admin stays removed (review 3).
+ * They have no password: they sign in by email link and give each satellite its first admin.
  */
 final class ChurchSeeder extends Seeder
 {
@@ -41,8 +41,12 @@ final class ChurchSeeder extends Seeder
                 Squad::createChartFor(Satellite::query()->firstOrCreate(['church_id' => $church->id, 'slug' => $slug], ['name' => $name]));
             }
 
+            // The first person is the platform admin (Roy 2026-11-08): on no satellite's People, able to open each, and
+            // the one who gives each satellite its first admin. Made once: a rerun never puts back what was taken off.
             $admin = User::query()->firstOrCreate(['email' => $settings['first_admin_email']], ['name' => $settings['first_admin_name']]);
-            self::assign($church, $admin, RoleEnum::Admin, ScopeTypeEnum::Church, $church->id);
+            if ($admin->wasRecentlyCreated) {
+                $admin->forceFill(['is_platform_admin' => true])->save();
+            }
         });
     }
 

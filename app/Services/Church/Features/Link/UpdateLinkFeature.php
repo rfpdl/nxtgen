@@ -19,7 +19,7 @@ use Illuminate\Http\RedirectResponse;
  */
 #[UserStory(
     title: 'Change a Link',
-    persona: 'church admin or satellite admin',
+    persona: 'satellite admin',
     happyPaths: ['story#168' => 'An Admin renames a Link or changes its address'],
     unhappyPaths: ['story#169' => 'Only a Link at a satellite they look after, in their church; only to an https address'],
 )]

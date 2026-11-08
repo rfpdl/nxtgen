@@ -11,7 +11,6 @@ use App\Domains\Church\DataObjects\RoleScope;
 use App\Domains\Church\DataObjects\SatelliteOptionData;
 use App\Domains\Church\DataObjects\StaffMemberData;
 use App\Domains\Church\DataObjects\StaffRoleData;
-use App\Domains\Church\Jobs\GetSatellitesJob;
 use App\Domains\Church\Jobs\GetStaffRolesJob;
 use App\Domains\Schedule\Jobs\GetSchedulesByIdJob;
 use App\Domains\Schedule\Jobs\GetSchedulesBySatelliteJob;
@@ -25,15 +24,15 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * People (D-R2): everyone who serves, with their roles, and the roles this viewer may give. A church admin
- * sees the whole church; a satellite admin sees their satellite's people (plan §3.2 "Grant roles").
+ * People (D-R2): everyone who serves, with their roles, and the roles this viewer may give: a satellite admin
+ * sees their satellite's people and its classes' (plan §3.2 "Grant roles"; spec item 9).
  *
  * @extends BaseChurchFeature<Response>
  */
 #[UserStory(
     title: 'See who serves',
-    persona: 'church admin or satellite admin',
-    happyPaths: ['story#74' => 'An Admin sees who serves and their Roles; a Satellite admin only their Satellite'],
+    persona: 'satellite admin',
+    happyPaths: ['story#74' => 'A Satellite admin sees who serves at their Satellite and their Roles'],
     unhappyPaths: ['story#75' => 'Not there for a Lifeshaper'],
 )]
 #[AccessRow(AccessRowEnum::GrantRoles)]
@@ -45,13 +44,12 @@ final class ShowPeopleFeature extends BaseChurchFeature
         $scope = $this->scope();
         abort_unless($scope->canManagePeople(), 404);
 
-        $satellites = $this->run(new GetSatellitesJob(church: $church));
-        $satelliteNames = [];
-        foreach ($satellites as $satellite) {
-            $satelliteNames[$satellite->id] = $satellite->name;
-        }
+        // This satellite's People (spec item 9): its Roles and its classes' — never another satellite's.
+        $here = $this->satellite();
+        $satellites = [SatelliteOptionData::fromModel($here)];
+        $satelliteNames = [$here->id => $here->name];
 
-        $roles = $this->run(new GetStaffRolesJob(church: $church, satelliteIds: $scope->isChurchAdmin ? null : $scope->adminSatelliteIds));
+        $roles = $this->run(new GetStaffRolesJob(church: $church, satelliteIds: [$here->id]));
         // Class admins' classes (TODO #9), retired ones too, to name each Role and to ask who may remove it.
         $classes = $this->run(new GetSchedulesByIdJob(church: $church, ids: array_values($roles
             ->filter(fn (RoleAssignment $a): bool => $a->scope_type === ScopeTypeEnum::Schedule)
@@ -76,7 +74,7 @@ final class ShowPeopleFeature extends BaseChurchFeature
 
         return Inertia::render('Church/People/Index', [
             'people' => $people->all(),
-            'grant_options' => $this->grantOptions($church->id, $satellites, $this->run(new GetSchedulesBySatelliteJob(
+            'grant_options' => $this->grantOptions($satellites, $this->run(new GetSchedulesBySatelliteJob(
                 church: $church,
                 satelliteIds: array_map(fn (SatelliteOptionData $s): int => $s->id, $satellites),
             ))),
@@ -84,15 +82,15 @@ final class ShowPeopleFeature extends BaseChurchFeature
     }
 
     /**
-     * The Roles this admin may give: at the church, at each satellite, and Admin at each active class (TODO #9).
+     * The Roles this admin may give: at this satellite, and Admin at each of its active classes (TODO #9).
      *
      * @param  list<SatelliteOptionData>  $satellites
      * @param  array<int, list<Schedule>>  $classes  by satellite id
      * @return list<GrantOptionData>
      */
-    private function grantOptions(int $churchId, array $satellites, array $classes): array
+    private function grantOptions(array $satellites, array $classes): array
     {
-        $places = [[new RoleScope(ScopeTypeEnum::Church, $churchId), null]];
+        $places = [];
         foreach ($satellites as $satellite) {
             $places[] = [new RoleScope(ScopeTypeEnum::Satellite, $satellite->id), $satellite->name];
             foreach ($classes[$satellite->id] ?? [] as $class) {

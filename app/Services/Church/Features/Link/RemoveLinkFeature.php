@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\DB;
  */
 #[UserStory(
     title: 'Remove a Link',
-    persona: 'church admin or satellite admin',
+    persona: 'satellite admin',
     happyPaths: ['story#172' => 'An Admin removes a Link from the poster'],
     unhappyPaths: ['story#173' => 'Only a Link at a satellite they look after, in their church'],
 )]

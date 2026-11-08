@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\DB;
  */
 #[UserStory(
     title: 'Make a print list',
-    persona: 'church admin or satellite admin',
+    persona: 'satellite admin',
     happyPaths: ['story#150' => 'An Admin makes a print list of the approved cards the tab shows — exactly those, kept — and sees it on the Approved tab'],
     unhappyPaths: ['story#151' => 'Nothing approved to show makes no list; never by a Lifeshaper or a parent'],
 )]

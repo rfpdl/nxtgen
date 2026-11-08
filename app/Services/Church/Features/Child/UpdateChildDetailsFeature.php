@@ -15,7 +15,7 @@ use Illuminate\Http\RedirectResponse;
 
 /**
  * Staff fix a child's details (plan §3.2: who may edit the child's family). Not status or Level — status is
- * its own action, the Level changes only at Moving-Up (or by a church admin's correction). The same input and Job as the parent's own edit.
+ * its own action, the Level changes only at Moving-Up (or by a satellite admin's correction). The same input and Job as the parent's own edit.
  *
  * @extends BaseChurchFeature<RedirectResponse>
  */

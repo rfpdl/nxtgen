@@ -46,7 +46,6 @@ final class StaffRoleData extends Data
     public static function label(RoleEnum $role, RoleScope $scope, ?string $placeName): string
     {
         $where = match ($scope->type) {
-            ScopeTypeEnum::Church => 'whole church',
             ScopeTypeEnum::Satellite => $placeName ?? 'a satellite',
             ScopeTypeEnum::Schedule => $placeName ?? 'a class',
         };

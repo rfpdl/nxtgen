@@ -13,7 +13,7 @@ use function Pest\Laravel\assertAuthenticatedAs;
 use function Pest\Laravel\assertGuest;
 use function Pest\Laravel\get;
 use function Pest\Laravel\post;
-use function Tests\Support\atChurch;
+use function Tests\Support\atSatellite;
 use function Tests\Support\church;
 use function Tests\Support\familyAt;
 use function Tests\Support\grantRole;
@@ -28,9 +28,8 @@ use function Tests\Support\satelliteOf;
 
 function servingUser(?string $password = null): User
 {
-    $church = church();
     $user = User::factory()->create(['email' => 'leo@example.com', 'password' => $password]);
-    grantRole($user, RoleEnum::Lifeshaper, atChurch($church));
+    grantRole($user, RoleEnum::Lifeshaper, atSatellite(satelliteOf(church())));
 
     return $user;
 }

@@ -14,11 +14,11 @@ use App\Enums\RoleEnum;
 use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
-use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
 use function Tests\Support\childOf;
 use function Tests\Support\church;
 use function Tests\Support\familyAt;
+use function Tests\Support\grantRole;
 use function Tests\Support\guardianOf;
 use function Tests\Support\satelliteOf;
 use function Tests\Support\staffMember;
@@ -53,8 +53,10 @@ function dupFamily(Satellite $satellite, string $name, string $email): Family
 }
 
 it('shows a family\'s open possible duplicates on its page, both sides in the lite view, to an admin who may answer at its satellite @story#92', function (): void {
-    ['church' => $church, 'new' => $new, 'old' => $old] = dupChurch();
-    $admin = staffMember(RoleEnum::Admin, atChurch($church));
+    ['htc' => $htc, 'house' => $house, 'new' => $new, 'old' => $old] = dupChurch();
+    // No church-wide Role (spec item 9): an admin at both satellites, to open each family at its own address.
+    $admin = staffMember(RoleEnum::Admin, atSatellite($htc));
+    grantRole($admin, RoleEnum::Admin, atSatellite($house));
 
     // On the new family's page, at its satellite: the pair to answer.
     actingAs($admin)->get("/htc/admin/families/{$new->id}")
@@ -84,7 +86,7 @@ it('shows a pair of children on both children\'s families\' pages @story#92', fu
     childOf($old, ['first_name' => 'Ana', 'last_name' => 'Cruz', 'date_of_birth' => '2018-01-01']);
     childOf($new, ['first_name' => 'Ana', 'last_name' => 'Cruz', 'date_of_birth' => '2018-01-01']);
     (new CreateDuplicateCandidatesJob($new))->handle();
-    $admin = staffMember(RoleEnum::Admin, atChurch($church));
+    $admin = staffMember(RoleEnum::Admin, atSatellite($htc));
 
     foreach ([$new, $old] as $family) {
         actingAs($admin)->get("/htc/admin/families/{$family->id}")
@@ -103,19 +105,19 @@ it('shows a family no possible duplicates its viewer may not answer, nor answere
         ->assertInertia(fn (AssertableInertia $p) => $p->has('duplicates', 0));
 
     DuplicateCandidate::query()->update(['status' => DuplicateStatusEnum::Dismissed]);
-    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get("/htc/admin/families/{$new->id}")
+    actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->get("/htc/admin/families/{$new->id}")
         ->assertInertia(fn (AssertableInertia $p) => $p->has('duplicates', 0));
 });
 
 it('has no possible-duplicates page of its own: the families list\'s filter finds them', function (): void {
-    ['church' => $church] = dupChurch();
+    ['htc' => $htc] = dupChurch();
 
-    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/htc/admin/duplicates')->assertNotFound();
+    actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->get('/htc/admin/duplicates')->assertNotFound();
 });
 
 it('dismisses a pair, records who, and notes it on the new family @story#72', function (): void {
-    ['church' => $church, 'new' => $new] = dupChurch();
-    $admin = staffMember(RoleEnum::Admin, atChurch($church));
+    ['htc' => $htc, 'new' => $new] = dupChurch();
+    $admin = staffMember(RoleEnum::Admin, atSatellite($htc));
     $pair = DuplicateCandidate::query()->sole();
 
     actingAs($admin)->put("/htc/admin/duplicates/{$pair->id}", ['status' => 'dismissed'])->assertRedirect()->assertSessionHas('success');
@@ -129,10 +131,10 @@ it('dismisses a pair, records who, and notes it on the new family @story#72', fu
 });
 
 it('confirms a pair as the same family — flagged for the merge, nothing merged @story#72', function (): void {
-    ['church' => $church] = dupChurch();
+    ['htc' => $htc] = dupChurch();
     $pair = DuplicateCandidate::query()->sole();
 
-    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
+    actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))
         ->put("/htc/admin/duplicates/{$pair->id}", ['status' => 'confirmed'])->assertSessionHas('success');
 
     expect($pair->fresh()?->status)->toBe(DuplicateStatusEnum::Confirmed)
@@ -140,30 +142,30 @@ it('confirms a pair as the same family — flagged for the merge, nothing merged
 });
 
 it('refuses to review a pair outside the reviewer\'s satellite, or one already reviewed @story#73', function (): void {
-    ['church' => $church, 'house' => $house] = dupChurch();
+    ['htc' => $htc, 'house' => $house] = dupChurch();
     $pair = DuplicateCandidate::query()->sole();
 
     actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))
         ->put("/house/admin/duplicates/{$pair->id}", ['status' => 'dismissed'])->assertNotFound();
 
     $pair->forceFill(['status' => DuplicateStatusEnum::Dismissed])->save();
-    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
+    actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))
         ->put("/htc/admin/duplicates/{$pair->id}", ['status' => 'confirmed'])->assertNotFound();
 });
 
 it('only takes "dismissed" or "confirmed" @story#73', function (): void {
-    ['church' => $church] = dupChurch();
+    ['htc' => $htc] = dupChurch();
     $pair = DuplicateCandidate::query()->sole();
 
-    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
+    actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))
         ->put("/htc/admin/duplicates/{$pair->id}", ['status' => 'open'])->assertSessionHasErrors('status');
 });
 
 it('flags a child added to an older family that matches a newer family\'s child, the added child to answer for', function (): void {
-    ['church' => $church, 'htc' => $htc, 'new' => $new, 'old' => $old] = dupChurch();
+    ['house' => $house, 'new' => $new, 'old' => $old] = dupChurch();
     $first = childOf($new, ['first_name' => 'Ana', 'last_name' => 'Santos', 'date_of_birth' => '2018-01-01']);
 
-    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->post("/house/serve/families/{$old->id}/children", [
+    actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->post("/house/serve/families/{$old->id}/children", [
         'first_name' => 'Ana', 'last_name' => 'Santos', 'nickname' => 'Ana', 'gender' => 'girl', 'date_of_birth' => '2018-01-01', 'has_allergies' => false,
     ])->assertSessionHas('success');
 

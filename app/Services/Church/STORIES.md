@@ -9,20 +9,21 @@ decided by `AccessScope` against the access-matrix row the Feature declares (`#[
 ## Who may
 - **Every refusal is a 404**, never a 403: a page does not confirm that something it will not show exists. Ids in
   the address are looked up within this Church only.
-- A church admin sees and edits the whole Church. A Satellite admin edits Families whose home is their Satellite.
-  A Lifeshaper sees their Satellite's Families but gets no edit forms.
+- There is no church-wide Role: every Role is at one Satellite or one class. A Satellite admin does everything for
+  their Satellite and edits Families whose home is their Satellite. A Lifeshaper sees their Satellite's Families but
+  gets no edit forms.
 - **Registration is church-wide**: any Staff member searches the whole Church first, then adds a Child to a found
   Family (any Satellite) or registers a new one. The email stays unconfirmed until the parent taps the link; that
   never blocks check-in.
 - Lists and the Excel download show only Satellites the viewer can see; filters only narrow. Emails are masked
-  for anyone who may not edit; the download has full emails only for a church admin.
+  for anyone who may not edit; the download has full emails only for the Satellite's admins.
 
 ## Children
-- Status (active, inactive, Graduated) is set by a church admin or the home Satellite's admin.
-- **Only a church admin corrects a Level**, outside Moving-Up, and only to a Level on the chart. There is no gender
+- Status (active, inactive, Graduated) is set by the home Satellite's admin.
+- **Only the home Satellite's admin corrects a Level**, outside Moving-Up, and only to a Level on the chart. There is no gender
   rule: the Child's Squad follows from Level and gender.
-- **Moving-Up is a church admin's only** (DECISIONS 2026-11-06): every Active child with a Level goes up one Level,
-  from the top Level to Graduated; the admin unticks anyone who stays. If any child changed since the page was opened,
+- **Moving-Up is a Satellite admin's, for their Satellite** (DECISIONS 2026-11-06, 2026-11-08): every Active child of
+  that Satellite with a Level goes up one Level, from the top Level to Graduated; the admin unticks anyone who stays. If any child changed since the page was opened,
   nobody moves. The last Moving-Up can be put back — one child, or everyone — except a child someone changed since.
 - A Lifeshaper may record a parent's in-person yes to photos ("Are you sure the parent said yes?"), then take the
   photo. Consent sent with a photo does not count.
@@ -47,13 +48,13 @@ decided by `AccessScope` against the access-matrix row the Feature declares (`#[
 
 ## People
 - One login per person: adding someone who already has a login (often a parent) only gives the Role.
-- A Satellite admin gives only Lifeshaper, in their own Satellite. A Role is switched off, never deleted, and the
-  Church is never left without a church admin.
+- A Satellite admin gives and removes any Role at their Satellite (Admin or Lifeshaper), and Admin at its classes;
+  nowhere else. A Role is switched off, never deleted, and a Satellite is never left without an admin.
 
 ## Classes
 - A class (GLOSSARY "Schedule") belongs to one Satellite: a name, and a day and start/end time only if it has them.
   A class with a day shows at the door only on that day; one with no day shows every day.
-- Church admins manage every Satellite's classes, Satellite admins their own; a Lifeshaper has no Classes page.
+- Satellite admins manage their Satellite's classes, a class admin their class; a Lifeshaper has no Classes page.
 - A class is retired, never deleted (Sessions will point at it). Two active classes at a Satellite never share a
   name; a retired class's name is free again.
 
@@ -61,8 +62,7 @@ decided by `AccessScope` against the access-matrix row the Feature declares (`#[
 - A Session (one class on one date) is never opened or closed: the first Check-in makes it. One Check-in per child
   per Session, whatever number of phones press at once (the database's unique keys decide; tested with two real
   connections). "Today" is the church's date (its timezone), not the server's.
-- Staff see today's classes at the satellites their Role covers (church-wide Roles: every satellite); a class with a
-  day only on that day. Any child of the church may be checked in, and joins THIS satellite's Squad for their Level
+- Staff see today's classes at the satellites their Roles cover; a class with a day only on that day. Any child of the church may be checked in, and joins THIS satellite's Squad for their Level
   and gender — a visiting child needs nothing.
 - Graduated children are refused. An inactive child is made active again first (the door asks), and a child with no
   Level gets one picked at the door (their age's suggestion first) — both saved and noted on the child's history. The
@@ -71,7 +71,7 @@ decided by `AccessScope` against the access-matrix row the Feature declares (`#[
 - The search shows no photo or phone and only an allergy yes/no; health details only when a child's row is opened.
 
 ## Attendance
-- Admins only (a church admin every Satellite, a Satellite admin their own): pick a Satellite, class and date and see
+- Admins only, at the Satellite in the address: pick a class and date and see
   the children checked in to that Session — undone Check-ins left out — by Squad (Level order, then mixed, boys,
   girls), each with nickname, full name, check-in time (the church's) and who checked them in; a count per Squad and
   a total; "No one was checked in" when empty. It opens on today's class with a Session, else the latest Session.

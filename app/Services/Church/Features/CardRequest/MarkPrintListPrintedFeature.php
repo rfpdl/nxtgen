@@ -20,7 +20,7 @@ use Illuminate\Http\RedirectResponse;
  */
 #[UserStory(
     title: 'Mark a print list printed',
-    persona: 'church admin or satellite admin',
+    persona: 'satellite admin',
     happyPaths: ['story#144' => 'An Admin marks a print list\'s cards printed — only its own, still approved — and is told how many, and how many had already moved on'],
     unhappyPaths: ['story#145' => 'Never a card that was not on the list, nor another Satellite\'s; a list with none of theirs is not found; never by a Lifeshaper or a parent'],
 )]

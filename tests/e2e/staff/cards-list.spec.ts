@@ -8,7 +8,7 @@ import { CARDS, DUBAI, DOOR, sessionFile, type DoorProject } from '../support/wo
 
 /*
  * Cards (name cards 03, DECISIONS 2026-10-29). At the desk a Lifeshaper asks for new cards for three Ocampo boys (the
- * first still without one, so a retry takes others). The church admin opens Cards from the menu and finds each boy by
+ * first still without one, so a retry takes others). The admin opens Cards from the menu and finds each boy by
  * name: the first is paid, approved and marked printed, then given at the desk — the Pill gone, "New card…" back; the
  * second goes on a print list ("Make print list" on Approved; downloaded, its Barcode the code the door scans), is
  * printed with the list's "Mark these N printed" and marked Given from the Printed tab; the third is refused with a reason.
@@ -32,7 +32,7 @@ test('an admin finds, pays, approves, prints, gives and refuses new cards on Car
     test.setTimeout(60_000)
     const family = `${DOOR.guardians[info.project.name as DoorProject]} ${CARDS.surname}`
     const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
-    const admin = await browser.newContext({ storageState: sessionFile('churchAdmin') })
+    const admin = await browser.newContext({ storageState: sessionFile('admin') })
     try {
         const desk = await lifeshaper.newPage()
         await openCardFamily(desk, info.project.name)

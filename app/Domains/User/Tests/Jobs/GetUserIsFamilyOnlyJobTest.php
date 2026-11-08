@@ -7,14 +7,14 @@ use App\Data\Models\User;
 use App\Domains\User\Jobs\GetUserIsFamilyOnlyJob;
 use App\Enums\RoleEnum;
 
-use function Tests\Support\atChurch;
+use function Tests\Support\atSatellite;
 use function Tests\Support\church;
 use function Tests\Support\familyAt;
 use function Tests\Support\grantRole;
 use function Tests\Support\guardianOf;
 use function Tests\Support\satelliteOf;
 
-/* A church admin may change a login's email only when it is one unconfirmed family's login and nothing else. */
+/* An admin may change a login's email only when it is one unconfirmed family's login and nothing else. */
 
 it('is true for an unconfirmed login used by exactly one family', function (): void {
     $user = User::factory()->unverified()->create();
@@ -31,10 +31,10 @@ it('is false once the email is confirmed', function (): void {
 });
 
 it('is false for a login that also holds a role, even a revoked one', function (): void {
-    $church = church();
+    $satellite = satelliteOf(church());
     $user = User::factory()->unverified()->create();
-    guardianOf(familyAt(satelliteOf($church)), $user);
-    grantRole($user, RoleEnum::Lifeshaper, atChurch($church), active: false);
+    guardianOf(familyAt($satellite), $user);
+    grantRole($user, RoleEnum::Lifeshaper, atSatellite($satellite), active: false);
 
     expect((new GetUserIsFamilyOnlyJob(user: $user))->handle())->toBeFalse();
 });

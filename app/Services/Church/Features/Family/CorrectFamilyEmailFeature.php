@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\DB;
  */
 #[UserStory(
     title: 'Correct a family email',
-    persona: 'church admin or satellite admin',
+    persona: 'satellite admin',
     happyPaths: ['story#56' => 'An Admin fixes a mistyped, unconfirmed parent email; a new link goes out and it is noted'],
     unhappyPaths: ['story#57' => 'Refused for a Staff login, a confirmed email, an email in use, or a Lifeshaper'],
 )]
@@ -56,7 +56,7 @@ final class CorrectFamilyEmailFeature extends BaseChurchFeature
         });
 
         if ($issued === null) {
-            return back()->with('error', 'This email cannot be changed here: it is already confirmed or is also a volunteer login. Ask a church admin.');
+            return back()->with('error', 'This email cannot be changed here: it is already confirmed or is also a volunteer login. Ask the platform admin.');
         }
 
         if (! $this->run(new SendMagicLinkJob(issued: $issued, churchName: $church->name))) {

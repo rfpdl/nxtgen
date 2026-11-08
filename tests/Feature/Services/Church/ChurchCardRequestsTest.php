@@ -13,7 +13,6 @@ use App\Enums\RoleEnum;
 use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
-use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
 use function Tests\Support\childOf;
 use function Tests\Support\church;
@@ -54,9 +53,9 @@ describe('filing a new card', function (): void {
     });
 
     it('lets an admin file a damaged card with no note @story#130', function (): void {
-        ['church' => $church, 'amara' => $amara] = cardChurch();
+        ['dxb' => $dxb, 'amara' => $amara] = cardChurch();
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->post("/dxb/serve/children/{$amara->id}/card-requests", ['reason' => 'damaged', 'note' => null])
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($dxb)))->post("/dxb/serve/children/{$amara->id}/card-requests", ['reason' => 'damaged', 'note' => null])
             ->assertSessionHas('success');
 
         expect([CardRequest::query()->sole()->reason, CardRequest::query()->sole()->note])->toBe([CardReasonEnum::Damaged, null]);

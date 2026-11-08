@@ -12,17 +12,17 @@ use App\Foundation\Jobs\BaseJob;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
- * Active roles in this church, with their person. `$satelliteIds` null = every role (church admin); a list =
- * only roles in those satellites and at their classes (a satellite admin sees their own satellite's people).
+ * Active roles at `$satelliteIds` and at their classes, with their person — People shows the satellite in its address
+ * (spec item 9).
  *
  * @extends BaseJob<Collection<int, RoleAssignment>>
  */
 final class GetStaffRolesJob extends BaseJob
 {
-    /** @param list<int>|null $satelliteIds */
+    /** @param list<int> $satelliteIds */
     public function __construct(
         private readonly Church $church,
-        private readonly ?array $satelliteIds,
+        private readonly array $satelliteIds,
     ) {}
 
     /** @return Collection<int, RoleAssignment> */
@@ -32,11 +32,11 @@ final class GetStaffRolesJob extends BaseJob
             ->with('user')
             ->where('church_id', $this->church->id)
             ->where('is_active', true)
-            ->when($this->satelliteIds !== null, fn ($q) => $q->where(fn ($w) => $w
-                ->where(fn ($at) => $at->where('scope_type', ScopeTypeEnum::Satellite)->whereIn('scope_id', $this->satelliteIds ?? []))
+            ->where(fn ($w) => $w
+                ->where(fn ($at) => $at->where('scope_type', ScopeTypeEnum::Satellite)->whereIn('scope_id', $this->satelliteIds))
                 // A class admin of a class at one of those satellites (TODO #9).
                 ->orWhere(fn ($class) => $class->where('scope_type', ScopeTypeEnum::Schedule)->whereIn('scope_id', Schedule::query()
-                    ->select('id')->where('church_id', $this->church->id)->whereIn('satellite_id', $this->satelliteIds ?? [])))))
+                    ->select('id')->where('church_id', $this->church->id)->whereIn('satellite_id', $this->satelliteIds))))
             ->orderBy('id')
             ->get();
     }

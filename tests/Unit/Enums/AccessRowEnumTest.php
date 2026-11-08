@@ -19,7 +19,9 @@ it('states each rule as who may, in its own words', function (): void {
     $labels = array_map(fn (AccessRowEnum $row): string => $row->label(), AccessRowEnum::cases());
 
     expect(array_unique($labels))->toHaveCount(count(AccessRowEnum::cases()))
-        ->and(AccessRowEnum::SetChildLevel->label())->toContain('church admin only')
+        ->and(AccessRowEnum::SetChildLevel->label())->toContain('an admin of the child\'s satellite')
+        ->and(AccessRowEnum::MovingUp->label())->toContain('per satellite')
+        ->and(AccessRowEnum::GrantRoles->label())->toContain('last admin')
         ->and(AccessRowEnum::OwnFamily->label())->toContain('not status/Level')
         ->and(AccessRowEnum::CheckIn->label())->toContain('any child of the church')
         ->and(AccessRowEnum::Attendance->label())->toContain('satellite admin at their own')

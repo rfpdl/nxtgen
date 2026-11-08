@@ -82,7 +82,7 @@ function oneOfEach(Satellite $satellite): array
         'checkIn' => checkedIn(sessionOf($schedule), $child)->id,
         'cardRequest' => CardRequest::factory()->for($child)->create()->id,
         'printList' => PrintList::factory()->for($satellite->church)->create()->id,
-        'movingUp' => MovingUp::query()->create(['church_id' => $satellite->church_id])->id,
+        'movingUp' => MovingUp::query()->create(['church_id' => $satellite->church_id, 'satellite_id' => $satellite->id])->id,
         'link' => SatelliteLink::factory()->for($satellite)->create()->id,
         'assignment' => RoleAssignment::query()->where('user_id', $volunteer->id)->sole()->id,
         'pair' => DuplicateCandidate::query()->where('church_id', $satellite->church_id)->sole()->id,

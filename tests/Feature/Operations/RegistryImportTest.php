@@ -22,7 +22,7 @@ use OpenSpout\Writer\XLSX\Writer;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\artisan;
-use function Tests\Support\atChurch;
+use function Tests\Support\atSatellite;
 use function Tests\Support\church;
 use function Tests\Support\grantRole;
 use function Tests\Support\satelliteOf;
@@ -424,10 +424,11 @@ it('reports an edited row with an invalid gender instead of crashing', function 
 it('reports families waiting for an existing login to confirm, and the resend gets the parent in', function (): void {
     Notification::fake();
     [$church, $out] = proposeSample();
+    $dubai = $church->satellites()->where('slug', 'dubai')->sole();
     $lifeshaper = User::factory()->create(['email' => 'janice@example.com']);
-    grantRole($lifeshaper, RoleEnum::Lifeshaper, atChurch($church));
+    grantRole($lifeshaper, RoleEnum::Lifeshaper, atSatellite($dubai));
     $admin = User::factory()->create();
-    grantRole($admin, RoleEnum::Admin, atChurch($church));
+    grantRole($admin, RoleEnum::Admin, atSatellite($dubai));
 
     $apply = artisan('nxtgen:registry-apply', ['xlsx' => $out, '--church' => 'ccf']);
     if (! $apply instanceof PendingCommand) {

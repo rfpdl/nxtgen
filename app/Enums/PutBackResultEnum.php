@@ -20,6 +20,8 @@ enum PutBackResultEnum: string implements HasEnumMetadata
     case PutBack = 'put_back';
     case AlreadyPutBack = 'already_put_back';
     case ChangedSince = 'changed_since';
+    /** The child's family moved to another satellite since: that satellite's now (issue 06, Astra). */
+    case Elsewhere = 'elsewhere';
 
     /** Said after the child's name: "Ben was already put back". */
     public function label(): string
@@ -28,11 +30,12 @@ enum PutBackResultEnum: string implements HasEnumMetadata
             self::PutBack => 'is put back',
             self::AlreadyPutBack => 'was already put back',
             self::ChangedSince => 'has a different Level or status since Moving-Up, so was left as they are',
+            self::Elsewhere => 'is at another satellite now, so was left as they are',
         };
     }
 
     public function color(): string
     {
-        return $this === self::ChangedSince ? 'danger' : 'success';
+        return $this === self::PutBack || $this === self::AlreadyPutBack ? 'success' : 'danger';
     }
 }

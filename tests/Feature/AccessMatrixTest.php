@@ -240,7 +240,7 @@ function childAtLevel(AccessWorld $w): int
 function movingUpOf(AccessWorld $w): MovingUp
 {
     $w->child->forceFill(['level' => 3, 'status' => ChildStatusEnum::Active])->save();
-    $movingUp = MovingUp::query()->create(['church_id' => $w->church->id]);
+    $movingUp = MovingUp::query()->create(['church_id' => $w->church->id, 'satellite_id' => $w->home->id]);
     $movingUp->children()->create([
         'church_id' => $w->church->id, 'child_id' => $w->child->id,
         'from_level' => 2, 'from_status' => ChildStatusEnum::Active, 'to_level' => 3, 'to_status' => ChildStatusEnum::Active,
@@ -438,7 +438,7 @@ describe('a child, for staff', function (): void {
         ->with(bothAreas('children.update'));
     it('has its status set only by an admin who may edit the family @story#62 @story#63', cellTest())
         ->with(cells('admin.children.status'));
-    it('has its Level corrected only by a church admin @story#64 @story#65', cellTest())
+    it('has its Level corrected only by an admin of its satellite @story#64 @story#65', cellTest())
         ->with(cells('admin.children.level'));
     it('has in-person consent recorded by staff who can see the family @story#66 @story#67', cellTest())
         ->with(bothAreas('children.photo-consent'));
@@ -500,14 +500,14 @@ describe('Links, for admins', function (): void {
         ->with(cells('admin.links.destroy'));
 });
 
-describe('Moving-Up, for a church admin', function (): void {
-    it('opens Moving-Up for a church admin only @story#154 @story#155', cellTest())
+describe('Moving-Up, for an admin of the satellite', function (): void {
+    it('opens Moving-Up for the satellite\'s admins only @story#154 @story#155', cellTest())
         ->with(cells('admin.moving-up.index'));
-    it('moves children up only for a church admin @story#156 @story#157', cellTest())
+    it('moves children up only for the satellite\'s admins @story#156 @story#157', cellTest())
         ->with(cells('admin.moving-up.store'));
-    it('puts one child back only for a church admin @story#158 @story#159', cellTest())
+    it('puts one child back only for the satellite\'s admins @story#158 @story#159', cellTest())
         ->with(cells('admin.moving-up.children.put-back'));
-    it('puts everyone back only for a church admin @story#160 @story#161', cellTest())
+    it('puts everyone back only for the satellite\'s admins @story#160 @story#161', cellTest())
         ->with(cells('admin.moving-up.put-back'));
 });
 
@@ -618,12 +618,10 @@ it('refuses the other satellite\'s admin who puts Home\'s ids in Away\'s address
         ->and(array_unique(array_values(array_diff_key($answers, $helped))))->toBe(['404'], (string) json_encode($answers, JSON_PRETTY_PRINT));
 });
 
-it('refuses a church admin who puts Home\'s ids in Away\'s address — they act on Home at Home\'s @story#51 @story#65', function (): void {
-    $answers = guessesFrom(Actor::ChurchAdmin, 'away', fn (AccessWorld $w): array => familyEdit($w->away));
+it('refuses an admin of both satellites who puts Home\'s ids in Away\'s address — they act on Home at Home\'s @story#51 @story#65 @story#157 @story#79', function (): void {
+    $answers = guessesFrom(Actor::HomeAndAwayAdmin, 'away', fn (AccessWorld $w): array => familyEdit($w->away));
     $helped = array_filter($answers, fn (string $key): bool => preg_match('#/families/\d+/(resend|children)$#', $key) === 1, ARRAY_FILTER_USE_KEY);
-    // Until issue 06 takes the church-wide Admin away: Moving-Up is the whole church's, and People grants church-wide.
-    $churchWide = array_filter($answers, fn (string $key): bool => preg_match('#/(moving-up|people)/#', $key) === 1, ARRAY_FILTER_USE_KEY);
 
     expect(array_values($helped))->toBe(['ok', 'ok', 'ok', 'ok'])
-        ->and(array_unique(array_values(array_diff_key($answers, $helped, $churchWide))))->toBe(['404'], (string) json_encode($answers, JSON_PRETTY_PRINT));
+        ->and(array_unique(array_values(array_diff_key($answers, $helped))))->toBe(['404'], (string) json_encode($answers, JSON_PRETTY_PRINT));
 });

@@ -20,7 +20,7 @@ use Illuminate\Http\RedirectResponse;
  */
 #[UserStory(
     title: 'Retire a class',
-    persona: 'church admin or satellite admin',
+    persona: 'satellite admin',
     happyPaths: ['story#101' => 'An Admin retires a class: it is gone from the page, kept for the record, and its name is free'],
     unhappyPaths: ['story#102' => 'Only a class at a satellite they look after, in their church'],
 )]

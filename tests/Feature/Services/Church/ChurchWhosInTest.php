@@ -18,13 +18,13 @@ use Inertia\Testing\AssertableInertia;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 use function Pest\Laravel\travelTo;
-use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
 use function Tests\Support\atTheSameTime;
 use function Tests\Support\checkedIn;
 use function Tests\Support\childOf;
 use function Tests\Support\church;
 use function Tests\Support\familyAt;
+use function Tests\Support\grantRole;
 use function Tests\Support\guardianOf;
 use function Tests\Support\satelliteOf;
 use function Tests\Support\scheduleAt;
@@ -143,9 +143,11 @@ describe('the Who\'s in page', function (): void {
             ->where('class_id', $w['onePm']->id)->where('squads', [])->where('squad_id', null));
     });
 
-    it('gives a church-wide Role every satellite\'s classes, and says when none meets today @story#117', function (): void {
+    it('gives a Role at both satellites each satellite\'s classes, and says when none meets today @story#117', function (): void {
         $w = whosInChurch();
-        $everywhere = staffMember(RoleEnum::Lifeshaper, atChurch($w['dxb']->church));
+        // DECISIONS 2026-11-08: no church-wide Role — the Lifeshaper Role at both satellites instead.
+        $everywhere = staffMember(RoleEnum::Lifeshaper, atSatellite($w['dxb']));
+        grantRole($everywhere, RoleEnum::Lifeshaper, atSatellite($w['house']));
 
         // Every satellite's, one satellite at a time: the address satellite's classes (DECISIONS 2026-11-08).
         actingAs($everywhere)->get('/dxb/serve/door/whos-in')->assertInertia(fn (AssertableInertia $page) => $page->has('classes', 2));
@@ -252,8 +254,8 @@ describe('marking a child present', function (): void {
         actingAs($w['lifeshaper'])->put("/house/serve/check-ins/{$atHouse->id}/present", ['present' => true, 'revision' => 0])->assertNotFound();
         actingAs($w['lifeshaper'])->put("/dxb/serve/check-ins/{$lastWeek->id}/present", ['present' => true, 'revision' => 0])->assertNotFound();
         $other = church(['slug' => 'other']);
-        satelliteOf($other, ['slug' => 'other']);
-        actingAs(staffMember(RoleEnum::Admin, atChurch($other)))->put("/other/serve/check-ins/{$today->id}/present", ['present' => true, 'revision' => 0])->assertNotFound();
+        $otherSatellite = satelliteOf($other, ['slug' => 'other']);
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($otherSatellite)))->put("/other/serve/check-ins/{$today->id}/present", ['present' => true, 'revision' => 0])->assertNotFound();
         actingAs($w['lifeshaper'])->put("/dxb/serve/check-ins/{$today->id}/present", [])->assertSessionHasErrors(['present', 'revision']);
 
         expect(CheckIn::query()->whereNotNull('present_at')->count())->toBe(0);
@@ -332,8 +334,8 @@ describe('confirming a head count', function (): void {
         $sunday = Schedule::query()->where('name', 'Sunday school')->sole();
         $put($w['lifeshaper'], "/dxb/serve/classes/{$sunday->id}/squads/{$girls->id}/head-count");
         $other = church(['slug' => 'other']);
-        satelliteOf($other, ['slug' => 'other']);
-        $put(staffMember(RoleEnum::Admin, atChurch($other)), "/other/serve/classes/{$w['onePm']->id}/squads/{$atHouse->squad_id}/head-count");
+        $otherSatellite = satelliteOf($other, ['slug' => 'other']);
+        $put(staffMember(RoleEnum::Admin, atSatellite($otherSatellite)), "/other/serve/classes/{$w['onePm']->id}/squads/{$atHouse->squad_id}/head-count");
 
         expect(SquadHeadCount::query()->count())->toBe(0);
     });

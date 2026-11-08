@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Data\Models\Child;
 use App\Data\Models\MovingUp;
 use App\Data\Models\Note;
+use App\Data\Models\Satellite;
 use App\Data\Models\User;
 use App\Enums\ChildStatusEnum;
 use App\Enums\PutBackResultEnum;
@@ -24,7 +25,7 @@ use function Tests\Support\satelliteOf;
 function movedUp(Child ...$children): MovingUp
 {
     $movingUp = (new MoveChildrenUpOperation(
-        church: $children[0]->family->church,
+        satellite: $children[0]->family->homeSatellite,
         expected: collect($children)->mapWithKeys(fn (Child $c): array => [$c->id => (int) $c->level])->all(),
         by: User::factory()->create(),
     ))->handle();
@@ -35,7 +36,7 @@ function movedUp(Child ...$children): MovingUp
 
 function putBack(MovingUp $movingUp, Child $child, ?User $by = null): PutBackResultEnum
 {
-    return (new PutBackChildOperation(church: $child->family->church, movingUp: $movingUp, childId: $child->id, by: $by ?? User::factory()->create()))->handle();
+    return (new PutBackChildOperation(satellite: Satellite::query()->findOrFail($movingUp->satellite_id), movingUp: $movingUp, childId: $child->id, by: $by ?? User::factory()->create()))->handle();
 }
 
 it('puts a moved child back to their Level, and a graduated one back to Active, marking who and when', function (): void {
@@ -88,4 +89,15 @@ it('puts a child back only once', function (): void {
     expect(putBack($movingUp, $child))->toBe(PutBackResultEnum::PutBack)
         ->and(putBack($movingUp, $child))->toBe(PutBackResultEnum::AlreadyPutBack)
         ->and($child->fresh()?->level)->toBe(1);
+});
+
+it('leaves a child whose family moved to another satellite since — the other satellite\'s now (Astra, issue 06)', function (): void {
+    $church = church();
+    $family = familyAt(satelliteOf($church));
+    $amara = childOf($family, ['level' => 1]);
+    $movingUp = movedUp($amara);
+    $family->forceFill(['home_satellite_id' => satelliteOf($church)->id])->save();
+
+    expect(putBack($movingUp, $amara))->toBe(PutBackResultEnum::Elsewhere)
+        ->and($amara->fresh()?->level)->toBe(2);
 });

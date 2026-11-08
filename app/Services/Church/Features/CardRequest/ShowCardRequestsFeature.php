@@ -30,7 +30,7 @@ use Inertia\Response;
  */
 #[UserStory(
     title: 'See the cards to do',
-    persona: 'church admin or satellite admin',
+    persona: 'satellite admin',
     happyPaths: ['story#134' => 'An Admin sees the Card requests of their Satellites\' families by step, or finds a child\'s by name — whose, which family, why, the fee'],
     unhappyPaths: ['story#135' => 'Another Satellite\'s requests never show; a Lifeshaper or a parent has no Cards page'],
 )]

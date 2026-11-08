@@ -3,13 +3,13 @@ import { expect, test } from '../support/test'
 import { DUBAI, movingUpChild, sessionFile } from '../support/world'
 
 /*
- * Moving-Up (TODO #27; DECISIONS 2026-11-06): a church admin moves children up a Level — from Level 4 they graduate —
+ * Moving-Up (TODO #27; DECISIONS 2026-11-06): an admin moves their satellite's children up a Level — from Level 4 they graduate —
  * then puts one back, then everyone. Every browser shares the church, so the journey unticks every Level and ticks
  * only its own Navarro children (E2ESeeder::MOVING_UP_CHILDREN), and puts them back before it ends.
  */
-test.use({ storageState: sessionFile('churchAdmin') })
+test.use({ storageState: sessionFile('admin') })
 
-test('a church admin moves two children up — one graduates — then puts one back, then everyone @story#154 @story#156 @story#158 @story#160', async ({
+test("an admin moves two of Dubai's children up — one graduates — then puts one back, then everyone @story#154 @story#156 @story#158 @story#160", async ({
     page,
 }, info) => {
     // A long journey: on Safari, late in a full run, it needs more than the default 30s.

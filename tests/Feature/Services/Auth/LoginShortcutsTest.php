@@ -11,9 +11,10 @@ use function Pest\Laravel\actingAs;
 use function Pest\Laravel\assertGuest;
 use function Pest\Laravel\get;
 use function Pest\Laravel\withCookie;
-use function Tests\Support\atChurch;
+use function Tests\Support\atSatellite;
 use function Tests\Support\church;
 use function Tests\Support\grantRole;
+use function Tests\Support\satelliteOf;
 
 /*
  * Two short addresses (Roy, 2026-11-06): /loginp opens the backup password straight away, and /loginc clears this
@@ -27,7 +28,7 @@ describe('/loginp', function (): void {
 
     it('sends someone already signed in home, like a correct password would @story#162', function (): void {
         $user = User::factory()->create();
-        grantRole($user, RoleEnum::Lifeshaper, atChurch(church()));
+        grantRole($user, RoleEnum::Lifeshaper, atSatellite(satelliteOf(church())));
 
         actingAs($user)->get('/loginp')->assertRedirect('/home');
     });
@@ -36,7 +37,7 @@ describe('/loginp', function (): void {
 describe('/loginc', function (): void {
     it('signs out, forgets the remembered landing page and goes back to sign in @story#163', function (): void {
         $user = User::factory()->create();
-        grantRole($user, RoleEnum::Lifeshaper, atChurch(church()));
+        grantRole($user, RoleEnum::Lifeshaper, atSatellite(satelliteOf(church())));
 
         $response = actingAs($user)->withCookie(ShowLandingFeature::REMEMBERED, '/ccf')->get('/loginc');
 

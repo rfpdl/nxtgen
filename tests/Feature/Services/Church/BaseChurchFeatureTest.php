@@ -13,7 +13,7 @@ use App\Services\Church\Features\BaseChurchFeature;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 use function Pest\Laravel\actingAs;
-use function Tests\Support\atChurch;
+use function Tests\Support\atSatellite;
 use function Tests\Support\childEdit;
 use function Tests\Support\childOf;
 use function Tests\Support\church;
@@ -59,7 +59,7 @@ function atSatelliteRequest(Satellite $satellite): ScopedLookups
 {
     RequestContext::putChurch(request(), $satellite->church);
     RequestContext::putSatellite(request(), $satellite);
-    RequestContext::putScope(request(), new AccessScope($satellite->church_id, true, [], [], []));
+    RequestContext::putScope(request(), new AccessScope($satellite->church_id, [$satellite->id], [], []));
 
     return new ScopedLookups;
 }
@@ -101,8 +101,9 @@ it('never finds a child or family of another church', function (): void {
     $other = familyAt(satelliteOf(church()));
     $child = childOf($other);
     $church = church();
-    $own = familyAt(satelliteOf($church, ['slug' => 'dubai']));
-    $admin = staffMember(RoleEnum::Admin, atChurch($church));
+    $dubai = satelliteOf($church, ['slug' => 'dubai']);
+    $own = familyAt($dubai);
+    $admin = staffMember(RoleEnum::Admin, atSatellite($dubai));
 
     actingAs($admin)->get("/dubai/admin/families/{$own->id}")->assertOk();
     actingAs($admin)->get("/dubai/admin/families/{$other->id}")->assertNotFound();

@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\DB;
  */
 #[UserStory(
     title: 'Delete a child\'s photo for good, for a parent',
-    persona: 'church admin or satellite admin',
+    persona: 'satellite admin',
     happyPaths: ['story#178' => 'An Admin who may edit the Family deletes a child\'s photo for good, in Admin'],
     unhappyPaths: ['story#179' => 'Not a Lifeshaper, not another Satellite\'s Admin, not from Serve'],
 )]

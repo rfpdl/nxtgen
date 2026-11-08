@@ -11,7 +11,7 @@ use App\Foundation\Jobs\BaseJob;
 use App\Foundation\Support\LevelChart;
 
 /**
- * Put a child at a Level, recording who and when (plan §3.2: a church admin's correction outside Moving-Up), and note
+ * Put a child at a Level, recording who and when (plan §3.2: a satellite admin's correction outside Moving-Up), and note
  * the change on the child's history when the Level changed (as UpdateChildStatusJob does for a status).
  *
  * @extends BaseJob<Child>

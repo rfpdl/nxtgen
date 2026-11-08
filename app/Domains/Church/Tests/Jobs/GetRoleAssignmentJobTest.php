@@ -7,15 +7,16 @@ use App\Domains\Church\Jobs\GetRoleAssignmentJob;
 use App\Enums\RoleEnum;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-use function Tests\Support\atChurch;
+use function Tests\Support\atSatellite;
 use function Tests\Support\church;
+use function Tests\Support\satelliteOf;
 use function Tests\Support\staffMember;
 
 /* A role by id from the URL — found only inside this church. */
 
 it('finds a role in this church', function (): void {
     $church = church();
-    $user = staffMember(RoleEnum::Lifeshaper, atChurch($church));
+    $user = staffMember(RoleEnum::Lifeshaper, atSatellite(satelliteOf($church)));
     $role = RoleAssignment::query()->where('user_id', $user->id)->sole();
 
     expect((new GetRoleAssignmentJob(church: $church, id: $role->id))->handle()->id)->toBe($role->id);
@@ -23,7 +24,7 @@ it('finds a role in this church', function (): void {
 
 it('does not find another church\'s role by its id', function (): void {
     $other = church();
-    $user = staffMember(RoleEnum::Admin, atChurch($other));
+    $user = staffMember(RoleEnum::Admin, atSatellite(satelliteOf($other)));
     $theirs = RoleAssignment::query()->where('user_id', $user->id)->sole();
 
     (new GetRoleAssignmentJob(church: church(), id: $theirs->id))->handle();

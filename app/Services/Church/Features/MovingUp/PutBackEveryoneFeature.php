@@ -21,9 +21,9 @@ use Illuminate\Http\RedirectResponse;
  */
 #[UserStory(
     title: 'Put everyone back',
-    persona: 'church admin',
-    happyPaths: ['story#160' => 'A Church admin puts back every child of the last Moving-Up not yet put back, and is told who was left because they changed since'],
-    unhappyPaths: ['story#161' => 'Only the last Moving-Up; never by a Satellite admin'],
+    persona: 'satellite admin',
+    happyPaths: ['story#160' => 'A Satellite admin puts back every child of their satellite\'s last Moving-Up not yet put back, and is told who was left because they changed since'],
+    unhappyPaths: ['story#161' => 'Only the satellite\'s last Moving-Up; never by a Lifeshaper or another satellite\'s admin'],
 )]
 #[AccessRow(AccessRowEnum::MovingUp)]
 final class PutBackEveryoneFeature extends BaseMovingUpFeature
@@ -37,11 +37,12 @@ final class PutBackEveryoneFeature extends BaseMovingUpFeature
             $putBack = 0;
             $left = [];
             foreach ($waiting as $moved) {
-                $result = $this->run(new PutBackChildOperation(church: $this->church(), movingUp: $movingUp, childId: $moved->child_id, by: $this->staff()));
+                $result = $this->run(new PutBackChildOperation(satellite: $this->satellite(), movingUp: $movingUp, childId: $moved->child_id, by: $this->staff()));
                 match ($result) {
                     PutBackResultEnum::PutBack => $putBack++,
                     PutBackResultEnum::ChangedSince => $left[] = $moved->child->displayName(),
-                    PutBackResultEnum::AlreadyPutBack => null,
+                    // Already back, or another satellite's now (its family moved): not this satellite's to name.
+                    PutBackResultEnum::AlreadyPutBack, PutBackResultEnum::Elsewhere => null,
                 };
             }
 

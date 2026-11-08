@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * One Moving-Up (GLOSSARY): the children a church admin moved to the next Level, exactly those, kept when it ran — so
+ * One Moving-Up (GLOSSARY): the children a satellite admin moved to the next Level, exactly those, kept when it ran — so
  * the last one can be put back.
  *
  * @property int $id

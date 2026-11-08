@@ -90,7 +90,7 @@ Route::prefix('admin')->name('admin.')->group(function () use ($familyPages): vo
         Route::put('/card-requests/{cardRequest}/refuse', [CardRequestController::class, 'refuse'])->whereNumber('cardRequest')->name('card-requests.refuse');
         Route::put('/card-requests/{cardRequest}/mark-printed', [CardRequestController::class, 'markPrinted'])->whereNumber('cardRequest')->name('card-requests.mark-printed');
 
-        // Moving-Up (TODO #27): the yearly step to the next Level, and putting the last one back — church admin only.
+        // Moving-Up (TODO #27): the yearly step to the next Level, and putting the last one back — a satellite's admins, for its children (DECISIONS 2026-11-08).
         Route::get('/moving-up', [MovingUpController::class, 'index'])->name('moving-up.index');
         Route::post('/moving-up', [MovingUpController::class, 'store'])->name('moving-up.store');
         Route::put('/moving-up/{movingUp}/children/{child}/put-back', [MovingUpController::class, 'putBackChild'])->whereNumber(['movingUp', 'child'])->name('moving-up.children.put-back');

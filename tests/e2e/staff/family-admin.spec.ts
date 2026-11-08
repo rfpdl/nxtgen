@@ -13,7 +13,7 @@ import { DUBAI, SATELLITES, sessionFile, uniqueEmail, uniqueSurname } from '../s
  * set a child's status, the "not confirmed" filter, and the Excel download. Registering starts from the Families
  * list's button and ends on the new family's page (DECISIONS 2026-10-17, after first look).
  */
-test.use({ storageState: sessionFile('churchAdmin') })
+test.use({ storageState: sessionFile('admin') })
 
 test('register for a parent, resend, correct the email, set a status @story#47 @story#54 @story#56 @story#62 @story#85', async ({
     page,

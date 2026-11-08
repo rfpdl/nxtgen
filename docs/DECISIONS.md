@@ -4,6 +4,22 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-11-09 (Issue 06 built — an Admin Role per satellite)
+
+- **No church-wide Role** (spec item 9): a Role is at one satellite or one class. A satellite's admins give and remove
+  any Role there (Admin too), and Admin at its classes; People shows that satellite's Roles only. A person may hold
+  Roles at several satellites and appears on each one's People with that Role.
+- **A satellite always keeps one admin**: removing its last admin is refused with the reason, counted under the
+  satellite's lock (two admins removing each other at once leave one).
+- **Moving-Up runs per satellite** (Roy, DECISIONS 2026-11-08): it moves that satellite's children, and "put back" is
+  that satellite's last Moving-Up. A child whose family moved to another satellite is that satellite's: the old one's
+  put back leaves them, and its last Moving-Up no longer names them (Astra). Moving-Up, put back, Level and status
+  fixes queue on the church's row, and lock the family or child they check, so none overwrites another (review).
+- **The first person the setup makes is the platform admin** (Roy): no satellite Role, so on no People list, but an
+  admin at every satellite they open (spec item 12, brought forward from issue 09 so a new install has a way in).
+  Until `/platform` (issue 09) they land on the first satellite. The demo admin is Admin at all three satellites (the
+  bar's switch has places to go).
+
 ## 2026-11-08 (Batch B, before the overnight run — Roy)
 
 - **The platform admin is not on any satellite's People list, but can open every satellite's Admin and Serve** (Roy:

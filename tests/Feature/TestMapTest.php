@@ -16,8 +16,12 @@ it('shows each staff route with its rule, who gets in, and each story\'s tests',
     expect($route['method'])->toBe('POST')
         ->and($route['uri'])->toBe('/{satellite}/admin/moving-up')
         ->and($route['feature'])->toBe('MoveChildrenUpFeature')
-        ->and($route['rule'])->toContain('church admin only')
-        ->and($route['cells'])->toMatchArray(['church admin' => 'ok', 'satellite admin' => '404', 'anonymous' => 'login']);
+        ->and($route['rule'])->toStartWith('Moving-Up (every child to the next Level) and putting the last one back:')
+        // Moving-Up is a satellite admin's, for their satellite (DECISIONS 2026-11-08): no church-wide Role (spec item 9).
+        ->and($route['cells'])->toMatchArray([
+            'admin at Home and Away' => 'ok', 'satellite admin' => 'ok', 'other-satellite admin' => '404',
+            'satellite Lifeshaper' => '404', 'anonymous' => 'login',
+        ]);
 
     $happy = collect($route['stories'])->firstWhere('kind', 'happy') ?? throw new LogicException('No happy path.');
     expect($happy['token'])->toBe('story#156')

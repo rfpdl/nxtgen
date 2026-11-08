@@ -232,15 +232,14 @@ describe('the door search — the church-wide lite view', function (): void {
 });
 
 describe('a family opened by staff', function (): void {
-    it('gives an admin who may edit it the edit details, and the Level list only to a church admin @story#50 @story#52', function (Actor $actor, bool $setsLevels): void {
+    // The Level list is any admin's here — setting a child's Level is a satellite admin's (DECISIONS 2026-11-08); a
+    // Lifeshaper gets none (below).
+    it('gives an admin who may edit it the edit details, and the Level list @story#50 @story#52', function (Actor $actor): void {
         $props = propsOf($actor, adminFamilyPageWithCardRequest(...));
 
-        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, FAMILY_VIEW, FAMILY_EDIT_DETAILS, POSSIBLE_DUPLICATES, $setsLevels ? ['levels.*.level', 'levels.*.name'] : ['levels']))
+        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, FAMILY_VIEW, FAMILY_EDIT_DETAILS, POSSIBLE_DUPLICATES, ['levels.*.level', 'levels.*.name']))
             ->and(data_get($props, 'family.email'))->toBe('janice@example.com');
-    })->with([
-        Actor::ChurchAdmin->value => [Actor::ChurchAdmin, true],
-        Actor::HomeAdmin->value => [Actor::HomeAdmin, false],
-    ]);
+    })->with(actors(Actor::HomeAndAwayAdmin, Actor::HomeAdmin));
 
     it('gives a Lifeshaper of its satellite the edit details (Roy 2026-11-06) — only its own satellite to pick, the email still masked @story#50 @story#52', function (Actor $actor): void {
         $props = propsOf($actor, familyPageWithCardRequest(...));
@@ -248,7 +247,7 @@ describe('a family opened by staff', function (): void {
         expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, FAMILY_VIEW, FAMILY_EDIT_DETAILS, ['levels', 'duplicates']))
             ->and(count(listAt($props, 'satellites')))->toBe(1)
             ->and(data_get($props, 'family.email'))->toBe('ja•••@example.com');
-    })->with(actors(Actor::ChurchLifeshaper, Actor::HomeLifeshaper, Actor::BothHats, Actor::HomeParentLifeshaper));
+    })->with(actors(Actor::HomeAndAwayLifeshaper, Actor::HomeLifeshaper, Actor::BothHats, Actor::HomeParentLifeshaper));
 });
 
 describe('Cards, for admins', function (): void {
@@ -262,7 +261,7 @@ describe('Cards, for admins', function (): void {
         expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, ['enums.card_move', 'enums.card_tab', 'print_lists', 'q', 'tab', 'pagination.last_page', 'pagination.page', 'pagination.per_page', 'pagination.total'], prefixed('requests.*', [
             'child_name', 'family_id', 'family_name', 'fee', 'fee_label', 'id', 'moves.*', 'note', 'reason_label', 'refused_reason', 'satellite', 'step', 'step_label',
         ])))->and(forbiddenOnLists($props))->toBe([]);
-    })->with(actors(Actor::ChurchAdmin, Actor::HomeAdmin));
+    })->with(actors(Actor::HomeAndAwayAdmin, Actor::HomeAdmin));
 
     it('gives an admin on Approved each open print list\'s time, maker and counts — no names or cards @story#150', function (Actor $actor): void {
         $props = propsOf($actor, function (AccessWorld $w): string {
@@ -274,7 +273,7 @@ describe('Cards, for admins', function (): void {
 
         expect(array_values(array_filter(keyPaths($props), fn (string $p): bool => str_starts_with($p, 'print_lists'))))
             ->toBe(['print_lists.*.cards', 'print_lists.*.id', 'print_lists.*.made', 'print_lists.*.made_by', 'print_lists.*.to_print']);
-    })->with(actors(Actor::ChurchAdmin, Actor::HomeAdmin));
+    })->with(actors(Actor::HomeAndAwayAdmin, Actor::HomeAdmin));
 });
 
 describe('the registration lists', function (): void {
@@ -286,9 +285,9 @@ describe('the registration lists', function (): void {
             ->and(forbiddenOnLists($props))->toBe([])
             ->and(data_get($janice, 'email'))->toBe($email);
     })->with([
-        Actor::ChurchAdmin->value => [Actor::ChurchAdmin, 'janice@example.com'],
+        Actor::HomeAndAwayAdmin->value => [Actor::HomeAndAwayAdmin, 'janice@example.com'],
         Actor::HomeAdmin->value => [Actor::HomeAdmin, 'janice@example.com'],
-        Actor::ChurchLifeshaper->value => [Actor::ChurchLifeshaper, 'ja•••@example.com'],
+        Actor::HomeAndAwayLifeshaper->value => [Actor::HomeAndAwayLifeshaper, 'ja•••@example.com'],
         Actor::HomeLifeshaper->value => [Actor::HomeLifeshaper, 'ja•••@example.com'],
     ]);
 
@@ -319,7 +318,7 @@ describe('the registration lists', function (): void {
         Storage::fake('photos');
         $world = AccessWorld::make();
 
-        $rows = exportedRows(actingAs($world->user(Actor::ChurchAdmin) ?? throw new \LogicException('An admin signs in.'))->get('/home-sat/admin/families/export'));
+        $rows = exportedRows(actingAs($world->user(Actor::HomeAndAwayAdmin) ?? throw new \LogicException('An admin signs in.'))->get('/home-sat/admin/families/export'));
 
         expect($rows[0])->toBe('Family|Email|Email confirmed|Satellite|Child nickname|Child full name|Birthday|Level|Allergies|Status|Registered by|Registered on');
     });
@@ -341,15 +340,15 @@ describe('admin pages', function (): void {
         expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, ['grant_options.*.label', 'grant_options.*.role', 'grant_options.*.scope_id', 'grant_options.*.scope_type'], prefixed('people.*', ['email', 'id', 'name', 'roles.*.can_remove', 'roles.*.id', 'roles.*.label'])))
             ->and($labels->contains(fn (mixed $l): bool => is_string($l) && str_contains($l, 'Home')))->toBe($seesHome);
     })->with([
-        Actor::ChurchAdmin->value => [Actor::ChurchAdmin, 'home-sat', true],
+        Actor::HomeAndAwayAdmin->value => [Actor::HomeAndAwayAdmin, 'home-sat', true],
         Actor::HomeAdmin->value => [Actor::HomeAdmin, 'home-sat', true],
         Actor::AwayAdmin->value => [Actor::AwayAdmin, 'away', false],
     ]);
 
     it('shows Moving-Up as names, satellites and Levels — no health, contact or family details @story#154', function (): void {
-        $props = propsOf(Actor::ChurchAdmin, function (AccessWorld $w): string {
+        $props = propsOf(Actor::HomeAndAwayAdmin, function (AccessWorld $w): string {
             $w->child->forceFill(['level' => 2, 'status' => ChildStatusEnum::Active])->save();
-            actingAs($w->user(Actor::ChurchAdmin) ?? throw new \LogicException('A church admin signs in.'))->post('/home-sat/admin/moving-up', ['children' => [['child_id' => $w->child->id, 'level' => 2]]]);
+            actingAs($w->user(Actor::HomeAndAwayAdmin) ?? throw new \LogicException('An admin signs in.'))->post('/home-sat/admin/moving-up', ['children' => [['child_id' => $w->child->id, 'level' => 2]]]);
 
             return '/home-sat/admin/moving-up';
         });
@@ -371,10 +370,10 @@ describe('the Classes page', function (): void {
         expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, ['enums.weekday', 'satellites.*.can_add', 'satellites.*.id', 'satellites.*.name'], prefixed('satellites.*.schedules.*', ['ends_at', 'id', 'name', 'starts_at', 'weekday', 'weekday_label'])))
             ->and(collect(listAt($props, 'satellites'))->pluck('name')->all())->toBe($satellites);
     })->with([
-        // A page shows only the satellite in its address (DECISIONS 2026-11-08): a church admin at Home sees Home's
+        // A page shows only the satellite in its address (DECISIONS 2026-11-08): an admin at Home and Away sees Home's
         // classes only (was Away and Home), and at Away only Away's.
-        Actor::ChurchAdmin->value => [Actor::ChurchAdmin, 'home-sat', ['Home']],
-        'church admin at Away' => [Actor::ChurchAdmin, 'away', ['Away']],
+        Actor::HomeAndAwayAdmin->value => [Actor::HomeAndAwayAdmin, 'home-sat', ['Home']],
+        'admin at Home and Away, at Away' => [Actor::HomeAndAwayAdmin, 'away', ['Away']],
         Actor::HomeAdmin->value => [Actor::HomeAdmin, 'home-sat', ['Home']],
         Actor::AwayAdmin->value => [Actor::AwayAdmin, 'away', ['Away']],
     ]);
@@ -483,13 +482,13 @@ describe('Attendance', function (): void {
             ->and(forbiddenOnLists($props))->toBe([])
             ->and(data_get($props, 'squads.0.children.0.nickname'))->toBe('Amara')
             ->and(data_get($props, 'squads.0.level'))->toBe(['number' => 2, 'name' => 'Level 2']);
-    })->with(actors(Actor::ChurchAdmin, Actor::HomeAdmin));
+    })->with(actors(Actor::HomeAndAwayAdmin, Actor::HomeAdmin));
 
     it('downloads exactly the allowlisted columns — no health detail, phone or photo @story#114', function (): void {
         Storage::fake('photos');
         $world = AccessWorld::make();
 
-        $rows = exportedRows(actingAs($world->user(Actor::ChurchAdmin) ?? throw new \LogicException('An admin signs in.'))
+        $rows = exportedRows(actingAs($world->user(Actor::HomeAndAwayAdmin) ?? throw new \LogicException('An admin signs in.'))
             ->get("/home-sat/admin/attendance/export?class={$world->schedule->id}&date=2026-10-31"));
 
         expect($rows[0])->toBe('Squad|Child nickname|Child full name|Checked in at|Checked in by|Present|Squad head count')

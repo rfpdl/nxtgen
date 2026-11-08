@@ -14,7 +14,7 @@ import {
 } from '../support/world'
 
 /*
- * Journey — Attendance (DECISIONS 2026-10-26: reports are admins only, with Excel). A church admin checks a child in
+ * Journey — Attendance (DECISIONS 2026-10-26: reports are admins only, with Excel). An admin checks a child in
  * at the door first (so the journey never depends on another having run), then opens Attendance from the menu,
  * picks CCF Dubai · 1PM · the door's Saturday, sees the children by Squad with a count per Squad and a total, and
  * downloads the Excel — which has the same rows. The roll call (DECISIONS 2026-10-28): after ticking a child present on
@@ -58,7 +58,7 @@ async function checkInBen(page: Page, project: string): Promise<void> {
 test('an admin sees 1PM by Squad with counts, and downloads the same rows as Excel @story#112 @story#114', async ({
     browser,
 }, info) => {
-    const admin = await browser.newContext({ storageState: sessionFile('churchAdmin') })
+    const admin = await browser.newContext({ storageState: sessionFile('admin') })
     const page = await admin.newPage()
     await checkInBen(page, info.project.name)
 
@@ -143,7 +143,7 @@ test("an admin sees the roll call — present ✓, the Squad's head count and th
     browser,
 }, info) => {
     const project = info.project.name as DoorProject
-    const admin = await browser.newContext({ storageState: sessionFile('churchAdmin') })
+    const admin = await browser.newContext({ storageState: sessionFile('admin') })
     const page = await admin.newPage()
     const [, , tala, faith] = ROLL_CALL.girls[project]
 

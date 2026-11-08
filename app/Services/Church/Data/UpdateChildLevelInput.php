@@ -10,7 +10,7 @@ use Illuminate\Validation\Rules\In;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** A church admin's Level choice for one child — always one of the church-wide chart's Levels. */
+/** A satellite admin's Level choice for one child — always one of the church-wide chart's Levels. */
 #[TypeScript]
 final class UpdateChildLevelInput extends Data
 {

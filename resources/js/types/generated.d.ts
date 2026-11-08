@@ -430,7 +430,7 @@ declare namespace App {
         export type RelationshipEnum =
             'mother' | 'father' | 'guardian' | 'grandparent' | 'aunt_uncle' | 'sibling' | 'other'
         export type RoleEnum = 'admin' | 'lifeshaper'
-        export type ScopeTypeEnum = 'church' | 'satellite' | 'schedule'
+        export type ScopeTypeEnum = 'satellite' | 'schedule'
         export type WeekdayEnum =
             'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'
     }

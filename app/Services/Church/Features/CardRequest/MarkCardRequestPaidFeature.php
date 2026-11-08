@@ -13,15 +13,15 @@ use App\Foundation\Attributes\UserStory;
 use Illuminate\Http\RedirectResponse;
 
 /**
- * "Mark paid" on Cards (name cards 03): the AED 10 was paid at the desk. Church admin, or admin of the child's family's
- * home satellite. A free (first) card has nothing to pay, and says so; one already paid, or closed, is not
+ * "Mark paid" on Cards (name cards 03): the AED 10 was paid at the desk. An admin of the child's family's home
+ * satellite. A free (first) card has nothing to pay, and says so; one already paid, or closed, is not
  * marked again — the page says where it is.
  *
  * @extends BaseCardRequestFeature<RedirectResponse>
  */
 #[UserStory(
     title: 'Mark a new card paid',
-    persona: 'church admin or satellite admin',
+    persona: 'satellite admin',
     happyPaths: ['story#136' => 'An Admin marks a Card request\'s AED 10 paid (cash at the desk)'],
     unhappyPaths: ['story#137' => 'Not by a Lifeshaper, another Satellite\'s Admin or a parent; never twice; a free card has nothing to pay'],
 )]

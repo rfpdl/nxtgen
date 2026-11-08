@@ -16,9 +16,9 @@ import { computed, ref, watch } from 'vue'
 import { route } from 'ziggy-js'
 
 /**
- * Moving-Up (TODO #27; DECISIONS 2026-11-06), church admins only: every child who will move — the Active children with
- * a Level, lowest first — grouped by Level, each ticked with where they go ("Level 3", or "Graduated" from the top);
- * the admin unticks anyone who stays, presses "Move up N children" and confirms — warned first if the last Moving-Up
+ * Moving-Up (TODO #27; DECISIONS 2026-11-06, 2026-11-08), this satellite's admins only: every child of it who will
+ * move — the Active children with a Level, lowest first — grouped by Level, each ticked with where they go ("Level 3",
+ * or "Graduated" from the top); the admin unticks anyone who stays, presses "Move up N children" and confirms — warned first if the last Moving-Up
  * is recent (another would move everyone up a second Level). The form sends each ticked child with the Level shown, so
  * a list that changed meanwhile moves nobody (the server says to look again). Above it, the last Moving-Up, to put
  * back (MovingUpLastCard).

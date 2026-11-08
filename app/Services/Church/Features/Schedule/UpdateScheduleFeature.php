@@ -22,7 +22,7 @@ use Illuminate\Validation\ValidationException;
  */
 #[UserStory(
     title: 'Edit a class',
-    persona: 'church admin or satellite admin',
+    persona: 'satellite admin',
     happyPaths: ['story#99' => 'An Admin changes a class\'s name, day or times'],
     unhappyPaths: ['story#100' => 'Only a class at a satellite they look after, still active; the same field rules and a name no other active class there has'],
 )]

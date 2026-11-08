@@ -4,7 +4,7 @@ import { checkLayout, expect, test } from '../support/test'
 import { DUBAI, CLASSES, SATELLITES, SHARJAH, sessionFile } from '../support/world'
 
 /*
- * Classes (GLOSSARY "Schedule", DECISIONS 2026-10-26). A church admin opens Classes from the menu, sees CCF Dubai's
+ * Classes (GLOSSARY "Schedule", DECISIONS 2026-10-26). An admin opens Classes from the menu, sees CCF Dubai's
  * 1PM and 7PM, adds "Special class" with no day, gives it a time, then retires it (so the seeded classes stay as
  * they are for the other journeys). A satellite admin sees only their own satellite; a Lifeshaper has no Classes.
  */
@@ -17,7 +17,7 @@ function satellite(page: Page, name: string) {
 test("an admin sees CCF Dubai's classes, adds one with no day, edits its time and retires it @story#95 @story#97 @story#99 @story#101", async ({
     browser,
 }) => {
-    const admin = await browser.newContext({ storageState: sessionFile('churchAdmin') })
+    const admin = await browser.newContext({ storageState: sessionFile('admin') })
     const page = await admin.newPage()
     await page.goto(`/${DUBAI}/admin/families`)
     await navTo(page, 'Classes')

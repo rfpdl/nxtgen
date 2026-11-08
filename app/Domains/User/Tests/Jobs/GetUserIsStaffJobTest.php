@@ -6,15 +6,16 @@ use App\Data\Models\User;
 use App\Domains\User\Jobs\GetUserIsStaffJob;
 use App\Enums\RoleEnum;
 
-use function Tests\Support\atChurch;
+use function Tests\Support\atSatellite;
 use function Tests\Support\church;
 use function Tests\Support\grantRole;
+use function Tests\Support\satelliteOf;
 use function Tests\Support\staffMember;
 
 /* Staff = an active role in any church, or the platform admin. A revoked role does not count. */
 
 it('is true for an active role in any church and for the platform admin', function (): void {
-    $lifeshaper = staffMember(RoleEnum::Lifeshaper, atChurch(church()));
+    $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite(satelliteOf(church())));
 
     expect((new GetUserIsStaffJob(user: $lifeshaper))->handle())->toBeTrue()
         ->and((new GetUserIsStaffJob(user: User::factory()->platformAdmin()->create()))->handle())->toBeTrue();
@@ -22,7 +23,7 @@ it('is true for an active role in any church and for the platform admin', functi
 
 it('is false for a login with no role, or only a revoked one', function (): void {
     $revoked = User::factory()->create();
-    grantRole($revoked, RoleEnum::Admin, atChurch(church()), active: false);
+    grantRole($revoked, RoleEnum::Admin, atSatellite(satelliteOf(church())), active: false);
 
     expect((new GetUserIsStaffJob(user: User::factory()->create()))->handle())->toBeFalse()
         ->and((new GetUserIsStaffJob(user: $revoked))->handle())->toBeFalse();

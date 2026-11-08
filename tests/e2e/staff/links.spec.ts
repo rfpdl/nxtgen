@@ -7,7 +7,7 @@ import { DUBAI, SATELLITES, SHARJAH, sessionFile } from '../support/world'
  * group — on its QR poster, each as a QR code. Every browser shares CCF Dubai's poster, so each adds a Link of its own
  * name and removes it before it ends (the journeys run one at a time; a retry first removes what a failed try left).
  */
-test.use({ storageState: sessionFile('churchAdmin') })
+test.use({ storageState: sessionFile('admin') })
 
 test("an admin adds a WhatsApp group to CCF Dubai's poster, sees its QR there, then removes it @story#164 @story#166 @story#172 @story#174", async ({
     page,

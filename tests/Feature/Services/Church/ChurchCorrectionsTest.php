@@ -21,13 +21,13 @@ use Illuminate\Support\Facades\RateLimiter;
 use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
-use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
 use function Tests\Support\childEdit;
 use function Tests\Support\childOf;
 use function Tests\Support\church;
 use function Tests\Support\familyAt;
 use function Tests\Support\familyEdit;
+use function Tests\Support\grantRole;
 use function Tests\Support\guardianOf;
 use function Tests\Support\satelliteOf;
 use function Tests\Support\staffMember;
@@ -79,10 +79,10 @@ describe('child status', function (): void {
 describe('correcting the family email (v1 rule)', function (): void {
     it('fixes a mistyped, unconfirmed parent email and sends a new confirmation link @story#56', function (): void {
         Notification::fake();
-        ['church' => $church, 'family' => $family, 'guardianUser' => $guardianUser] = correctionChurch();
+        ['church' => $church, 'htc' => $htc, 'family' => $family, 'guardianUser' => $guardianUser] = correctionChurch();
         $version = $guardianUser->credential_version;
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))
             ->put("/htc/admin/families/{$family->id}/email", ['email' => 'janice@example.com'])
             ->assertRedirect()->assertSessionHas('success');
 
@@ -93,10 +93,10 @@ describe('correcting the family email (v1 rule)', function (): void {
     });
 
     it('refuses when the login is also a staff account, and changes nothing @story#57', function (): void {
-        ['church' => $church, 'family' => $family, 'guardianUser' => $guardianUser] = correctionChurch();
+        ['church' => $church, 'htc' => $htc, 'family' => $family, 'guardianUser' => $guardianUser] = correctionChurch();
         RoleAssignment::factory()->create(['church_id' => $church->id, 'user_id' => $guardianUser->id]);
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))
             ->put("/htc/admin/families/{$family->id}/email", ['email' => 'janice@example.com'])
             ->assertRedirect()->assertSessionHas('error');
 
@@ -104,9 +104,9 @@ describe('correcting the family email (v1 rule)', function (): void {
     });
 
     it('refuses when the email is already confirmed @story#57', function (): void {
-        ['church' => $church, 'family' => $family, 'guardianUser' => $guardianUser] = correctionChurch(verified: true);
+        ['church' => $church, 'htc' => $htc, 'family' => $family, 'guardianUser' => $guardianUser] = correctionChurch(verified: true);
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))
             ->put("/htc/admin/families/{$family->id}/email", ['email' => 'janice@example.com'])
             ->assertSessionHas('error');
 
@@ -114,10 +114,10 @@ describe('correcting the family email (v1 rule)', function (): void {
     });
 
     it('refuses an email someone else already uses @story#57', function (): void {
-        ['church' => $church, 'family' => $family] = correctionChurch();
+        ['church' => $church, 'htc' => $htc, 'family' => $family] = correctionChurch();
         User::factory()->create(['email' => 'taken@example.com']);
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))
             ->put("/htc/admin/families/{$family->id}/email", ['email' => 'taken@example.com'])
             ->assertSessionHasErrors('email');
     });
@@ -134,13 +134,13 @@ describe('correcting the family email (v1 rule)', function (): void {
 // Found in review-spar r2.
 it('says honestly when the corrected email could not be sent because of the per-address limit', function (): void {
     Notification::fake();
-    ['church' => $church, 'family' => $family, 'guardianUser' => $guardianUser] = correctionChurch();
+    ['church' => $church, 'htc' => $htc, 'family' => $family, 'guardianUser' => $guardianUser] = correctionChurch();
     RateLimiter::hit('magic-link-mail:'.hash('sha256', 'janice@example.com'), 600);
     foreach (range(1, 4) as $_) {
         RateLimiter::hit('magic-link-mail:'.hash('sha256', 'janice@example.com'), 600);
     }
 
-    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
+    actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))
         ->put("/htc/admin/families/{$family->id}/email", ['email' => 'janice@example.com'])
         ->assertSessionHas('error', 'Email updated, but too many emails went to this address recently, so no link was sent. Use "Send the confirmation link again" in 10 minutes.');
 
@@ -150,7 +150,7 @@ it('says honestly when the corrected email could not be sent because of the per-
 
 /*
  * Staff editing a family (plan §3.2 "Edit family/guardian/child details"; Roy 2026-11-06: staff who can open the
- * family — church admin, the home satellite's admin, a Lifeshaper of that satellite). Status stays its own action
+ * family — the home satellite's admin, a Lifeshaper of that satellite; no church admin since spec item 9). Status stays its own action
  * (admins); email its own flow (admins); moving the family to another satellite, an admin's.
  */
 
@@ -179,7 +179,11 @@ it('lets a Lifeshaper of the satellite edit the family and its parent in Serve (
 it('leaves moving a family to another satellite to an admin: a Lifeshaper\'s edit that moves it is refused, and nothing changes @story#53', function (): void {
     ['church' => $church, 'htc' => $htc, 'house' => $house, 'family' => $family] = correctionChurch();
 
-    actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))
+    // No church-wide Role (spec item 9): even a Lifeshaper at both satellites may not move it.
+    $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
+    grantRole($lifeshaper, RoleEnum::Lifeshaper, atSatellite($house));
+
+    actingAs($lifeshaper)
         ->put("/htc/serve/families/{$family->id}", familyEdit($house, ['area_text' => 'Moved']))
         ->assertSessionHasErrors(['home_satellite_id' => 'Only an admin can move a family to another satellite.']);
 

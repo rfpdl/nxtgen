@@ -23,9 +23,9 @@ use Illuminate\Http\RedirectResponse;
  */
 #[UserStory(
     title: 'Put one child back',
-    persona: 'church admin',
-    happyPaths: ['story#158' => 'A Church admin puts one child of the last Moving-Up back to the Level (and status) they had'],
-    unhappyPaths: ['story#159' => 'A child changed since is left as they are, and the admin is told; only the last Moving-Up; never by a Satellite admin'],
+    persona: 'satellite admin',
+    happyPaths: ['story#158' => 'A Satellite admin puts one child of their satellite\'s last Moving-Up back to the Level (and status) they had'],
+    unhappyPaths: ['story#159' => 'A child changed since is left as they are, and the admin is told; only the satellite\'s last Moving-Up; never by a Lifeshaper'],
 )]
 #[AccessRow(AccessRowEnum::MovingUp)]
 final class PutBackChildFeature extends BaseMovingUpFeature
@@ -41,11 +41,13 @@ final class PutBackChildFeature extends BaseMovingUpFeature
             $moved = $movingUp->children->first(fn (MovingUpChild $m): bool => $m->child_id === $this->child->id);
             abort_unless($moved instanceof MovingUpChild, 404);
 
-            return [$moved, $this->run(new PutBackChildOperation(church: $this->church(), movingUp: $movingUp, childId: $this->child->id, by: $this->staff()))];
+            return [$moved, $this->run(new PutBackChildOperation(satellite: $this->satellite(), movingUp: $movingUp, childId: $this->child->id, by: $this->staff()))];
         });
         $name = $moved->child->displayName();
 
         return match ($result) {
+            // Its family is another satellite's now: not this page's child (Astra, issue 06).
+            PutBackResultEnum::Elsewhere => abort(404),
             PutBackResultEnum::PutBack => back()->with('success', "{$name} {$result->label()}: ".LevelChart::name($moved->from_level).'.'),
             PutBackResultEnum::AlreadyPutBack => back()->with('success', "{$name} {$result->label()}."),
             PutBackResultEnum::ChangedSince => back()->with('error', "{$name} {$result->label()}."),

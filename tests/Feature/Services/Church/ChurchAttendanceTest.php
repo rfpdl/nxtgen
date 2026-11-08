@@ -19,7 +19,6 @@ use Inertia\Testing\AssertableInertia;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 use function Pest\Laravel\travelTo;
-use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
 use function Tests\Support\checkedIn;
 use function Tests\Support\childOf;
@@ -27,6 +26,7 @@ use function Tests\Support\church;
 use function Tests\Support\classAdminOf;
 use function Tests\Support\exportedRows;
 use function Tests\Support\familyAt;
+use function Tests\Support\grantRole;
 use function Tests\Support\guardianOf;
 use function Tests\Support\satelliteOf;
 use function Tests\Support\scheduleAt;
@@ -72,9 +72,13 @@ function attendanceChurch(): array
     // Another Session's head count (1PM two weeks before): never on this 1PM's page, not even as a Squad of its own.
     SquadHeadCount::factory()->create(['session_id' => sessionOf($onePm, '2026-10-17')->id, 'squad_id' => $noah->squad_id, 'head_count' => 9]);
 
+    // DECISIONS 2026-11-08: no church-wide Role — `admin` holds the Admin Role at both satellites.
+    $admin = staffMember(RoleEnum::Admin, atSatellite($dxb));
+    grantRole($admin, RoleEnum::Admin, atSatellite($house));
+
     return [
         'church' => $church, 'dxb' => $dxb, 'house' => $house, 'onePm' => $onePm, 'sevenPm' => $sevenPm, 'houseClass' => $houseClass,
-        'admin' => staffMember(RoleEnum::Admin, atChurch($church)), 'lifeshaper' => $lifeshaper, 'noahsSquad' => $noah->squad_id,
+        'admin' => $admin, 'lifeshaper' => $lifeshaper, 'noahsSquad' => $noah->squad_id,
     ];
 }
 
@@ -215,7 +219,7 @@ describe('the Attendance page', function (): void {
         $theirs = scheduleAt(satelliteOf(church(['slug' => 'other'])));
 
         actingAs($houseAdmin)->get("/house/admin/attendance?class={$onePm->id}")->assertNotFound();
-        // DECISIONS 2026-11-08: a church admin, too, is offered only the address satellite's classes.
+        // DECISIONS 2026-11-08: an admin of both satellites, too, is offered only the address satellite's classes.
         actingAs($admin)->get("/dxb/admin/attendance?class={$houseClass->id}")->assertNotFound();
         actingAs($admin)->get("/dxb/admin/attendance?class={$theirs->id}")->assertNotFound();
         actingAs($admin)->get("/dxb/admin/attendance?class={$onePm->id}&date=31-10-2026")->assertNotFound();

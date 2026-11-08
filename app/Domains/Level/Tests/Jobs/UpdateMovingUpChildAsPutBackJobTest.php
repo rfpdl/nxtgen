@@ -15,8 +15,9 @@ use function Tests\Support\satelliteOf;
 
 it('marks the child put back, saying who and when', function (): void {
     $church = church();
-    $child = childOf(familyAt(satelliteOf($church)), ['level' => 1]);
-    $movingUp = (new CreateMovingUpJob(church: $church, children: [$child], by: User::factory()->create()))->handle();
+    $dubai = satelliteOf($church);
+    $child = childOf(familyAt($dubai), ['level' => 1]);
+    $movingUp = (new CreateMovingUpJob(satellite: $dubai, children: [$child], by: User::factory()->create()))->handle();
     $admin = User::factory()->create();
 
     (new UpdateMovingUpChildAsPutBackJob(moved: $movingUp->children()->sole(), by: $admin))->handle();

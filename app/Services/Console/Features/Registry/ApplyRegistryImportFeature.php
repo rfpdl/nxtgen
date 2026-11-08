@@ -44,7 +44,7 @@ use Illuminate\Support\Facades\DB;
  */
 #[UserStory(
     title: 'Load the reviewed registry',
-    persona: 'church admin at the terminal',
+    persona: 'platform admin at the terminal',
     happyPaths: ['story#82' => 'The approved registry rows load as Families, without emailing anyone, and safely twice'],
     unhappyPaths: ['story#83' => 'Unapproved, conflicting or broken rows are not loaded, and the command fails'],
 )]

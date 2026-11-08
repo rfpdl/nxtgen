@@ -43,8 +43,12 @@ final class DemoChurchSeeder extends Seeder
             );
         }
 
+        // The demo admin: the platform admin, and Admin at every satellite — so the bar's satellite switch has places to go.
         $admin = User::query()->where('email', 'admin@nxtgen.test')->firstOrFail();
         $admin->forceFill(['email_verified_at' => now(), 'password' => 'password', 'is_platform_admin' => true])->save();
+        foreach (Satellite::query()->where('church_id', $ccf->id)->orderBy('id')->get() as $satellite) {
+            ChurchSeeder::assign($ccf, $admin, RoleEnum::Admin, ScopeTypeEnum::Satellite, $satellite->id);
+        }
 
         $lifeshaper = User::query()->updateOrCreate(['email' => 'lifeshaper@nxtgen.test'], ['name' => 'Lifeshaper', 'email_verified_at' => now(), 'password' => 'password']);
         ChurchSeeder::assign($ccf, $lifeshaper, RoleEnum::Lifeshaper, ScopeTypeEnum::Satellite, $dxb->id);

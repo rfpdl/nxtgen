@@ -11,7 +11,7 @@ use App\Foundation\Jobs\BaseJob;
 
 /**
  * Is this login used ONLY as one family's login, with no staff role anywhere, not a platform admin and not
- * confirmed yet? Only then may a church admin change its email (plan §4.4, v1 rule).
+ * confirmed yet? Only then may an admin change its email (plan §4.4, v1 rule).
  *
  * @extends BaseJob<bool>
  */

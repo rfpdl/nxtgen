@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\DB;
  */
 #[UserStory(
     title: 'Answer a possible duplicate',
-    persona: 'church admin or satellite admin',
+    persona: 'satellite admin',
     happyPaths: ['story#72' => 'An Admin dismisses or confirms a pair; it is noted, and nothing is merged'],
     unhappyPaths: ['story#73' => 'Refused outside their scope, once answered, or for any other answer'],
 )]

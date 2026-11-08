@@ -7,7 +7,7 @@ use App\Data\Models\Note;
 use App\Data\Models\User;
 use App\Domains\Family\Jobs\UpdateChildLevelJob;
 
-/* A church admin's correction of a child's Level outside Moving-Up: the Level, who set it and when, and a history note. */
+/* An admin's correction of a child's Level outside Moving-Up: the Level, who set it and when, and a history note. */
 
 it('puts the child at the Level, recording who and when', function (): void {
     $child = Child::factory()->create(['level' => 1]);

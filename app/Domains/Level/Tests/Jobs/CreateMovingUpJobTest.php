@@ -16,14 +16,15 @@ use function Tests\Support\satelliteOf;
 
 it('keeps each child with where they were and where Moving-Up takes them, saying who made it', function (): void {
     $church = church();
-    $family = familyAt(satelliteOf($church));
+    $dubai = satelliteOf($church);
+    $family = familyAt($dubai);
     $two = childOf($family, ['level' => 2]);
     $top = childOf($family, ['level' => 4]);
     $admin = User::factory()->create();
 
-    $movingUp = (new CreateMovingUpJob(church: $church, children: [$two, $top], by: $admin))->handle();
+    $movingUp = (new CreateMovingUpJob(satellite: $dubai, children: [$two, $top], by: $admin))->handle();
 
-    expect([$movingUp->church_id, $movingUp->made_by])->toBe([$church->id, $admin->id])
+    expect([$movingUp->church_id, $movingUp->satellite_id, $movingUp->made_by])->toBe([$church->id, $dubai->id, $admin->id])
         ->and($movingUp->children->pluck('id')->all())->toBe($movingUp->children()->orderBy('id')->pluck('id')->all())
         ->and($movingUp->children()->orderBy('id')->get()->map(fn (MovingUpChild $m): array => [
             $m->church_id, $m->child_id, $m->from_level, $m->from_status, $m->to_level, $m->to_status, $m->put_back_at,

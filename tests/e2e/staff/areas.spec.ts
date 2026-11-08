@@ -7,7 +7,7 @@ import { DUBAI, sessionFile } from '../support/world'
  * Families, the QR poster — and NxtGen Admin for admins. The church's address opens each person's own.
  */
 
-test("a Lifeshaper's church address opens Serve: the door, Families without Excel, and no Admin @story#42", async ({
+test("a Lifeshaper's satellite address opens Serve: the door, Families without Excel, and no Admin @story#42", async ({
     browser,
 }) => {
     const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
@@ -27,11 +27,11 @@ test("a Lifeshaper's church address opens Serve: the door, Families without Exce
     await lifeshaper.close()
 })
 
-test("an admin's church address opens Admin, and the menu goes to Serve's door and back @story#42", async ({
+test("an admin's satellite address opens Admin, and the menu goes to Serve's door and back @story#42", async ({
     browser,
 }) => {
-    const churchAdmin = await browser.newContext({ storageState: sessionFile('churchAdmin') })
-    const page = await churchAdmin.newPage()
+    const admin = await browser.newContext({ storageState: sessionFile('admin') })
+    const page = await admin.newPage()
 
     await page.goto(`/${DUBAI}`)
     await expect(page).toHaveURL(new RegExp(`/${DUBAI}/admin/families`))
@@ -41,5 +41,5 @@ test("an admin's church address opens Admin, and the menu goes to Serve's door a
     await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/door`))
     await navTo(page, 'Admin')
     await expect(page).toHaveURL(new RegExp(`/${DUBAI}/admin/families`))
-    await churchAdmin.close()
+    await admin.close()
 })

@@ -13,14 +13,12 @@ enum ScopeTypeEnum: string implements HasEnumMetadata
 {
     use ProvidesEnumMetadata;
 
-    case Church = 'church';
     case Satellite = 'satellite';
     case Schedule = 'schedule';
 
     public function label(): string
     {
         return match ($this) {
-            self::Church => 'Church',
             self::Satellite => 'Satellite',
             self::Schedule => 'Class',
         };

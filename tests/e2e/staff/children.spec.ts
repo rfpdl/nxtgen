@@ -3,14 +3,14 @@ import { expect, test } from '../support/test'
 import { DUBAI, DOOR, LEVELS, sessionFile, type DoorProject } from '../support/world'
 
 /*
- * The children list (plan §6) and a church admin correcting a child's Level (plan §3.2; DECISIONS 2026-10-17 —
+ * The children list (plan §6) and an admin correcting a child's Level (plan §3.2; DECISIONS 2026-10-17 —
  * Levels replaced groups). The child's age suggested Level 3 at registration; the correction is noted on the
  * history, and the list agrees.
  *
  * On this project's own Torres girls (E2ESeeder::LEVEL_CHILDREN, Level 3 by age): the first still at Level 3, found by
  * the Level filter and her family's names — so every project, and a retry, has a child of its own (TODO #12).
  */
-test.use({ storageState: sessionFile('churchAdmin') })
+test.use({ storageState: sessionFile('admin') })
 
 test('an admin finds a child by Level on the children list and corrects their Level @story#58 @story#64', async ({
     page,

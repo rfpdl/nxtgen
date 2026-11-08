@@ -79,7 +79,8 @@ final readonly class AccessWorld
         childOf($hanas, ['nickname' => 'Hugo']);
 
         $revoked = User::factory()->create();
-        grantRole($revoked, RoleEnum::Admin, atChurch($church), active: false);
+        grantRole($revoked, RoleEnum::Admin, atSatellite($home), active: false);
+        grantRole($revoked, RoleEnum::Admin, atSatellite($away), active: false);
         $revokedSatelliteAdmin = User::factory()->create();
         grantRole($revokedSatelliteAdmin, RoleEnum::Admin, atSatellite($home), active: false);
         $revokedParent = User::factory()->create();
@@ -90,8 +91,7 @@ final readonly class AccessWorld
 
         // Another church, whose admin tries ccf's ids from their own satellite's address (/other/…).
         $otherChurch = church(['slug' => 'other']);
-        satelliteOf($otherChurch, ['slug' => 'other']);
-        $otherAdmin = staffMember(RoleEnum::Admin, atChurch($otherChurch));
+        $otherAdmin = staffMember(RoleEnum::Admin, atSatellite(satelliteOf($otherChurch, ['slug' => 'other'])));
 
         // A new family at Home with the same phone: its possible-duplicate pair is the one answered.
         $newcomer = familyAt($home);
@@ -111,6 +111,14 @@ final readonly class AccessWorld
         // A Home Lifeshaper who is no Actor: People removes THEIR role, so no actor loses theirs mid-request.
         $volunteer = staffMember(RoleEnum::Lifeshaper, atSatellite($home));
 
+        // One person with the same Role at both satellites (spec item 9: a Role is a satellite's).
+        $both = function (RoleEnum $role) use ($home, $away): User {
+            $user = staffMember($role, atSatellite($home));
+            grantRole($user, $role, atSatellite($away));
+
+            return $user;
+        };
+
         return new self(
             church: $church,
             home: $home,
@@ -126,9 +134,9 @@ final readonly class AccessWorld
             users: [
                 Actor::Parent->value => $parent,
                 Actor::OtherParent->value => $otherParent,
-                Actor::ChurchAdmin->value => staffMember(RoleEnum::Admin, atChurch($church)),
+                Actor::HomeAndAwayAdmin->value => $both(RoleEnum::Admin),
                 Actor::HomeAdmin->value => staffMember(RoleEnum::Admin, atSatellite($home)),
-                Actor::ChurchLifeshaper->value => staffMember(RoleEnum::Lifeshaper, atChurch($church)),
+                Actor::HomeAndAwayLifeshaper->value => $both(RoleEnum::Lifeshaper),
                 Actor::HomeLifeshaper->value => staffMember(RoleEnum::Lifeshaper, atSatellite($home)),
                 Actor::BothHats->value => $bothHats,
                 Actor::HomeParentLifeshaper->value => $homeParentLifeshaper,

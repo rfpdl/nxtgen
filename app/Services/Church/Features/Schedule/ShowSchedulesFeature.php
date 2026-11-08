@@ -27,7 +27,7 @@ use Inertia\Response;
  */
 #[UserStory(
     title: 'See a satellite\'s classes',
-    persona: 'church admin or satellite admin',
+    persona: 'satellite admin',
     happyPaths: [
         'story#95' => 'An Admin sees the classes of the satellite in the address — one they look after',
         'story#182' => 'A class admin (TODO #9) sees their own class — and its door, Who\'s in and Attendance — and edits or retires it',

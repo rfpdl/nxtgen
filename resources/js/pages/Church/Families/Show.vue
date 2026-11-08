@@ -58,7 +58,7 @@ const props = defineProps<{
     satellites: SatelliteOption[]
     /** Correct the email, set a child's status, delete a photo for good: an editor, in the Admin area only (Roy 2026-11-06). */
     admin_controls: boolean
-    /** Church admins only (plan §3.2), in the Admin area: correct a child's Level outside Moving-Up. */
+    /** Satellite admins only (plan §3.2; DECISIONS 2026-11-08), in the Admin area: correct a child's Level outside Moving-Up. */
     can_set_level: boolean
     levels: LevelOption[]
 }>()

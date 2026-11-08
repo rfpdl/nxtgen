@@ -35,7 +35,7 @@ function page() {
 }
 
 describe('Children', () => {
-    it('offers Moving-Up to a church admin only — once a year, so not in the menu', () => {
+    it('offers Moving-Up to an admin only — once a year, so not in the menu', () => {
         nav.can_move_up = false
         expect(page().find('[data-testid="children-moving-up"]').exists()).toBe(false)
 

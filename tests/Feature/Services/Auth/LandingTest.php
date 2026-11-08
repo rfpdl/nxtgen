@@ -12,7 +12,6 @@ use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
-use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
 use function Tests\Support\church;
 use function Tests\Support\familyAt;
@@ -39,14 +38,15 @@ it('sends a parent straight to their family page @story#24', function (): void {
 
 it('sends a staff member straight to the dashboard @story#24', function (): void {
     $church = church(['slug' => 'ccf']);
-    satelliteOf($church, ['name' => 'A first', 'slug' => 'dubai']);
+    $dubai = satelliteOf($church, ['name' => 'A first', 'slug' => 'dubai']);
     $sharjah = satelliteOf($church, ['name' => 'Added second', 'slug' => 'sharjah']);
     $user = User::factory()->create();
-    grantRole($user, RoleEnum::Lifeshaper, atChurch($church));
+    grantRole($user, RoleEnum::Lifeshaper, atSatellite($sharjah));
+    grantRole($user, RoleEnum::Lifeshaper, atSatellite($dubai));
     $satelliteStaff = User::factory()->create();
     grantRole($satelliteStaff, RoleEnum::Lifeshaper, atSatellite($sharjah));
 
-    // A church-wide Role: the church's first-added satellite; a satellite Role: its own.
+    // Roles at several satellites: the first-added of them (no church-wide Role — spec item 9); one satellite: its own.
     actingAs($user)->get('/home')->assertRedirect('/dubai');
     actingAs($satelliteStaff)->get('/home')->assertRedirect('/sharjah');
 });
@@ -54,8 +54,9 @@ it('sends a staff member straight to the dashboard @story#24', function (): void
 it('lets a parent who also serves choose, with one login @story#24', function (): void {
     $church = church(['slug' => 'ccf']);
     $user = User::factory()->create();
-    guardianOf(familyAt(satelliteOf($church, ['slug' => 'dubai'])), $user);
-    grantRole($user, RoleEnum::Lifeshaper, atChurch($church));
+    $dubai = satelliteOf($church, ['slug' => 'dubai']);
+    guardianOf(familyAt($dubai), $user);
+    grantRole($user, RoleEnum::Lifeshaper, atSatellite($dubai));
 
     actingAs($user)->get('/home')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
         ->component('Auth/Choose')
@@ -67,9 +68,9 @@ it('lets a parent who also serves choose, with one login @story#24', function ()
 it('lets someone in two churches pick one @story#24', function (): void {
     $user = User::factory()->create();
     $other = church(['slug' => 'other']);
-    satelliteOf($other, ['slug' => 'other-sat']);
+    $otherSat = satelliteOf($other, ['slug' => 'other-sat']);
     guardianOf(familyAt(satelliteOf(church(['slug' => 'ccf']))), $user);
-    grantRole($user, RoleEnum::Lifeshaper, atChurch($other));
+    grantRole($user, RoleEnum::Lifeshaper, atSatellite($otherSat));
 
     actingAs($user)->get('/home')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
         ->component('Auth/Choose')
@@ -85,7 +86,7 @@ it('tells someone with no family or role that there is nothing here yet @story#2
 it('ignores a revoked role @story#25', function (): void {
     $church = church(['slug' => 'ccf']);
     $user = User::factory()->create();
-    grantRole($user, RoleEnum::Lifeshaper, atChurch($church));
+    grantRole($user, RoleEnum::Lifeshaper, atSatellite(satelliteOf($church)));
     RoleAssignment::query()->update(['is_active' => false]);
 
     actingAs($user)->get('/home')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p->component('Auth/NothingYet'));
@@ -101,8 +102,9 @@ describe('remembering the choice', function (): void {
     {
         $church = church(['slug' => 'ccf']);
         $user = User::factory()->create();
-        guardianOf(familyAt(satelliteOf($church, ['slug' => 'dubai'])), $user);
-        grantRole($user, RoleEnum::Lifeshaper, atChurch($church));
+        $dubai = satelliteOf($church, ['slug' => 'dubai']);
+        guardianOf(familyAt($dubai), $user);
+        grantRole($user, RoleEnum::Lifeshaper, atSatellite($dubai));
 
         return [$user, $church];
     }

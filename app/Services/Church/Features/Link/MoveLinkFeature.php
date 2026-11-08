@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\DB;
  */
 #[UserStory(
     title: 'Move a Link',
-    persona: 'church admin or satellite admin',
+    persona: 'satellite admin',
     happyPaths: ['story#170' => 'An Admin moves a Link up or down the poster'],
     unhappyPaths: ['story#171' => 'Only a Link at a satellite they look after; only up or down'],
 )]

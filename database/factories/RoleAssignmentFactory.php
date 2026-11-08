@@ -6,6 +6,7 @@ namespace Database\Factories;
 
 use App\Data\Models\Church;
 use App\Data\Models\RoleAssignment;
+use App\Data\Models\Satellite;
 use App\Data\Models\User;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
@@ -23,8 +24,8 @@ final class RoleAssignmentFactory extends Factory
             'church_id' => Church::factory(),
             'user_id' => User::factory(),
             'role' => RoleEnum::Lifeshaper,
-            'scope_type' => ScopeTypeEnum::Church,
-            'scope_id' => fn (array $attributes): mixed => $attributes['church_id'],
+            'scope_type' => ScopeTypeEnum::Satellite,
+            'scope_id' => fn (array $attributes): int => Satellite::factory()->create(['church_id' => $attributes['church_id']])->id,
             'is_active' => true,
         ];
     }

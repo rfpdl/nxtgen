@@ -4,7 +4,7 @@ import { DUBAI, DOOR, FAMILIES, SHARJAH, sessionFile, type DoorProject } from '.
 /*
  * Journey 4 — scope. A CCF Sharjah admin works at /sharjah: sees CCF Sharjah families and not CCF Dubai ones, cannot
  * open a Dubai family by guessing its address — at Dubai's address or their own (spec item 10) — and can only give the
- * Lifeshaper role in CCF Sharjah.
+ * Admin or Lifeshaper Role at CCF Sharjah (spec item 9).
  */
 test.use({ storageState: sessionFile('houseAdmin') })
 
@@ -22,8 +22,8 @@ test('a satellite admin sees only their own satellite @story#43 @story#58', asyn
         page.getByTestId('family-row').filter({ hasText: FAMILIES.dxb.guardian }),
     ).toHaveCount(0)
 
-    // The church admin can see the Dubai family's address; the Sharjah admin typing it gets nothing.
-    const admin = await browser.newContext({ storageState: sessionFile('churchAdmin') })
+    // Dubai's admin can see the Dubai family's address; the Sharjah admin typing it gets nothing.
+    const admin = await browser.newContext({ storageState: sessionFile('admin') })
     const adminPage = await admin.newPage()
     await adminPage.goto(`/${DUBAI}/admin/families?q=${FAMILIES.dxb.guardian}`)
     const href = await adminPage
@@ -50,13 +50,14 @@ test("a satellite admin cannot open another satellite's Admin or Serve — not f
     }
 })
 
-test('a satellite admin can only add Lifeshapers to their own satellite @story#77', async ({
+test('a satellite admin gives Roles — Admin or Lifeshaper — at their own satellite only @story#77', async ({
     page,
 }) => {
     await page.goto(`/${SHARJAH}/admin/people`)
 
     // A retrying assertion: allTextContents() reads once, before the page may have rendered its options.
     await expect(page.getByTestId('staff-role').locator('option')).toHaveText([
+        'Admin · CCF Sharjah',
         'Lifeshaper · CCF Sharjah',
     ])
 })

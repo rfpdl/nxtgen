@@ -27,7 +27,6 @@ use Inertia\Testing\AssertableInertia;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 use function Pest\Laravel\travelTo;
-use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
 use function Tests\Support\checkedIn;
 use function Tests\Support\childOf;
@@ -77,16 +76,18 @@ describe('who gets in', function (): void {
         adminChurch();
         $other = church();
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($other)))->get('/htc/serve/families')->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atSatellite(satelliteOf($other))))->get('/htc/serve/families')->assertNotFound();
     });
 });
 
 describe('the family list', function (): void {
-    it('shows a church admin every family @story#43', function (): void {
+    it('shows an admin of every satellite every family @story#43', function (): void {
         ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
         registeredFamily($htc, 'Janice', 'janice@example.com');
         registeredFamily($house, 'Mira', 'mira@example.com');
-        $admin = staffMember(RoleEnum::Admin, atChurch($church));
+        // No church-wide Role (spec item 9): "an admin of everything" is the Admin Role at each satellite.
+        $admin = staffMember(RoleEnum::Admin, atSatellite($htc));
+        grantRole($admin, RoleEnum::Admin, atSatellite($house));
 
         // Every family, one satellite at a time: the list shows only the satellite in the address (DECISIONS 2026-11-08).
         actingAs($admin)->get('/htc/serve/families')
@@ -117,7 +118,7 @@ describe('the family list', function (): void {
         registeredFamily($htc, 'Janice', 'janice@example.com', verified: false);
         registeredFamily($htc, 'Mira', 'mira@example.com');
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/htc/serve/families?unconfirmed=1')
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->get('/htc/serve/families?unconfirmed=1')
             ->assertInertia(fn (AssertableInertia $p) => $p->has('families', 1)->where('families.0.email_confirmed', false));
     });
 });
@@ -226,7 +227,7 @@ describe('registering for a parent', function (): void {
         ['church' => $church, 'htc' => $htc] = adminChurch();
         $foreign = Family::factory()->create();
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->post("/htc/serve/families/{$foreign->id}/children", [
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->post("/htc/serve/families/{$foreign->id}/children", [
             'first_name' => 'X', 'last_name' => 'Y', 'nickname' => 'X', 'gender' => 'boy', 'date_of_birth' => '2018-01-01', 'has_allergies' => false,
         ])->assertNotFound();
     });
@@ -247,7 +248,7 @@ describe('a family\'s page', function (): void {
     it('keeps the admin-only controls — email, status, Level, duplicates — to the Admin area; Serve shows the family without them (Astra) @story#50', function (): void {
         ['church' => $church, 'htc' => $htc] = adminChurch();
         $family = registeredFamily($htc, 'Janice', 'janice@example.com');
-        $admin = staffMember(RoleEnum::Admin, atChurch($church));
+        $admin = staffMember(RoleEnum::Admin, atSatellite($htc));
 
         actingAs($admin)->get("/htc/admin/families/{$family->id}")->assertInertia(fn (AssertableInertia $p) => $p
             ->where('admin_controls', true)->where('can_set_level', true)->where('family.can_edit', true));
@@ -331,11 +332,25 @@ it('downloads the visible families as an Excel file @story#45', function (): voi
     ['church' => $church, 'htc' => $htc] = adminChurch();
     registeredFamily($htc, 'Janice', 'janice@example.com');
 
-    $response = actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/htc/admin/families/export');
+    $response = actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->get('/htc/admin/families/export');
 
     $response->assertOk();
     expect((string) $response->headers->get('content-type'))->toContain('spreadsheetml')
         ->and((string) $response->headers->get('content-disposition'))->toContain('.xlsx');
+});
+
+it('gives a satellite admin full emails in the Excel file for their satellite\'s families @story#45', function (): void {
+    ['church' => $church, 'htc' => $htc, 'house' => $house] = adminChurch();
+    registeredFamily($htc, 'Janice', 'janice@example.com');
+    registeredFamily($house, 'Mira', 'mira@example.com');
+
+    // DECISIONS 2026-11-08 (spec item 9): full emails were a church admin's; now an admin here has them, for here only.
+    $sheet = implode("\n", exportedRows(actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->get('/htc/admin/families/export')));
+
+    expect(str_contains($sheet, 'janice@example.com'))->toBeTrue()
+        ->and(str_contains($sheet, '•••'))->toBeFalse()
+        ->and(str_contains($sheet, 'mira@example.com'))->toBeFalse();
+    actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->get('/house/admin/families/export')->assertNotFound();
 });
 
 /*
@@ -378,7 +393,7 @@ describe('re-sending from the lists', function (): void {
         $new = registeredFamily($htc, 'Anna', 'anna@example.com', verified: false);
         (new CreateDuplicateCandidatesJob(family: $new))->handle();
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get("/htc/admin/families/{$new->id}")
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->get("/htc/admin/families/{$new->id}")
             ->assertInertia(fn (AssertableInertia $p) => $p->where('duplicates.0.subject.can_resend', false)->where('duplicates.0.candidate.can_resend', false));
     });
 
@@ -470,7 +485,7 @@ describe('searching and filtering the list', function (): void {
         ['church' => $church, 'htc' => $htc] = adminChurch();
         registeredFamily($htc, 'Janice', 'janice@example.com');
         registeredFamily($htc, 'Mira', 'mira@example.com');
-        $admin = staffMember(RoleEnum::Admin, atChurch($church));
+        $admin = staffMember(RoleEnum::Admin, atSatellite($htc));
 
         foreach (['Janice', 'janice@exa', 'Janice-kid'] as $q) {
             actingAs($admin)->get('/htc/serve/families?q='.urlencode($q))->assertInertia(fn (AssertableInertia $p) => $p
@@ -484,9 +499,10 @@ describe('searching and filtering the list', function (): void {
         registeredFamily($house, 'Mira', 'mira@example.com');
         Child::query()->where('church_id', $church->id)->update(['level' => 1]);
         Child::query()->where('family_id', $a->id)->update(['status' => ChildStatusEnum::Inactive, 'level' => 2]);
-        $admin = staffMember(RoleEnum::Admin, atChurch($church));
+        $admin = staffMember(RoleEnum::Admin, atSatellite($htc));
+        grantRole($admin, RoleEnum::Admin, atSatellite($house));
 
-        // The satellite is the address's, not a filter (DECISIONS 2026-11-08): a church admin sees House at /house, and
+        // The satellite is the address's, not a filter (DECISIONS 2026-11-08): an admin at both sees House at /house, and
         // a `?satellite=House` at /htc is not read — the list stays htc's; no satellite is offered to pick.
         actingAs($admin)->get('/house/serve/families')->assertInertia(fn (AssertableInertia $p) => $p
             ->has('families', 1)->where('families.0.primary_name', 'Mira Ramos')
@@ -512,7 +528,7 @@ describe('searching and filtering the list', function (): void {
         registeredFamily($htc, 'Mira', 'mira@example.com')->guardians()->update(['phone' => '0500000099']);
         (new CreateDuplicateCandidatesJob($new))->handle();
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/htc/serve/families?duplicates=1')
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->get('/htc/serve/families?duplicates=1')
             // Newest first: the new family, then the one it may duplicate; Mira (different phone) is not listed.
             ->assertInertia(fn (AssertableInertia $p) => $p->has('families', 2)
                 ->where('families.0.id', $new->id)->where('families.1.id', $old->id));
@@ -533,12 +549,14 @@ describe('searching and filtering the list', function (): void {
         registeredFamily($house, 'Mira', 'mira@example.com');
 
         // The download is the address satellite's, as the list (DECISIONS 2026-11-08).
-        $response = actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/house/admin/families/export');
+        $response = actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->get('/house/admin/families/export');
 
         $rows = exportedRows($response);
 
         $sheet = implode("\n", $rows);
-        expect(str_contains($sheet, 'Mira'))->toBeTrue()->and(str_contains($sheet, 'Janice'))->toBeFalse();
+        // Janice's own cells, not a bare 'Janice' — a made-up child name can be "Janice" too (seen flaking).
+        expect(str_contains($sheet, 'Mira Ramos'))->toBeTrue()
+            ->and(str_contains($sheet, 'Janice Ramos'))->toBeFalse()->and(str_contains($sheet, 'janice@example.com'))->toBeFalse();
     });
 });
 
@@ -546,7 +564,7 @@ describe('searching and filtering the list', function (): void {
 it('shows the families list 50 at a time; the Excel download still has every family', function (): void {
     ['church' => $church, 'htc' => $htc] = adminChurch();
     Family::factory()->count(55)->create(['church_id' => $church->id, 'home_satellite_id' => $htc->id]);
-    $admin = staffMember(RoleEnum::Admin, atChurch($church));
+    $admin = staffMember(RoleEnum::Admin, atSatellite($htc));
 
     actingAs($admin)->get('/htc/serve/families')->assertInertia(fn (AssertableInertia $p) => $p
         ->has('families', 50)->where('pagination.total', 55)->where('pagination.last_page', 2));
@@ -559,7 +577,7 @@ it('downloads every filtered family, not only the page on screen @story#45', fun
         childOf(familyAt($htc), ['nickname' => "Kid {$n}"]);
     }
 
-    $rows = exportedRows(actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/htc/admin/families/export'));
+    $rows = exportedRows(actingAs(staffMember(RoleEnum::Admin, atSatellite($htc)))->get('/htc/admin/families/export'));
 
     expect($rows)->toHaveCount(56); // the heading + one row per child
 });

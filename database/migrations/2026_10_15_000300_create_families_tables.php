@@ -89,7 +89,7 @@ return new class extends Migration
             $table->string('status')->default(ChildStatusEnum::default()->value)->comment('ChildStatusEnum: active | inactive | graduated');
             $table->timestampTz('status_changed_at')->nullable()->comment('When the status last changed');
             $table->foreignId('status_changed_by')->nullable()->comment('Who changed it')->constrained('users')->nullOnDelete();
-            $table->unsignedTinyInteger('level')->nullable()->comment('Stored Level (config nxtgen.levels), null = none yet; changes only at Moving-Up or by a church admin');
+            $table->unsignedTinyInteger('level')->nullable()->comment('Stored Level (config nxtgen.levels), null = none yet; changes only at Moving-Up or by an admin of the home satellite');
             $table->timestampTz('level_set_at')->nullable()->comment('When the Level was last set');
             $table->foreignId('level_set_by')->nullable()->comment('Who set it')->constrained('users')->nullOnDelete();
             $table->string('photo_path')->nullable()->comment('Private object-storage path; consent required');

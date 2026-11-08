@@ -8,7 +8,6 @@ use App\Domains\Church\Jobs\GetAccessScopeJob;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
 
-use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
 use function Tests\Support\church;
 use function Tests\Support\grantRole;
@@ -17,22 +16,23 @@ use function Tests\Support\scheduleAt;
 
 /*
  * What one person may do at ONE satellite — the one in the address — read from their ACTIVE roles in its church only.
- * Only their Roles there count; a church-wide Role counts as the same Role at this satellite (DECISIONS 2026-11-08).
+ * Only their Roles there count — at the satellite or one of its classes; there is no church-wide Role (spec item 9;
+ * DECISIONS 2026-11-08).
  */
 
-it('collects this person\'s active roles at this satellite, by role — a church-wide Role counting as the same Role here', function (): void {
+it('collects this person\'s active roles at this satellite, by role — a Role at another satellite counting only there', function (): void {
     $church = church();
     $dxb = satelliteOf($church);
     $house = satelliteOf($church);
     $user = User::factory()->create();
-    grantRole($user, RoleEnum::Lifeshaper, atChurch($church));
+    grantRole($user, RoleEnum::Lifeshaper, atSatellite($dxb));
+    grantRole($user, RoleEnum::Lifeshaper, atSatellite($house));
     grantRole($user, RoleEnum::Admin, atSatellite($dxb));
 
     $atDxb = (new GetAccessScopeJob(user: $user, satellite: $dxb))->handle();
     $atHouse = (new GetAccessScopeJob(user: $user, satellite: $house))->handle();
 
     expect($atDxb->churchId)->toBe($church->id)
-        ->and($atDxb->isChurchAdmin)->toBeFalse()
         ->and($atDxb->adminSatelliteIds)->toBe([$dxb->id])
         ->and($atDxb->lifeshaperSatelliteIds)->toBe([$dxb->id])
         ->and($atDxb->adminSchedules)->toBe([])
@@ -40,17 +40,20 @@ it('collects this person\'s active roles at this satellite, by role — a church
         ->and($atHouse->lifeshaperSatelliteIds)->toBe([$house->id]);
 });
 
-it('counts a church admin as admin at every satellite of the church, keeping the church-wide powers', function (): void {
+// No church-wide Role (spec item 9): an admin at every satellite holds the Role at each, and each address shows its own.
+it('counts an admin at every satellite of the church as admin at each, one address at a time', function (): void {
     $church = church();
     $dxb = satelliteOf($church);
+    $house = satelliteOf($church);
     $user = User::factory()->create();
-    grantRole($user, RoleEnum::Admin, atChurch($church));
+    grantRole($user, RoleEnum::Admin, atSatellite($dxb));
+    grantRole($user, RoleEnum::Admin, atSatellite($house));
 
     $scope = (new GetAccessScopeJob(user: $user, satellite: $dxb))->handle();
 
-    expect($scope->isChurchAdmin)->toBeTrue()
-        ->and($scope->adminSatelliteIds)->toBe([$dxb->id])
-        ->and($scope->lifeshaperSatelliteIds)->toBe([]);
+    expect($scope->adminSatelliteIds)->toBe([$dxb->id])
+        ->and($scope->lifeshaperSatelliteIds)->toBe([])
+        ->and((new GetAccessScopeJob(user: $user, satellite: $house))->handle()->adminSatelliteIds)->toBe([$house->id]);
 });
 
 it('gives nothing at a satellite the person has no Role at', function (): void {
@@ -87,34 +90,46 @@ it('reads a class admin\'s classes at this satellite — this church\'s, still a
 });
 
 it('ignores a revoked role', function (): void {
-    $church = church();
+    $satellite = satelliteOf(church());
     $user = User::factory()->create();
-    grantRole($user, RoleEnum::Admin, atChurch($church), active: false);
+    grantRole($user, RoleEnum::Admin, atSatellite($satellite), active: false);
 
-    $scope = (new GetAccessScopeJob(user: $user, satellite: satelliteOf($church)))->handle();
+    $scope = (new GetAccessScopeJob(user: $user, satellite: $satellite))->handle();
 
-    expect($scope->isChurchAdmin)->toBeFalse()->and($scope->canWorkHere())->toBeFalse();
+    expect($scope->adminSatelliteIds)->toBe([])->and($scope->canWorkHere())->toBeFalse();
 });
 
 it('ignores roles the person holds in another church', function (): void {
     $here = church();
     $elsewhere = church();
     $user = User::factory()->create();
-    grantRole($user, RoleEnum::Admin, atChurch($elsewhere));
     grantRole($user, RoleEnum::Admin, atSatellite(satelliteOf($elsewhere)));
 
     $scope = (new GetAccessScopeJob(user: $user, satellite: satelliteOf($here)))->handle();
 
-    expect($scope->isChurchAdmin)->toBeFalse()
-        ->and($scope->adminSatelliteIds)->toBe([])
+    expect($scope->adminSatelliteIds)->toBe([])
         ->and($scope->canWorkHere())->toBeFalse();
 });
 
 it('ignores other people\'s roles in the same church', function (): void {
-    $church = church();
-    grantRole(User::factory()->create(), RoleEnum::Admin, atChurch($church));
+    $satellite = satelliteOf(church());
+    grantRole(User::factory()->create(), RoleEnum::Admin, atSatellite($satellite));
 
-    $scope = (new GetAccessScopeJob(user: User::factory()->create(), satellite: satelliteOf($church)))->handle();
+    $scope = (new GetAccessScopeJob(user: User::factory()->create(), satellite: $satellite))->handle();
 
-    expect($scope->isChurchAdmin)->toBeFalse();
+    expect($scope->adminSatelliteIds)->toBe([])->and($scope->canWorkHere())->toBeFalse();
+});
+
+// Spec item 12, Roy 2026-11-08: the platform admin may open any satellite's Admin and Serve — as its admin there,
+// though they hold no Role (so they are on no satellite's People).
+it('makes the platform admin an admin at any satellite, with no Role', function (): void {
+    $dubai = satelliteOf(church());
+    $platform = User::factory()->create(['is_platform_admin' => true]);
+
+    $scope = (new GetAccessScopeJob(user: $platform, satellite: $dubai))->handle();
+
+    expect($scope->canUseFullAdmin())->toBeTrue()
+        ->and($scope->adminSatelliteIds)->toBe([$dubai->id])
+        ->and($scope->lifeshaperSatelliteIds)->toBe([])
+        ->and(RoleAssignment::query()->where('user_id', $platform->id)->exists())->toBeFalse();
 });

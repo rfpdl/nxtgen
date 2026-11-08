@@ -16,7 +16,7 @@ use Attribute;
  *
  *     #[UserStory(
  *         title: 'Correct a family email',
- *         persona: 'church admin',
+ *         persona: 'satellite admin',
  *         happyPaths: ['story#12' => 'The family gets a new link at the corrected address'],
  *         unhappyPaths: ['story#13' => 'An email another family uses is refused'],
  *     )]

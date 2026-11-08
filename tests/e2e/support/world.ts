@@ -7,7 +7,7 @@ export const DUBAI = 'dubai'
 export const SHARJAH = 'sharjah'
 
 export const STAFF = {
-    churchAdmin: 'admin@nxtgen.test',
+    admin: 'admin@nxtgen.test',
     lifeshaper: 'lifeshaper@nxtgen.test',
     houseAdmin: 'house-admin@nxtgen.test',
 } as const

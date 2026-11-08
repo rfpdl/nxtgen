@@ -113,11 +113,6 @@ function childOf(Family $family, array $attributes = []): Child
     return Child::factory()->create(['family_id' => $family->id, 'church_id' => $family->church_id] + $attributes);
 }
 
-function atChurch(Church $church): RoleScope
-{
-    return new RoleScope($church, ScopeTypeEnum::Church, $church->id);
-}
-
 function atSatellite(Satellite $satellite): RoleScope
 {
     return new RoleScope($satellite->church()->firstOrFail(), ScopeTypeEnum::Satellite, $satellite->id);

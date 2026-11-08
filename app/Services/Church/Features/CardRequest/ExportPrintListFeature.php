@@ -22,7 +22,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
  */
 #[UserStory(
     title: 'Download a print list',
-    persona: 'church admin or satellite admin',
+    persona: 'satellite admin',
     happyPaths: ['story#148' => 'An Admin downloads a print list\'s cards as Excel — Full name, Nickname, Level, Squad, Barcode (the code the door scans) — again whenever needed, and no card moves'],
     unhappyPaths: ['story#149' => 'Never a card the viewer may not see; another church\'s list, or one with none of theirs, is not found; never for a Lifeshaper or a parent'],
 )]

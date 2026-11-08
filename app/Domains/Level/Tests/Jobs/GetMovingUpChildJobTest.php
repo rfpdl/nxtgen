@@ -16,16 +16,18 @@ use function Tests\Support\satelliteOf;
 
 it('finds the child on this Moving-Up', function (): void {
     $church = church();
-    $child = childOf(familyAt(satelliteOf($church)), ['level' => 1]);
-    $movingUp = (new CreateMovingUpJob(church: $church, children: [$child], by: User::factory()->create()))->handle();
+    $dubai = satelliteOf($church);
+    $child = childOf(familyAt($dubai), ['level' => 1]);
+    $movingUp = (new CreateMovingUpJob(satellite: $dubai, children: [$child], by: User::factory()->create()))->handle();
 
     expect((new GetMovingUpChildJob(church: $church, movingUp: $movingUp, child: $child))->handle()->child_id)->toBe($child->id);
 });
 
 it('finds no child that Moving-Up did not move', function (): void {
     $church = church();
-    $family = familyAt(satelliteOf($church));
-    $movingUp = (new CreateMovingUpJob(church: $church, children: [childOf($family, ['level' => 1])], by: User::factory()->create()))->handle();
+    $dubai = satelliteOf($church);
+    $family = familyAt($dubai);
+    $movingUp = (new CreateMovingUpJob(satellite: $dubai, children: [childOf($family, ['level' => 1])], by: User::factory()->create()))->handle();
 
     expect(fn () => (new GetMovingUpChildJob(church: $church, movingUp: $movingUp, child: childOf($family, ['level' => 1])))->handle())
         ->toThrow(ModelNotFoundException::class);

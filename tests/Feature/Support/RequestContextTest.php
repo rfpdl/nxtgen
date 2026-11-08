@@ -22,7 +22,7 @@ it('hands back the church, scope and guardian a middleware put on the request', 
     $church = church();
     $satellite = satelliteOf($church, ['slug' => 'dubai']);
     $guardian = guardianOf(familyAt($satellite), User::factory()->create());
-    $scope = new AccessScope($church->id, true, [], [], []);
+    $scope = new AccessScope($church->id, [$satellite->id], [], []);
     $request = Request::create('/dubai');
 
     RequestContext::putChurch($request, $church);

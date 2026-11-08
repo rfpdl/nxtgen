@@ -23,13 +23,13 @@ use Inertia\Testing\AssertableInertia;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 use function Pest\Laravel\travelTo;
-use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
 use function Tests\Support\checkedIn;
 use function Tests\Support\childOf;
 use function Tests\Support\church;
 use function Tests\Support\classAdminOf;
 use function Tests\Support\familyAt;
+use function Tests\Support\grantRole;
 use function Tests\Support\guardianOf;
 use function Tests\Support\satelliteOf;
 use function Tests\Support\scheduleAt;
@@ -108,9 +108,11 @@ describe('the door page', function (): void {
             ->where('families', []));
     });
 
-    it('gives a church-wide Role every satellite\'s classes for today @story#103', function (): void {
-        ['church' => $church] = doorChurch();
-        $lifeshaper = staffMember(RoleEnum::Lifeshaper, atChurch($church));
+    it('gives a Role at both satellites each satellite\'s classes for today @story#103', function (): void {
+        ['dxb' => $dxb, 'house' => $house] = doorChurch();
+        // DECISIONS 2026-11-08: no church-wide Role — the Lifeshaper Role at both satellites instead.
+        $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($dxb));
+        grantRole($lifeshaper, RoleEnum::Lifeshaper, atSatellite($house));
 
         // Every satellite's, one satellite at a time: the door shows the address satellite's classes (DECISIONS 2026-11-08).
         actingAs($lifeshaper)->get('/dxb/serve/door')->assertInertia(fn (AssertableInertia $page) => $page
@@ -197,7 +199,7 @@ describe('the door page', function (): void {
     });
 
     it('says which found families the viewer may open — their own satellite\'s, not a visitor\'s @story#103', function (): void {
-        ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'church' => $church, 'house' => $house] = doorChurch();
+        ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'dxb' => $dxb, 'house' => $house] = doorChurch();
 
         actingAs($lifeshaper)->get("/dxb/serve/door?class={$onePm->id}&q=Cruz")->assertInertia(fn (AssertableInertia $page) => $page
             ->where('families.0.name', 'Cruz family')
@@ -205,9 +207,10 @@ describe('the door page', function (): void {
         actingAs($lifeshaper)->get("/dxb/serve/door?class={$onePm->id}&q=Santos")->assertInertia(fn (AssertableInertia $page) => $page
             ->where('families.0.satellite', 'House Church')
             ->where('families.0.can_open', false));
-        // A church-wide Role opens a family at its own satellite's address only (DECISIONS 2026-11-08): a visitor at
-        // the DXB door is not theirs to open there, but is at the House door.
-        $churchWide = staffMember(RoleEnum::Lifeshaper, atChurch($church));
+        // A Role at both satellites (no church-wide Role, DECISIONS 2026-11-08) opens a family at its own satellite's
+        // address only: a visitor at the DXB door is not theirs to open there, but is at the House door.
+        $churchWide = staffMember(RoleEnum::Lifeshaper, atSatellite($dxb));
+        grantRole($churchWide, RoleEnum::Lifeshaper, atSatellite($house));
         $houseClass = Schedule::query()->where('satellite_id', $house->id)->sole();
         actingAs($churchWide)->get("/dxb/serve/door?class={$onePm->id}&q=Santos")
             ->assertInertia(fn (AssertableInertia $page) => $page->where('families.0.can_open', false));
@@ -456,8 +459,8 @@ describe('undoing a Check-in', function (): void {
         actingAs($lifeshaper)->put("/dxb/serve/check-ins/{$atHouse->id}/undo")->assertNotFound();
         actingAs($lifeshaper)->put("/dxb/serve/check-ins/{$lastWeek->id}/undo")->assertNotFound();
         $other = church(['slug' => 'other']);
-        satelliteOf($other, ['slug' => 'other']);
-        actingAs(staffMember(RoleEnum::Admin, atChurch($other)))->put("/other/serve/check-ins/{$atHouse->id}/undo")->assertNotFound();
+        $otherSatellite = satelliteOf($other, ['slug' => 'other']);
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($otherSatellite)))->put("/other/serve/check-ins/{$atHouse->id}/undo")->assertNotFound();
 
         expect([$atHouse->fresh()?->isIn(), $lastWeek->fresh()?->isIn()])->toBe([true, true]);
     });

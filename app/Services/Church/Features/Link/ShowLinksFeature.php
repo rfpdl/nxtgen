@@ -25,7 +25,7 @@ use Inertia\Response;
  */
 #[UserStory(
     title: 'See a satellite\'s Links',
-    persona: 'church admin or satellite admin',
+    persona: 'satellite admin',
     happyPaths: ['story#164' => 'An Admin sees the Links of the satellite in the address, in the poster\'s order'],
     unhappyPaths: ['story#165' => 'Not there for a Lifeshaper'],
 )]

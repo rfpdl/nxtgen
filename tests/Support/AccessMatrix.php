@@ -56,7 +56,7 @@ final class AccessMatrix
             'admin.children.index' => [AccessRowEnum::FamilyList, Actor::admins()],
             'admin.families.email' => [AccessRowEnum::CorrectContact, Actor::editingFamily()],
             'admin.children.status' => [AccessRowEnum::SetChildStatus, Actor::editingFamily()],
-            'admin.children.level' => [AccessRowEnum::SetChildLevel, [Actor::ChurchAdmin]],
+            'admin.children.level' => [AccessRowEnum::SetChildLevel, Actor::admins()],
             // A photo deleted for good (TODO #25): it cannot be undone, so an admin who may edit the family — never a
             // Lifeshaper.
             'admin.children.photo.destroy' => [AccessRowEnum::DeleteChildPhoto, Actor::editingFamily()],
@@ -75,27 +75,27 @@ final class AccessMatrix
             // Answered from either family's page (there is no Duplicates page — DECISIONS 2026-10-17, after first look);
             // answering needs the new family.
             'admin.duplicates.resolve' => [AccessRowEnum::ReviewDuplicates, Actor::editingFamily()],
-            // Moving-Up (DECISIONS 2026-11-06): the whole church at once, so a church admin only — no satellite admin.
-            'admin.moving-up.index' => [AccessRowEnum::MovingUp, [Actor::ChurchAdmin]],
-            'admin.moving-up.store' => [AccessRowEnum::MovingUp, [Actor::ChurchAdmin]],
-            'admin.moving-up.children.put-back' => [AccessRowEnum::MovingUp, [Actor::ChurchAdmin]],
-            'admin.moving-up.put-back' => [AccessRowEnum::MovingUp, [Actor::ChurchAdmin]],
+            // Moving-Up (DECISIONS 2026-11-08): per satellite — any admin of Home, for Home's children.
+            'admin.moving-up.index' => [AccessRowEnum::MovingUp, Actor::admins()],
+            'admin.moving-up.store' => [AccessRowEnum::MovingUp, Actor::admins()],
+            'admin.moving-up.children.put-back' => [AccessRowEnum::MovingUp, Actor::admins()],
+            'admin.moving-up.put-back' => [AccessRowEnum::MovingUp, Actor::admins()],
             // Classes (DECISIONS 2026-10-26): the page opens for every admin; Home's class is changed only by an admin
             // over Home.
             // A class admin (TODO #9) sees and changes their own class — the world's — and adds none.
             'admin.schedules.index' => [AccessRowEnum::ManageClasses, [...Actor::admins(), Actor::ClassAdmin]],
-            'admin.schedules.store' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin]],
-            'admin.schedules.update' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin, Actor::ClassAdmin]],
-            'admin.schedules.retire' => [AccessRowEnum::ManageClasses, [Actor::ChurchAdmin, Actor::HomeAdmin, Actor::ClassAdmin]],
+            'admin.schedules.store' => [AccessRowEnum::ManageClasses, [Actor::HomeAndAwayAdmin, Actor::HomeAdmin]],
+            'admin.schedules.update' => [AccessRowEnum::ManageClasses, [Actor::HomeAndAwayAdmin, Actor::HomeAdmin, Actor::ClassAdmin]],
+            'admin.schedules.retire' => [AccessRowEnum::ManageClasses, [Actor::HomeAndAwayAdmin, Actor::HomeAdmin, Actor::ClassAdmin]],
             // Links (Roy 2026-11-06): the page opens for every admin; Home's Links are changed only by an admin over Home.
             'admin.links.index' => [AccessRowEnum::ManageLinks, Actor::admins()],
-            'admin.links.store' => [AccessRowEnum::ManageLinks, [Actor::ChurchAdmin, Actor::HomeAdmin]],
-            'admin.links.update' => [AccessRowEnum::ManageLinks, [Actor::ChurchAdmin, Actor::HomeAdmin]],
-            'admin.links.move' => [AccessRowEnum::ManageLinks, [Actor::ChurchAdmin, Actor::HomeAdmin]],
-            'admin.links.destroy' => [AccessRowEnum::ManageLinks, [Actor::ChurchAdmin, Actor::HomeAdmin]],
+            'admin.links.store' => [AccessRowEnum::ManageLinks, [Actor::HomeAndAwayAdmin, Actor::HomeAdmin]],
+            'admin.links.update' => [AccessRowEnum::ManageLinks, [Actor::HomeAndAwayAdmin, Actor::HomeAdmin]],
+            'admin.links.move' => [AccessRowEnum::ManageLinks, [Actor::HomeAndAwayAdmin, Actor::HomeAdmin]],
+            'admin.links.destroy' => [AccessRowEnum::ManageLinks, [Actor::HomeAndAwayAdmin, Actor::HomeAdmin]],
             // Attendance (DECISIONS 2026-10-26: reports are admins only): Home's class, only for an admin over Home.
-            'admin.attendance.show' => [AccessRowEnum::Attendance, [Actor::ChurchAdmin, Actor::HomeAdmin, Actor::ClassAdmin]],
-            'admin.attendance.export' => [AccessRowEnum::Attendance, [Actor::ChurchAdmin, Actor::HomeAdmin, Actor::ClassAdmin]],
+            'admin.attendance.show' => [AccessRowEnum::Attendance, [Actor::HomeAndAwayAdmin, Actor::HomeAdmin, Actor::ClassAdmin]],
+            'admin.attendance.export' => [AccessRowEnum::Attendance, [Actor::HomeAndAwayAdmin, Actor::HomeAdmin, Actor::ClassAdmin]],
             // People: adding or removing a home Lifeshaper needs an admin at Home.
             'admin.people.index' => [AccessRowEnum::GrantRoles, Actor::admins()],
             'admin.people.store' => [AccessRowEnum::GrantRoles, Actor::editingFamily()],

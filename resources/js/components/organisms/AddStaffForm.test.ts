@@ -17,9 +17,9 @@ vi.mock('@inertiajs/vue3', async () => {
 })
 
 const options: GrantOption[] = [
-    { label: 'Admin · whole church', role: 'admin', scope_type: 'church', scope_id: 1 },
+    { label: 'Admin · CCF Dubai', role: 'admin', scope_type: 'satellite', scope_id: 3 },
     {
-        label: 'Lifeshaper · Holy Trinity Church',
+        label: 'Lifeshaper · CCF Dubai',
         role: 'lifeshaper',
         scope_type: 'satellite',
         scope_id: 3,
@@ -30,14 +30,14 @@ describe('AddStaffForm', () => {
     beforeEach(() => post.mockReset())
 
     it('lists only the roles it was given', () => {
-        const wrapper = mount(AddStaffForm, { props: { action: '/ccf/people', options } })
+        const wrapper = mount(AddStaffForm, { props: { action: '/dubai/admin/people', options } })
 
         const labels = wrapper.findAll('option').map((o) => o.text())
-        expect(labels).toEqual(['Admin · whole church', 'Lifeshaper · Holy Trinity Church'])
+        expect(labels).toEqual(['Admin · CCF Dubai', 'Lifeshaper · CCF Dubai'])
     })
 
     it('sends the chosen role and place with the person', async () => {
-        const wrapper = mount(AddStaffForm, { props: { action: '/ccf/people', options } })
+        const wrapper = mount(AddStaffForm, { props: { action: '/dubai/admin/people', options } })
 
         await wrapper.find('[data-testid="staff-name"]').setValue('Leo')
         await wrapper.find('[data-testid="staff-email"]').setValue('leo@example.com')
@@ -51,6 +51,6 @@ describe('AddStaffForm', () => {
             scope_type: 'satellite',
             scope_id: 3,
         })
-        expect(post).toHaveBeenCalledWith('/ccf/people', expect.anything())
+        expect(post).toHaveBeenCalledWith('/dubai/admin/people', expect.anything())
     })
 })

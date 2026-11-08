@@ -9,7 +9,6 @@ use App\Enums\RoleEnum;
 use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
-use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
 use function Tests\Support\atTheSameTime;
 use function Tests\Support\church;
@@ -20,8 +19,9 @@ use function Tests\Support\withCommittedWorld;
 
 /*
  * Links (GLOSSARY; Roy 2026-11-06, TODO #31 step 3): a satellite's own addresses on its QR poster — its parents'
- * Facebook group, its WhatsApp group, any link an admin names. Church admins manage every satellite's, satellite
- * admins their own (AccessScope::canManageLinksAt). The poster shows the satellite's Links as QR codes, for the
+ * Facebook group, its WhatsApp group, any link an admin names. A satellite's admins manage its Links — there is no
+ * church-wide Role (DECISIONS 2026-11-08), so "an admin of everything" holds the Admin Role at both satellites
+ * (AccessScope::canManageLinksAt). The poster shows the satellite's Links as QR codes, for the
  * satellites the person is assigned to.
  */
 
@@ -40,13 +40,14 @@ function labelsAt(Satellite $satellite): array
 }
 
 describe('the Links page', function (): void {
-    it('shows an admin each satellite they look after with its Links in order; a church admin every satellite @story#164', function (): void {
-        ['church' => $church, 'dxb' => $dxb, 'house' => $house] = linksChurch();
+    it('shows an admin each satellite they look after with its Links in order; an admin of both satellites each at its own @story#164', function (): void {
+        ['dxb' => $dxb, 'house' => $house] = linksChurch();
         SatelliteLink::factory()->for($dxb)->create(['label' => 'WhatsApp', 'url' => 'https://chat.whatsapp.com/abc', 'position' => 2]);
         SatelliteLink::factory()->for($dxb)->create(['label' => 'Facebook', 'url' => 'https://facebook.com/groups/ccf', 'position' => 1]);
 
-        // DECISIONS 2026-11-08: the page shows only the satellite in its address — a church admin sees each at its own.
-        $churchAdmin = staffMember(RoleEnum::Admin, atChurch($church));
+        // DECISIONS 2026-11-08: the page shows only the satellite in its address — an admin of both sees each at its own.
+        $churchAdmin = staffMember(RoleEnum::Admin, atSatellite($dxb));
+        grantRole($churchAdmin, RoleEnum::Admin, atSatellite($house));
         actingAs($churchAdmin)->get('/dxb/admin/links')->assertOk()
             ->assertInertia(fn (AssertableInertia $p) => $p->component('Church/Links/Index')
                 ->has('satellites', 1)
@@ -63,16 +64,18 @@ describe('the Links page', function (): void {
     });
 
     it('is not there for a Lifeshaper @story#165', function (): void {
-        ['church' => $church] = linksChurch();
+        ['dxb' => $dxb, 'house' => $house] = linksChurch();
 
-        // DECISIONS 2026-11-08: a Lifeshaper opening an Admin page is sent to the door.
-        actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get('/dxb/admin/links')->assertRedirect('/dxb/serve/door');
+        // DECISIONS 2026-11-08: a Lifeshaper opening an Admin page is sent to the door — one at both satellites too.
+        $both = staffMember(RoleEnum::Lifeshaper, atSatellite($dxb));
+        grantRole($both, RoleEnum::Lifeshaper, atSatellite($house));
+        actingAs($both)->get('/dxb/admin/links')->assertRedirect('/dxb/serve/door');
     });
 });
 
 describe('adding a Link', function (): void {
     it('adds a Link last on a satellite\'s poster @story#166', function (): void {
-        ['church' => $church, 'dxb' => $dxb] = linksChurch();
+        ['dxb' => $dxb] = linksChurch();
         SatelliteLink::factory()->for($dxb)->create(['label' => 'Facebook', 'position' => 1]);
 
         actingAs(staffMember(RoleEnum::Admin, atSatellite($dxb)))
@@ -83,9 +86,9 @@ describe('adding a Link', function (): void {
     });
 
     it('takes only an https address, and a label @story#167', function (string $url): void {
-        ['church' => $church, 'dxb' => $dxb] = linksChurch();
+        ['dxb' => $dxb] = linksChurch();
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($dxb)))
             ->post('/dxb/admin/links', ['label' => '', 'url' => $url])
             ->assertSessionHasErrors(['label', 'url']);
 
@@ -97,12 +100,12 @@ describe('adding a Link', function (): void {
     ]);
 
     it('holds at most 6 a satellite, so the poster prints on one page @story#167', function (): void {
-        ['church' => $church, 'dxb' => $dxb] = linksChurch();
+        ['dxb' => $dxb] = linksChurch();
         foreach (range(1, 6) as $i) {
             SatelliteLink::factory()->for($dxb)->create(['label' => "Link {$i}", 'position' => $i]);
         }
 
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($dxb)))
             ->post('/dxb/admin/links', ['label' => 'Seventh', 'url' => 'https://example.com'])
             ->assertSessionHasErrors(['label' => 'CCF DXB\'s poster has 6 links already — remove one first.']);
 
@@ -110,7 +113,7 @@ describe('adding a Link', function (): void {
     });
 
     it('adds only at a satellite the admin looks after, in this church @story#167', function (): void {
-        ['church' => $church, 'dxb' => $dxb, 'house' => $house] = linksChurch();
+        ['dxb' => $dxb, 'house' => $house] = linksChurch();
         $other = satelliteOf(church());
         $admin = staffMember(RoleEnum::Admin, atSatellite($house));
 
@@ -121,7 +124,9 @@ describe('adding a Link', function (): void {
         foreach ([$dxb, $other] as $satellite) {
             actingAs($admin)->post('/house/admin/links', ['satellite_id' => $satellite->id, 'label' => "Not at {$satellite->name}", 'url' => 'https://example.com'])->assertSessionHas('success');
         }
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->post('/dxb/admin/links', ['satellite_id' => $house->id, 'label' => 'At dxb', 'url' => 'https://example.com'])->assertSessionHas('success');
+        $adminOfBoth = staffMember(RoleEnum::Admin, atSatellite($dxb));
+        grantRole($adminOfBoth, RoleEnum::Admin, atSatellite($house));
+        actingAs($adminOfBoth)->post('/dxb/admin/links', ['satellite_id' => $house->id, 'label' => 'At dxb', 'url' => 'https://example.com'])->assertSessionHas('success');
 
         expect(labelsAt($house))->toBe(["Not at {$dxb->name}", "Not at {$other->name}"])
             ->and(labelsAt($dxb))->toBe(['At dxb'])
@@ -131,7 +136,7 @@ describe('adding a Link', function (): void {
 
 describe('changing, moving and removing a Link', function (): void {
     it('renames a Link and changes its address @story#168', function (): void {
-        ['church' => $church, 'dxb' => $dxb] = linksChurch();
+        ['dxb' => $dxb] = linksChurch();
         $link = SatelliteLink::factory()->for($dxb)->create(['label' => 'Old', 'url' => 'https://old.example']);
 
         actingAs(staffMember(RoleEnum::Admin, atSatellite($dxb)))
@@ -142,7 +147,7 @@ describe('changing, moving and removing a Link', function (): void {
     });
 
     it('changes only a Link at a satellite the admin looks after, and only to an https address @story#169', function (): void {
-        ['church' => $church, 'dxb' => $dxb, 'house' => $house] = linksChurch();
+        ['dxb' => $dxb, 'house' => $house] = linksChurch();
         $link = SatelliteLink::factory()->for($dxb)->create(['label' => 'Kept', 'url' => 'https://kept.example']);
 
         actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))
@@ -156,10 +161,10 @@ describe('changing, moving and removing a Link', function (): void {
     });
 
     it('moves a Link up or down the poster @story#170', function (): void {
-        ['church' => $church, 'dxb' => $dxb] = linksChurch();
+        ['dxb' => $dxb] = linksChurch();
         SatelliteLink::factory()->for($dxb)->create(['label' => 'A', 'position' => 1]);
         $b = SatelliteLink::factory()->for($dxb)->create(['label' => 'B', 'position' => 2]);
-        $admin = staffMember(RoleEnum::Admin, atChurch($church));
+        $admin = staffMember(RoleEnum::Admin, atSatellite($dxb));
 
         actingAs($admin)->put("/dxb/admin/links/{$b->id}/move", ['direction' => 'up'])->assertRedirect()->assertSessionHasNoErrors();
         expect(labelsAt($dxb))->toBe(['B', 'A']);
@@ -169,18 +174,18 @@ describe('changing, moving and removing a Link', function (): void {
     });
 
     it('moves only a Link the admin looks after, up or down @story#171', function (): void {
-        ['church' => $church, 'dxb' => $dxb, 'house' => $house] = linksChurch();
+        ['dxb' => $dxb, 'house' => $house] = linksChurch();
         SatelliteLink::factory()->for($dxb)->create(['label' => 'A', 'position' => 1]);
         $b = SatelliteLink::factory()->for($dxb)->create(['label' => 'B', 'position' => 2]);
 
         actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->put("/house/admin/links/{$b->id}/move", ['direction' => 'up'])->assertNotFound();
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->put("/dxb/admin/links/{$b->id}/move", ['direction' => 'sideways'])->assertSessionHasErrors('direction');
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($dxb)))->put("/dxb/admin/links/{$b->id}/move", ['direction' => 'sideways'])->assertSessionHasErrors('direction');
 
         expect(labelsAt($dxb))->toBe(['A', 'B']);
     });
 
     it('removes a Link from the poster @story#172', function (): void {
-        ['church' => $church, 'dxb' => $dxb] = linksChurch();
+        ['dxb' => $dxb] = linksChurch();
         $link = SatelliteLink::factory()->for($dxb)->create(['label' => 'Gone']);
 
         actingAs(staffMember(RoleEnum::Admin, atSatellite($dxb)))->delete("/dxb/admin/links/{$link->id}")
@@ -190,12 +195,12 @@ describe('changing, moving and removing a Link', function (): void {
     });
 
     it('removes only a Link the admin looks after, in this church @story#173', function (): void {
-        ['church' => $church, 'dxb' => $dxb, 'house' => $house] = linksChurch();
+        ['dxb' => $dxb, 'house' => $house] = linksChurch();
         $link = SatelliteLink::factory()->for($dxb)->create(['label' => 'Kept']);
         $theirs = SatelliteLink::factory()->for(satelliteOf(church()))->create();
 
         actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->delete("/house/admin/links/{$link->id}")->assertNotFound();
-        actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->delete("/dxb/admin/links/{$theirs->id}")->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($dxb)))->delete("/dxb/admin/links/{$theirs->id}")->assertNotFound();
 
         expect(SatelliteLink::query()->count())->toBe(2);
     });
@@ -203,11 +208,11 @@ describe('changing, moving and removing a Link', function (): void {
 
 describe('two admins at the same moment (Astra) — two connections', function (): void {
     it('never lets two adds past the limit: at five Links, one of two adds is refused @story#167', function (): void {
-        ['church' => $church, 'dxb' => $dxb] = linksChurch();
+        ['dxb' => $dxb] = linksChurch();
         foreach (range(1, 5) as $i) {
             SatelliteLink::factory()->for($dxb)->create(['label' => "Link {$i}", 'position' => $i]);
         }
-        $admin = staffMember(RoleEnum::Admin, atChurch($church));
+        $admin = staffMember(RoleEnum::Admin, atSatellite($dxb));
 
         withCommittedWorld(function () use ($admin, $dxb): void {
             $add = function (string $label) use ($admin): Closure {
@@ -227,11 +232,11 @@ describe('two admins at the same moment (Astra) — two connections', function (
     });
 
     it('keeps every Link in its own place when two are moved at once @story#170', function (): void {
-        ['church' => $church, 'dxb' => $dxb] = linksChurch();
+        ['dxb' => $dxb] = linksChurch();
         SatelliteLink::factory()->for($dxb)->create(['label' => 'A', 'position' => 1]);
         $b = SatelliteLink::factory()->for($dxb)->create(['label' => 'B', 'position' => 2]);
         $c = SatelliteLink::factory()->for($dxb)->create(['label' => 'C', 'position' => 3]);
-        $admin = staffMember(RoleEnum::Admin, atChurch($church));
+        $admin = staffMember(RoleEnum::Admin, atSatellite($dxb));
 
         withCommittedWorld(function () use ($admin, $dxb, $b, $c): void {
             $up = fn (SatelliteLink $link): Closure => fn (): int => actingAs($admin)
@@ -249,7 +254,7 @@ describe('two admins at the same moment (Astra) — two connections', function (
 
 describe('the poster', function (): void {
     it('shows the satellite\'s Links after the registration QR, each with its own QR code @story#174', function (): void {
-        ['church' => $church, 'dxb' => $dxb] = linksChurch();
+        ['dxb' => $dxb] = linksChurch();
         SatelliteLink::factory()->for($dxb)->create(['label' => 'WhatsApp', 'url' => 'https://chat.whatsapp.com/abc', 'position' => 1]);
 
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->get('/dxb/serve/poster')->assertOk()
@@ -263,12 +268,14 @@ describe('the poster', function (): void {
                 ->where('links.0.qr', fn (string $qr): bool => str_starts_with($qr, 'data:image/svg+xml;base64,')));
     });
 
-    it('lets someone in two satellites pick, and a church-wide Role every satellite @story#174', function (): void {
-        ['church' => $church, 'dxb' => $dxb, 'house' => $house] = linksChurch();
+    it('lets someone in two satellites pick, a Lifeshaper or an Admin at both @story#174', function (): void {
+        ['dxb' => $dxb, 'house' => $house] = linksChurch();
         SatelliteLink::factory()->for($house)->create(['label' => 'House group']);
         $both = staffMember(RoleEnum::Lifeshaper, atSatellite($dxb));
         grantRole($both, RoleEnum::Lifeshaper, atSatellite($house));
-        $churchAdmin = staffMember(RoleEnum::Admin, atChurch($church));
+        // DECISIONS 2026-11-08: no church-wide Role — the old church admin is an Admin at both satellites.
+        $churchAdmin = staffMember(RoleEnum::Admin, atSatellite($dxb));
+        grantRole($churchAdmin, RoleEnum::Admin, atSatellite($house));
 
         // DECISIONS 2026-11-08: the poster is the address satellite's — the pick is the address (switched in the bar), not `?satellite=`.
         foreach ([$both, $churchAdmin] as $who) {
@@ -280,7 +287,7 @@ describe('the poster', function (): void {
     });
 
     it('never shows a satellite the person is not assigned to — the first of their own instead @story#175', function (): void {
-        ['church' => $church, 'dxb' => $dxb, 'house' => $house] = linksChurch();
+        ['dxb' => $dxb, 'house' => $house] = linksChurch();
         SatelliteLink::factory()->for($house)->create(['label' => 'House only']);
 
         $dxbLifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($dxb));

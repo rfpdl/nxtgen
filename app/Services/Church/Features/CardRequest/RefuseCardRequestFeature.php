@@ -20,7 +20,7 @@ use Illuminate\Http\RedirectResponse;
  */
 #[UserStory(
     title: 'Refuse a new card',
-    persona: 'church admin or satellite admin',
+    persona: 'satellite admin',
     happyPaths: ['story#140' => 'An Admin refuses a Card request not yet printed, with a short reason; the Child may be asked for again'],
     unhappyPaths: ['story#141' => 'Never without a reason, never once printed, and not by a Lifeshaper, another Satellite\'s Admin or a parent'],
 )]

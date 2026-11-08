@@ -7,7 +7,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /*
- * Moving-Up (GLOSSARY; TODO #27): the yearly step a church admin runs. Each one keeps exactly the children it moved,
+ * Moving-Up (GLOSSARY; TODO #27): the yearly step a satellite's admin runs. Each one keeps exactly the children it moved,
  * with their Level and status before and after, so the last one can be put back — one child or everyone (Roy
  * 2026-11-06).
  */
@@ -18,10 +18,11 @@ return new class extends Migration
         Schema::create('moving_ups', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('church_id')->comment('The church whose children moved up')->constrained()->restrictOnDelete();
-            $table->foreignId('made_by')->nullable()->comment('The church admin who ran it')->constrained('users')->nullOnDelete();
+            $table->foreignId('satellite_id')->comment('The satellite whose children moved up (DECISIONS 2026-11-08: per satellite)')->constrained()->restrictOnDelete();
+            $table->foreignId('made_by')->nullable()->comment('The admin who ran it')->constrained('users')->nullOnDelete();
             $table->timestampsTz();
 
-            $table->index(['church_id', 'created_at']);
+            $table->index(['satellite_id', 'created_at']);
         });
 
         Schema::create('moving_up_children', function (Blueprint $table): void {

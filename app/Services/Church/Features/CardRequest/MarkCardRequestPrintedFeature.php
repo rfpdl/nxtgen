@@ -18,7 +18,7 @@ use Illuminate\Http\RedirectResponse;
  */
 #[UserStory(
     title: 'Mark a new card printed',
-    persona: 'church admin or satellite admin',
+    persona: 'satellite admin',
     happyPaths: ['story#142' => 'An Admin marks one approved Card request printed'],
     unhappyPaths: ['story#143' => 'Not one that is not approved, and not by a Lifeshaper, another Satellite\'s Admin or a parent'],
 )]

@@ -34,7 +34,7 @@ return new class extends Migration
             $table->foreignId('church_id')->comment('Church the role applies in')->constrained()->restrictOnDelete();
             $table->foreignId('user_id')->comment('Staff member')->constrained()->restrictOnDelete();
             $table->string('role')->comment('RoleEnum: admin | lifeshaper');
-            $table->string('scope_type')->comment('ScopeTypeEnum: church | satellite | schedule');
+            $table->string('scope_type')->comment('ScopeTypeEnum: satellite | schedule (no church-wide Role — spec item 9)');
             $table->unsignedBigInteger('scope_id')->comment('Id of the church, satellite or schedule');
             $table->boolean('is_active')->default(true)->comment('Revoked assignments stay for audit');
             $table->foreignId('granted_by')->nullable()->comment('Who granted it')->constrained('users')->nullOnDelete();

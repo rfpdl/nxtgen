@@ -15,7 +15,6 @@ use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
 use Tests\Support\RoleScope as TestRoleScope;
 
-use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
 use function Tests\Support\church;
 use function Tests\Support\familyAt;
@@ -26,8 +25,8 @@ use function Tests\Support\scheduleAt;
 /*
  * The access matrix (plan §3.2), one rule per test. AccessScope is the ONE owner of these answers;
  * Features ask it and never compare roles themselves. It is built for ONE satellite — the one in the address — so every
- * satellite list is that satellite or nothing, and a church-wide Role counts as the same Role there
- * (DECISIONS 2026-11-08).
+ * satellite list is that satellite or nothing. There is no church-wide Role (spec item 9): "an admin of everything" is
+ * an admin at each satellite (DECISIONS 2026-11-08).
  */
 
 function scopeAt(User $user, Satellite $satellite): AccessScope
@@ -43,12 +42,22 @@ function fx(): array
     return ['church' => $church, 'htc' => satelliteOf($church), 'house' => satelliteOf($church)];
 }
 
-// DECISIONS 2026-11-08: a church admin is admin at each satellite's own address — every family and every edit, one
-// satellite at a time — and keeps the church-wide acts.
-it('gives a church admin every family and every edit, each at its own satellite\'s address', function (): void {
-    ['church' => $church, 'htc' => $htc, 'house' => $house] = fx();
+/** A new user holding `$role` at each of `$satellites` — one Role per satellite (no church-wide Role, spec item 9). */
+function atBoth(RoleEnum $role, Satellite ...$satellites): User
+{
     $user = User::factory()->create();
-    grantRole($user, RoleEnum::Admin, atChurch($church));
+    foreach ($satellites as $satellite) {
+        grantRole($user, $role, atSatellite($satellite));
+    }
+
+    return $user;
+}
+
+// DECISIONS 2026-11-08: an admin at both satellites is admin at each satellite's own address — every family and every
+// edit, one satellite at a time — and Level, Moving-Up and merging are an admin's here (spec item 9).
+it('gives an admin of both satellites every family and every edit, each at its own satellite\'s address', function (): void {
+    ['htc' => $htc, 'house' => $house] = fx();
+    $user = atBoth(RoleEnum::Admin, $htc, $house);
 
     $scope = scopeAt($user, $htc);
 
@@ -57,8 +66,8 @@ it('gives a church admin every family and every edit, each at its own satellite\
         ->and($scope->canEditFamily(familyAt($htc)))->toBeTrue()
         ->and($scope->canEditFamily(familyAt($house)))->toBeFalse()
         ->and(scopeAt($user, $house)->canEditFamily(familyAt($house)))->toBeTrue()
-        ->and($scope->canMergeRecords())->toBeTrue()
-        ->and($scope->canManageChurch())->toBeTrue();
+        ->and($scope->canSetLevel())->toBeTrue()
+        ->and($scope->canMoveUp())->toBeTrue();
 });
 
 it('limits a satellite admin to families of that satellite', function (): void {
@@ -72,9 +81,10 @@ it('limits a satellite admin to families of that satellite', function (): void {
         ->and($scope->canEditFamily(familyAt($htc)))->toBeTrue()
         ->and($scope->canEditFamily(familyAt($house)))->toBeFalse()
         ->and($scope->canSeeFamily(familyAt($house)))->toBeFalse()
-        ->and($scope->canMergeRecords())->toBeFalse()
-        ->and($scope->canManageChurch())->toBeFalse()
-        ->and(scopeAt($user, $house)->canWorkHere())->toBeFalse();
+        // Level and Moving-Up are a satellite admin's, for this satellite (DECISIONS 2026-11-08).
+        ->and([$scope->canSetLevel(), $scope->canMoveUp()])->toBe([true, true])
+        ->and(scopeAt($user, $house)->canWorkHere())->toBeFalse()
+        ->and([scopeAt($user, $house)->canSetLevel(), scopeAt($user, $house)->canMoveUp()])->toBe([false, false]);
 });
 
 it('lets a Lifeshaper see their satellite\'s families but not edit them', function (): void {
@@ -95,19 +105,18 @@ it('lets a Lifeshaper edit the details of the families they can open — their s
     ['church' => $church, 'htc' => $htc, 'house' => $house] = fx();
     $user = User::factory()->create();
     grantRole($user, RoleEnum::Lifeshaper, atSatellite($htc));
-    $churchWide = User::factory()->create();
-    grantRole($churchWide, RoleEnum::Lifeshaper, atChurch($church));
+    $atBoth = atBoth(RoleEnum::Lifeshaper, $htc, $house);
 
     $scope = scopeAt($user, $htc);
-    // A church Lifeshaper is a Lifeshaper at each satellite's address (DECISIONS 2026-11-08).
-    $wide = scopeAt($churchWide, $house);
+    // A Lifeshaper at both satellites is a Lifeshaper at each satellite's address (DECISIONS 2026-11-08).
+    $wide = scopeAt($atBoth, $house);
 
     expect($scope->canEditFamilyDetails(familyAt($htc)))->toBeTrue()
         ->and($scope->canEditFamilyDetails(familyAt($house)))->toBeFalse()
         ->and($scope->canEditFamily(familyAt($htc)))->toBeFalse()
         ->and($wide->canEditFamilyDetails(familyAt($house)))->toBeTrue()
         ->and($wide->canEditFamily(familyAt($house)))->toBeFalse()
-        ->and(scopeAt($churchWide, $htc)->canEditFamilyDetails(familyAt($house)))->toBeFalse()
+        ->and(scopeAt($atBoth, $htc)->canEditFamilyDetails(familyAt($house)))->toBeFalse()
         ->and($scope->canEditFamilyDetails(familyAt(satelliteOf(church()))))->toBeFalse();
 });
 
@@ -137,9 +146,8 @@ it('keeps several satellites apart, each at its own address', function (): void 
 it('ignores revoked roles and roles in another church', function (): void {
     ['church' => $church, 'htc' => $htc] = fx();
     $user = User::factory()->create();
-    grantRole($user, RoleEnum::Admin, atChurch($church), active: false);
-    $other = church();
-    grantRole($user, RoleEnum::Admin, atChurch($other));
+    grantRole($user, RoleEnum::Admin, atSatellite($htc), active: false);
+    grantRole($user, RoleEnum::Admin, atSatellite(satelliteOf(church())));
 
     $scope = scopeAt($user, $htc);
 
@@ -148,10 +156,10 @@ it('ignores revoked roles and roles in another church', function (): void {
         ->and($scope->canSeeFamily(familyAt($htc)))->toBeFalse();
 });
 
-it('never lets a family from another church through, even for a church admin', function (): void {
-    ['church' => $church, 'htc' => $htc] = fx();
+it('never lets a family from another church through, even for an admin', function (): void {
+    ['htc' => $htc] = fx();
     $user = User::factory()->create();
-    grantRole($user, RoleEnum::Admin, atChurch($church));
+    grantRole($user, RoleEnum::Admin, atSatellite($htc));
     $foreign = Family::factory()->create();
 
     $scope = scopeAt($user, $htc);
@@ -161,46 +169,57 @@ it('never lets a family from another church through, even for a church admin', f
 });
 
 /*
- * People (plan §3.2 "Grant roles" + the role-grant ceiling): a church admin grants anything in the church;
- * a satellite admin grants only Lifeshaper, only in their own satellite; nobody else grants at all.
+ * People (plan §3.2 "Grant roles" + the role-grant ceiling, spec item 9; DECISIONS 2026-11-08): an admin here gives and
+ * removes any Role — Admin or Lifeshaper — at this satellite, and the Admin Role at its classes; nothing at another
+ * satellite, even one they are admin of too (that is its own address); nobody else grants at all.
  */
-it('lets a church admin grant any role anywhere in the church', function (): void {
-    ['church' => $church, 'htc' => $htc] = fx();
-    $user = User::factory()->create();
-    grantRole($user, RoleEnum::Admin, atChurch($church));
-
-    $scope = scopeAt($user, $htc);
-
-    expect($scope->canManagePeople())->toBeTrue()
-        ->and($scope->canGrant(RoleEnum::Admin, new RoleScope(ScopeTypeEnum::Church, $church->id)))->toBeTrue()
-        ->and($scope->canGrant(RoleEnum::Admin, new RoleScope(ScopeTypeEnum::Satellite, $htc->id)))->toBeTrue()
-        ->and($scope->canGrant(RoleEnum::Lifeshaper, new RoleScope(ScopeTypeEnum::Church, $church->id)))->toBeTrue()
-        ->and($scope->canGrant(RoleEnum::Admin, new RoleScope(ScopeTypeEnum::Church, $church->id + 999)))->toBeFalse();
-});
-
-it('caps a satellite admin at Lifeshaper in their own satellite', function (): void {
-    ['church' => $church, 'htc' => $htc, 'house' => $house] = fx();
+it('lets an admin here grant Admin and Lifeshaper at this satellite and Admin at its classes', function (): void {
+    ['htc' => $htc] = fx();
     $user = User::factory()->create();
     grantRole($user, RoleEnum::Admin, atSatellite($htc));
+    $class = scheduleAt($htc);
 
     $scope = scopeAt($user, $htc);
 
     expect($scope->canManagePeople())->toBeTrue()
-        ->and($scope->canGrant(RoleEnum::Lifeshaper, new RoleScope(ScopeTypeEnum::Satellite, $htc->id)))->toBeTrue()
-        ->and($scope->canGrant(RoleEnum::Lifeshaper, new RoleScope(ScopeTypeEnum::Satellite, $house->id)))->toBeFalse()
-        ->and($scope->canGrant(RoleEnum::Admin, new RoleScope(ScopeTypeEnum::Satellite, $htc->id)))->toBeFalse()
-        ->and($scope->canGrant(RoleEnum::Lifeshaper, new RoleScope(ScopeTypeEnum::Church, $church->id)))->toBeFalse();
+        ->and($scope->canGrant(RoleEnum::Admin, RoleScope::of($htc)))->toBeTrue()
+        ->and($scope->canGrant(RoleEnum::Lifeshaper, RoleScope::of($htc)))->toBeTrue()
+        ->and($scope->canGrant(RoleEnum::Admin, RoleScope::of($class)))->toBeTrue()
+        // A class Role is only ever Admin (TODO #9), and its satellite must be known.
+        ->and($scope->canGrant(RoleEnum::Lifeshaper, RoleScope::of($class)))->toBeFalse()
+        ->and($scope->canGrant(RoleEnum::Admin, new RoleScope(ScopeTypeEnum::Schedule, $class->id)))->toBeFalse();
+});
+
+it('lets an admin here grant nothing at another satellite or its classes, even one they are admin of too', function (): void {
+    ['htc' => $htc, 'house' => $house] = fx();
+    $user = User::factory()->create();
+    grantRole($user, RoleEnum::Admin, atSatellite($htc));
+    $both = atBoth(RoleEnum::Admin, $htc, $house);
+    $houseClass = scheduleAt($house);
+    $foreign = satelliteOf(church());
+
+    $scope = scopeAt($user, $htc);
+    $bothHere = scopeAt($both, $htc);
+
+    expect($scope->canGrant(RoleEnum::Lifeshaper, RoleScope::of($house)))->toBeFalse()
+        ->and($scope->canGrant(RoleEnum::Admin, RoleScope::of($house)))->toBeFalse()
+        ->and($scope->canGrant(RoleEnum::Admin, RoleScope::of($houseClass)))->toBeFalse()
+        ->and($scope->canGrant(RoleEnum::Admin, RoleScope::of($foreign)))->toBeFalse()
+        ->and($bothHere->canGrant(RoleEnum::Admin, RoleScope::of($house)))->toBeFalse()
+        ->and($bothHere->canGrant(RoleEnum::Admin, RoleScope::of($houseClass)))->toBeFalse()
+        ->and(scopeAt($both, $house)->canGrant(RoleEnum::Admin, RoleScope::of($house)))->toBeTrue();
 });
 
 it('does not let a Lifeshaper manage people', function (): void {
-    ['church' => $church, 'htc' => $htc] = fx();
+    ['htc' => $htc] = fx();
     $user = User::factory()->create();
-    grantRole($user, RoleEnum::Lifeshaper, atChurch($church));
+    grantRole($user, RoleEnum::Lifeshaper, atSatellite($htc));
 
     $scope = scopeAt($user, $htc);
 
     expect($scope->canManagePeople())->toBeFalse()
-        ->and($scope->canGrant(RoleEnum::Lifeshaper, new RoleScope(ScopeTypeEnum::Satellite, $htc->id)))->toBeFalse();
+        ->and($scope->canGrant(RoleEnum::Lifeshaper, RoleScope::of($htc)))->toBeFalse()
+        ->and($scope->canGrant(RoleEnum::Admin, RoleScope::of(scheduleAt($htc))))->toBeFalse();
 });
 
 /*
@@ -210,14 +229,17 @@ it('does not let a Lifeshaper manage people', function (): void {
  */
 it('lets anyone with a staff role in the church re-send a family\'s confirmation link', function (RoleEnum $role, string $where): void {
     ['church' => $church, 'htc' => $htc, 'house' => $house] = fx();
-    $user = User::factory()->create();
-    grantRole($user, $role, match ($where) {
-        'church' => atChurch($church),
-        'home' => atSatellite($htc),
-        'away' => atSatellite($house),
-        'class' => new TestRoleScope($church, ScopeTypeEnum::Schedule, scheduleAt($house)->id),
-        default => throw new LogicException("Unknown place: {$where}"),
-    });
+    if ($where === 'both') {
+        $user = atBoth($role, $htc, $house);
+    } else {
+        $user = User::factory()->create();
+        grantRole($user, $role, match ($where) {
+            'home' => atSatellite($htc),
+            'away' => atSatellite($house),
+            'class' => new TestRoleScope($church, ScopeTypeEnum::Schedule, scheduleAt($house)->id),
+            default => throw new LogicException("Unknown place: {$where}"),
+        });
+    }
 
     // From their own satellite's address, on a family of any satellite (DECISIONS 2026-11-08).
     $scope = scopeAt($user, in_array($where, ['away', 'class'], true) ? $house : $htc);
@@ -225,8 +247,8 @@ it('lets anyone with a staff role in the church re-send a family\'s confirmation
     expect($scope->canResendLink(familyAt($htc)))->toBeTrue()
         ->and($scope->canResendLink(Family::factory()->create()))->toBeFalse();
 })->with([
-    'church admin' => [RoleEnum::Admin, 'church'],
-    'church Lifeshaper' => [RoleEnum::Lifeshaper, 'church'],
+    'admin at both satellites' => [RoleEnum::Admin, 'both'],
+    'Lifeshaper at both satellites' => [RoleEnum::Lifeshaper, 'both'],
     'home satellite admin' => [RoleEnum::Admin, 'home'],
     'home Lifeshaper' => [RoleEnum::Lifeshaper, 'home'],
     'other-satellite admin' => [RoleEnum::Admin, 'away'],
@@ -244,11 +266,10 @@ it('refuses a re-send to someone whose only role was switched off', function ():
     expect($scope->canResendLink(familyAt($htc)))->toBeFalse();
 });
 
-// DECISIONS 2026-11-08: a church admin manages every satellite's classes, each at that satellite's address.
-it('lets admins manage classes: a church admin at every satellite (at its address), a satellite admin at their own', function (): void {
-    ['church' => $church, 'htc' => $htc, 'house' => $house] = fx();
-    $churchAdmin = User::factory()->create();
-    grantRole($churchAdmin, RoleEnum::Admin, atChurch($church));
+// DECISIONS 2026-11-08: an admin at both satellites manages each one's classes, each at that satellite's address.
+it('lets admins manage classes: an admin at both satellites at each (at its address), a satellite admin at their own', function (): void {
+    ['htc' => $htc, 'house' => $house] = fx();
+    $churchAdmin = atBoth(RoleEnum::Admin, $htc, $house);
     $htcAdmin = User::factory()->create();
     grantRole($htcAdmin, RoleEnum::Admin, atSatellite($htc));
 
@@ -264,11 +285,11 @@ it('lets admins manage classes: a church admin at every satellite (at its addres
 });
 
 it('never lets a Lifeshaper manage classes, nor anyone another church\'s', function (): void {
-    ['church' => $church, 'htc' => $htc] = fx();
+    ['htc' => $htc] = fx();
     $lifeshaper = User::factory()->create();
-    grantRole($lifeshaper, RoleEnum::Lifeshaper, atChurch($church));
+    grantRole($lifeshaper, RoleEnum::Lifeshaper, atSatellite($htc));
     $admin = User::factory()->create();
-    grantRole($admin, RoleEnum::Admin, atChurch($church));
+    grantRole($admin, RoleEnum::Admin, atSatellite($htc));
     $elsewhere = satelliteOf(church());
 
     $scope = scopeAt($lifeshaper, $htc);
@@ -277,33 +298,27 @@ it('never lets a Lifeshaper manage classes, nor anyone another church\'s', funct
         ->and(scopeAt($admin, $htc)->canManageClassesAt($elsewhere))->toBeFalse();
 });
 
-// DECISIONS 2026-11-08: a church admin sees each satellite's Attendance at that satellite's address.
-it('shows Attendance to admins — a church admin every satellite, a satellite admin their own — and never to a Lifeshaper', function (): void {
-    ['church' => $church, 'htc' => $htc] = fx();
-    $scopeOf = function (RoleEnum $role, bool $churchWide) use ($church, $htc) {
-        $user = User::factory()->create();
-        grantRole($user, $role, $churchWide ? atChurch($church) : atSatellite($htc));
-
-        return scopeAt($user, $htc);
+// DECISIONS 2026-11-08: an admin at both satellites sees each one's Attendance at that satellite's address.
+it('shows Attendance to admins — an admin at both satellites each one, a satellite admin their own — and never to a Lifeshaper', function (): void {
+    ['htc' => $htc, 'house' => $house] = fx();
+    $scopeOf = function (RoleEnum $role, bool $bothSatellites) use ($htc, $house) {
+        return scopeAt($bothSatellites ? atBoth($role, $htc, $house) : atBoth($role, $htc), $htc);
     };
 
     $all = $scopeOf(RoleEnum::Admin, true);
     $own = $scopeOf(RoleEnum::Admin, false);
     $lifeshaper = $scopeOf(RoleEnum::Lifeshaper, true);
 
-    expect([$all->canSeeAttendance(), $all->attendanceSatelliteIds()])->toBe([true, [$htc->id]])
-        ->and([$own->canSeeAttendance(), $own->attendanceSatelliteIds()])->toBe([true, [$htc->id]])
-        ->and([$lifeshaper->canSeeAttendance(), $lifeshaper->attendanceSatelliteIds()])->toBe([false, []]);
+    expect($all->canSeeAttendance())->toBeTrue()
+        ->and($own->canSeeAttendance())->toBeTrue()
+        ->and($lifeshaper->canSeeAttendance())->toBeFalse();
 });
 
-// DECISIONS 2026-11-08: a church admin sees each satellite's Card requests at that satellite's address.
-it('opens Cards to admins — a church admin every satellite\'s requests, a satellite admin their own — and never to a Lifeshaper', function (): void {
-    ['church' => $church, 'htc' => $htc] = fx();
-    $scopeOf = function (RoleEnum $role, bool $churchWide) use ($church, $htc) {
-        $user = User::factory()->create();
-        grantRole($user, $role, $churchWide ? atChurch($church) : atSatellite($htc));
-
-        return scopeAt($user, $htc);
+// DECISIONS 2026-11-08: an admin at both satellites sees each one's Card requests at that satellite's address.
+it('opens Cards to admins — an admin at both satellites each one\'s requests, a satellite admin their own — and never to a Lifeshaper', function (): void {
+    ['htc' => $htc, 'house' => $house] = fx();
+    $scopeOf = function (RoleEnum $role, bool $bothSatellites) use ($htc, $house) {
+        return scopeAt($bothSatellites ? atBoth($role, $htc, $house) : atBoth($role, $htc), $htc);
     };
 
     $all = $scopeOf(RoleEnum::Admin, true);
@@ -315,12 +330,11 @@ it('opens Cards to admins — a church admin every satellite\'s requests, a sate
         ->and([$lifeshaper->canManageCards(), $lifeshaper->cardSatelliteIds()])->toBe([false, []]);
 });
 
-// DECISIONS 2026-11-08: the door is the address satellite's — a church-wide Role checks in anywhere, at that
+// DECISIONS 2026-11-08: the door is the address satellite's — a Role at both satellites checks in at each, at that
 // satellite's own address.
-it('lets anyone with a Role at a satellite check children in there; a church-wide Role anywhere', function (RoleEnum $role, string $where, bool $atHtc, bool $atHouse): void {
-    ['church' => $church, 'htc' => $htc, 'house' => $house] = fx();
-    $user = User::factory()->create();
-    grantRole($user, $role, $where === 'church' ? atChurch($church) : atSatellite($htc));
+it('lets anyone with a Role at a satellite check children in there; a Role at both satellites at each', function (RoleEnum $role, string $where, bool $atHtc, bool $atHouse): void {
+    ['htc' => $htc, 'house' => $house] = fx();
+    $user = $where === 'both' ? atBoth($role, $htc, $house) : atBoth($role, $htc);
 
     $scope = scopeAt($user, $htc);
     $atHouseAddress = scopeAt($user, $house);
@@ -328,18 +342,18 @@ it('lets anyone with a Role at a satellite check children in there; a church-wid
     expect([$scope->canCheckInTo(scheduleAt($htc)), $atHouseAddress->canCheckInTo(scheduleAt($house))])->toBe([$atHtc, $atHouse])
         ->and($scope->canCheckInTo(scheduleAt($house)))->toBeFalse()
         ->and($scope->doorSatelliteIds())->toBe([$htc->id])
-        ->and($atHouseAddress->doorSatelliteIds())->toBe($where === 'church' ? [$house->id] : []);
+        ->and($atHouseAddress->doorSatelliteIds())->toBe($where === 'both' ? [$house->id] : []);
 })->with([
-    'church admin' => [RoleEnum::Admin, 'church', true, true],
-    'church Lifeshaper' => [RoleEnum::Lifeshaper, 'church', true, true],
+    'admin at both satellites' => [RoleEnum::Admin, 'both', true, true],
+    'Lifeshaper at both satellites' => [RoleEnum::Lifeshaper, 'both', true, true],
     'satellite admin' => [RoleEnum::Admin, 'satellite', true, false],
     'satellite Lifeshaper' => [RoleEnum::Lifeshaper, 'satellite', true, false],
 ]);
 
 it('never lets anyone check in at another church\'s satellite, nor with a switched-off Role', function (): void {
-    ['church' => $church, 'htc' => $htc] = fx();
+    ['htc' => $htc] = fx();
     $admin = User::factory()->create();
-    grantRole($admin, RoleEnum::Admin, atChurch($church));
+    grantRole($admin, RoleEnum::Admin, atSatellite($htc));
     $revoked = User::factory()->create();
     grantRole($revoked, RoleEnum::Lifeshaper, atSatellite($htc), active: false);
 
@@ -370,7 +384,7 @@ it('gives a class admin their class — its door, its Attendance, editing it —
         ->and($scope->doorSatelliteIds())->toBe([])
         ->and($scope->classAdminScheduleIds())->toBe([$onePm->id])
         ->and([$scope->canManageClasses(), $scope->canManageSchedule($onePm), $scope->canManageSchedule($sevenPm), $scope->canManageClassesAt($htc)])->toBe([true, true, false, false])
-        ->and([$scope->canSeeAttendance(), $scope->canSeeAttendanceOf($onePm), $scope->canSeeAttendanceOf($sevenPm), $scope->attendanceSatelliteIds()])->toBe([true, true, false, [$htc->id]]);
+        ->and([$scope->canSeeAttendance(), $scope->canSeeAttendanceOf($onePm), $scope->canSeeAttendanceOf($sevenPm)])->toBe([true, true, false]);
 });
 
 it('lets a class admin work at their class\'s satellite as a Lifeshaper there, and into Admin only for Classes and Attendance (TODO #9)', function (): void {
@@ -382,15 +396,13 @@ it('lets a class admin work at their class\'s satellite as a Lifeshaper there, a
         ->and([$scope->canManagePeople(), $scope->canManageCards(), $scope->canManageLinks(), $scope->canReviewDuplicates(), $scope->canMoveUp()])->toBe([false, false, false, false, false]);
 });
 
-// DECISIONS 2026-11-08: a church admin manages each satellite's Links at that satellite's address.
-it('lets an admin manage the Links of the satellites they look after — a church admin every satellite\'s (Roy 2026-11-06)', function (): void {
-    ['church' => $church, 'htc' => $htc, 'house' => $house] = fx();
-    $churchAdmin = User::factory()->create();
-    grantRole($churchAdmin, RoleEnum::Admin, atChurch($church));
+// DECISIONS 2026-11-08: an admin at both satellites manages each one's Links at that satellite's address.
+it('lets an admin manage the Links of the satellites they look after — an admin at both satellites each one\'s (Roy 2026-11-06)', function (): void {
+    ['htc' => $htc, 'house' => $house] = fx();
+    $churchAdmin = atBoth(RoleEnum::Admin, $htc, $house);
     $satelliteAdmin = User::factory()->create();
     grantRole($satelliteAdmin, RoleEnum::Admin, atSatellite($htc));
-    $lifeshaper = User::factory()->create();
-    grantRole($lifeshaper, RoleEnum::Lifeshaper, atChurch($church));
+    $lifeshaper = atBoth(RoleEnum::Lifeshaper, $htc, $house);
 
     $wide = scopeAt($churchAdmin, $htc);
     $own = scopeAt($satelliteAdmin, $htc);

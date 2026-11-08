@@ -19,12 +19,12 @@ use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\travelTo;
-use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
 use function Tests\Support\childOf;
 use function Tests\Support\church;
 use function Tests\Support\exportedRows;
 use function Tests\Support\familyAt;
+use function Tests\Support\grantRole;
 use function Tests\Support\guardianOf;
 use function Tests\Support\satelliteOf;
 use function Tests\Support\staffMember;
@@ -69,23 +69,25 @@ describe('the Cards page', function (): void {
         actingAs($admin)->get('/dxb/admin/card-requests?tab=nonsense')->assertInertia(fn (AssertableInertia $p) => $p->where('tab', 'asked'));
     });
 
-    it('shows a church admin every satellite\'s requests, a satellite admin only their own; a Lifeshaper has no page @story#135', function (): void {
-        ['church' => $church, 'house' => $house, 'amara' => $amara] = cardsChurch();
+    it('shows an admin of every satellite each satellite\'s requests, a satellite admin only their own; a Lifeshaper has no page @story#135', function (): void {
+        ['dxb' => $dxb, 'house' => $house, 'amara' => $amara] = cardsChurch();
         $dxbRequest = CardRequest::factory()->for($amara)->create();
         $houseRequest = CardRequest::factory()->for(childOf(familyAt($house)))->create();
 
         $lists = fn (User $who, string $at, array $ids) => actingAs($who)->get("/{$at}/admin/card-requests")->assertInertia(fn (AssertableInertia $p) => $p
             ->where('requests', fn (Collection $rows): bool => $rows->pluck('id')->all() === $ids));
 
-        // DECISIONS 2026-11-08: the page shows only the satellite in its address — a church admin sees each satellite's at its own address.
-        $churchAdmin = staffMember(RoleEnum::Admin, atChurch($church));
-        $lists($churchAdmin, 'dxb', [$dxbRequest->id]);
-        $lists($churchAdmin, 'house', [$houseRequest->id]);
+        // DECISIONS 2026-11-08: the page shows only the satellite in its address — an admin at both satellites (no
+        // church-wide Role, spec item 9) sees each satellite's at its own address.
+        $bothAdmin = staffMember(RoleEnum::Admin, atSatellite($dxb));
+        grantRole($bothAdmin, RoleEnum::Admin, atSatellite($house));
+        $lists($bothAdmin, 'dxb', [$dxbRequest->id]);
+        $lists($bothAdmin, 'house', [$houseRequest->id]);
         $houseAdmin = staffMember(RoleEnum::Admin, atSatellite($house));
         $lists($houseAdmin, 'house', [$houseRequest->id]);
         actingAs($houseAdmin)->get('/dxb/admin/card-requests')->assertNotFound();
         // DECISIONS 2026-11-08: a Lifeshaper opening an Admin page is sent to the door.
-        actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get('/dxb/admin/card-requests')->assertRedirect('/dxb/serve/door');
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->get('/dxb/admin/card-requests')->assertRedirect('/dxb/serve/door');
     });
 });
 
@@ -247,7 +249,7 @@ describe('print lists', function (): void {
     });
 
     it('shows a viewer only the cards on a list they may see; a list with none of theirs, or another church\'s, is not found @story#149', function (): void {
-        ['church' => $church, 'house' => $house, 'amara' => $amara, 'admin' => $dxbAdmin] = cardsChurch();
+        ['church' => $church, 'dxb' => $dxb, 'house' => $house, 'amara' => $amara, 'admin' => $dxbAdmin] = cardsChurch();
         $hers = CardRequest::factory()->for($amara)->create(['step' => CardStepEnum::Approved]);
         $pia = CardRequest::factory()->for(childOf(familyAt($house), ['first_name' => 'Pia', 'middle_name' => null, 'last_name' => 'Villa', 'nickname' => 'Pia']))->create(['step' => CardStepEnum::Approved]);
         $both = PrintList::factory()->for($church)->create();
@@ -260,8 +262,10 @@ describe('print lists', function (): void {
             ->toBe(['Full name|Nickname|Level|Squad|Barcode', 'Pia Villa|Pia|||PIAVILLA']);
         actingAs($dxbAdmin)->get("/dxb/admin/card-requests/print-lists/{$houseOnly->id}")->assertNotFound();
         actingAs($dxbAdmin)->get("/dxb/admin/card-requests/print-lists/{$elsewhere->id}")->assertNotFound();
-        // DECISIONS 2026-11-08: a Lifeshaper opening an Admin page is sent to the door, never shown the list.
-        actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get("/dxb/admin/card-requests/print-lists/{$both->id}")->assertRedirect('/dxb/serve/door');
+        // DECISIONS 2026-11-08: a Lifeshaper opening an Admin page is sent to the door, never shown the list — even one at both satellites.
+        $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($dxb));
+        grantRole($lifeshaper, RoleEnum::Lifeshaper, atSatellite($house));
+        actingAs($lifeshaper)->get("/dxb/admin/card-requests/print-lists/{$both->id}")->assertRedirect('/dxb/serve/door');
     });
 
     it('marks a print list\'s still-approved cards printed, and says how many had already moved on @story#144', function (): void {

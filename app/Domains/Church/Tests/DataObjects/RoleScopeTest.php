@@ -10,25 +10,25 @@ use App\Enums\ScopeTypeEnum;
 use function Tests\Support\atSatellite;
 use function Tests\Support\church;
 use function Tests\Support\satelliteOf;
+use function Tests\Support\scheduleAt;
 use function Tests\Support\staffMember;
 
-/* Where a Role is held — the whole Church or one Satellite — in the one shape everything that gives, removes or names a role uses. */
+/*
+ * Where a Role is held — one Satellite or one class; there is no church-wide Role (spec item 9) — in the one shape
+ * everything that gives, removes or names a role uses.
+ */
 
-it('is the whole church when the place is the church', function (): void {
-    $church = church();
+it('is one class, carrying the class\'s satellite, when the place is a class', function (): void {
+    $satellite = satelliteOf(church());
+    $class = scheduleAt($satellite);
 
-    $scope = RoleScope::of($church);
-
-    expect([$scope->type, $scope->id, RoleScope::churchIdOf($church)])->toBe([ScopeTypeEnum::Church, $church->id, $church->id]);
+    expect(RoleScope::of($class))->toEqual(new RoleScope(ScopeTypeEnum::Schedule, $class->id, $satellite->id));
 });
 
-it('is one satellite, in that satellite\'s church, when the place is a satellite', function (): void {
-    $church = church();
-    $satellite = satelliteOf($church);
+it('is one satellite when the place is a satellite', function (): void {
+    $satellite = satelliteOf(church());
 
-    $scope = RoleScope::of($satellite);
-
-    expect([$scope->type, $scope->id, RoleScope::churchIdOf($satellite)])->toBe([ScopeTypeEnum::Satellite, $satellite->id, $church->id]);
+    expect(RoleScope::of($satellite))->toEqual(new RoleScope(ScopeTypeEnum::Satellite, $satellite->id));
 });
 
 it('reads a held role\'s place', function (): void {

@@ -15,7 +15,7 @@ use App\Services\Church\Features\BaseChurchFeature;
 use Illuminate\Http\RedirectResponse;
 
 /**
- * "Move up N children" (DECISIONS 2026-11-06): the children the church admin left ticked go to the next Level, from
+ * "Move up N children" (DECISIONS 2026-11-06): the children the satellite's admin left ticked (Moving-Up per satellite, DECISIONS 2026-11-08) go to the next Level, from
  * the top Level to Graduated (MoveChildrenUpOperation). If any changed since the page was opened, nobody moves and
  * the admin is asked to look again.
  *
@@ -23,9 +23,9 @@ use Illuminate\Http\RedirectResponse;
  */
 #[UserStory(
     title: 'Move children up',
-    persona: 'church admin',
-    happyPaths: ['story#156' => 'A Church admin moves the ticked children up a Level — from the top Level to Graduated — and the unticked stay'],
-    unhappyPaths: ['story#157' => 'Nobody moves when a child changed since the page was opened, or none is ticked; never another church\'s child; never by a Satellite admin'],
+    persona: 'satellite admin',
+    happyPaths: ['story#156' => 'A Satellite admin moves the ticked children of their satellite up a Level — from the top Level to Graduated — and the unticked stay'],
+    unhappyPaths: ['story#157' => 'Nobody moves when a child changed since the page was opened, or none is ticked; never another satellite\'s or church\'s child; never by a Lifeshaper'],
 )]
 #[AccessRow(AccessRowEnum::MovingUp)]
 final class MoveChildrenUpFeature extends BaseChurchFeature
@@ -34,7 +34,7 @@ final class MoveChildrenUpFeature extends BaseChurchFeature
     {
         abort_unless($this->scope()->canMoveUp(), 404);
 
-        $movingUp = $this->run(new MoveChildrenUpOperation(church: $this->church(), expected: $input->expected(), by: $this->staff()));
+        $movingUp = $this->run(new MoveChildrenUpOperation(satellite: $this->satellite(), expected: $input->expected(), by: $this->staff()));
         if ($movingUp === null) {
             return back()->with('error', 'Some children changed since this page was opened, so nobody moved. Please look again.');
         }

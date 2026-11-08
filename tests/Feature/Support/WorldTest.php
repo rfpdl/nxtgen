@@ -10,7 +10,6 @@ use App\Domains\Church\Jobs\GetAccessScopeJob;
 use App\Enums\RoleEnum;
 use App\Enums\WeekdayEnum;
 
-use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
 use function Tests\Support\checkedIn;
 use function Tests\Support\childOf;
@@ -59,7 +58,7 @@ it('gives a role only in the church its scope belongs to', function (): void {
     $ccf = satelliteOf(church());
     $other = satelliteOf(church());
 
-    $admin = staffMember(RoleEnum::Admin, atChurch($ccf->church));
+    $admin = staffMember(RoleEnum::Admin, atSatellite($ccf));
 
     expect((new GetAccessScopeJob(user: $admin, satellite: $ccf))->handle()->canWorkHere())->toBeTrue()
         ->and((new GetAccessScopeJob(user: $admin, satellite: $other))->handle()->canWorkHere())->toBeFalse();
@@ -71,8 +70,8 @@ it('gives an existing user a role, or a revoked one that opens nothing', functio
     $admin = User::factory()->create();
     $revoked = User::factory()->create();
 
-    grantRole($admin, RoleEnum::Admin, atChurch($church));
-    grantRole($revoked, RoleEnum::Admin, atChurch($church), active: false);
+    grantRole($admin, RoleEnum::Admin, atSatellite($satellite));
+    grantRole($revoked, RoleEnum::Admin, atSatellite($satellite), active: false);
 
     expect((new GetAccessScopeJob(user: $admin, satellite: $satellite))->handle()->canWorkHere())->toBeTrue()
         ->and((new GetAccessScopeJob(user: $revoked, satellite: $satellite))->handle()->canWorkHere())->toBeFalse();

@@ -7,9 +7,9 @@ use App\Enums\RoleEnum;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
-use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
 use function Tests\Support\church;
+use function Tests\Support\grantRole;
 use function Tests\Support\satelliteOf;
 use function Tests\Support\staffMember;
 
@@ -47,20 +47,24 @@ it('serves the staff pages by area — a satellite\'s Admin and Serve (Roy 2026-
 it('opens the church home on an admin\'s Admin area and everyone else\'s Serve area @story#42', function (): void {
     $church = church(['slug' => 'ccf']);
     $dubai = satelliteOf($church, ['slug' => 'dubai']);
-    satelliteOf($church, ['slug' => 'sharjah']);
+    $sharjah = satelliteOf($church, ['slug' => 'sharjah']);
+    // An admin at both satellites (no church-wide Role — spec item 9).
+    $homeAndAway = staffMember(RoleEnum::Admin, atSatellite($dubai));
+    grantRole($homeAndAway, RoleEnum::Admin, atSatellite($sharjah));
 
     // The satellite's home (/{satellite}, was the church's /ccf — Roy 2026-11-07).
-    actingAs(staffMember(RoleEnum::Admin, atChurch($church)))->get('/dubai')->assertRedirect('/dubai/admin/families');
+    actingAs($homeAndAway)->get('/dubai')->assertRedirect('/dubai/admin/families');
+    actingAs($homeAndAway)->get('/sharjah')->assertRedirect('/sharjah/admin/families');
     actingAs(staffMember(RoleEnum::Admin, atSatellite($dubai)))->get('/dubai')->assertRedirect('/dubai/admin/families');
-    actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get('/dubai')->assertRedirect('/dubai/serve/door');
+    actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dubai)))->get('/dubai')->assertRedirect('/dubai/serve/door');
     // Access is asked at the satellite in the address only (DECISIONS 2026-11-08): Dubai's admin has no Role at Sharjah.
     actingAs(staffMember(RoleEnum::Admin, atSatellite($dubai)))->get('/sharjah')->assertNotFound();
 });
 
 it('keeps the Admin area to admins: a Lifeshaper opening it is sent to Serve, and acting there is a 404', function (): void {
     $church = church(['slug' => 'ccf']);
-    satelliteOf($church, ['slug' => 'dubai']);
-    $lifeshaper = staffMember(RoleEnum::Lifeshaper, atChurch($church));
+    $dubai = satelliteOf($church, ['slug' => 'dubai']);
+    $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($dubai));
 
     // DECISIONS 2026-11-08 (spec item 10): an Admin page opened by someone who only serves here goes to their door
     // (was a 404); any Admin act by them is still a 404.

@@ -23,7 +23,7 @@ use Illuminate\Validation\ValidationException;
  */
 #[UserStory(
     title: 'Add a class',
-    persona: 'church admin or satellite admin',
+    persona: 'satellite admin',
     happyPaths: ['story#97' => 'An Admin adds a class with a name, and a day and times if it has them'],
     unhappyPaths: ['story#98' => 'Only at a satellite they look after; a name is needed, times are HH:MM and the end comes after the start; no two active classes at a satellite share a name'],
 )]

@@ -9,8 +9,6 @@ use App\Data\Models\Schedule;
 use App\Data\Models\Squad;
 use App\Data\Models\User;
 use App\Enums\GenderEnum;
-use App\Enums\RoleEnum;
-use App\Enums\ScopeTypeEnum;
 use App\Enums\WeekdayEnum;
 use Database\Seeders\ChurchSeeder;
 use Database\Seeders\DatabaseSeeder;
@@ -36,7 +34,7 @@ function churchSettings(array $overrides = []): void
     ], $overrides)]);
 }
 
-it('creates the church, its satellites, each satellite\'s Squads and the first church admin', function (): void {
+it('creates the church, its satellites, each satellite\'s Squads and the first person — the platform admin, on no satellite\'s People (Roy 2026-11-08)', function (): void {
     churchSettings();
 
     seed(ChurchSeeder::class);
@@ -48,9 +46,8 @@ it('creates the church, its satellites, each satellite\'s Squads and the first c
         ->and(Satellite::query()->where('church_id', $church->id)->orderBy('name')->pluck('name')->all())->toBe(['CCF Dubai', 'CCF Sharjah'])
         ->and(Satellite::query()->orderBy('slug')->pluck('slug')->all())->toBe(['dubai', 'sharjah'])
         ->and($admin->password)->toBeNull()
-        ->and($admin->is_platform_admin)->toBeFalse()
-        ->and(RoleAssignment::query()->where('user_id', $admin->id)->where('role', RoleEnum::Admin)
-            ->where('scope_type', ScopeTypeEnum::Church)->where('scope_id', $church->id)->where('is_active', true)->count())->toBe(1);
+        ->and($admin->is_platform_admin)->toBeTrue()
+        ->and(RoleAssignment::query()->count())->toBe(0);
 });
 
 it('gives every satellite the chart\'s Squads: Level 1 mixed, Levels 2–4 boys and girls', function (): void {
@@ -80,7 +77,7 @@ it('is safe to run again', function (): void {
         ->and(Satellite::query()->count())->toBe(2)
         ->and(Squad::query()->count())->toBe(14)
         ->and(User::query()->count())->toBe(1)
-        ->and(RoleAssignment::query()->count())->toBe(1);
+        ->and(User::query()->sole()->is_platform_admin)->toBeTrue();
 });
 
 it('refuses to start without a first admin', function (): void {
@@ -133,14 +130,14 @@ it('adds what is missing on a second run, and changes nothing that exists', func
     seed(ChurchSeeder::class);
     $church = Church::query()->sole();
     $church->forceFill(['timezone' => 'Asia/Manila'])->save();
-    RoleAssignment::query()->update(['is_active' => false]);          // the church removed that admin
+    User::query()->update(['is_platform_admin' => false]);              // the platform admin was taken off
 
     churchSettings(['satellites' => 'dubai=CCF Dubai|sharjah=CCF Sharjah|abu-dhabi=CCF Abu Dhabi']);
     seed(ChurchSeeder::class);
 
     expect($church->fresh()?->timezone)->toBe('Asia/Manila')
         ->and(Squad::query()->count())->toBe(21)           // the new satellite got its own seven
-        ->and(RoleAssignment::query()->where('is_active', true)->count())->toBe(0)
+        ->and(User::query()->sole()->is_platform_admin)->toBeFalse()
         ->and(Satellite::query()->pluck('name')->sort()->values()->all())->toBe(['CCF Abu Dhabi', 'CCF Dubai', 'CCF Sharjah']);
 });
 

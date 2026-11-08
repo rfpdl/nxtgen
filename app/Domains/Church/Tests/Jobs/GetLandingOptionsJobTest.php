@@ -6,7 +6,6 @@ use App\Data\Models\User;
 use App\Domains\Church\Jobs\GetLandingOptionsJob;
 use App\Enums\RoleEnum;
 
-use function Tests\Support\atChurch;
 use function Tests\Support\atClass;
 use function Tests\Support\atSatellite;
 use function Tests\Support\church;
@@ -18,21 +17,22 @@ use function Tests\Support\scheduleAt;
 
 /*
  * Where a login can go: their family page (`/family`) where they are a guardian, and a staff home per church they
- * serve in — the first satellite their Roles cover there, in the order satellites were added (a church-wide Role: the
- * church's first-added satellite).
+ * serve in — the first satellite their Roles cover there, in the order satellites were added (there is no church-wide
+ * Role — spec item 9).
  */
 
 it('offers the family page first, then staff, for each church in name order', function (): void {
     $user = User::factory()->create();
     $beta = church(['name' => 'Beta Church', 'slug' => 'beta']);
     $alpha = church(['name' => 'Alpha Church', 'slug' => 'alpha']);
-    satelliteOf($alpha, ['name' => 'Zeta', 'slug' => 'alpha-zeta']);
+    $alphaZeta = satelliteOf($alpha, ['name' => 'Zeta', 'slug' => 'alpha-zeta']);
     $alphaDelta = satelliteOf($alpha, ['name' => 'Delta', 'slug' => 'alpha-delta']);
     satelliteOf($beta, ['name' => 'Aardvark', 'slug' => 'beta-aardvark']);
     $omega = satelliteOf($beta, ['name' => 'Omega', 'slug' => 'beta-omega']);
     $alphaHall = satelliteOf($beta, ['name' => 'Alpha Hall', 'slug' => 'beta-alpha-hall']);
     guardianOf(familyAt($alphaDelta), $user);
-    grantRole($user, RoleEnum::Lifeshaper, atChurch($alpha));
+    grantRole($user, RoleEnum::Lifeshaper, atSatellite($alphaDelta));
+    grantRole($user, RoleEnum::Lifeshaper, atSatellite($alphaZeta));
     grantRole($user, RoleEnum::Admin, atSatellite($alphaHall));
     grantRole($user, RoleEnum::Lifeshaper, atSatellite($omega));
 
@@ -66,9 +66,9 @@ it('offers no place for a class admin whose class is retired — that Role gives
 
 it('offers nothing for a revoked role or for churches the person has no part in', function (): void {
     $user = User::factory()->create();
-    grantRole($user, RoleEnum::Admin, atChurch(church()), active: false);
+    grantRole($user, RoleEnum::Admin, atSatellite(satelliteOf(church())), active: false);
     guardianOf(familyAt(satelliteOf(church())), User::factory()->create());
-    grantRole(User::factory()->create(), RoleEnum::Admin, atChurch(church()));
+    grantRole(User::factory()->create(), RoleEnum::Admin, atSatellite(satelliteOf(church())));
 
     expect((new GetLandingOptionsJob(user: $user))->handle())->toBe([]);
 });

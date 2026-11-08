@@ -5,10 +5,10 @@ import { expect, test } from '../support/test'
 import { DUBAI, CLASSES, SATELLITES, sessionFile, uniqueEmail } from '../support/world'
 
 /*
- * A class admin (TODO #9; plan §3.2 "Class admin (S)"): a church admin makes someone Admin of CCF Dubai · 1PM on
+ * A class admin (TODO #9; plan §3.2 "Class admin (S)"): an admin of CCF Dubai makes someone Admin of CCF Dubai · 1PM on
  * People; they sign in from the email and find their class at the door and on Classes — and no other.
  */
-test('a church admin makes someone class admin of 1PM; they see only 1PM at the door and on Classes @story#180 @story#182 @story#183', async ({
+test('an admin makes someone class admin of 1PM; they see only 1PM at the door and on Classes @story#180 @story#182 @story#183', async ({
     page,
     browser,
 }) => {
@@ -16,7 +16,7 @@ test('a church admin makes someone class admin of 1PM; they see only 1PM at the 
     const before = mailCount(email)
     const role = `Admin · ${SATELLITES.dxb} · ${CLASSES.onePm.name}`
 
-    const admin = await browser.newContext({ storageState: sessionFile('churchAdmin') })
+    const admin = await browser.newContext({ storageState: sessionFile('admin') })
     const office = await admin.newPage()
     await office.goto(`/${DUBAI}/admin/people`)
     await office.getByTestId('staff-name').fill('Cleo Class')

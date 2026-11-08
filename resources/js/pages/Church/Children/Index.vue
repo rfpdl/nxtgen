@@ -18,7 +18,7 @@ import { areaRoute } from '@/composables/useArea'
  * flag — with the same search and filters as the families list. Each child opens their family; a child whose family's
  * email is unconfirmed offers "Send the confirmation link again" (DECISIONS 2026-10-17).
  * On the kit (the Bold look): one stacked row per child — the whole row opens the family — the Level a Pill in its
- * own colour. A church admin also gets "Moving-Up" here — once a year, so not a menu item (DECISIONS 2026-11-06).
+ * own colour. A satellite admin also gets "Moving-Up" here — once a year, so not a menu item (DECISIONS 2026-11-06).
  */
 defineProps<{
     children: ChildListRow[]

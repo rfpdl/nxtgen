@@ -11,17 +11,18 @@ use App\Enums\WeekdayEnum;
 use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
-use function Tests\Support\atChurch;
 use function Tests\Support\atSatellite;
 use function Tests\Support\church;
 use function Tests\Support\classAdminOf;
+use function Tests\Support\grantRole;
 use function Tests\Support\satelliteOf;
 use function Tests\Support\scheduleAt;
 use function Tests\Support\staffMember;
 
 /*
  * Classes (GLOSSARY "Schedule", shown as "class" — DECISIONS 2026-10-26): admins make a satellite's classes —
- * a name, an optional day and start/end time. Church admins at every satellite, satellite admins at their own.
+ * a name, an optional day and start/end time. A satellite's admins, at that satellite (DECISIONS 2026-11-08: no
+ * church-wide Role — `admin` here holds the Admin Role at both satellites).
  * AccessScope::canManageClasses/canManageClassesAt own the rule; these prove the screens ask it.
  */
 
@@ -36,7 +37,10 @@ function classesChurch(): array
     scheduleAt($house, ['name' => '10AM', 'weekday' => WeekdayEnum::Sunday, 'starts_at' => '10:00', 'ends_at' => null]);
     scheduleAt($dxb, ['name' => 'Old class', 'is_active' => false]);
 
-    return ['church' => $church, 'dxb' => $dxb, 'house' => $house, 'admin' => staffMember(RoleEnum::Admin, atChurch($church)), 'onePm' => $onePm];
+    $admin = staffMember(RoleEnum::Admin, atSatellite($dxb));
+    grantRole($admin, RoleEnum::Admin, atSatellite($house));
+
+    return ['church' => $church, 'dxb' => $dxb, 'house' => $house, 'admin' => $admin, 'onePm' => $onePm];
 }
 
 /**
@@ -49,10 +53,10 @@ function classForm(array $overrides = []): array
 }
 
 describe('the Classes page', function (): void {
-    it('shows a church admin every satellite\'s active classes, in the order of the week @story#95', function (): void {
+    it('shows an admin of both satellites each satellite\'s active classes, in the order of the week @story#95', function (): void {
         ['admin' => $admin] = classesChurch();
 
-        // DECISIONS 2026-11-08: the page shows only the satellite in its address — a church admin sees each at its own.
+        // DECISIONS 2026-11-08: the page shows only the satellite in its address — an admin of both sees each at its own.
         actingAs($admin)->get('/dxb/admin/classes')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
             ->component('Church/Schedules/Index')
             ->has('satellites', 1)
@@ -83,18 +87,20 @@ describe('the Classes page', function (): void {
     });
 
     it('puts Classes in the menu for admins only', function (): void {
-        ['church' => $church, 'admin' => $admin] = classesChurch();
+        ['dxb' => $dxb, 'admin' => $admin] = classesChurch();
 
         actingAs($admin)->get('/dxb/serve/families')->assertInertia(fn (AssertableInertia $page) => $page->where('church_nav.can_manage_classes', true));
-        actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get('/dxb/serve/families')
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->get('/dxb/serve/families')
             ->assertInertia(fn (AssertableInertia $page) => $page->where('church_nav.can_manage_classes', false));
     });
 
     it('is not there for a Lifeshaper @story#96', function (): void {
-        ['church' => $church, 'dxb' => $dxb] = classesChurch();
+        ['dxb' => $dxb, 'house' => $house] = classesChurch();
 
-        // DECISIONS 2026-11-08: a Lifeshaper opening an Admin page is sent to the door.
-        actingAs(staffMember(RoleEnum::Lifeshaper, atChurch($church)))->get('/dxb/admin/classes')->assertRedirect('/dxb/serve/door');
+        // DECISIONS 2026-11-08: a Lifeshaper opening an Admin page is sent to the door — one at both satellites too.
+        $atBoth = staffMember(RoleEnum::Lifeshaper, atSatellite($dxb));
+        grantRole($atBoth, RoleEnum::Lifeshaper, atSatellite($house));
+        actingAs($atBoth)->get('/dxb/admin/classes')->assertRedirect('/dxb/serve/door');
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->get('/dxb/admin/classes')->assertRedirect('/dxb/serve/door');
     });
 });
@@ -228,7 +234,7 @@ describe('retiring a class', function (): void {
         actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->put("/house/admin/classes/{$onePm->id}/retire")->assertNotFound();
         actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->put("/dxb/admin/classes/{$onePm->id}/retire")->assertNotFound();
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($house)))->put("/house/admin/classes/{$onePm->id}/retire")->assertNotFound();
-        actingAs(staffMember(RoleEnum::Admin, atChurch($otherChurch)))->put("/{$otherSatellite->slug}/admin/classes/{$onePm->id}/retire")->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($otherSatellite)))->put("/{$otherSatellite->slug}/admin/classes/{$onePm->id}/retire")->assertNotFound();
 
         expect($onePm->fresh()?->is_active)->toBeTrue();
     });

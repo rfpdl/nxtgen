@@ -8,7 +8,7 @@ use App\Enums\RoleEnum;
 use Inertia\Testing\AssertableInertia;
 
 use function Pest\Laravel\actingAs;
-use function Tests\Support\atChurch;
+use function Tests\Support\atSatellite;
 use function Tests\Support\church;
 use function Tests\Support\familyAt;
 use function Tests\Support\grantRole;
@@ -22,9 +22,9 @@ use function Tests\Support\satelliteOf;
 
 it('gives a staff member a poster whose QR code opens this church\'s registration form @story#80', function (): void {
     $church = church(['slug' => 'ccf', 'name' => 'CCF']);
-    satelliteOf($church, ['name' => 'CCF Dubai', 'slug' => 'dubai']);
+    $dubai = satelliteOf($church, ['name' => 'CCF Dubai', 'slug' => 'dubai']);
     $user = User::factory()->create();
-    grantRole($user, RoleEnum::Lifeshaper, atChurch($church));
+    grantRole($user, RoleEnum::Lifeshaper, atSatellite($dubai));
 
     // The poster is the address satellite's: its own registration address (DECISIONS 2026-11-08).
     actingAs($user)->get('/dubai/serve/poster')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
