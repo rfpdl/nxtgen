@@ -1,4 +1,4 @@
-import { navTo } from '../support/menu'
+import { menuOf, navTo } from '../support/menu'
 import { openEmailedLink } from '../support/sign-in'
 import { mailCount } from '../support/mailbox'
 import { expect, test } from '../support/test'
@@ -23,7 +23,10 @@ test('a platform admin adds a satellite and gives it its first admin @story#192 
 
     const platform = await browser.newContext({ storageState: sessionFile('platform') })
     const admin = await platform.newPage()
-    await admin.goto('/platform')
+    // From any satellite's page, the menu's Platform shortcut.
+    await admin.goto(`/${DUBAI}/admin/families`)
+    await (await menuOf(admin)).getByTestId('platform-link').click()
+    await expect(admin).toHaveURL(/\/platform$/)
     await admin.getByTestId('satellite-name').fill(name)
     await admin.getByTestId('satellite-slug').fill(slug)
     await admin.getByTestId('add-satellite-submit').click()

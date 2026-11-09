@@ -12,7 +12,11 @@ export type PlatformSatellite = App.Domains.Church.DataObjects.PlatformSatellite
 export type ChurchSettings = App.Domains.Church.DataObjects.ChurchSettingsData
 
 export type SharedProps = {
-    auth: { user: { id: number; name: string } | null; can_switch?: boolean }
+    auth: {
+        user: { id: number; name: string } | null
+        can_switch?: boolean
+        is_platform_admin?: boolean
+    }
     flash: { success?: string | null; error?: string | null }
     /** The church the page is about: the address's satellite's, or a parent's own; null elsewhere. */
     church: Church | null

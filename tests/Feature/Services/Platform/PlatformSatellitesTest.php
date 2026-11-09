@@ -98,3 +98,11 @@ describe('renaming a satellite, or changing its address', function (): void {
         actingAs(platformAdmin())->put('/platform/satellites/dubai', ['name' => 'CCF Dubai', 'slug' => 'k7m2q9xa'])->assertSessionHasErrors('slug');
     });
 });
+
+it('tells every page whether its viewer is the platform admin — the bar\'s shortcut to /platform @story#190', function (): void {
+    $dubai = satelliteOf(church(), ['slug' => 'dubai']);
+    $admin = staffMember(RoleEnum::Admin, atSatellite($dubai));
+
+    actingAs(platformAdmin())->get('/dubai/admin/families')->assertInertia(fn (AssertableInertia $p) => $p->where('auth.is_platform_admin', true));
+    actingAs($admin)->get('/dubai/admin/families')->assertInertia(fn (AssertableInertia $p) => $p->where('auth.is_platform_admin', false));
+});

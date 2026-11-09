@@ -3,6 +3,7 @@ import AppButton from '@/components/atoms/AppButton.vue'
 import BrandMark from '@/components/atoms/BrandMark.vue'
 import SignOutButton from '@/components/atoms/SignOutButton.vue'
 import SwitchLink from '@/components/atoms/SwitchLink.vue'
+import PlatformLink from '@/components/atoms/PlatformLink.vue'
 import FlashBanner from '@/components/molecules/FlashBanner.vue'
 import { useFlashMessages } from '@/composables/useFlashMessages'
 import { APP_NAME } from '@/lib/brand'
@@ -24,7 +25,7 @@ import { computed, ref, watch } from 'vue'
 /**
  * The Bold frame for every signed-in page (DECISIONS 2026-10-28; the bar, spec item 13): an amber bar — on the left
  * the logo and "CCF NxtGen", with the page's name under it on a phone only; on the right what the page puts in the
- * `end` slot (the satellite) and Sign out; then the menu `items` and Switch. On a phone the menu is a sheet of big
+ * `end` slot (the satellite) and Sign out; then the menu `items`, Switch and — for the platform admin — Platform. On a phone the menu is a sheet of big
  * buttons behind the Menu button (a reka-ui Dialog: focus stays inside, Esc closes and gives focus back); from 1024px
  * (`lg`) it is a row in the bar, in base-size words, on ONE line — an admin's ten items do not fit one line at 768px
  * (TODO #12's layout check found it wrapping even at 1280px). Which one shows is CSS alone, so the first paint is
@@ -152,6 +153,7 @@ function wrapOptionTab(event: KeyboardEvent): void {
                                         >{{ item.label }}</AppButton
                                     >
                                     <SwitchLink variant="secondary" size="lg" block />
+                                    <PlatformLink variant="secondary" size="lg" block />
                                     <SignOutButton
                                         v-if="signedIn"
                                         variant="secondary"
@@ -183,6 +185,7 @@ function wrapOptionTab(event: KeyboardEvent): void {
                         >{{ item.label }}</AppButton
                     >
                     <SwitchLink class="ml-auto" />
+                    <PlatformLink class="px-2.5! text-base!" />
                 </nav>
             </div>
         </header>

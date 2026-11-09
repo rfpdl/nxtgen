@@ -61,6 +61,7 @@ every staff, parent and public page is on the kit (issues 02 and 03 of `.plannin
 | FamilyDetailsForm       | organism | "Edit family details": GuardianFieldset (no email) + OtherGuardiansFieldset + FamilyFieldset, PUT                                                    |
 | EditChildForm           | organism | "Edit {child}'s details": ChildFieldset from what is saved, PUT to the given action; never status/Level                                              |
 | RegistrationListFilters | molecule | Families + children lists: search, satellite/status/Level (+ unconfirmed/duplicates with familyToggles); emits address params                        |
+| PlatformLink            | atom     | "Platform": the platform admin's shortcut to /platform, beside Switch; not on the platform's own pages                                               |
 | SwitchLink              | atom     | "Switch" between My family / Serve (or churches): only when there is more than one place to go                                                       |
 | PasswordLoginForm       | organism | The staff backup password on /loginp (never on /login): a Card of TextFields + Sign in                                                               |
 | ChildPhotoForm          | organism | A child's photo: take (camera) or choose; parent agrees/takes back consent, staff only after consent                                                 |

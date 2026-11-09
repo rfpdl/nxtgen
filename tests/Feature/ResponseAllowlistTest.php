@@ -30,7 +30,7 @@ use function Tests\Support\exportedRows;
  */
 
 /** What HandleInertiaRequests shares with every page about a church, apart from the satellite and the staff menu. */
-const SHARED = ['auth.can_switch', 'auth.user.id', 'auth.user.name', 'church.name', 'church.slug', 'errors', 'flash.error', 'flash.success'];
+const SHARED = ['auth.can_switch', 'auth.is_platform_admin', 'auth.user.id', 'auth.user.name', 'church.name', 'church.slug', 'errors', 'flash.error', 'flash.success'];
 
 /** A page that is not a staff page: no satellite in its address (`/family`, Roy 2026-11-07), and the staff menu is null. */
 const FRAME = [...SHARED, 'church_nav', 'open_satellites', 'satellite'];

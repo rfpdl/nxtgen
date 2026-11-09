@@ -8,7 +8,8 @@ describes the design; this records the choices that shaped or changed it.
 
 - **`/platform` is the platform admin's alone** (spec item 12): anyone else gets "not found", as if it did not exist.
   A person becomes one by `php artisan nxtgen:platform-admin {email}` (and stops with `--remove`) — never in the app.
-  The demo admin is one. There is no link to `/platform` in the bar yet; it is typed (Claude's call — ask Roy).
+  The demo admin is one. **The menu has a "Platform" link for the platform admin** (Roy 2026-11-10: "create shortcut
+  for platform if im platform admin"), beside Switch; not on the platform's own pages.
 - **Its pages**: Satellites (add one with its name and address — its QR code and Squads come with it; rename one or
   change its address — the QR code keeps working; open one), People (give or take away any Role at any satellite or
   class — a new satellite's first admin is given here; the last admin of a satellite still stays, as on a

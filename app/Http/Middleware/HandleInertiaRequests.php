@@ -48,6 +48,8 @@ final class HandleInertiaRequests extends Middleware
                 ] : null,
                 // More than one place to go (a parent who serves, or two churches) → the "Switch" link.
                 'can_switch' => fn (): bool => $user instanceof User && count($this->run(new GetLandingOptionsJob(user: $user))) > 1,
+                // The platform admin (spec item 12) → the bar's "Platform" link (Roy 2026-11-10).
+                'is_platform_admin' => $user instanceof User && $user->is_platform_admin,
             ],
 
             // The church a page is about: the address's satellite's (staff pages, registration), or the parent's own
