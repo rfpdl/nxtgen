@@ -4,6 +4,29 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-11-10 (Issue 09 built — the platform admin)
+
+- **`/platform` is the platform admin's alone** (spec item 12): anyone else gets "not found", as if it did not exist.
+  A person becomes one by `php artisan nxtgen:platform-admin {email}` (and stops with `--remove`) — never in the app.
+  The demo admin is one. There is no link to `/platform` in the bar yet; it is typed (Claude's call — ask Roy).
+- **Its pages**: Satellites (add one with its name and address — its QR code and Squads come with it; rename one or
+  change its address — the QR code keeps working; open one), People (give or take away any Role at any satellite or
+  class — a new satellite's first admin is given here; the last admin of a satellite still stays, as on a
+  satellite's People), Settings (time zone, card fee, Moving-Up date).
+- **The card fee is a church setting** (`churches.card_fee_minor`, 10 AED to start), no longer fixed in code. A card
+  already asked for keeps the fee it was asked at; a lost or damaged card asked for after a change costs the new fee.
+- **The platform's church is the first church** (Claude's call, reversible): the app is CCF's NxtGen only
+  (DECISIONS 2026-11-07); with a second church the platform would pick one (TODO #39).
+- **A new or moved address is refused if it is reserved** (`family`, `platform`, `pick`, …), **has a code's shape**,
+  or is not words joined by single dashes (`al-ain`, never `al-ain-` or `al--ain`) — closes TODO #8.
+- **In the browser tests the platform admin is a login of its own** (`platform@nxtgen.test`, no Role; review): the
+  platform journey adds a satellite in every browser, and only the platform admin sees every satellite — so the demo
+  admin there is an admin of its three satellites only, and the picker test checks exactly those. The demo data
+  (`php artisan migrate --seed`) keeps the demo admin as the platform admin.
+- Reviews (Astra, code and test): a satellite just added had no rename form until the page reloaded — fixed, and
+  the journey now renames it at once. Two satellites added in the same instant with the same address: the second
+  gets an error page instead of "taken" — left, with one platform admin.
+
 ## 2026-11-09 (Issue 08 built — landing and the bar)
 
 - **After sign-in, staff go to the satellite they used last, else the only one they serve at, else "Pick your

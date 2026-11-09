@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Data\Models\Church;
 use App\Enums\CardReasonEnum;
 
 /* Why a Card request was made (GLOSSARY "Card request"): Lost, Damaged, or a child's First card — which is free. */
@@ -10,11 +11,14 @@ it('stores the three reasons', function (): void {
     expect(array_column(CardReasonEnum::cases(), 'value'))->toBe(['lost', 'damaged', 'first_card']);
 });
 
-it('gives each reason its label and fee — AED 10 for a lost or damaged card, the first card free', function (CardReasonEnum $reason, string $label, int $fee): void {
-    expect([$reason->label(), $reason->feeMinor()])->toBe([$label, $fee]);
+it('gives each reason its label and fee — the church\'s card fee for a lost or damaged card, the first card free', function (CardReasonEnum $reason, string $label, int $fee): void {
+    $church = new Church;
+    $church->card_fee_minor = 1550;
+
+    expect([$reason->label(), $reason->feeMinor($church)])->toBe([$label, $fee]);
 })->with([
-    [CardReasonEnum::Lost, 'Lost', 1000],
-    [CardReasonEnum::Damaged, 'Damaged', 1000],
+    [CardReasonEnum::Lost, 'Lost', 1550],
+    [CardReasonEnum::Damaged, 'Damaged', 1550],
     [CardReasonEnum::FirstCard, 'First card', 0],
 ]);
 

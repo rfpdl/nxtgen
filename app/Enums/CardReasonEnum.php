@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
+use App\Data\Models\Church;
 use App\Enums\Concerns\HasEnumMetadata;
 use App\Enums\Concerns\ProvidesEnumMetadata;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -16,12 +17,6 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 enum CardReasonEnum: string implements HasEnumMetadata
 {
     use ProvidesEnumMetadata;
-
-    /**
-     * AED 10, in fils, for a lost or damaged card (plan 2026-10-14). A constant for now: the spec calls it a church
-     * setting, which can replace this when a second church or a new price needs one.
-     */
-    public const int REPLACEMENT_FEE_MINOR = 1000;
 
     case Lost = 'lost';
     case Damaged = 'damaged';
@@ -43,10 +38,11 @@ enum CardReasonEnum: string implements HasEnumMetadata
     }
 
     /** What the card costs, in fils: the first card is free. */
-    public function feeMinor(): int
+    /** The fee, in fils: the church's card fee (the platform's Settings) for a lost or damaged card; a first card is free. */
+    public function feeMinor(Church $church): int
     {
         return match ($this) {
-            self::Lost, self::Damaged => self::REPLACEMENT_FEE_MINOR,
+            self::Lost, self::Damaged => $church->card_fee_minor,
             self::FirstCard => 0,
         };
     }

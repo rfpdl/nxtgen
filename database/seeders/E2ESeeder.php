@@ -22,7 +22,7 @@ use App\Operations\Registration\RegisterFamilyOperation;
 use Illuminate\Database\Seeder;
 
 /**
- * The browser tests' world (`make e2e`): the demo church plus a CCF Sharjah admin and one family in each
+ * The browser tests' world (`make e2e`): the demo church plus a CCF Sharjah admin, a platform admin and one family in each
  * satellite. Families go through RegisterFamilyOperation — the import path, no emails — so the rows are ones
  * the app itself can produce. Must match `tests/e2e/support/world.ts`.
  *
@@ -37,6 +37,12 @@ use Illuminate\Database\Seeder;
 final class E2ESeeder extends Seeder
 {
     public const string HOUSE_ADMIN_EMAIL = 'house-admin@nxtgen.test';
+
+    /**
+     * The platform admin (spec item 12), with no Role: the platform journey adds satellites, and only they see them all —
+     * the demo admin stays an admin of its three satellites, so the bar and the picker show exactly those.
+     */
+    public const string PLATFORM_ADMIN_EMAIL = 'platform@nxtgen.test';
 
     /** Each browser's own Lifeshaper at CCF Dubai (`volunteer-desktop@…`): the password journey sets and uses its own password. */
     public const string VOLUNTEER_EMAIL = 'volunteer-%s@nxtgen.test';
@@ -106,6 +112,10 @@ final class E2ESeeder extends Seeder
         $ccf = Church::query()->where('slug', 'ccf')->firstOrFail();
         $dxb = Satellite::query()->where('slug', 'dubai')->firstOrFail();
         $house = Satellite::query()->where('slug', 'sharjah')->firstOrFail();
+
+        User::query()->where('email', 'admin@nxtgen.test')->firstOrFail()->forceFill(['is_platform_admin' => false])->save();
+        User::query()->create(['name' => 'Pat Platform', 'email' => self::PLATFORM_ADMIN_EMAIL, 'email_verified_at' => now()])
+            ->forceFill(['is_platform_admin' => true])->save();
 
         $houseAdmin = User::query()->create(['name' => 'House Admin', 'email' => self::HOUSE_ADMIN_EMAIL, 'email_verified_at' => now()]);
         RoleAssignment::query()->create([

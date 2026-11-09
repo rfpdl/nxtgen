@@ -41,7 +41,7 @@ final class CreateFirstCardRequestJob extends BaseJob
             'reason' => CardReasonEnum::FirstCard,
             'note' => null,
             'step' => CardStepEnum::default(),
-            'fee_minor' => CardReasonEnum::FirstCard->feeMinor(),
+            'fee_minor' => CardReasonEnum::FirstCard->feeMinor($this->child->loadMissing('church')->church),
             'created_by' => null,
         ]);
     }

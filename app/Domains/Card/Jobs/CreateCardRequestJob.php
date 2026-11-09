@@ -13,7 +13,7 @@ use App\Foundation\Jobs\BaseJob;
 use Illuminate\Database\UniqueConstraintViolationException;
 
 /**
- * File a Card request for a Child (GLOSSARY "Card request"): Asked, with the reason's fee (AED 10 for lost or
+ * File a Card request for a Child (GLOSSARY "Card request"): Asked, with the reason's fee (the church's card fee — AED 10 to start — for lost or
  * damaged, a first card free), not paid, saying who and when. `$by` is null for a request the app makes itself.
  *
  * One OPEN request per Child, held by the database's unique `open_child_id`: when the insert meets it (one is open
@@ -42,7 +42,7 @@ final class CreateCardRequestJob extends BaseJob
                 'reason' => $this->reason,
                 'note' => $this->note,
                 'step' => CardStepEnum::default(),
-                'fee_minor' => $this->reason->feeMinor(),
+                'fee_minor' => $this->reason->feeMinor($this->child->loadMissing('church')->church),
                 'created_by' => $this->by?->id,
             ]));
         } catch (UniqueConstraintViolationException) {

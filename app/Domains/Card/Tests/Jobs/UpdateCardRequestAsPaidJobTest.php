@@ -11,7 +11,7 @@ use Carbon\CarbonImmutable;
 
 use function Pest\Laravel\travelTo;
 
-/* Marking a Card request's AED 10 paid (cash at the desk): once, only while it is open, and never for a free card. */
+/* Marking a Card request's fee paid (cash at the desk): once, only while it is open, and never for a free card. */
 
 it('marks an unpaid open request paid, saying who and when', function (CardStepEnum $step): void {
     $request = CardRequest::factory()->create(['step' => $step]);

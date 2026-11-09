@@ -6,7 +6,7 @@ namespace App\Foundation\Support;
 
 /**
  * An amount stored in fils (minor units), as people read it: "AED 10", "AED 10.50" — whole dirhams without decimals,
- * fils never dropped. The one formatter for money on screen and in messages (name cards: the AED 10 fee).
+ * fils never dropped. The one formatter for money on screen and in messages (name cards: the card fee).
  */
 final class Money
 {

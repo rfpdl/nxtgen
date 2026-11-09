@@ -44,6 +44,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property CarbonImmutable|null $photo_consent_at
  * @property int|null $photo_consent_by
  * @property RegistrationSourceEnum $registration_source
+ * @property-read Church $church
  * @property-read Family $family
  */
 final class Child extends Model
@@ -72,6 +73,12 @@ final class Child extends Model
             'photo_consent_at' => 'immutable_datetime',
             'registration_source' => RegistrationSourceEnum::class,
         ];
+    }
+
+    /** @return BelongsTo<Church, $this> */
+    public function church(): BelongsTo
+    {
+        return $this->belongsTo(Church::class);
     }
 
     /** @return BelongsTo<Family, $this> */

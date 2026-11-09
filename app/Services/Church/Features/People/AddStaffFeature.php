@@ -5,24 +5,18 @@ declare(strict_types=1);
 namespace App\Services\Church\Features\People;
 
 use App\Data\Models\Schedule;
-use App\Domains\Auth\Jobs\CreateMagicLinkJob;
-use App\Domains\Auth\Jobs\SendMagicLinkJob;
 use App\Domains\Church\DataObjects\RoleScope;
 use App\Domains\Church\DataObjects\StaffRoleData;
-use App\Domains\Church\Jobs\CreateRoleAssignmentJob;
 use App\Domains\Church\Jobs\GetSatelliteJob;
 use App\Domains\Schedule\Jobs\GetScheduleJob;
-use App\Domains\User\Jobs\CreateUserJob;
-use App\Domains\User\Jobs\GetUserByEmailJob;
 use App\Enums\AccessRowEnum;
-use App\Enums\MagicLinkPurposeEnum;
 use App\Enums\ScopeTypeEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
+use App\Operations\Church\GiveRoleOperation;
 use App\Services\Church\Data\AddStaffInput;
 use App\Services\Church\Features\BaseChurchFeature;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Add someone who serves (D-R2). One login per person (plan §4): an existing login — often a parent — just
@@ -61,32 +55,10 @@ final class AddStaffFeature extends BaseChurchFeature
 
         $label = StaffRoleData::label($input->role, $place, $at instanceof Schedule ? StaffRoleData::className($at) : $at->name);
 
-        $result = DB::transaction(function () use ($at, $input) {
-            $user = $this->run(new GetUserByEmailJob(email: $input->email))
-                ?? $this->run(new CreateUserJob(name: $input->name, email: $input->email));
+        [$level, $message] = $this->run(new GiveRoleOperation(
+            church: $church, name: $input->name, email: $input->email, role: $input->role, place: $at, label: $label, by: $this->staff(),
+        ));
 
-            $added = $this->run(new CreateRoleAssignmentJob(
-                user: $user,
-                role: $input->role,
-                place: $at,
-                grantedBy: $this->staff(),
-            ));
-
-            return ['user' => $user, 'added' => $added];
-        });
-
-        // Replies name the email the admin typed, never the account's own name: an existing login's name is
-        // not the admin's to learn from this form (SECURITY #16).
-        $user = $result['user'];
-        if (! $result['added']) {
-            return back()->with('error', "{$user->email} is already {$label}.");
-        }
-
-        $issued = $this->run(new CreateMagicLinkJob(purpose: MagicLinkPurposeEnum::Login, email: $user->email, user: $user));
-        if (! $this->run(new SendMagicLinkJob(issued: $issued, churchName: $church->name, invitedAs: $label))) {
-            return back()->with('success', "{$user->email} is now {$label}. Too many emails went to them recently, so no sign-in link was sent — they can sign in from the sign-in page with this email.");
-        }
-
-        return back()->with('success', "{$user->email} is now {$label}. We emailed them a sign-in link.");
+        return back()->with($level, $message);
     }
 }

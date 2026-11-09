@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $name
  * @property string $slug
  * @property string $timezone
+ * @property int $card_fee_minor a lost or damaged name card, in fils (the platform's Settings)
  * @property string $currency
  * @property CarbonImmutable|null $moving_up_reference_date
  * @property array<string, mixed>|null $settings
@@ -37,6 +38,7 @@ final class Church extends Model
     protected function casts(): array
     {
         return [
+            'card_fee_minor' => 'integer',
             'moving_up_reference_date' => 'date',
             'settings' => 'array',
         ];

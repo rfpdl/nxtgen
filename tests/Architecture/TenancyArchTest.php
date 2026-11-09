@@ -43,6 +43,8 @@ function crossChurchOnPurpose(): array
         'Satellite.php — RoleAssignment' => 'Satellite::openTo — which satellites this login may open, in any church (where they land after sign-in, the bar\'s switch); the satellites carry their church.',
         'Satellite.php — Schedule' => 'Satellite::openTo — the satellites of the classes this login is class admin of, in any church; the same question.',
         'GetLandingOptionsJob.php — Satellite' => 'After sign-in: the satellites this login may open (Satellite::openTo), in any church — each carries its church, and the platform admin may open any (spec item 12).',
+        'CreateSatelliteJob.php — Satellite' => 'A new registration code must be nobody\'s, in any church: a QR code names a satellite and never a church (spec item 7).',
+        'CreateSatelliteJob.php — Squad' => 'Squad::createChartFor makes the new satellite\'s own Squads, each in its church — it reads nothing (as ChurchSeeder).',
         'GetOpenSatellitesJob.php — Satellite' => '"Pick your satellite" and the bar\'s switch: the satellites this login may open, in any church (Satellite::openTo); each carries its church.',
         'GetOwnGuardianJob.php — Guardian' => 'The parent\'s own page, `/family`: the address names no church, so the church is read FROM the login\'s own guardian row (RequireGuardian).',
         'GetSatelliteByCodeJob.php — Satellite' => 'A QR poster\'s registration code (spec item 7) names a satellite and never a church: the church is read FROM the satellite (codes are unique), and the page forwards to its address.',

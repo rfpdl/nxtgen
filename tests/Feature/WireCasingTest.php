@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\WireCasing;
 
 use App\Data\Models\PrintList;
+use App\Data\Models\User;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route as Router;
@@ -102,10 +103,13 @@ it('sends no camelCase key, at any depth, on any page anyone can open', function
     $offenders = [];
     $seen = [];
 
+    // The platform pages are the platform admin's alone — not one of the world's actors.
+    $platformAdmin = User::factory()->create(['is_platform_admin' => true]);
+
     foreach (pageRoutes() as $route) {
-        foreach (Actor::cases() as $actor) {
+        foreach ([...Actor::cases(), $platformAdmin] as $actor) {
             Auth::forgetGuards();
-            $user = $world->user($actor);
+            $user = $actor instanceof User ? $actor : $world->user($actor);
             if ($user !== null) {
                 actingAs($user);
             }

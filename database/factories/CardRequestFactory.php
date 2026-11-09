@@ -26,7 +26,7 @@ final class CardRequestFactory extends Factory
             'reason' => CardReasonEnum::Lost,
             'note' => null,
             'step' => CardStepEnum::Asked,
-            'fee_minor' => CardReasonEnum::REPLACEMENT_FEE_MINOR,
+            'fee_minor' => 1000,   // AED 10, a church's card fee to start
             'created_by' => null,
             // As the app leaves it: a request that reached Approved (and went on to be printed or given) was approved.
             'approved_at' => fn (array $attributes): mixed => in_array(self::step($attributes['step']), [CardStepEnum::Approved, CardStepEnum::Printed, CardStepEnum::Given], true) ? now() : null,

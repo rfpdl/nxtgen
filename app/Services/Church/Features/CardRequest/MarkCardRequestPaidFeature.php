@@ -13,7 +13,7 @@ use App\Foundation\Attributes\UserStory;
 use Illuminate\Http\RedirectResponse;
 
 /**
- * "Mark paid" on Cards (name cards 03): the AED 10 was paid at the desk. An admin of the child's family's home
+ * "Mark paid" on Cards (name cards 03): the card fee was paid at the desk. An admin of the child's family's home
  * satellite. A free (first) card has nothing to pay, and says so; one already paid, or closed, is not
  * marked again — the page says where it is.
  *
@@ -22,7 +22,7 @@ use Illuminate\Http\RedirectResponse;
 #[UserStory(
     title: 'Mark a new card paid',
     persona: 'satellite admin',
-    happyPaths: ['story#136' => 'An Admin marks a Card request\'s AED 10 paid (cash at the desk)'],
+    happyPaths: ['story#136' => 'An Admin marks a Card request\'s fee paid (cash at the desk)'],
     unhappyPaths: ['story#137' => 'Not by a Lifeshaper, another Satellite\'s Admin or a parent; never twice; a free card has nothing to pay'],
 )]
 #[AccessRow(AccessRowEnum::Cards)]

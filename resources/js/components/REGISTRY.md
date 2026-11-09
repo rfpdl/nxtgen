@@ -39,6 +39,7 @@ every staff, parent and public page is on the kit (issues 02 and 03 of `.plannin
 | BrandMark      | atom   | The NXTGEN logo (SVG), for the app bar; `large` for the welcome page                                                                                                           |
 | AppShell       | layout | The Bold frame: amber bar (logo, page name, place), menu as a phone sheet (reka-ui Dialog) or a desktop row, flash; no `items` = no menu (public pages); `narrow` = one column |
 | FamilyShell    | layout | The parent's frame on AppShell, phone-first and `narrow`: "My family", the church; menu My family, Switch (when they also serve), Sign out                                     |
+| PlatformShell  | layout | The platform admin's frame on AppShell (spec item 12): menu Satellites, People, Settings                                                                                       |
 
 ## Everything else
 

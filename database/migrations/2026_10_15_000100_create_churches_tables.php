@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('slug')->unique()->comment('URL key: /{slug}/register');
             $table->string('timezone')->default('Asia/Dubai')->comment('Classes are generated in this timezone');
             $table->string('currency', 3)->default('AED')->comment('Card fees');
+            $table->unsignedInteger('card_fee_minor')->default(1000)->comment('A lost or damaged name card, in fils (AED 10) — set on the platform\'s Settings');
             $table->date('moving_up_reference_date')->nullable()->comment('Age is measured on this date for Level suggestions');
             $table->json('settings')->nullable()->comment('satellite_label, lifeshapers_can_open, card fees');
             $table->timestampsTz();

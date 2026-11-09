@@ -8,6 +8,7 @@ use App\Providers\TypeScriptTransformerServiceProvider;
 use App\Services\Auth\Providers\AuthServiceProvider;
 use App\Services\Church\Providers\ChurchServiceProvider;
 use App\Services\Family\Providers\FamilyServiceProvider;
+use App\Services\Platform\Providers\PlatformServiceProvider;
 use App\Services\Public\Providers\PublicServiceProvider;
 
 return [
@@ -18,6 +19,7 @@ return [
     AuthServiceProvider::class,
     FamilyServiceProvider::class,
     PublicServiceProvider::class,
+    PlatformServiceProvider::class,
 
     // LAST: its routes start with /{satellite}, so every fixed top-level path (/login, /home, /magic…)
     // must be registered before it or the satellite wildcard would swallow them.

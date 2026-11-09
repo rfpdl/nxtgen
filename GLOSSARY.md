@@ -144,7 +144,8 @@ _Avoid_: Permission, access level
 The Role that manages its Satellite — people (any Role there), families, children, classes, Cards, Links,
 Moving-Up — or one class (a **class admin**: that class's door, Who's in, Attendance, and editing it). A Satellite
 has any number of admins and always at least one.
-_Platform admin_: set by a command, not a Role — opens any Satellite and manages the Satellites themselves.
+_Platform admin_: set by a command (`nxtgen:platform-admin`), not a Role — opens any Satellite, and at `/platform`
+manages the Satellites themselves, every Role anywhere and the church's settings (time zone, card fee, Moving-Up date).
 _Avoid_: Super user, manager
 
 **Lifeshaper**:

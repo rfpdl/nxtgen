@@ -10,6 +10,8 @@ export const STAFF = {
     admin: 'admin@nxtgen.test',
     lifeshaper: 'lifeshaper@nxtgen.test',
     houseAdmin: 'house-admin@nxtgen.test',
+    // The platform admin, with no Role (E2ESeeder::PLATFORM_ADMIN_EMAIL).
+    platform: 'platform@nxtgen.test',
 } as const
 
 export type StaffRole = keyof typeof STAFF

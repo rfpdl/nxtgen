@@ -110,6 +110,10 @@ it('seeds exactly what the browser journeys expect', function (): void {
 
     expect(User::query()->where('email', E2ESeeder::HOUSE_ADMIN_EMAIL)->firstOrFail()->roleAssignments()->first()?->role)->toBe(RoleEnum::Admin);
 
+    // The platform admin is their own login; the demo admin is not one here (E2ESeeder::PLATFORM_ADMIN_EMAIL).
+    expect($world)->toContain("'".E2ESeeder::PLATFORM_ADMIN_EMAIL."'")
+        ->and(User::query()->where('is_platform_admin', true)->pluck('email')->all())->toBe([E2ESeeder::PLATFORM_ADMIN_EMAIL]);
+
     expect($world)->toContain('`volunteer-${project}@nxtgen.test`');
     foreach (array_keys(E2ESeeder::DOOR_GUARDIANS) as $project) {
         expect(User::query()->where('email', sprintf(E2ESeeder::VOLUNTEER_EMAIL, $project))->firstOrFail()->roleAssignments()->first()?->role)->toBe(RoleEnum::Lifeshaper);

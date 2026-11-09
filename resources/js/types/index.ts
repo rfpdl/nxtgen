@@ -8,6 +8,8 @@
 
 export type Church = App.Domains.Church.DataObjects.ChurchData
 export type SatelliteChoice = App.Domains.Church.DataObjects.SatelliteChoiceData
+export type PlatformSatellite = App.Domains.Church.DataObjects.PlatformSatelliteData
+export type ChurchSettings = App.Domains.Church.DataObjects.ChurchSettingsData
 
 export type SharedProps = {
     auth: { user: { id: number; name: string } | null; can_switch?: boolean }

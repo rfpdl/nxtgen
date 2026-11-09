@@ -156,6 +156,11 @@ declare namespace App {
                     can_move_up: boolean
                     can_manage_links: boolean
                 }
+                export type ChurchSettingsData = {
+                    timezone: string
+                    card_fee: string
+                    moving_up_date: string | null
+                }
                 export type GrantOptionData = {
                     label: string
                     role: App.Enums.RoleEnum
@@ -167,6 +172,13 @@ declare namespace App {
                     label: string
                     url: string
                     place: string
+                }
+                export type PlatformSatelliteData = {
+                    id: number
+                    name: string
+                    slug: string
+                    code: string
+                    admins: number
                 }
                 export type PosterLinkData = {
                     label: string
@@ -614,6 +626,26 @@ declare namespace App {
                 }
                 export type UpdateChildStatusInput = {
                     status: App.Enums.ChildStatusEnum
+                }
+            }
+        }
+        namespace Platform {
+            namespace Data {
+                export type ChurchSettingsInput = {
+                    timezone: string
+                    card_fee: string
+                    moving_up_date: string
+                }
+                export type GiveRoleInput = {
+                    name: string
+                    email: string
+                    role: App.Enums.RoleEnum
+                    scope_type: App.Enums.ScopeTypeEnum
+                    scope_id: number
+                }
+                export type SatelliteInput = {
+                    name: string
+                    slug: string
                 }
             }
         }
