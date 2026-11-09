@@ -21,7 +21,7 @@ final class RouteSatellite
      * so without this `/up` (health check, registered after the services) was answered by the satellite wildcard. A
      * satellite can never take one of these as its slug.
      */
-    public const array RESERVED = ['up', 'login', 'loginp', 'loginc', 'logout', 'home', 'magic', 'account', 'photos', 'build', 'storage', 'family', 'platform'];
+    public const array RESERVED = ['up', 'login', 'loginp', 'loginc', 'logout', 'home', 'magic', 'account', 'photos', 'build', 'storage', 'family', 'platform', 'pick'];
 
     /** The `{satellite}` route pattern: a slug that is not reserved. */
     public static function pattern(): string

@@ -9,6 +9,7 @@ const page = {
         flash: {},
         church: { name: 'CCF', slug: 'ccf' },
         satellite: makeSatellite(),
+        open_satellites: [{ name: 'CCF Dubai', slug: 'dubai' }],
         auth: { user: { id: 1, name: 'Roy' }, can_switch: false },
         church_nav: {
             area: 'serve' as string | null,

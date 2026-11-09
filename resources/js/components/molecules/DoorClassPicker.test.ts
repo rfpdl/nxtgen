@@ -7,30 +7,30 @@ vi.mock('@inertiajs/vue3', () => ({
     usePage: () => ({ props: { church: { name: 'CCF', slug: 'ccf' } } }),
 }))
 
-const onePm: DoorClass = { id: 1, name: '1PM', satellite: 'CCF DXB', times: '13:00–15:00' }
-const sevenPm: DoorClass = { id: 2, name: '7PM', satellite: 'CCF DXB', times: '19:00–21:00' }
-const tenAm: DoorClass = { id: 3, name: '10AM', satellite: 'House Church', times: null }
+const onePm: DoorClass = { id: 1, name: '1PM', times: '13:00–15:00' }
+const sevenPm: DoorClass = { id: 2, name: '7PM', times: '19:00–21:00' }
+const tenAm: DoorClass = { id: 3, name: '10AM', times: null }
 
 describe('DoorClassPicker', () => {
-    it("heads the page with the chosen class's satellite and today, and a chip per class", () => {
+    it('heads the page with today alone — the satellite is in the bar (spec item 13) — and a chip per class', () => {
         const wrapper = mount(DoorClassPicker, {
             props: { today: 'Sat 31 Oct', classes: [onePm, sevenPm], classId: 2 },
         })
 
-        expect(wrapper.find('[data-testid="door-heading"]').text()).toBe('CCF DXB · Sat 31 Oct')
+        expect(wrapper.find('[data-testid="door-heading"]').text()).toBe('Sat 31 Oct')
         const chips = wrapper.findAll('[role="radio"]')
         expect(chips.map((c) => c.text())).toEqual(['1PM 13:00–15:00', '7PM 19:00–21:00'])
         expect(chips[1]?.attributes('aria-checked')).toBe('true')
     })
 
-    it('names the satellite on each chip when the Role covers more than one', () => {
+    it("names no satellite on the chips — the door is one satellite's (DECISIONS 2026-11-08)", () => {
         const wrapper = mount(DoorClassPicker, {
             props: { today: 'Sat 31 Oct', classes: [onePm, tenAm], classId: 1 },
         })
 
         expect(wrapper.findAll('[role="radio"]').map((c) => c.text())).toEqual([
-            '1PM 13:00–15:00 · CCF DXB',
-            '10AM House Church',
+            '1PM 13:00–15:00',
+            '10AM',
         ])
     })
 
@@ -44,12 +44,12 @@ describe('DoorClassPicker', () => {
         expect(wrapper.emitted('pick')).toEqual([[2]])
     })
 
-    it('says what to do when no class meets today, under the church', () => {
+    it('says what to do when no class meets today', () => {
         const wrapper = mount(DoorClassPicker, {
             props: { today: 'Mon 2 Nov', classes: [], classId: null },
         })
 
-        expect(wrapper.find('[data-testid="door-heading"]').text()).toBe('CCF · Mon 2 Nov')
+        expect(wrapper.find('[data-testid="door-heading"]').text()).toBe('Mon 2 Nov')
         expect(wrapper.find('[data-testid="no-class"]').text()).toBe(
             'No class meets today. Admins add classes on the Classes page.',
         )

@@ -53,6 +53,7 @@ every staff, parent and public page is on the kit (issues 02 and 03 of `.plannin
 | FamilySearchResultCard  | molecule | A church-wide "already registered?" hit (and each side of a possible duplicate): masked email, add-a-child                                           |
 | StaffMemberCard         | molecule | One person who serves, with their roles; Remove only where the viewer may                                                                            |
 | AddStaffForm            | organism | "Add someone": name, email, one role from the server's allowed choices                                                                               |
+| SatelliteSwitch         | atom     | The bar's satellite (spec item 13): its name; a dropdown to another satellite's home for someone with two or more                                    |
 | SignOutButton           | atom     | "Sign out" (POST /logout) for every signed-in page: staff menu, family page, landing pages                                                           |
 | GuardianFieldset        | molecule | A parent's own fields (+ email on registration only), one ministry; `other` words it for another guardian                                            |
 | FamilyFieldset          | molecule | The family's fields (satellite, area, FB, DGroup, lifestage); shared by registration and editing                                                     |

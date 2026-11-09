@@ -7,12 +7,15 @@
 // ─── What every page receives (HandleInertiaRequests::share, RequireAssignment) ─────────────────────────
 
 export type Church = App.Domains.Church.DataObjects.ChurchData
+export type SatelliteChoice = App.Domains.Church.DataObjects.SatelliteChoiceData
 
 export type SharedProps = {
     auth: { user: { id: number; name: string } | null; can_switch?: boolean }
     flash: { success?: string | null; error?: string | null }
     /** The church the page is about: the address's satellite's, or a parent's own; null elsewhere. */
     church: Church | null
+    /** The bar's satellite switch: on a staff page, the satellites its viewer may open (spec item 13); else none. */
+    open_satellites: SatelliteChoice[]
     /** The satellite the address names (`/{satellite}/…`); null on a page outside one. */
     satellite: App.Domains.Church.DataObjects.SatelliteData | null
     /** The staff menu: set on church staff pages (from RequireAssignment's scope), null on every other page. */

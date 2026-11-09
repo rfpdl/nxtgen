@@ -14,7 +14,7 @@ import { route } from 'ziggy-js'
 defineProps<{ options: LandingOption[] }>()
 
 function choose(option: LandingOption): void {
-    router.post(route('home.choice'), { url: option.url })
+    router.post(route('home.choice'), { place: option.place })
 }
 </script>
 

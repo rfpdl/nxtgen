@@ -7,7 +7,7 @@ import { checkLayout } from './test'
  * made on the painted page — which one shows is CSS, settled by then.
  */
 export async function openMenu(page: Page): Promise<void> {
-    await expect(page.getByTestId('page-name')).toBeVisible()
+    await expect(page.getByTestId('app-name')).toBeVisible()
     const button = page.getByTestId('menu-open')
     if (await button.isVisible()) {
         await button.click()
@@ -15,9 +15,13 @@ export async function openMenu(page: Page): Promise<void> {
     }
 }
 
-/** Signs out from the menu — the sheet on a phone, the bar's row on a wider screen. */
+/** Signs out — from the sheet on a phone, from the right of the bar on a wider screen (spec item 13). */
 export async function signOutFromMenu(page: Page): Promise<void> {
-    await (await menuOf(page)).getByTestId('sign-out').click()
+    await openMenu(page)
+    const sheet = page.getByTestId('menu-sheet')
+    await ((await sheet.isVisible()) ? sheet : page.getByTestId('bar-top'))
+        .getByTestId('sign-out')
+        .click()
 }
 
 /** The open menu — the sheet on a narrow screen, the bar's row on a wider one — to find a menu item in. */

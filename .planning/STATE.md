@@ -1,6 +1,6 @@
 # State
 
-**Read this first at session start.** Updated: 2026-11-09 (issue 07).
+**Read this first at session start.** Updated: 2026-11-09 (issue 08).
 
 ## Where things stand
 
@@ -14,11 +14,11 @@
 | **Moving-Up** | Built, reviewed (code + test review + Astra: two lock gaps found and fixed) and pushed: a church admin's page (button on Children), untick to keep back, confirm, put back one child or everyone — `tasks/2026-11-06-moving-up/` (DECISIONS 2026-11-06) |
 | **Admin / Serve (TODO #31)** | All three steps built 2026-11-06. Step 1: staff addresses by area — `/ccf/nxtgen/serve/…` (door, Who's in, Families, poster: any staff), `/ccf/nxtgen/admin/…` (families + Excel, Children, Classes, Attendance, Cards, Moving-Up: admins only), `/ccf/admin/people`; a menu per area; `/ccf` opens the person's area. Step 2: Lifeshapers edit their satellite's families in Serve. Step 3: Links per satellite on the QR poster (Admin → Links) — `tasks/2026-11-06-admin-serve/` |
 | **Overnight 2026-11-07** | Built, reviewed by Astra and pushed: delete a photo for good (#25); class admin roles (#9). Spec only, with questions for Roy: merge families/children (#29, `tasks/2026-11-07-merge/`) |
-| **CCF NxtGen (2026-11-07)** | Roy: the app is for CCF's NxtGen only, many satellites. Batch A built (TODO #32). Batch B (TODO #33, issues 05–09) in progress: **05 done 2026-11-08** — every address names its satellite (`/dubai/admin|serve/…`, `/family`, `/dubai/register`), access at the address satellite only, every id bound by route within it (controllers take models), satellites Dubai/Sharjah/Abu Dhabi, welcome page empty (Roy). **06 done 2026-11-09** — no church-wide Role; a satellite's admins give any Role there, the last admin stays, Moving-Up per satellite; the platform admin opens any satellite. **07 done 2026-11-09** — each satellite has a registration code its QR poster carries; `/{code}/register` forwards to the address. Next: 08 (landing + bar), 09 (/platform). Then TODO #35 — `tasks/2026-11-07-ccf-nxtgen/` |
+| **CCF NxtGen (2026-11-07)** | Roy: the app is for CCF's NxtGen only, many satellites. Batch A built (TODO #32). Batch B (TODO #33, issues 05–09) in progress: **05 done 2026-11-08** — every address names its satellite (`/dubai/admin|serve/…`, `/family`, `/dubai/register`), access at the address satellite only, every id bound by route within it (controllers take models), satellites Dubai/Sharjah/Abu Dhabi, welcome page empty (Roy). **06 done 2026-11-09** — no church-wide Role; a satellite's admins give any Role there, the last admin stays, Moving-Up per satellite; the platform admin opens any satellite. **07 done 2026-11-09** — each satellite has a registration code its QR poster carries; `/{code}/register` forwards to the address. **08 done 2026-11-09** — landing (last satellite used, else the only one, else `/pick`), the new bar (satellite menu, page name on phones only), door heading, welcome Sign in in the bar. Next: 09 (/platform). Then TODO #35 — `tasks/2026-11-07-ccf-nxtgen/` |
 | **Also 2026-11-06** | The test map (`make test-map`, TODO #10) and the "No Level" filter on Children and Families (plan §13 q5) — both reviewed by Astra and pushed |
 | **Next step** | Roy tries Moving-Up (Children → Moving-Up; `php artisan migrate`), the test map (`make test-map`) and the No Level filter, and confirms the Claude calls in DECISIONS 2026-11-06 (and 2026-11-03). Open: offline check-in, #29 merge, #9 class admin roles |
 | **Waiting on Roy** | Laravel Cloud + mail provider + Registry CSV (TODO #23); a real-iPhone photo try (TODO #16) |
-| **Gate** | `make check` green — 2889 Pest + 178 arch, 504 Vitest, PHPStan L10 · `make e2e` (issue 07): 840 passed, 13 skipped, 5 Safari runs fail only in a full run and pass on their own (TODO #38) |
+| **Gate** | `make check` green — 2908 Pest + 178 arch, 508 Vitest, PHPStan L10 · `make e2e` (issue 08): 885 passed, 13 skipped, 5 Safari runs fail only in a full run and pass on their own (TODO #38) |
 
 ## Where to look
 

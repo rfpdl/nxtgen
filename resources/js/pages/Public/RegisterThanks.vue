@@ -12,7 +12,7 @@ const church = useChurch()
 
 <template>
     <Head title="Thank you" />
-    <AppShell title="Register" :place="church.name" narrow>
+    <AppShell title="Register" narrow>
         <PageHeader title="Thank you" />
         <Card as="section" class="flex items-start gap-4">
             <MailCheck class="text-action size-10 shrink-0" aria-hidden="true" />

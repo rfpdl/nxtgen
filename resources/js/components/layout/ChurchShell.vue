@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useSatellite } from '@/composables/useSatellite'
 import AppShell from '@/components/layout/AppShell.vue'
+import SatelliteSwitch from '@/components/atoms/SatelliteSwitch.vue'
 import { useChurch } from '@/composables/useChurch'
 import type { SharedProps, ShellItem } from '@/types'
 import { usePage } from '@inertiajs/vue3'
@@ -99,7 +100,10 @@ function isUnder(path: string, base: string): boolean {
 </script>
 
 <template>
-    <AppShell :title="title" :place="church.name" :items="items">
+    <AppShell :title="title" :items="items">
+        <template #end>
+            <SatelliteSwitch :current="satellite" :satellites="page.props.open_satellites" />
+        </template>
         <slot />
     </AppShell>
 </template>

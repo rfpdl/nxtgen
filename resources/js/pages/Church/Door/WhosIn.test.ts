@@ -22,7 +22,7 @@ vi.mock('ziggy-js', () => ({
     route: (name: string, params: unknown) => `${name}:${JSON.stringify(params)}`,
 }))
 
-const onePm: DoorClass = { id: 1, name: '1PM', satellite: 'CCF DXB', times: '13:00–15:00' }
+const onePm: DoorClass = { id: 1, name: '1PM', times: '13:00–15:00' }
 const girls: WhosInSquad = {
     id: 5,
     name: 'Level 2 Girls',

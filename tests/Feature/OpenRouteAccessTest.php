@@ -61,9 +61,12 @@ function openMatrix(): array
         // One place: go there — a parent to /family, staff to their first satellite's home (/{satellite}, the church
         // is never in the address — Roy 2026-11-07). The other church's admin is no parent any more (AccessWorld), so
         // they go straight to their own satellite rather than being asked to choose.
-        'home' => ['302 /login', '302 /family', '302 /home-sat', '302 /other'],
+        // An admin at two satellites who used neither yet picks one (spec item 11); one satellite goes straight there.
+        'home' => ['302 /login', '302 /family', '302 /pick', '302 /other'],
         // Only a place on the person's own landing list: an admin with no family has no "/family".
         'home.choice' => ['302 /login', '302 /family', '404', '404'],
+        // "Pick your satellite" (spec item 11): for staff — the admin at Home and Away picks; a parent has none to pick.
+        'pick' => ['302 /login', '404', '200', '200'],
         // The backup password is for staff (anywhere), never a parent.
         'account.password' => ['302 /login', '404', '200', '200'],
         'account.password.update' => ['302 /login', '404', '302 /', '302 /'],
@@ -99,7 +102,8 @@ function openRequest(string $route, AccessWorld $w): array
         'auth.magic.verify' => ['POST', '/magic/verify/'.$link(MagicLinkPurposeEnum::VerifyEmail), []],
         'auth.magic.claim' => ['POST', '/magic/claim/'.$link(MagicLinkPurposeEnum::ClaimFamily, FamilyClaim::factory()->create(['email_normalised' => $parent->email])), []],
         'home' => ['GET', '/home', []],
-        'home.choice' => ['POST', '/home/choice', ['url' => '/family']],
+        'home.choice' => ['POST', '/home/choice', ['place' => 'family']],
+        'pick' => ['GET', '/pick', []],
         'account.password' => ['GET', '/account/password', []],
         'account.password.update' => ['PUT', '/account/password', $password],
         // A satellite's registration link (spec item 7): the satellite in the address, never the church.
@@ -143,7 +147,7 @@ it('has a row for every Auth and Public route, and no row for a route that is go
     $rows = array_keys(openMatrix());
     sort($rows);
 
-    expect(openRouteNames())->toHaveCount(18)->toBe($rows);
+    expect(openRouteNames())->toHaveCount(19)->toBe($rows);
 });
 
 it('opens public pages to everyone, signed-in pages to the signed in, the password page to staff @story#1 @story#4 @story#12 @story#19 @story#20 @story#24 @story#162 @story#163', function (string $route, Actor $actor, string $expected): void {

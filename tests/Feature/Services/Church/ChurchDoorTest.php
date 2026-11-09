@@ -100,7 +100,6 @@ describe('the door page', function (): void {
             ->where('today', 'Sat 31 Oct')
             ->has('classes', 2)
             ->where('classes.0.name', '1PM')
-            ->where('classes.0.satellite', 'CCF DXB')
             ->where('classes.0.times', '13:00–15:00')
             ->where('classes.1.name', '7PM')
             ->where('class_id', $onePm->id)
@@ -117,11 +116,9 @@ describe('the door page', function (): void {
         // Every satellite's, one satellite at a time: the door shows the address satellite's classes (DECISIONS 2026-11-08).
         actingAs($lifeshaper)->get('/dxb/serve/door')->assertInertia(fn (AssertableInertia $page) => $page
             ->has('classes', 2)
-            ->where('classes.0.satellite', 'CCF DXB')
             ->where('classes.1.name', '7PM'));
         actingAs($lifeshaper)->get('/house/serve/door')->assertInertia(fn (AssertableInertia $page) => $page
             ->has('classes', 1)
-            ->where('classes.0.satellite', 'House Church')
             ->where('classes.0.name', '10AM'));
     });
 
@@ -152,6 +149,8 @@ describe('the door page', function (): void {
 
             return count(DB::getQueryLog());
         };
+        // The first visit also keeps the satellite as the viewer's last one (spec item 11): measure from the second.
+        $count();
         $few = $count();
 
         $family = Family::query()->firstOrFail();

@@ -20,7 +20,7 @@ const satellite = useSatellite()
 
 <template>
     <Head :title="`Register · ${church.name}`" />
-    <AppShell title="Register" :place="church.name" narrow>
+    <AppShell title="Register" narrow>
         <PageHeader
             title="Register your family"
             :sub="`For ${church.name} kids church. It takes about 5 minutes.`"

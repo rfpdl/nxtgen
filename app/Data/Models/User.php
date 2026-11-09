@@ -24,6 +24,7 @@ use Illuminate\Notifications\Notifiable;
  * @property int $credential_version
  * @property string|null $password
  * @property bool $is_platform_admin
+ * @property int|null $last_satellite_id the satellite whose pages they opened last (spec item 11)
  * @property CarbonImmutable|null $last_login_at
  * @property-read Collection<int, Guardian> $guardians
  * @property-read Collection<int, RoleAssignment> $roleAssignments
@@ -46,7 +47,7 @@ final class User extends Authenticatable
      *
      * @var array<string, mixed>
      */
-    protected $attributes = ['credential_version' => 1, 'remember_token' => null, 'is_platform_admin' => false];
+    protected $attributes = ['credential_version' => 1, 'remember_token' => null, 'is_platform_admin' => false, 'last_satellite_id' => null];
 
     /** @var list<string> */
     protected $hidden = [
@@ -57,6 +58,7 @@ final class User extends Authenticatable
     protected function casts(): array
     {
         return [
+            'last_satellite_id' => 'integer',
             'email_verified_at' => 'immutable_datetime',
             'last_login_at' => 'immutable_datetime',
             'password' => 'hashed',

@@ -202,6 +202,8 @@ describe('the Attendance page', function (): void {
 
             return count(DB::getQueryLog());
         };
+        // The first visit also keeps Dubai as the admin's last satellite (spec item 11): measure from the second.
+        $count();
         $few = $count();
 
         $family = Family::query()->firstOrFail();

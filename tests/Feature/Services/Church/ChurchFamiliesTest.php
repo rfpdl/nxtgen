@@ -308,6 +308,8 @@ describe('a family\'s page', function (): void {
 
             return count(DB::getQueryLog());
         };
+        // The first visit also keeps the satellite as the viewer's last one (spec item 11): measure from the second.
+        $count();
         $few = $count();
         foreach (['2026-10-10', '2026-10-17', '2026-10-24'] as $date) {
             checkedIn(sessionOf(scheduleAt($htc), $date), $kid);
@@ -403,6 +405,8 @@ describe('re-sending from the lists', function (): void {
             registeredFamily($htc, "Parent{$i}", "p{$i}@example.com", verified: $i % 2 === 0);
         }
         $admin = staffMember(RoleEnum::Admin, atSatellite($htc));
+        // The first visit also keeps the satellite as the viewer's last one (spec item 11): measure from the second.
+        actingAs($admin)->get('/htc/admin/children')->assertOk();
 
         DB::enableQueryLog();
         actingAs($admin)->get('/htc/admin/children')->assertOk();

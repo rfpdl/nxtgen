@@ -6,18 +6,15 @@ namespace App\Domains\Church\Jobs;
 
 use App\Data\Models\Church;
 use App\Data\Models\Guardian;
-use App\Data\Models\RoleAssignment;
 use App\Data\Models\Satellite;
-use App\Data\Models\Schedule;
 use App\Data\Models\User;
 use App\Domains\Church\DataObjects\LandingOptionData;
-use App\Enums\ScopeTypeEnum;
 use App\Foundation\Jobs\BaseJob;
 
 /**
  * Where this login can go (plan §4.5): their family page (`/family`) where they are a linked guardian, and a staff
- * home where they hold an active Role — the first satellite their Roles cover, in the order satellites were added
- * (the satellite picker and the last one used are issue 08). Family first, then staff.
+ * home where they may open a satellite (Satellite::openTo) — the one they used last, else the only one, else "Pick
+ * your satellite" (spec item 11). Family first, then staff.
  *
  * @extends BaseJob<list<LandingOptionData>>
  */
@@ -30,30 +27,22 @@ final class GetLandingOptionsJob extends BaseJob
     {
         $familyChurchIds = Guardian::query()->where('user_id', $this->user->id)->get(['church_id'])
             ->map(fn (Guardian $g): int => $g->church_id)->all();
-        $roles = RoleAssignment::query()->where('user_id', $this->user->id)->where('is_active', true)->get();
-        $staffChurchIds = $roles->map(fn (RoleAssignment $r): int => $r->church_id)->all();
+        // The satellites they may open, by church (one church today), in the order added.
+        $open = Satellite::query()->openTo($this->user)->orderBy('id')->get()->groupBy('church_id');
 
         $churches = Church::query()
-            ->whereIn('id', array_unique([...$familyChurchIds, ...$staffChurchIds]))
+            ->whereIn('id', array_unique([...$familyChurchIds, ...$open->keys()->all()]))
             ->orderBy('name')
             ->get();
 
         $options = [];
         foreach ($churches as $church) {
             if (in_array($church->id, $familyChurchIds, true)) {
-                $options[] = new LandingOptionData(church_name: $church->name, label: 'My family', url: '/family');
+                $options[] = new LandingOptionData(church_name: $church->name, label: 'My family', url: '/family', place: 'family');
             }
-            $satellite = $this->firstSatellite($church, array_values($roles->where('church_id', $church->id)->all()));
-            if ($satellite !== null) {
-                $options[] = new LandingOptionData(church_name: $church->name, label: 'Serve', url: "/{$satellite->slug}");
-            }
-        }
-
-        // The platform admin (spec item 12), with no Role: the first satellite, until their own page (issue 09).
-        if ($this->user->is_platform_admin && ! in_array('Serve', array_map(fn (LandingOptionData $o): string => $o->label, $options), true)) {
-            $first = Satellite::query()->with('church')->orderBy('id')->first();
-            if ($first !== null) {
-                $options[] = new LandingOptionData(church_name: $first->church->name, label: 'Serve', url: "/{$first->slug}");
+            $satellites = $open->get($church->id);
+            if ($satellites !== null && $satellites->isNotEmpty()) {
+                $options[] = new LandingOptionData(church_name: $church->name, label: 'Serve', url: $this->landingOf(array_values($satellites->all())), place: "serve:{$church->id}");
             }
         }
 
@@ -61,25 +50,19 @@ final class GetLandingOptionsJob extends BaseJob
     }
 
     /**
-     * The first satellite, in the order they were added, that these Roles cover: a satellite Role's own, a class Role's
-     * class's.
+     * Where staff land (spec item 11): the satellite they used last, while they may still open it; else the only one;
+     * else "Pick your satellite".
      *
-     * @param  list<RoleAssignment>  $roles
+     * @param  list<Satellite>  $satellites
      */
-    private function firstSatellite(Church $church, array $roles): ?Satellite
+    private function landingOf(array $satellites): string
     {
-        if ($roles === []) {
-            return null;
+        foreach ($satellites as $satellite) {
+            if ($satellite->id === $this->user->last_satellite_id) {
+                return "/{$satellite->slug}";
+            }
         }
 
-        $of = fn (ScopeTypeEnum $type): array => array_values(array_map(fn (RoleAssignment $r): int => $r->scope_id, array_filter($roles, fn (RoleAssignment $r): bool => $r->scope_type === $type)));
-
-        return Satellite::query()
-            ->where('church_id', $church->id)
-            ->where(fn ($q) => $q
-                ->whereIn('id', $of(ScopeTypeEnum::Satellite))
-                ->orWhereIn('id', Schedule::query()->where('church_id', $church->id)->where('is_active', true)->whereIn('id', $of(ScopeTypeEnum::Schedule))->select('satellite_id')))
-            ->orderBy('id')
-            ->first();
+        return count($satellites) === 1 ? "/{$satellites[0]->slug}" : '/pick';
     }
 }

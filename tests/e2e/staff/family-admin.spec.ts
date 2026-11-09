@@ -1,6 +1,6 @@
 import { savedDownload } from '../support/download'
 import { readFileSync } from 'node:fs'
-import { allNavigation, closeMenu, menuOf } from '../support/menu'
+import { allNavigation, closeMenu } from '../support/menu'
 import { expect, test } from '../support/test'
 import { fillFamily } from '../support/forms'
 import { latestMail, mailCount } from '../support/mailbox'
@@ -199,7 +199,8 @@ test('the welcome page is there, with Sign in in the bar @story#1', async ({ bro
         page.getByRole('heading', { name: 'Welcome to CCF NxtGen', exact: true }),
     ).toBeVisible()
     await expect(page.getByTestId('welcome-register')).toHaveCount(0)
-    await (await menuOf(page)).getByTestId('welcome-sign-in').click()
+    // In the bar itself, on a phone too — no menu to open (Roy 2026-11-08).
+    await page.getByTestId('welcome-sign-in').click()
     await expect(page).toHaveURL(/\/login$/)
     await visitor.close()
 })

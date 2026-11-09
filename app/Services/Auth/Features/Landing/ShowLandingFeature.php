@@ -27,7 +27,7 @@ use Inertia\Response;
 )]
 final class ShowLandingFeature extends BaseAuthFeature
 {
-    /** The device remembers the "My family / Serve" choice (plan §4.5). Holds one of the person's own URLs. */
+    /** The device remembers the "My family / Serve" choice (plan §4.5). Holds a place (`family`, `serve:{church id}`), never an address. */
     public const string REMEMBERED = 'nxtgen_landing';
 
     public function handle(): Response|RedirectResponse
@@ -47,10 +47,11 @@ final class ShowLandingFeature extends BaseAuthFeature
 
         // A remembered choice counts only while it is STILL one of their options, and only as an exact match —
         // the cookie can never send anyone anywhere else. `?choose=1` (the Switch link) asks again.
+        // The remembered PLACE (My family, Serve), sent to where it is today — Serve follows the satellite used last.
         $remembered = request()->cookie(self::REMEMBERED);
-        $urls = array_map(fn (LandingOptionData $o): string => $o->url, $options);
-        if (! request()->boolean('choose') && is_string($remembered) && in_array($remembered, $urls, true)) {
-            return redirect($remembered);
+        $option = array_values(array_filter($options, fn (LandingOptionData $o): bool => $o->place === $remembered))[0] ?? null;
+        if (! request()->boolean('choose') && $option !== null) {
+            return redirect($option->url);
         }
 
         return Inertia::render('Auth/Choose', ['options' => $options]);

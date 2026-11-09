@@ -7,8 +7,10 @@ namespace App\Http\Middleware;
 use App\Data\Models\User;
 use App\Domains\Church\DataObjects\ChurchData;
 use App\Domains\Church\DataObjects\ChurchNavData;
+use App\Domains\Church\DataObjects\SatelliteChoiceData;
 use App\Domains\Church\DataObjects\SatelliteData;
 use App\Domains\Church\Jobs\GetLandingOptionsJob;
+use App\Domains\Church\Jobs\GetOpenSatellitesJob;
 use App\Foundation\Support\RequestContext;
 use App\Foundation\Support\RouteArea;
 use App\Foundation\Support\RouteSatellite;
@@ -51,6 +53,11 @@ final class HandleInertiaRequests extends Middleware
             // The church a page is about: the address's satellite's (staff pages, registration), or the parent's own
             // (family pages). Read after the route's middleware has resolved and checked it; null elsewhere.
             'church' => fn (): ?ChurchData => ($church = RequestContext::church($request) ?? RouteSatellite::from($request)?->church) !== null ? ChurchData::fromModel($church) : null,
+
+            // The bar's satellite switch (spec item 13): on a staff page, the satellites its viewer may open; else none.
+            'open_satellites' => fn (): array => $user instanceof User && RequestContext::scope($request) !== null
+                ? array_map(SatelliteChoiceData::fromModel(...), $this->run(new GetOpenSatellitesJob(user: $user)))
+                : [],
 
             // The satellite the address names (/{satellite}/…, Roy 2026-11-07): staff pages build their links from it.
             'satellite' => fn (): ?SatelliteData => ($satellite = RouteSatellite::from($request)) !== null ? SatelliteData::fromModel($satellite) : null,

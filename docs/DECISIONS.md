@@ -4,6 +4,19 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-11-09 (Issue 08 built — landing and the bar)
+
+- **After sign-in, staff go to the satellite they used last, else the only one they serve at, else "Pick your
+  satellite"** (`/pick`, spec item 11); an admin lands in Admin, everyone else in Serve. The last satellite is saved
+  on the account each time they open one of its pages (DECISIONS 2026-11-08), so it follows them to every device. The
+  platform admin may open any satellite: last used, else the picker.
+- **The bar** (Roy): the logo and "CCF NxtGen" on the left; on the right the satellite — a dropdown only for someone
+  who may open two or more, landing on that satellite's home (Roy) — and Sign out. The page's name shows only on a
+  phone; there the satellite has a line of its own under the logo (it did not fit beside "CCF NxtGen" on a 320px
+  phone). The door's heading is today alone. "Satellite::openTo" is the one answer for which satellites a person may
+  open (landing, picker, bar).
+- **The welcome page's Sign in sits in the bar** (Roy 2026-11-08: "header with login"), in sight on a phone.
+
 ## 2026-11-09 (Issue 07 built — registration by address or code)
 
 - **Each satellite has a registration code, 8 lowercase letters and digits with no look-alikes, made once and never

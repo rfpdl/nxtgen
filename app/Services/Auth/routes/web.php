@@ -32,6 +32,8 @@ Route::post('/magic/claim/{token}', [LinkController::class, 'claim'])->middlewar
 
 Route::get('/home', [LandingController::class, 'show'])->middleware('auth')->name('home');
 Route::post('/home/choice', [LandingController::class, 'choose'])->middleware('auth')->name('home.choice');
+// "Pick your satellite" (spec item 11): staff who serve at several and used none yet.
+Route::get('/pick', [LandingController::class, 'pick'])->middleware('auth')->name('pick');
 
 Route::get('/account/password', [AccountController::class, 'showPassword'])->middleware('auth')->name('account.password');
 Route::put('/account/password', [AccountController::class, 'updatePassword'])->middleware('auth')->name('account.password.update');

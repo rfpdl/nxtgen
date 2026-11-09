@@ -12,6 +12,7 @@ use function Tests\Support\atSatellite;
 use function Tests\Support\church;
 use function Tests\Support\classAdminOf;
 use function Tests\Support\familyAt;
+use function Tests\Support\grantRole;
 use function Tests\Support\guardianOf;
 use function Tests\Support\satelliteOf;
 use function Tests\Support\scheduleAt;
@@ -87,4 +88,18 @@ it('gives the staff menu only to a staff page — never to the next request in t
     actingAs(staffMember(RoleEnum::Admin, atSatellite($dubai)))->get('/dubai/serve/families')
         ->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav.can_manage_people', true));
     actingAs($parent)->get('/family')->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav', null));
+});
+
+// The bar's satellite switch (spec item 13): a staff page carries the satellites its viewer may open; no other page.
+it('gives a staff page the satellites its viewer may open, for the bar — and no other page', function (): void {
+    $church = church(['slug' => 'ccf']);
+    $dubai = satelliteOf($church, ['name' => 'CCF Dubai', 'slug' => 'dubai']);
+    $sharjah = satelliteOf($church, ['name' => 'CCF Sharjah', 'slug' => 'sharjah']);
+    satelliteOf($church, ['name' => 'CCF Abu Dhabi', 'slug' => 'abu-dhabi']);
+    $admin = staffMember(RoleEnum::Admin, atSatellite($dubai));
+    grantRole($admin, RoleEnum::Lifeshaper, atSatellite($sharjah));
+
+    actingAs($admin)->get('/dubai/serve/door')->assertInertia(fn (AssertableInertia $p) => $p
+        ->where('open_satellites', [['name' => 'CCF Dubai', 'slug' => 'dubai'], ['name' => 'CCF Sharjah', 'slug' => 'sharjah']]));
+    get('/dubai/register')->assertInertia(fn (AssertableInertia $p) => $p->where('open_satellites', []));
 });

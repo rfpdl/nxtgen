@@ -28,7 +28,9 @@ async function openDoor(page: Page): Promise<void> {
     const chip = page.getByTestId('door-class').getByRole('radio', { name: CLASSES.onePm.name })
     await chip.click()
     await expect(chip).toHaveAttribute('aria-checked', 'true')
-    await expect(page.getByTestId('door-heading')).toContainText(`${SATELLITES.dxb} · Sat `)
+    // Today alone: the satellite is in the bar (spec item 13).
+    await expect(page.getByTestId('door-heading')).toHaveText(/^Sat \d{1,2} \w{3}$/)
+    await expect(page.getByTestId('bar-satellite')).toContainText(SATELLITES.dxb)
     // Phone first: nothing pushes the page sideways.
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         page.viewportSize()?.width ?? 0,

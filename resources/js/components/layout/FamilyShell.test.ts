@@ -25,11 +25,10 @@ beforeEach(() => {
 })
 
 describe('FamilyShell', () => {
-    it('names the page and the church, in one narrow column, with the page under it', () => {
+    it('names the page, in one narrow column, with the page under it', () => {
         const wrapper = mount(FamilyShell, { slots: { default: '<p>body</p>' } })
 
         expect(wrapper.find('[data-testid="page-name"]').text()).toBe('My family')
-        expect(wrapper.text()).toContain('CCF DXB')
         expect(wrapper.find('main').classes()).toContain('max-w-2xl')
         expect(wrapper.find('main').text()).toBe('body')
     })
@@ -40,7 +39,10 @@ describe('FamilyShell', () => {
         expect(row().find('[data-testid="nav-family"]').attributes('href')).toBe(
             'http://app.test/#family.show',
         )
-        expect(row().find('[data-testid="sign-out"]').exists()).toBe(true)
+        // Sign out sits on the right of the bar (spec item 13).
+        expect(
+            mount(FamilyShell).find('[data-testid="bar-top"] [data-testid="sign-out"]').exists(),
+        ).toBe(true)
         expect(row().find('[data-testid="switch-place"]').exists()).toBe(false)
 
         page.props.auth.can_switch = true

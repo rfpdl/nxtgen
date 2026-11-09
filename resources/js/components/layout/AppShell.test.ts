@@ -46,7 +46,7 @@ const sheet = () => document.body.querySelector<HTMLElement>('[data-testid="menu
 
 function shell() {
     return mount(AppShell, {
-        props: { title: 'Check in', place: 'CCF DXB', items },
+        props: { title: 'Check in', items },
         slots: { default: '<p>the page</p><button data-testid="outside">outside</button>' },
         attachTo: document.body,
     })
@@ -66,32 +66,50 @@ beforeEach(() => {
 })
 
 describe('AppShell', () => {
-    it('shows the logo, the page name and the place in the amber bar, and the page under it', () => {
+    it('shows the logo and "CCF NxtGen" in the amber bar, and the page under it (spec item 13)', () => {
         const wrapper = shell()
 
         expect(wrapper.find('header').classes()).toEqual(
             expect.arrayContaining(['bg-bar', 'focus-on-bar']),
         )
         expect(wrapper.find('svg[aria-label="NxtGen"]').exists()).toBe(true)
-        expect(wrapper.find('[data-testid="page-name"]').text()).toBe('Check in')
-        expect(wrapper.text()).toContain('CCF DXB')
+        expect(wrapper.find('[data-testid="app-name"]').text()).toBe('CCF NxtGen')
         expect(wrapper.find('main').text()).toContain('the page')
         wrapper.unmount()
     })
 
-    it('names the app "CCF NxtGen" in the top left, over the page name (Roy 2026-11-07)', () => {
+    it("shows the page's name only on a phone — wider screens have the menu and the page's own heading (Roy 2026-11-08)", () => {
         const wrapper = shell()
 
-        expect(wrapper.find('[data-testid="app-name"]').text()).toBe('CCF NxtGen')
-        expect(wrapper.find('[data-testid="page-name"]').text()).toBe('Check in')
+        const name = wrapper.find('[data-testid="page-name"]')
+        expect(name.text()).toBe('Check in')
+        expect(name.classes()).toContain('md:hidden')
         wrapper.unmount()
     })
 
-    it('puts "CCF NxtGen" big, once, on a page with no name of its own (sign in, welcome)', () => {
+    it('puts "CCF NxtGen" alone on a page with no name of its own (sign in, welcome)', () => {
         const wrapper = mount(AppShell, { props: {}, slots: { default: '<p>the page</p>' } })
 
-        expect(wrapper.find('[data-testid="page-name"]').text()).toBe('CCF NxtGen')
-        expect(wrapper.find('[data-testid="app-name"]').exists()).toBe(false)
+        expect(wrapper.find('[data-testid="app-name"]').text()).toBe('CCF NxtGen')
+        expect(wrapper.find('[data-testid="page-name"]').exists()).toBe(false)
+    })
+
+    it('keeps the right of the bar for what the page puts there (the satellite), then Sign out', () => {
+        const wrapper = mount(AppShell, {
+            props: { title: 'Check in', items },
+            slots: {
+                default: '<p>the page</p>',
+                end: '<span data-testid="the-end">CCF Dubai</span>',
+            },
+        })
+
+        const top = wrapper.find('[data-testid="bar-top"]')
+        expect(top.find('[data-testid="the-end"]').exists()).toBe(true)
+        // Sign out sits on the right of the bar from 1024px; on a phone it is in the sheet.
+        const signOut = top.find('[data-testid="sign-out"]')
+        expect(signOut.exists()).toBe(true)
+        expect(signOut.classes()).toContain('max-lg:hidden')
+        wrapper.unmount()
     })
 
     it('picks the sheet or the row with CSS alone — the row from 1024px (lg), where the whole menu fits on one line', () => {
@@ -105,11 +123,11 @@ describe('AppShell', () => {
         const families = row.findAll('a').find((a) => a.text() === 'Families')
         expect(families?.classes()).toContain('text-base!')
         expect(row.text()).toContain('Families')
-        expect(row.find('[data-testid="sign-out"]').exists()).toBe(true)
+        expect(row.find('[data-testid="sign-out"]').exists()).toBe(false)
         wrapper.unmount()
     })
 
-    it('keeps the desktop items compact, so Sign out shares their row and wraps only when narrow', () => {
+    it('keeps the desktop items compact, so the row wraps only when narrow', () => {
         const wrapper = shell()
         const row = wrapper.find('[data-testid="menu-row"]')
 
@@ -206,7 +224,6 @@ describe('AppShell', () => {
         page.props.auth.user = null
         const wrapper = mount(AppShell, {
             props: {
-                place: 'Kids church',
                 items: [{ label: 'Sign in', href: '/login', testid: 'welcome-sign-in' }],
             },
         })

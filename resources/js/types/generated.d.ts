@@ -99,7 +99,6 @@ declare namespace App {
                 export type DoorClassData = {
                     id: number
                     name: string
-                    satellite: string
                     times: string | null
                 }
                 export type DoorFamilyData = {
@@ -167,11 +166,16 @@ declare namespace App {
                     church_name: string
                     label: string
                     url: string
+                    place: string
                 }
                 export type PosterLinkData = {
                     label: string
                     url: string
                     qr: string
+                }
+                export type SatelliteChoiceData = {
+                    name: string
+                    slug: string
                 }
                 export type SatelliteData = {
                     id: number
@@ -423,7 +427,8 @@ declare namespace App {
         export type MagicLinkRouteEnum = 'login' | 'verify' | 'claim'
         export type NoteKindEnum = 'system' | 'observation'
         export type NoteVisibilityEnum = 'staff' | 'family'
-        export type PutBackResultEnum = 'put_back' | 'already_put_back' | 'changed_since'
+        export type PutBackResultEnum =
+            'put_back' | 'already_put_back' | 'changed_since' | 'elsewhere'
         export type RegistrationOutcomeEnum =
             'registered' | 'already_registered' | 'claim_sent' | 'claim_resent'
         export type RegistrationSourceEnum = 'self' | 'staff' | 'import'

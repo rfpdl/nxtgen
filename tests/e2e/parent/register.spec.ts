@@ -100,7 +100,7 @@ test('a registered parent signs in again with just their email @story#9 @story#1
 
     // The sign-in page names the app (Roy 2026-11-07); the family page carries it over the page's name.
     await page.goto('/login')
-    await expect(page.getByTestId('page-name')).toHaveText('CCF NxtGen')
+    await expect(page.getByTestId('app-name')).toHaveText('CCF NxtGen')
     await expect(page).toHaveTitle(/CCF NxtGen/)
     await signInByEmail(page, email)
 

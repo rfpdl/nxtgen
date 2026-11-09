@@ -6,6 +6,7 @@ namespace App\Services\Auth\Http\Controllers\Landing;
 
 use App\Services\Auth\Features\Landing\ChooseLandingFeature;
 use App\Services\Auth\Features\Landing\ShowLandingFeature;
+use App\Services\Auth\Features\Landing\ShowSatellitePickerFeature;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Response;
 
@@ -14,6 +15,11 @@ final class Controller extends \Lucid\Units\Controller
     public function show(): Response|RedirectResponse
     {
         return $this->serve(ShowLandingFeature::class);
+    }
+
+    public function pick(): Response
+    {
+        return $this->serve(ShowSatellitePickerFeature::class);
     }
 
     public function choose(): RedirectResponse

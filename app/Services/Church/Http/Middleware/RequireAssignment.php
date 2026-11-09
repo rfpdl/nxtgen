@@ -6,6 +6,7 @@ namespace App\Services\Church\Http\Middleware;
 
 use App\Data\Models\User;
 use App\Domains\Church\Jobs\GetAccessScopeJob;
+use App\Domains\User\Jobs\UpdateUserLastSatelliteJob;
 use App\Foundation\Support\RequestContext;
 use App\Foundation\Support\RouteSatellite;
 use Closure;
@@ -39,6 +40,10 @@ final class RequireAssignment
         // The staff menu (HandleInertiaRequests' `church_nav`) is read from here too — never Inertia::share, which
         // is process-wide and would outlive this request.
         RequestContext::putScope($request, $scope);
+        // Where they land next time they sign in (spec item 11) — written only when it changes.
+        if ($user->last_satellite_id !== $satellite->id) {
+            $this->run(new UpdateUserLastSatelliteJob(user: $user, satellite: $satellite));
+        }
         $request->route()?->forgetParameter('satellite');
 
         return $next($request);

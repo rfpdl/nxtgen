@@ -31,12 +31,13 @@ final class ChooseLandingFeature extends BaseAuthFeature
         $user = request()->user();
         abort_unless($user instanceof User, 403);
 
-        $wanted = request()->string('url')->value();
-        $urls = array_map(fn (LandingOptionData $o): string => $o->url, $this->run(new GetLandingOptionsJob(user: $user)));
-        abort_unless(in_array($wanted, $urls, true), 404);
+        // A place, not an address (Astra, issue 08): it is resolved now, to where that place is today.
+        $wanted = request()->string('place')->value();
+        $option = array_values(array_filter($this->run(new GetLandingOptionsJob(user: $user)), fn (LandingOptionData $o): bool => $o->place === $wanted))[0] ?? null;
+        abort_if($option === null, 404);
 
-        Cookie::queue(ShowLandingFeature::REMEMBERED, $wanted, 60 * 24 * 365);
+        Cookie::queue(ShowLandingFeature::REMEMBERED, $option->place, 60 * 24 * 365);
 
-        return redirect($wanted);
+        return redirect($option->url);
     }
 }

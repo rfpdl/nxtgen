@@ -1,6 +1,6 @@
 import { expect, test as setup } from '@playwright/test'
 import { signInByEmail } from './support/sign-in'
-import { DUBAI, SHARJAH, STAFF, sessionFile, type StaffRole } from './support/world'
+import { DUBAI, SATELLITES, SHARJAH, STAFF, sessionFile, type StaffRole } from './support/world'
 
 /*
  * Each staff member signs in once, through the real login form and the real email link, and the session is
@@ -12,6 +12,11 @@ for (const role of Object.keys(STAFF) as StaffRole[]) {
 
         // Staff land straight in their area at their satellite (Roy 2026-11-06, 2026-11-07): an admin on Admin's
         // families list, a Lifeshaper at Serve's door; the Sharjah admin at Sharjah, everyone else at Dubai.
+        // The demo admin serves at all three satellites and used none yet: "Pick your satellite" (spec item 11).
+        if (role === 'admin') {
+            await expect(page).toHaveURL(/\/pick$/)
+            await page.getByTestId('pick-satellite').filter({ hasText: SATELLITES.dxb }).click()
+        }
         const satellite = role === 'houseAdmin' ? SHARJAH : DUBAI
         await expect(page).toHaveURL(
             new RegExp(`/${satellite}/${role === 'lifeshaper' ? 'serve/door' : 'admin/families'}`),

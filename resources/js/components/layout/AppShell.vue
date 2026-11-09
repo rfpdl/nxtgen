@@ -12,7 +12,6 @@ import { Menu, X } from 'lucide-vue-next'
 import {
     DialogClose,
     DialogContent,
-    DialogDescription,
     DialogOverlay,
     DialogPortal,
     DialogRoot,
@@ -23,8 +22,9 @@ import { useMediaQuery } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 
 /**
- * The Bold frame for every signed-in page (DECISIONS 2026-10-28): an amber bar with the logo, the page's name and
- * `place` (the church) under it; the menu `items`, then Switch and Sign out. On a phone the menu is a sheet of big
+ * The Bold frame for every signed-in page (DECISIONS 2026-10-28; the bar, spec item 13): an amber bar — on the left
+ * the logo and "CCF NxtGen", with the page's name under it on a phone only; on the right what the page puts in the
+ * `end` slot (the satellite) and Sign out; then the menu `items` and Switch. On a phone the menu is a sheet of big
  * buttons behind the Menu button (a reka-ui Dialog: focus stays inside, Esc closes and gives focus back); from 1024px
  * (`lg`) it is a row in the bar, in base-size words, on ONE line — an admin's ten items do not fit one line at 768px
  * (TODO #12's layout check found it wrapping even at 1280px). Which one shows is CSS alone, so the first paint is
@@ -34,12 +34,12 @@ import { computed, ref, watch } from 'vue'
  * Without `items` there is no menu at all — the public pages (welcome, register, sign in) and the few signed-in
  * pages with nowhere else to go (choose, nothing yet) get just the bar and the logo. `narrow` keeps the page to a
  * phone-like column on a wide screen, for the parent's and the public pages: one form, one column, easy to read.
- * "CCF NxtGen" (APP_NAME, Roy 2026-11-07) is in the top left on every page: a small line over the page's name, or
- * the name itself on a page without one (`title` left out: sign in, welcome).
+ * "CCF NxtGen" (APP_NAME, Roy 2026-11-07) is in the top left on every page; the page's name shows under it only on a
+ * phone (Roy 2026-11-08) — wider screens have the menu and the page's own heading.
  */
 const props = withDefaults(
-    defineProps<{ title?: string; place?: string; items?: ShellItem[]; narrow?: boolean }>(),
-    { title: undefined, place: undefined, items: undefined },
+    defineProps<{ title?: string; items?: ShellItem[]; narrow?: boolean }>(),
+    { title: undefined, items: undefined },
 )
 
 const width = computed(() => (props.narrow ? 'max-w-2xl' : 'max-w-5xl'))
@@ -82,20 +82,27 @@ function wrapOptionTab(event: KeyboardEvent): void {
     <div class="bg-surface min-h-dvh">
         <header class="bg-bar text-on-bar focus-on-bar">
             <div class="mx-auto flex flex-col gap-1 px-4 py-2" :class="width">
-                <div class="flex min-h-14 items-center gap-3">
+                <div class="flex min-h-14 flex-wrap items-center gap-x-3" data-testid="bar-top">
                     <BrandMark />
                     <p class="flex min-w-0 flex-1 flex-col leading-tight">
+                        <span class="truncate text-xl font-bold" data-testid="app-name">{{
+                            APP_NAME
+                        }}</span>
                         <span
                             v-if="title"
-                            class="truncate text-sm font-bold"
-                            data-testid="app-name"
-                            >{{ APP_NAME }}</span
+                            class="truncate text-base font-medium md:hidden"
+                            data-testid="page-name"
+                            >{{ title }}</span
                         >
-                        <span class="truncate text-xl font-bold" data-testid="page-name">{{
-                            title ?? APP_NAME
-                        }}</span>
-                        <span v-if="place" class="truncate text-base font-medium">{{ place }}</span>
                     </p>
+                    <!-- On a phone, a line of its own under the logo; from md, on the right of the bar. -->
+                    <div
+                        v-if="$slots.end"
+                        class="order-last flex w-full items-center pb-1 md:order-none md:w-auto md:pb-0"
+                    >
+                        <slot name="end" />
+                    </div>
+                    <SignOutButton v-if="signedIn && items" class="max-lg:hidden" />
                     <DialogRoot v-if="items" v-model:open="open">
                         <DialogTrigger as-child>
                             <AppButton
@@ -111,6 +118,7 @@ function wrapOptionTab(event: KeyboardEvent): void {
                         <DialogPortal>
                             <DialogOverlay class="bg-text/40 fixed inset-0 z-40 lg:hidden" />
                             <DialogContent
+                                :aria-describedby="undefined"
                                 class="bg-surface rounded-b-card fixed inset-x-0 top-0 z-50 flex max-h-dvh flex-col gap-3 overflow-y-auto p-4 pb-6 lg:hidden"
                                 data-testid="menu-sheet"
                                 @keydown="wrapOptionTab"
@@ -130,9 +138,6 @@ function wrapOptionTab(event: KeyboardEvent): void {
                                         </AppButton>
                                     </DialogClose>
                                 </div>
-                                <DialogDescription v-if="place" class="text-text-muted text-lg">{{
-                                    place
-                                }}</DialogDescription>
                                 <nav class="flex flex-col gap-3" aria-label="Menu">
                                     <AppButton
                                         v-for="item in items"
@@ -177,10 +182,7 @@ function wrapOptionTab(event: KeyboardEvent): void {
                         :data-testid="item.testid"
                         >{{ item.label }}</AppButton
                     >
-                    <span class="ml-auto flex items-center gap-1">
-                        <SwitchLink />
-                        <SignOutButton v-if="signedIn" />
-                    </span>
+                    <SwitchLink class="ml-auto" />
                 </nav>
             </div>
         </header>

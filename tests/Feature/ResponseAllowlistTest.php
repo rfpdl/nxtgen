@@ -33,10 +33,10 @@ use function Tests\Support\exportedRows;
 const SHARED = ['auth.can_switch', 'auth.user.id', 'auth.user.name', 'church.name', 'church.slug', 'errors', 'flash.error', 'flash.success'];
 
 /** A page that is not a staff page: no satellite in its address (`/family`, Roy 2026-11-07), and the staff menu is null. */
-const FRAME = [...SHARED, 'church_nav', 'satellite'];
+const FRAME = [...SHARED, 'church_nav', 'open_satellites', 'satellite'];
 
 /** A staff page: the address's satellite, and the staff menu's switches (People, Classes, Attendance, Cards, Moving-Up). Duplicates has no tab (DECISIONS 2026-10-17, after first look). */
-const STAFF_FRAME = [...SHARED, 'satellite.id', 'satellite.name', 'satellite.slug', 'church_nav.area', 'church_nav.can_manage_cards', 'church_nav.can_manage_classes', 'church_nav.can_manage_links', 'church_nav.can_manage_people', 'church_nav.can_move_up', 'church_nav.can_see_attendance', 'church_nav.can_use_admin', 'church_nav.can_use_full_admin'];
+const STAFF_FRAME = [...SHARED, 'open_satellites.*.name', 'open_satellites.*.slug', 'satellite.id', 'satellite.name', 'satellite.slug', 'church_nav.area', 'church_nav.can_manage_cards', 'church_nav.can_manage_classes', 'church_nav.can_manage_links', 'church_nav.can_manage_people', 'church_nav.can_move_up', 'church_nav.can_see_attendance', 'church_nav.can_use_admin', 'church_nav.can_use_full_admin'];
 
 /** Health, photo and contact fields: never on a list or search page, whoever asks — only the allergy yes/no. */
 const NEVER_ON_LISTS = '/photo|allerg|illness|fear|dislike|guardian_notes|phone|notes|ministries/';
@@ -403,7 +403,7 @@ describe('the door', function (): void {
             STAFF_FRAME,
             $checkedIn,
             // "Amara" is also tried as a name card; no child's full name is just that, and families are found, so no card.
-            ['class_id', 'classes.*.id', 'classes.*.name', 'classes.*.satellite', 'classes.*.times', 'levels.*.level', 'levels.*.name', 'query', 'scan', 'today'],
+            ['class_id', 'classes.*.id', 'classes.*.name', 'classes.*.times', 'levels.*.level', 'levels.*.name', 'query', 'scan', 'today'],
             prefixed('families.*', ['can_open', 'id', 'name', 'primary_name', 'satellite', ...prefixed('children.*', DOOR_CHILD)]),
         ))
             ->and(forbiddenOnLists($props))->toBe([])
@@ -459,7 +459,7 @@ describe('Who\'s in', function (): void {
         expect(keyPaths($props))->toBe(allowlist(
             STAFF_FRAME,
             $squads,
-            ['class_id', 'classes.*.id', 'classes.*.name', 'classes.*.satellite', 'classes.*.times', 'squad_id', 'today'],
+            ['class_id', 'classes.*.id', 'classes.*.name', 'classes.*.times', 'squad_id', 'today'],
         ))
             ->and(forbiddenOnLists($props))->toBe([])
             ->and(data_get($props, 'squads.0.children.0.nickname'))->toBe($home ? 'Amara' : null);
