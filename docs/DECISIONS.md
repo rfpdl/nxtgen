@@ -4,6 +4,17 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-11-10 (Batch C planned — classes and Sessions, TODO #35)
+
+Roy answered the six open questions (`tasks/2026-11-07-ccf-nxtgen/batch-c-plan.md`):
+- **The old door page goes** (`/{satellite}/serve/door`): Serve's "Open now" list takes you to each class's door.
+- **A helper for the day may do anything in Serve** at that satellite (Roy: "no need to do RBAC now, anything in
+  serve") — like a Lifeshaper — until the Session closes.
+- **A Session reopened the same day keeps its code**, so a link already shared still works.
+- **A one-time class after its date moves to a "Past" list** on Classes; Attendance keeps it.
+- **Lifeshapers see today's classes not open yet**, marked "Not open yet" (no Open button).
+- **On a class's page the bar's dropdown lists the satellite's open classes**; elsewhere, satellites as now.
+
 ## 2026-11-10 (Issue 09 built — the platform admin)
 
 - **`/platform` is the platform admin's alone** (spec item 12): anyone else gets "not found", as if it did not exist.

@@ -15,7 +15,13 @@ time, test-first, the same way as Batch B: page checks, address rule, small rule
 Note: the Session address (`/<code>/checkin`) is the first staff address without `{satellite}` in front — the spec
 asks for it, so the address rule (`AddressRuleTest`) gets one named exception for it.
 
-## Questions for Roy (the spec does not say) — with what Claude would do
+## Questions for Roy (the spec does not say) — answered by Roy 2026-11-10
+
+Answers: 1 yes, remove it · 2 **"no need to do RBAC now, anything in serve"** — a helper may do anything a Lifeshaper
+may in Serve at that satellite, until the Session closes · 3 same code · 4 a "Past" list · 5 yes, "Not open yet" ·
+6 yes.
+
+The questions, with what Claude suggested:
 
 1. **The old door page** (`/dubai/serve/door`, where you pick today's class): does it go, now that each open class has
    its own address and Serve lists them? *Claude: yes — Serve's "Open now" replaces it.*

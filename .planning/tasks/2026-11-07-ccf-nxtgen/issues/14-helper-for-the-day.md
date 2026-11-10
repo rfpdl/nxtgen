@@ -1,7 +1,8 @@
 # 14 — A helper for the day (TODO #35)
-Status: needs-info — questions for Roy in `../batch-c-plan.md`
-Spec item 18. An admin adds a person (name, email) for one Session only; they sign in with the emailed link; their
-access ends when the Session closes. Done when: the helper checks children in at that Session and, once it closes,
+Status: ready-for-agent (Roy answered 2026-11-10, `../batch-c-plan.md`)
+Spec item 18. An admin adds a person (name, email) for one Session only; they sign in with the emailed link; they
+may do anything a Lifeshaper may in Serve at that satellite (Roy 2026-11-10: "no need to do RBAC now") until the
+Session closes. Done when: the helper checks children in at that Session and, once it closes,
 finds nothing.
 
 Seams:

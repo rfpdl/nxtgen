@@ -1,5 +1,5 @@
 # 12 — The Session's own address (TODO #35)
-Status: needs-info — questions for Roy in `../batch-c-plan.md`
+Status: ready-for-agent (Roy answered 2026-11-10, `../batch-c-plan.md`)
 Spec item 16. Opening a Session gives it a code (the same 8-letter kind as a satellite's registration code). The door
 is `/<session code>/checkin`, Who's in `/<session code>/whos-in`. A Role at the Session's satellite is needed, else
 404. A closed Session's Who's in stays readable. Done when: the door works at the Session's address for staff of
