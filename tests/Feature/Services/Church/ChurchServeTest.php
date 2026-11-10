@@ -120,3 +120,17 @@ it('lists, on a class\'s door and Who\'s in, the satellite\'s classes open now t
         ->where('session.state', 'closed')
         ->where('open_classes', [['code' => $seven->code, 'name' => '7PM']]));
 });
+
+it('keeps a class opened today on Serve though its day was changed since — open, or closed with no Open again (Codex) @story#208', function (): void {
+    ['dxb' => $dxb, 'onePm' => $onePm] = serveChurch();
+    $session = sessionOf($onePm);
+    $onePm->update(['weekday' => WeekdayEnum::Sunday]);
+    $admin = staffMember(RoleEnum::Admin, atSatellite($dxb));
+
+    actingAs($admin)->get('/dxb/serve')->assertInertia(fn (AssertableInertia $page) => $page
+        ->where('classes.0.name', '1PM')->where('classes.0.state', 'open')->where('classes.0.code', $session->code));
+
+    $session->update(['closed_at' => now()]);
+    actingAs($admin)->get('/dxb/serve')->assertInertia(fn (AssertableInertia $page) => $page
+        ->where('classes.0.name', '1PM')->where('classes.0.state', 'closed')->where('classes.0.can_open', false));
+});

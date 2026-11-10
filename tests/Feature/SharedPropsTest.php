@@ -33,7 +33,7 @@ it('gives a staff page the church it is about', function (): void {
     actingAs($admin)->get('/dubai/serve/families')->assertInertia(fn (AssertableInertia $p) => $p
         ->where('church', ['name' => 'CCF', 'slug' => 'ccf'])
         ->where('satellite', ['id' => $dubai->id, 'name' => 'CCF Dubai', 'slug' => 'dubai'])
-        ->where('church_nav', ['area' => 'serve', 'can_use_admin' => true, 'can_use_full_admin' => true, 'can_manage_people' => true, 'can_manage_classes' => true, 'can_see_attendance' => true, 'can_manage_cards' => true, 'can_move_up' => true, 'can_manage_links' => true]));
+        ->where('church_nav', ['area' => 'serve', 'can_use_admin' => true, 'can_use_full_admin' => true, 'can_manage_people' => true, 'can_manage_classes' => true, 'can_see_attendance' => true, 'can_manage_cards' => true, 'can_move_up' => true, 'can_manage_links' => true, 'can_set_password' => true]));
 });
 
 it('gives a class admin the Admin area for their class only (TODO #9)', function (): void {

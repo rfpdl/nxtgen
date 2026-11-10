@@ -11,6 +11,7 @@ use App\Domains\Church\DataObjects\SatelliteChoiceData;
 use App\Domains\Church\DataObjects\SatelliteData;
 use App\Domains\Church\Jobs\GetLandingOptionsJob;
 use App\Domains\Church\Jobs\GetOpenSatellitesJob;
+use App\Domains\User\Jobs\GetUserIsStaffJob;
 use App\Foundation\Support\RequestContext;
 use App\Foundation\Support\RouteArea;
 use App\Foundation\Support\RouteSatellite;
@@ -66,7 +67,9 @@ final class HandleInertiaRequests extends Middleware
 
             // The staff menu (ChurchShell), from the AccessScope RequireAssignment put on THIS request; null on any
             // page that is not a staff page. Navigation only — every Feature still asks the scope itself.
-            'church_nav' => fn (): ?ChurchNavData => ($scope = RequestContext::scope($request)) !== null ? ChurchNavData::fromScope($scope, RouteArea::of($request)) : null,
+            'church_nav' => fn (): ?ChurchNavData => ($scope = RequestContext::scope($request)) !== null
+                ? ChurchNavData::fromScope($scope, RouteArea::of($request), canSetPassword: $user instanceof User && $this->run(new GetUserIsStaffJob(user: $user)))
+                : null,
 
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

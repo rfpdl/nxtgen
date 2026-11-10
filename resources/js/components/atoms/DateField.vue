@@ -13,21 +13,29 @@ import { computed, shallowRef, useAttrs, useId } from 'vue'
 
 /**
  * A labelled date (the Bold look, Roy 2026-11-07): day / month / year to type, and a calendar button (DateCalendar).
- * No day after today. The model is the date as the server takes it, `YYYY-MM-DD`, or '' for none. Same frame as
- * TextField; `data-testid` names the field, and its parts are `<testid>-day|month|year`, `-open`, `-calendar`.
+ * No day after today — unless `allowFuture`: up to five years on (the Moving-Up date). The model is `YYYY-MM-DD`, or
+ * '' for none. Same frame as TextField; `data-testid` names the field, its parts `<testid>-day|month|year`, `-open`.
  */
 defineOptions({ inheritAttrs: false })
 
-const props = withDefaults(defineProps<{ label: string; error?: string; required?: boolean }>(), {
-    error: undefined,
-})
+const props = withDefaults(
+    defineProps<{
+        label: string
+        error?: string
+        required?: boolean
+        allowFuture?: boolean
+    }>(),
+    { error: undefined, allowFuture: false },
+)
 const model = defineModel<string>({ default: '' })
 
 const id = useId()
 const attrs = useAttrs()
 const testid = computed(() => String(attrs['data-testid'] ?? 'date'))
 
-const max = today(getLocalTimeZone())
+const max = props.allowFuture
+    ? today(getLocalTimeZone()).add({ years: 5 })
+    : today(getLocalTimeZone())
 const date = computed<DateValue | undefined>({
     get: () => (/^\d{4}-\d{2}-\d{2}$/.test(model.value) ? parseDate(model.value) : undefined),
     set: (value) => (model.value = value === undefined ? '' : value.toString()),

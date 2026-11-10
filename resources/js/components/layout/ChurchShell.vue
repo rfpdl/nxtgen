@@ -80,7 +80,10 @@ const items = computed<ShellItem[]>(() => {
                   testid: 'nav-admin',
               },
           ]
-    all.push({ label: 'Password', href: route('account.password'), testid: 'backup-password' })
+    // A backup password is for staff who stay — never a helper for the day only (Codex).
+    if (nav?.can_set_password === true) {
+        all.push({ label: 'Password', href: route('account.password'), testid: 'backup-password' })
+    }
     const path = page.url.split('?')[0] ?? ''
     return all
         .filter((item): item is ShellItem & { exact?: boolean } => item !== false)

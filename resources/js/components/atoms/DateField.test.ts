@@ -68,6 +68,27 @@ describe('DateField', () => {
         expect(years[0]?.textContent).toBe('2026')
     })
 
+    it('takes a date in the coming years when asked — the Moving-Up date is ahead (Codex: Settings could not be saved)', async () => {
+        const wrapper = mount(DateField, {
+            props: {
+                label: 'Moving-Up date',
+                allowFuture: true,
+                modelValue: '2027-02-01',
+                'data-testid': 'dob',
+            },
+            attachTo: document.body,
+        })
+        const calendar = await open(wrapper)
+
+        expect(calendar.querySelector<HTMLSelectElement>('[data-testid="dob-year"]')?.value).toBe(
+            '2027',
+        )
+        expect(
+            calendar.querySelector('[data-value="2027-02-01"]')?.hasAttribute('data-disabled'),
+        ).toBe(false)
+        expect(wrapper.find('[aria-invalid="true"]').exists()).toBe(false)
+    })
+
     it('shows a saved birthday as day, month and year', () => {
         const wrapper = mount(DateField, {
             props: { label: 'Birthday', modelValue: '2019-05-10', 'data-testid': 'dob' },

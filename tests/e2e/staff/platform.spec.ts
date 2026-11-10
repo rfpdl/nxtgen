@@ -1,7 +1,7 @@
 import { menuOf, navTo } from '../support/menu'
 import { openEmailedLink } from '../support/sign-in'
 import { mailCount } from '../support/mailbox'
-import { expect, test } from '../support/test'
+import { checkLayout, expect, test } from '../support/test'
 import { DUBAI, sessionFile, uniqueEmail } from '../support/world'
 
 /*
@@ -63,4 +63,38 @@ test('a platform admin adds a satellite and gives it its first admin @story#192 
     expect((await page.goto(`/${DUBAI}/admin/families`))?.status()).toBe(404)
     expect((await page.goto('/platform'))?.status()).toBe(404)
     await platform.close()
+})
+
+/*
+ * The church's settings (spec item 12; Codex: no journey had opened them). They are the whole church's and the other
+ * journeys stand on them — the door's day is Dubai's, Cards' fee is 10 AED — so this one changes nothing for good: a
+ * fee that is no fee is refused beside the field and nothing is saved, then the same values are saved.
+ */
+test('a platform admin opens the church settings: a wrong fee is refused, nothing changed; a church admin finds no settings @story#199 @story#200 @story#201', async ({
+    browser,
+}) => {
+    const platform = await browser.newContext({ storageState: sessionFile('platform') })
+    const page = await platform.newPage()
+    await page.goto('/platform/settings')
+    await expect(page.getByRole('heading', { name: 'Settings', level: 1 })).toBeVisible()
+    const fee = page.getByTestId('settings-card-fee')
+    const was = await fee.inputValue()
+    await expect(page.getByTestId('settings-timezone')).toHaveValue('Asia/Dubai')
+
+    await fee.fill('-5')
+    await page.getByTestId('settings-save').click()
+    await expect(page.getByText('The fee cannot be below nothing.')).toBeVisible()
+    await checkLayout(page)
+    await page.reload()
+    await expect(fee).toHaveValue(was)
+
+    await page.getByTestId('settings-save').click()
+    await expect(page.getByTestId('flash-success')).toContainText('Settings saved.')
+    await expect(fee).toHaveValue(was)
+    await platform.close()
+
+    const admin = await browser.newContext({ storageState: sessionFile('admin') })
+    const adminPage = await admin.newPage()
+    expect((await adminPage.goto('/platform/settings'))?.status()).toBe(404)
+    await admin.close()
 })

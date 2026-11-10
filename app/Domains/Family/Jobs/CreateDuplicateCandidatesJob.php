@@ -75,8 +75,9 @@ final class CreateDuplicateCandidatesJob extends BaseJob
     private function record(string $type, int $foundFrom, int $other, DuplicateReasonEnum $reason): int
     {
         $model = DuplicateCandidate::query()->firstOrCreate(
-            ['subject_type' => $type, 'subject_id' => max($foundFrom, $other), 'candidate_id' => min($foundFrom, $other)],
-            ['church_id' => $this->family->church_id, 'reason' => $reason, 'status' => DuplicateStatusEnum::default()],
+            // The church in the lookup itself, not only in what a new row gets (Codex).
+            ['church_id' => $this->family->church_id, 'subject_type' => $type, 'subject_id' => max($foundFrom, $other), 'candidate_id' => min($foundFrom, $other)],
+            ['reason' => $reason, 'status' => DuplicateStatusEnum::default()],
         );
 
         return $model->wasRecentlyCreated ? 1 : 0;

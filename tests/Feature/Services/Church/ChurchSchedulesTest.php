@@ -250,6 +250,17 @@ describe('editing a class', function (): void {
         expect([$onePm->fresh()?->weekday, $onePm->fresh()?->date])->toBe([WeekdayEnum::Saturday, null]);
     });
 
+    it('changes no one-time class whose date has gone — retiring it is all that is left (Codex) @story#100', function (): void {
+        ['admin' => $admin] = classesChurch();
+        travelTo(CarbonImmutable::parse('2026-11-10 12:00', 'Asia/Dubai'));
+        $halloween = Schedule::query()->where('name', 'Halloween party')->sole();
+
+        actingAs($admin)->put("/dxb/admin/classes/{$halloween->id}", classForm(['name' => 'Renamed', 'one_time' => true, 'date' => '2026-12-31']))->assertNotFound();
+        actingAs($admin)->put("/dxb/admin/classes/{$halloween->id}/retire")->assertSessionHas('success');
+
+        expect($halloween->fresh()?->name)->toBe('Halloween party');
+    });
+
     it('turns a weekly class into a one-time one and back @story#99', function (): void {
         ['admin' => $admin, 'onePm' => $onePm] = classesChurch();
 

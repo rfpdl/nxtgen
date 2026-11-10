@@ -147,6 +147,8 @@ final readonly class AccessWorld
                 Actor::AwayLifeshaper->value => staffMember(RoleEnum::Lifeshaper, atSatellite($away)),
                 Actor::OtherChurch->value => $otherAdmin,
                 Actor::ClassAdmin->value => classAdminOf($schedule),
+                Actor::HomeHelper->value => helperAt($checkIn->session),
+                Actor::HomeHelperGone->value => helperAt(sessionOf($schedule, '2026-10-24')),
             ],
         );
     }

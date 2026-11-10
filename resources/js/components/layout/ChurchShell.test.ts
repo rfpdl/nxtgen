@@ -21,6 +21,7 @@ const page = {
             can_manage_cards: false,
             can_move_up: false,
             can_manage_links: false,
+            can_set_password: true,
         },
     },
 }
@@ -240,5 +241,12 @@ describe('ChurchShell', () => {
         expect(sheet?.querySelector('[data-testid="backup-password"]')).not.toBeNull()
         expect(sheet?.querySelector('[data-testid="sign-out"]')).not.toBeNull()
         wrapper.unmount()
+    })
+
+    it('offers Password only to someone who may set one — never a helper for the day (Codex)', () => {
+        page.props.church_nav.can_set_password = false
+        expect(mount(ChurchShell).find('[data-testid="backup-password"]').exists()).toBe(false)
+        page.props.church_nav.can_set_password = true
+        expect(mount(ChurchShell).find('[data-testid="backup-password"]').exists()).toBe(true)
     })
 })

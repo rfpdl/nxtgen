@@ -27,7 +27,7 @@ test('an admin opens a class, a Lifeshaper checks a child in, the admin closes i
     browser,
 }, info) => {
     // Two people, a class made, opened, closed and retired: late in a full run Safari takes over a minute.
-    test.setTimeout(90_000)
+    test.setTimeout(120_000)
     const admin = await browser.newContext({ storageState: sessionFile('admin') })
     const adminPage = await admin.newPage()
 
@@ -116,6 +116,25 @@ test('an admin opens a class, a Lifeshaper checks a child in, the admin closes i
         await roll.reload()
         await expect(roll.getByTestId('child-name')).toHaveText([DOOR.cruz.allergic])
         await expect(roll.getByTestId('present-toggle')).toBeDisabled()
+
+        // The admin opens it again the same day (spec item 15): the same code, Amara still in (Codex).
+        const code = new URL(door.url()).pathname
+        await adminPage.getByTestId('session-open').click()
+        await expect(adminPage.getByTestId('flash-success')).toContainText(`${name} is open.`)
+        await expect(adminPage).toHaveURL(new RegExp(`${code}$`))
+        await expect(adminPage.getByTestId('checked-in-row')).toHaveText([
+            new RegExp(DOOR.cruz.allergic),
+        ])
+        // The Lifeshaper's door is open again: Ben is checked in now.
+        // Its address still holds the search (?q=Cruz): the reload shows the family again.
+        await door.reload()
+        const again = family(door, info.project.name)
+        await expect(child(again, DOOR.cruz.active).getByTestId('tick-child')).toBeEnabled()
+        await child(again, DOOR.cruz.active).getByTestId('tick-child').check()
+        await again.getByTestId('check-in').click()
+        await expect(door.getByTestId('flash-success')).toContainText(
+            `Checked in ${DOOR.cruz.active}.`,
+        )
     } finally {
         // Retired even when a step failed, so the door's Saturday is left to the other journeys.
         await adminPage.goto(`/${DUBAI}/admin/classes`)

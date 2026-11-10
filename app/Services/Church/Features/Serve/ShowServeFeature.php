@@ -6,6 +6,7 @@ namespace App\Services\Church\Features\Serve;
 
 use App\Data\Models\Schedule;
 use App\Domains\CheckIn\DataObjects\ServeClassData;
+use App\Domains\CheckIn\Jobs\GetSatelliteSessionsOnJob;
 use App\Domains\CheckIn\Jobs\GetSessionsOnJob;
 use App\Domains\Church\Jobs\GetChurchTodayJob;
 use App\Domains\Schedule\Jobs\GetTodaysSchedulesJob;
@@ -45,6 +46,14 @@ final class ShowServeFeature extends BaseChurchFeature
         $today = $this->run(new GetChurchTodayJob(church: $church));
         $classes = $this->run(new GetTodaysSchedulesJob(church: $church, satelliteIds: $scope->doorSatelliteIds(), today: $today, alsoScheduleIds: $scope->classAdminScheduleIds()));
         $sessions = $this->run(new GetSessionsOnJob(classes: $classes, date: $today));
+        // A class opened today stays listed though its day was changed since (Codex): its Session is today's.
+        foreach ($this->run(new GetSatelliteSessionsOnJob(satellite: $this->satellite(), date: $today)) as $session) {
+            if (! isset($sessions[$session->schedule_id]) && $scope->canCheckInTo($session->schedule)) {
+                $classes[] = $session->schedule;
+                $sessions[$session->schedule_id] = $session;
+            }
+        }
+        usort($classes, fn (Schedule $a, Schedule $b): int => [$a->starts_at, mb_strtolower($a->name)] <=> [$b->starts_at, mb_strtolower($b->name)]);
 
         return Inertia::render('Church/Serve/Index', [
             'today' => $today->format('D j M'),
@@ -52,7 +61,8 @@ final class ShowServeFeature extends BaseChurchFeature
                 $class,
                 $sessions[$class->id] ?? null,
                 $today,
-                canOpen: $scope->canOpenSessionOf($class),
+                // Opening again needs the class to meet today (OpenSessionFeature).
+                canOpen: $class->meetsOn($today) && $scope->canOpenSessionOf($class),
             ), $classes),
         ]);
     }

@@ -175,6 +175,7 @@ declare namespace App {
                     can_manage_cards: boolean
                     can_move_up: boolean
                     can_manage_links: boolean
+                    can_set_password: boolean
                 }
                 export type ChurchSettingsData = {
                     timezone: string

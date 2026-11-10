@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Church\Features\Schedule;
 
 use App\Data\Models\Schedule;
+use App\Domains\Church\Jobs\GetChurchTodayJob;
 use App\Domains\Schedule\Jobs\UpdateScheduleJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -38,6 +39,8 @@ final class UpdateScheduleFeature extends BaseChurchFeature
 
         $schedule = $this->schedule;
         abort_unless($scope->canManageSchedule($schedule), 404);
+        // A one-time class whose date has gone is on "Past", to retire only (DECISIONS 2026-11-10) — held here too (Codex).
+        abort_if($schedule->isPastOn($this->run(new GetChurchTodayJob(church: $this->church()))), 404);
 
         try {
             $this->run(new UpdateScheduleJob(

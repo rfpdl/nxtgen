@@ -7,6 +7,7 @@ namespace App\Services\Church\Http\Middleware;
 use App\Data\Models\Session;
 use App\Data\Models\User;
 use App\Domains\Church\Jobs\GetAccessScopeJob;
+use App\Domains\User\Jobs\UpdateUserLastSatelliteJob;
 use App\Foundation\Support\RequestContext;
 use Closure;
 use Illuminate\Http\Request;
@@ -17,7 +18,8 @@ use Symfony\Component\HttpFoundation\Response;
  * A Session's own address (`/{session}/…` — its code, spec item 16), the one staff address without `{satellite}`
  * first (AddressRuleTest): a Role at the Session's satellite that covers its class (AccessScope::canCheckInTo — a
  * Lifeshaper or admin there, or that class's class admin), else 404. Then the request carries that satellite, its
- * church and the scope, as RequireAssignment's do — so the bar and the menu are that satellite's.
+ * church and the scope, as RequireAssignment's do — so the bar and the menu are that satellite's — and it is
+ * remembered as the last satellite used.
  */
 final class RequireSessionAssignment
 {
@@ -37,6 +39,10 @@ final class RequireSessionAssignment
         RequestContext::putSatellite($request, $satellite);
         RequestContext::putChurch($request, $satellite->church);
         RequestContext::putScope($request, $scope);
+        // Where they land next time they sign in (spec item 11), as a satellite address does (Codex).
+        if ($user->last_satellite_id !== $satellite->id) {
+            $this->run(new UpdateUserLastSatelliteJob(user: $user, satellite: $satellite));
+        }
 
         return $next($request);
     }

@@ -11,6 +11,7 @@ use App\Data\Models\User;
 use App\Domains\CheckIn\Jobs\GetSessionForUpdateJob;
 use App\Domains\CheckIn\Jobs\UpdateSessionAsClosedJob;
 use App\Enums\CheckInResultEnum;
+use App\Enums\ChildStatusEnum;
 use App\Operations\CheckIn\CheckInChildOperation;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -120,4 +121,35 @@ it('never checks a child in after an admin closed the Session at the same moment
             ->and($result === CheckInResultEnum::CheckedIn->value ? CheckIn::query()->count() : 1 - CheckIn::query()->count())->toBe(1)
             ->and($result)->toBeIn([CheckInResultEnum::CheckedIn->value, CheckInResultEnum::Closed->value]);
     });
+});
+
+it('decides on the child as they are now, not as the page loaded them — Graduated meanwhile is refused, never made active again (Codex)', function (string $loadedAs, bool $makeActive): void {
+    $satellite = satelliteOf(church());
+    $session = sessionOf(scheduleAt($satellite), '2026-10-31');
+    $child = childOf(familyAt($satellite), ['level' => 2, 'gender' => 'girl', 'status' => $loadedAs]);
+    $child->newQuery()->whereKey($child->id)->update(['status' => ChildStatusEnum::Graduated]);   // an admin, meanwhile
+    travelTo(CarbonImmutable::parse('2026-10-31 10:00:00'));
+
+    $result = (new CheckInChildOperation(session: $session, child: $child, level: null, makeActive: $makeActive, by: User::factory()->create()))->handle();
+
+    expect($result)->toBe(CheckInResultEnum::Graduated)
+        ->and($child->fresh()?->status)->toBe(ChildStatusEnum::Graduated)
+        ->and(CheckIn::query()->count())->toBe(0);
+})->with([
+    'loaded active' => ['active', false],
+    'loaded inactive, made active at the door' => ['inactive', true],
+]);
+
+it('keeps the Level the child was given meanwhile, not the one picked at the door from the old page (Codex)', function (): void {
+    $satellite = Satellite::factory()->for(church())->withSquads()->create();
+    $session = sessionOf(scheduleAt($satellite), '2026-10-31');
+    $child = childOf(familyAt($satellite), ['level' => null, 'gender' => 'girl']);
+    $child->newQuery()->whereKey($child->id)->update(['level' => 3]);   // an admin set it meanwhile
+    travelTo(CarbonImmutable::parse('2026-10-31 10:00:00'));
+
+    $result = (new CheckInChildOperation(session: $session, child: $child, level: 1, makeActive: false, by: User::factory()->create()))->handle();
+
+    expect($result)->toBe(CheckInResultEnum::CheckedIn)
+        ->and($child->fresh()?->level)->toBe(3)
+        ->and(CheckIn::query()->sole()->squad->level)->toBe(3);
 });

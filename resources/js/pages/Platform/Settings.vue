@@ -56,6 +56,7 @@ function save(): void {
             <DateField
                 v-model="form.moving_up_date"
                 label="Moving-Up date"
+                allow-future
                 :error="form.errors.moving_up_date"
                 data-testid="settings-moving-up-date"
             />

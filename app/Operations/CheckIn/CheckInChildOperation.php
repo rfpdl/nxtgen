@@ -10,6 +10,7 @@ use App\Data\Models\User;
 use App\Domains\CheckIn\Jobs\CreateCheckInJob;
 use App\Domains\CheckIn\Jobs\GetSessionForUpdateJob;
 use App\Domains\Church\Jobs\GetChurchTodayJob;
+use App\Domains\Family\Jobs\GetChildForUpdateJob;
 use App\Domains\Family\Jobs\UpdateChildLevelJob;
 use App\Domains\Family\Jobs\UpdateChildStatusJob;
 use App\Domains\Level\Jobs\CreateChildSquadJob;
@@ -31,7 +32,8 @@ use Lucid\Units\Operation;
  * - then this satellite's Squad for the child's Level and gender, and the Check-in — one per child per Session,
  *   however many phones press.
  *
- * Everything for the child commits together or not at all.
+ * Everything for the child commits together or not at all, decided on the Session and the child as they are now, both
+ * rows locked (the Session first, then the child — as status and Level changes lock the child last).
  *
  * @extends Operation<CheckInResultEnum>
  */
@@ -47,33 +49,36 @@ final class CheckInChildOperation extends Operation
 
     public function handle(): CheckInResultEnum
     {
-        $refused = match (true) {
-            $this->child->status === ChildStatusEnum::Graduated => CheckInResultEnum::Graduated,
-            $this->child->status === ChildStatusEnum::Inactive && ! $this->makeActive => CheckInResultEnum::Inactive,
-            $this->child->level === null && $this->level === null => CheckInResultEnum::NeedsLevel,
-            default => null,
-        };
-        if ($refused !== null) {
-            return $refused;
-        }
-
         return DB::transaction(function (): CheckInResultEnum {
             $session = $this->run(new GetSessionForUpdateJob(session: $this->session));
             if (! $session->isOpenOn($this->run(new GetChurchTodayJob(church: $session->church)))) {
                 return CheckInResultEnum::Closed;
             }
+            // The child as they are now, their row locked till the end — a status or Level change, or a Moving-Up, may
+            // have committed since the door loaded them (Codex): decided on this, never on the page's copy.
+            $child = $this->run(new GetChildForUpdateJob(child: $this->child));
 
-            if ($this->child->status === ChildStatusEnum::Inactive) {
-                $this->run(new UpdateChildStatusJob(child: $this->child, status: ChildStatusEnum::Active, by: $this->by));
+            $refused = match (true) {
+                $child->status === ChildStatusEnum::Graduated => CheckInResultEnum::Graduated,
+                $child->status === ChildStatusEnum::Inactive && ! $this->makeActive => CheckInResultEnum::Inactive,
+                $child->level === null && $this->level === null => CheckInResultEnum::NeedsLevel,
+                default => null,
+            };
+            if ($refused !== null) {
+                return $refused;
             }
-            if ($this->child->level === null && $this->level !== null) {
-                $this->run(new UpdateChildLevelJob(child: $this->child, level: $this->level, by: $this->by));
+
+            if ($child->status === ChildStatusEnum::Inactive) {
+                $this->run(new UpdateChildStatusJob(child: $child, status: ChildStatusEnum::Active, by: $this->by));
+            }
+            if ($child->level === null && $this->level !== null) {
+                $this->run(new UpdateChildLevelJob(child: $child, level: $this->level, by: $this->by));
             }
 
-            $squad = $this->run(new GetChildSquadJob(satellite: $session->satellite, child: $this->child))
-                ?? $this->run(new CreateChildSquadJob(satellite: $session->satellite, child: $this->child));
+            $squad = $this->run(new GetChildSquadJob(satellite: $session->satellite, child: $child))
+                ?? $this->run(new CreateChildSquadJob(satellite: $session->satellite, child: $child));
 
-            return $this->run(new CreateCheckInJob(session: $session, child: $this->child, squad: $squad, by: $this->by));
+            return $this->run(new CreateCheckInJob(session: $session, child: $child, squad: $squad, by: $this->by));
         });
     }
 }

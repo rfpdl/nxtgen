@@ -4,6 +4,27 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-11-10 (Codex review, whole codebase — Roy: "do a review with codex top to bottom")
+
+Roy asked, going to bed, for a top-to-bottom Codex review: Lucid conventions, and unit/feature/e2e tests up to date.
+Codex found the layering sound (no controller doing more than `serve()`, no Job calling a Job, no Domain importing
+another) and these, fixed test-first:
+- **A check-in decides on the child as they are now**: the child's row is locked and read again after the
+  Session's, so a child Graduated (or given a Level) meanwhile is refused (or keeps that Level) — never made active
+  again from the door's old copy.
+- **A class opened today stays on Serve though its day was changed since**, open or closed; "Open again" only if it
+  meets today. **A past one-time class cannot be changed on the server either** (only retired).
+- **Opening a class's own address remembers its satellite** for the next sign-in, as a satellite address does.
+- **Password is not in a helper's menu** (a backup password is for staff who stay).
+- **Platform Settings could not be saved**: its Moving-Up date (ahead) used the birthday picker, which refuses any
+  day after today — the picker now takes dates up to five years on when asked. Found by the new Settings journey.
+- Tests added: helpers in the access matrix and response allowlists (an open helper exactly where a Home Lifeshaper
+  is; one whose day is gone, nowhere); Session cases for roles, scopes and grants; reopening in the browser (same
+  code, children kept, check-in works again); a Platform Settings journey. The duplicate-check lookup names its
+  church.
+- Left for later (TODO #42–#44): two console commands that skip the Lucid flow, hand-written page-prop types, a
+  stronger close-vs-check-in race test; older enum words in Vue (TODO #41).
+
 ## 2026-11-10 (Issue 14 built — a helper for the day)
 
 - **An admin adds a helper on People** (Roy): "Helper for the day · CCF Dubai · 1PM today" sits beside the other

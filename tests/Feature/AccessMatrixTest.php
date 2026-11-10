@@ -358,7 +358,8 @@ function expectCell(string $route, Actor $actor, string $expected): void
     Notification::fake();
     Storage::fake('photos');
     // The door is asked about on the Saturday its classes meet.
-    if (str_starts_with($route, 'session.') || str_starts_with($route, 'serve.sessions.') || $route === 'serve.home') {
+    // …and a helper for the day on the day of their Session (spec item 18).
+    if (str_starts_with($route, 'session.') || str_starts_with($route, 'serve.sessions.') || $route === 'serve.home' || in_array($actor, Actor::helpers(), true)) {
         travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
     }
     $world = AccessWorld::make();

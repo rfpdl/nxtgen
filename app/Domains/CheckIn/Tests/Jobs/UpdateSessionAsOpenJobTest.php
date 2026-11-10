@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Data\Models\User;
 use App\Domains\CheckIn\Jobs\UpdateSessionAsOpenJob;
 use Carbon\CarbonImmutable;
 
@@ -14,7 +15,7 @@ use function Tests\Support\sessionOf;
 
 it('opens a closed Session again', function (): void {
     $session = sessionOf(scheduleAt(satelliteOf(church())));
-    $session->update(['closed_at' => now()]);
+    $session->update(['closed_at' => now(), 'closed_by' => User::factory()->create()->id]);
     $code = $session->code;
 
     (new UpdateSessionAsOpenJob(session: $session))->handle();

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Data\Models\CheckIn;
+use App\Data\Models\RoleAssignment;
 use App\Data\Models\Satellite;
 use App\Data\Models\Schedule;
 use App\Data\Models\Session;
@@ -107,4 +108,18 @@ it('keeps the code when the class is opened again the same day — a link alread
 
     expect($session->fresh()?->code)->toBe($session->code);
     actingAs($admin)->get("/{$session->code}/checkin")->assertInertia(fn (AssertableInertia $page) => $page->where('session.state', 'open'));
+});
+
+it('remembers the Session\'s satellite as the last one used, as a satellite address does — and not on a refusal (Codex)', function (): void {
+    ['dxb' => $dxb, 'house' => $house, 'session' => $session] = addressChurch();
+    $both = staffMember(RoleEnum::Lifeshaper, atSatellite($house));
+    RoleAssignment::factory()->create(['church_id' => $dxb->church_id, 'user_id' => $both->id, 'role' => RoleEnum::Lifeshaper, 'scope_type' => 'satellite', 'scope_id' => $dxb->id]);
+    $both->forceFill(['last_satellite_id' => $house->id])->save();
+    $stranger = staffMember(RoleEnum::Admin, atSatellite($house));
+    $stranger->forceFill(['last_satellite_id' => $house->id])->save();
+
+    actingAs($both)->get("/{$session->code}/checkin")->assertOk();
+    actingAs($stranger)->get("/{$session->code}/checkin")->assertNotFound();
+
+    expect([$both->fresh()?->last_satellite_id, $stranger->fresh()?->last_satellite_id])->toBe([$dxb->id, $house->id]);
 });

@@ -179,3 +179,11 @@ describe('what a helper may not do, and removing one', function (): void {
         actingAs(helperAt($session))->get("/{$elsewhere->slug}/serve")->assertNotFound();
     });
 });
+
+it('offers a helper no Password in the menu — a backup password is for staff who stay (Codex) @story#213', function (): void {
+    ['dxb' => $dxb, 'session' => $session] = helperChurch();
+
+    actingAs(helperAt($session))->get('/dxb/serve')->assertInertia(fn (AssertableInertia $page) => $page->where('church_nav.can_set_password', false));
+    actingAs(helperAt($session))->get('/account/password')->assertNotFound();
+    actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->get('/dxb/serve')->assertInertia(fn (AssertableInertia $page) => $page->where('church_nav.can_set_password', true));
+});
