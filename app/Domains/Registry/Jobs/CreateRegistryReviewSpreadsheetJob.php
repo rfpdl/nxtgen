@@ -36,6 +36,10 @@ final class CreateRegistryReviewSpreadsheetJob extends BaseJob
     public function handle(): string
     {
         $yes = static fn (bool $v): string => $v ? 'yes' : 'no';
+        // Its folder may be new (storage/imports/, git-ignored: the review file is personal data).
+        if (! is_dir(dirname($this->path))) {
+            mkdir(dirname($this->path), 0775, true);
+        }
         $writer = new Writer;
         $writer->openToFile($this->path);
         $writer->getCurrentSheet()->setName('Families');

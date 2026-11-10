@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Data\Models\Church;
 use App\Services\Console\Features\Registry\ApplyRegistryImportFeature;
 use Illuminate\Console\Command;
 use Lucid\Bus\ServesFeatures;
 
 /**
  * Step 2 (plan §7): load the REVIEWED file. Sends no emails; safe to run twice. The work is a Feature served from
- * here (aegis's `ServesFeatures` commands); this only finds the church and tells the operator what happened.
+ * here (aegis's `ServesFeatures` commands) — finding the church too (TODO #42); this only tells the operator what
+ * happened.
  */
 final class RegistryApplyCommand extends Command
 {
@@ -23,14 +23,12 @@ final class RegistryApplyCommand extends Command
 
     public function handle(): int
     {
-        $church = Church::query()->where('slug', (string) $this->option('church'))->first();
-        if ($church === null) {
+        $result = $this->serve(ApplyRegistryImportFeature::class, ['churchSlug' => (string) $this->option('church'), 'path' => (string) $this->argument('xlsx')]);
+        if ($result === null) {
             $this->error('Unknown church. Pass --church=<slug>.');
 
             return self::FAILURE;
         }
-
-        $result = $this->serve(ApplyRegistryImportFeature::class, ['church' => $church, 'path' => (string) $this->argument('xlsx')]);
         $problems = $result->problems;
 
         $this->info("Families created: {$result->familiesCreated}. Children loaded: {$result->childrenCreated}. Already loaded, skipped: {$result->childrenSkipped}.");

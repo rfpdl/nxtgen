@@ -37,6 +37,18 @@ function runCommand(string $command, array $args, bool $expectSuccess = true): v
     }
 }
 
+/**
+ * A command not run yet, to tell it what output to expect.
+ *
+ * @param  array<string, string>  $args
+ */
+function pendingCommand(string $command, array $args): PendingCommand
+{
+    $pending = artisan($command, $args);
+
+    return $pending instanceof PendingCommand ? $pending : throw new RuntimeException("{$command} ran at once.");
+}
+
 /** @return array{0: Church, 1: string} */
 function proposeSample(): array
 {
@@ -82,6 +94,27 @@ it('writes a review file with families, quarantine and a balancing reconciliatio
         ->and(count($sheets['Families']) - 1)->toBe(4)
         ->and(count($sheets['Quarantine']) - 1)->toBe(1)
         ->and(collect($sheets['Reconciliation'])->pluck(1)->all())->toContain('6');
+});
+
+it('proposes into a review file in a folder of its own, writing nothing to the database @story#211', function (): void {
+    $out = sys_get_temp_dir().'/nxtgen-'.uniqid().'/review.xlsx';
+
+    pendingCommand('nxtgen:registry-propose', ['csv' => base_path('tests/Fixtures/registry-sample.csv'), '--out' => $out])
+        ->expectsOutput('6 rows → 3 families, 1 duplicates dropped, 1 quarantined.')
+        ->assertSuccessful();
+
+    expect(is_file($out))->toBeTrue()
+        ->and(Family::query()->count())->toBe(0);
+});
+
+it('refuses a church nobody has, loading nothing @story#212', function (): void {
+    [, $out] = proposeSample();
+
+    pendingCommand('nxtgen:registry-apply', ['xlsx' => $out, '--church' => 'nope'])
+        ->expectsOutput('Unknown church. Pass --church=<slug>.')
+        ->assertFailed();
+
+    expect(Family::query()->count())->toBe(0);
 });
 
 it('loads the approved families without emailing anyone @story#82', function (): void {

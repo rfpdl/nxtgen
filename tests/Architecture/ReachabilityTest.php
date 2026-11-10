@@ -343,3 +343,23 @@ it('keeps controllers to a single serve call each', function (): void {
         'Controllers doing more than serving: '.implode(', ', array_unique($offenders)),
     );
 });
+
+it('keeps console commands to serving a Feature — never a Job, Operation or model of their own (TODO #42)', function (): void {
+    $offenders = [];
+
+    foreach (Finder::create()->files()->in(base_path('app/Console/Commands'))->name('*.php') as $file) {
+        $source = $file->getContents();
+        $path = str_replace(base_path().'/', '', (string) $file->getRealPath());
+
+        // A command reads its arguments, serves ONE Feature and tells the operator what happened (aegis's
+        // `ServesFeatures` commands): the work, and every read, is the Feature's.
+        $reaches = preg_match('/^use App\\\\(Domains|Data\\\\Models|Operations)\\\\/m', $source) === 1;
+        $serves = str_contains($source, '$this->serve(');
+
+        if ($reaches || ! $serves) {
+            $offenders[] = $path;
+        }
+    }
+
+    expect($offenders)->toBe([], 'Commands doing more than serving a Feature: '.implode(', ', $offenders));
+});

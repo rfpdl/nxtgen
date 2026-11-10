@@ -7,6 +7,7 @@ namespace App\Services\Console\Features\Registry;
 use App\Data\Models\Church;
 use App\Data\Models\Family;
 use App\Data\Models\Satellite;
+use App\Domains\Church\Jobs\GetChurchBySlugJob;
 use App\Domains\Church\Jobs\GetSatellitesByNameJob;
 use App\Domains\Family\DataObjects\ChildDetailsData;
 use App\Domains\Family\DataObjects\FamilyRegistrationData;
@@ -38,15 +39,19 @@ use Illuminate\Support\Facades\DB;
  * Idempotent: a child whose source key is already mapped is skipped, so the file can be applied twice.
  *
  * A Feature, not an Operation, because it composes those two Operations — and an Operation never runs another
- * (aegis). Served from `nxtgen:registry-apply`; the approval file's own problems come first in the result.
+ * (aegis). Served from `nxtgen:registry-apply`; the approval file's own problems come first in the result. Null, and
+ * nothing loaded, when no church has the slug.
  *
- * @extends BaseConsoleFeature<ImportResultData>
+ * @extends BaseConsoleFeature<ImportResultData|null>
  */
 #[UserStory(
     title: 'Load the reviewed registry',
     persona: 'platform admin at the terminal',
     happyPaths: ['story#82' => 'The approved registry rows load as Families, without emailing anyone, and safely twice'],
-    unhappyPaths: ['story#83' => 'Unapproved, conflicting or broken rows are not loaded, and the command fails'],
+    unhappyPaths: [
+        'story#83' => 'Unapproved, conflicting or broken rows are not loaded, and the command fails',
+        'story#212' => 'A church nobody has is refused, and nothing is loaded',
+    ],
 )]
 final class ApplyRegistryImportFeature extends BaseConsoleFeature
 {
@@ -62,13 +67,21 @@ final class ApplyRegistryImportFeature extends BaseConsoleFeature
     /** @var list<string> */
     private array $awaitingClaim = [];
 
+    private Church $church;
+
     public function __construct(
-        private readonly Church $church,
+        private readonly string $churchSlug,
         private readonly string $path,
     ) {}
 
-    public function handle(): ImportResultData
+    public function handle(): ?ImportResultData
     {
+        $church = $this->run(new GetChurchBySlugJob(slug: $this->churchSlug));
+        if ($church === null) {
+            return null;
+        }
+        $this->church = $church;
+
         $approval = $this->run(new GetApprovedRegistryRowsJob(path: $this->path));
         $this->problems = $approval->problems;
         $mapped = $this->run(new GetImportedSourceKeysJob(church: $this->church));
