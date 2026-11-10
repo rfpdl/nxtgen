@@ -20,7 +20,7 @@ import {
     DialogTrigger,
 } from 'reka-ui'
 import { useMediaQuery } from '@vueuse/core'
-import { computed, ref, watch } from 'vue'
+import { computed, ref, useTemplateRef, watch } from 'vue'
 
 /**
  * The Bold frame for every signed-in page (DECISIONS 2026-10-28; the bar, spec item 13): an amber bar — on the left
@@ -57,6 +57,24 @@ const rowShows = useMediaQuery('(min-width: 1024px)')
 watch(rowShows, (row) => {
     if (row) open.value = false
 })
+
+/**
+ * Closing gives focus back to the Menu button — but past 1024px it is hidden, and Safari then lost the keyboard: Tab
+ * moved nowhere (TODO #40). There, focus goes to the row's page instead (or its first item).
+ */
+const row = useTemplateRef<HTMLElement>('row')
+function focusAfterClose(event: Event): void {
+    if (!rowShows.value || row.value === null) {
+        return
+    }
+    const target =
+        row.value.querySelector<HTMLElement>('[aria-current="page"]') ??
+        row.value.querySelector<HTMLElement>('a[href]')
+    if (target) {
+        event.preventDefault()
+        target.focus()
+    }
+}
 
 /**
  * reka-ui's focus trap wraps a plain Tab only; Safari's Option+Tab (how its keyboard users reach every control) walked
@@ -123,6 +141,7 @@ function wrapOptionTab(event: KeyboardEvent): void {
                                 class="bg-surface rounded-b-card fixed inset-x-0 top-0 z-50 flex max-h-dvh flex-col gap-3 overflow-y-auto p-4 pb-6 lg:hidden"
                                 data-testid="menu-sheet"
                                 @keydown="wrapOptionTab"
+                                @close-auto-focus="focusAfterClose"
                             >
                                 <div class="flex items-center gap-3">
                                     <DialogTitle class="text-text flex-1 text-2xl font-bold"
@@ -167,6 +186,7 @@ function wrapOptionTab(event: KeyboardEvent): void {
                 </div>
                 <nav
                     v-if="items"
+                    ref="row"
                     class="hidden flex-wrap items-center gap-1 pb-1 lg:flex"
                     aria-label="Menu"
                     data-testid="menu-row"

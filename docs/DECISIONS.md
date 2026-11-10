@@ -11,7 +11,14 @@ describes the design; this records the choices that shaped or changed it.
   18 is dropped; issue 14 is wontfix. Gone: the Helper Role and the Session scope, the People choice, the helper's
   access while a Session is open, the Password rule for helpers (every staff member has Password again), and their
   tests and journey. The entries below about helpers are history.
+- **Offline is its own step, with low-signal speed** (Roy: "offline capabilities + low network optimization in its
+  own step") — not Batch C's issue 15. His early answers for it: offline, the phone keeps only the "has allergies"
+  flag, not the full health notes; two phones checking in the same child → the first is kept, the other sees "already
+  in"; offline, Undo, Who's in (this phone's) and registering a new family still work. Still to ask: which families a
+  door phone saves.
 - **Closed classes stay under "Today" on Serve** with "Closed" and "See who was in" (Roy confirmed).
+- **Safari Tab after the menu closes on a wide screen (TODO #40) fixed** (Roy: "fix it next"): focus goes to the menu
+  row's current page instead of the hidden Menu button.
 
 ## 2026-11-10 (Codex review, whole codebase — Roy: "do a review with codex top to bottom")
 
