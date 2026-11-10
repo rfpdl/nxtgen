@@ -44,8 +44,8 @@ test('an admin adds a Lifeshaper who then signs in from the email @story#76', as
 
     // Nina, on her own device.
     await openEmailedLink(page, email, before)
-    // A Lifeshaper at CCF Sharjah lands at Sharjah's door.
-    await expect(page).toHaveURL(new RegExp(`/${SHARJAH}/serve/door`))
+    // A Lifeshaper at CCF Sharjah lands on Sharjah's Serve.
+    await expect(page).toHaveURL(new RegExp(`/${SHARJAH}/serve$`))
 
     // The admin takes the role away; Nina loses access on her next page.
     await adminPage
@@ -55,7 +55,7 @@ test('an admin adds a Lifeshaper who then signs in from the email @story#76', as
         .click()
     await expect(adminPage.getByTestId('flash-success')).toContainText('Role removed')
 
-    const gone = await page.goto(`/${DUBAI}/serve/door`)
+    const gone = await page.goto(`/${SHARJAH}/serve`)
     expect(gone?.status()).toBe(404)
 
     // Signing in again, with no family and no role left, she is told plainly there is nothing here yet.
@@ -117,7 +117,7 @@ test('a Lifeshaper who registers their own family can reach both, from one login
     // …and "Switch" asks again.
     await (await menuOf(page)).getByTestId('switch-place').click()
     await page.getByTestId('landing-option').filter({ hasText: 'Serve' }).click()
-    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/door`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve$`))
     await page.goto('/home')
-    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/door`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve$`))
 })

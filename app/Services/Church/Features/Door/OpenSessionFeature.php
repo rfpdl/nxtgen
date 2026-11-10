@@ -14,7 +14,8 @@ use App\Services\Church\Features\BaseChurchFeature;
 use Illuminate\Http\RedirectResponse;
 
 /**
- * An admin opens a class for today (spec item 15): its Session is made, or opened again the same day. Only an active
+ * An admin opens a class for today (spec item 15): its Session is made — with its code, its door's address (spec item
+ * 16), where the admin goes next — or opened again the same day, keeping its code. Only an active
  * class meeting today — never another day — of a satellite they look after, or their own class (a class admin).
  *
  * @extends BaseChurchFeature<RedirectResponse>
@@ -37,8 +38,9 @@ final class OpenSessionFeature extends BaseChurchFeature
         $today = $this->run(new GetChurchTodayJob(church: $this->church()));
         abort_unless($class->meetsOn($today), 404);
 
-        $this->run(new OpenSessionOperation(schedule: $class, today: $today, by: $this->staff()));
+        $session = $this->run(new OpenSessionOperation(schedule: $class, today: $today, by: $this->staff()));
 
-        return back()->with('success', "{$class->name} is open.");
+        // On to its door, at its own address (spec item 16).
+        return redirect()->route('session.checkin', $session)->with('success', "{$class->name} is open.");
     }
 }

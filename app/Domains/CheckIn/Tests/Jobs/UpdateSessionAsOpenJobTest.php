@@ -10,14 +10,16 @@ use function Tests\Support\satelliteOf;
 use function Tests\Support\scheduleAt;
 use function Tests\Support\sessionOf;
 
-/* Reopening a closed Session the same day (spec item 15): it is open again, and no longer says who closed it. */
+/* Reopening a closed Session the same day (spec item 15): it is open again, no longer says who closed it, and keeps its code. */
 
 it('opens a closed Session again', function (): void {
     $session = sessionOf(scheduleAt(satelliteOf(church())));
     $session->update(['closed_at' => now()]);
+    $code = $session->code;
 
     (new UpdateSessionAsOpenJob(session: $session))->handle();
 
-    expect([$session->fresh()?->closed_at, $session->fresh()?->closed_by])->toBe([null, null])
+    // The same code (Roy 2026-11-10), so a link already shared still works.
+    expect([$session->fresh()?->closed_at, $session->fresh()?->closed_by, $session->fresh()?->code])->toBe([null, null, $code])
         ->and($session->fresh()?->isOpenOn(CarbonImmutable::parse('2026-10-31')))->toBeTrue();
 });

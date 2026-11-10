@@ -87,7 +87,7 @@ describe('the Cards page', function (): void {
         $lists($houseAdmin, 'house', [$houseRequest->id]);
         actingAs($houseAdmin)->get('/dxb/admin/card-requests')->assertNotFound();
         // DECISIONS 2026-11-08: a Lifeshaper opening an Admin page is sent to the door.
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->get('/dxb/admin/card-requests')->assertRedirect('/dxb/serve/door');
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->get('/dxb/admin/card-requests')->assertRedirect('/dxb/serve');
     });
 });
 
@@ -265,7 +265,7 @@ describe('print lists', function (): void {
         // DECISIONS 2026-11-08: a Lifeshaper opening an Admin page is sent to the door, never shown the list — even one at both satellites.
         $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($dxb));
         grantRole($lifeshaper, RoleEnum::Lifeshaper, atSatellite($house));
-        actingAs($lifeshaper)->get("/dxb/admin/card-requests/print-lists/{$both->id}")->assertRedirect('/dxb/serve/door');
+        actingAs($lifeshaper)->get("/dxb/admin/card-requests/print-lists/{$both->id}")->assertRedirect('/dxb/serve');
     });
 
     it('marks a print list\'s still-approved cards printed, and says how many had already moved on @story#144', function (): void {

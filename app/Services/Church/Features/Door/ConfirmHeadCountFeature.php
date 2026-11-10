@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Door;
 
-use App\Data\Models\Schedule;
+use App\Data\Models\Session;
 use App\Domains\CheckIn\Jobs\GetSessionForUpdateJob;
-use App\Domains\CheckIn\Jobs\GetSessionJob;
 use App\Domains\CheckIn\Jobs\GetSessionSquadJob;
 use App\Domains\CheckIn\Jobs\UpdateSquadHeadCountJob;
 use App\Domains\Church\Jobs\GetChurchTodayJob;
@@ -34,28 +33,21 @@ use Illuminate\Support\Facades\DB;
         'story#121' => 'A Squad leader confirms how many children they counted in their Squad today; it shows with when and who, confirming again replaces it, and two leaders confirming at once keep one count',
         'story#122' => 'When the count is not the number checked in now, Who\'s in says so — and names the children not marked present once some are',
     ],
-    unhappyPaths: ['story#123' => 'Only today\'s class at a satellite their Role covers, in this church, once it has a Session, for a Squad with a child checked in, and a whole number from 0 to 200'],
+    unhappyPaths: ['story#123' => 'Only at the Session at the address, while it is open, at a satellite their Role covers, in this church, for a Squad with a child checked in, and a whole number from 0 to 200'],
 )]
 #[AccessRow(AccessRowEnum::CheckIn)]
 final class ConfirmHeadCountFeature extends BaseChurchFeature
 {
     public function __construct(
-        private readonly Schedule $schedule,
+        private readonly Session $session,
         private readonly int $squadId,
     ) {}
 
     public function handle(HeadCountInput $input): RedirectResponse
     {
         $church = $this->church();
-        $class = $this->schedule;
-        abort_unless($this->scope()->canCheckInTo($class), 404);
-        $today = $this->run(new GetChurchTodayJob(church: $church));
-        abort_unless($class->meetsOn($today), 404);
-
-        $session = $this->run(new GetSessionJob(schedule: $class, date: $today));
-        if ($session === null) {
-            return back()->with('error', SessionStateEnum::NotOpen->refusal($class->name));
-        }
+        $session = $this->session;
+        $class = $session->schedule;
         $squad = $this->run(new GetSessionSquadJob(session: $session, id: $this->squadId));
 
         // Only while an admin has it open (spec item 15): asked under the Session's lock, the date read after it, so a

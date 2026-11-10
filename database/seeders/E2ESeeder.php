@@ -20,6 +20,7 @@ use App\Enums\RegistrationSourceEnum;
 use App\Enums\RelationshipEnum;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
+use App\Foundation\Support\SatelliteCode;
 use App\Operations\Registration\RegisterFamilyOperation;
 use App\Providers\E2EServiceProvider;
 use Carbon\CarbonImmutable;
@@ -136,7 +137,7 @@ final class E2ESeeder extends Seeder
         $saturday = E2EServiceProvider::doorSaturday(CarbonImmutable::now(E2EServiceProvider::churchTimezone()));
         foreach (Schedule::query()->where('satellite_id', $dxb->id)->whereIn('name', ['1PM', '7PM'])->get() as $class) {
             Session::query()->create([
-                'church_id' => $ccf->id, 'satellite_id' => $dxb->id, 'schedule_id' => $class->id, 'date' => $saturday, 'opened_at' => now(),
+                'church_id' => $ccf->id, 'satellite_id' => $dxb->id, 'schedule_id' => $class->id, 'date' => $saturday, 'code' => SatelliteCode::random(), 'opened_at' => now(),
             ]);
         }
 

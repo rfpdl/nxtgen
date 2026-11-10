@@ -41,7 +41,7 @@ function host() {
     const wrapper = mount(
         defineComponent({
             setup() {
-                api = useRollCall(() => 'dubai')
+                api = useRollCall(() => 'abcd2345')
                 return () => h('div')
             },
         }),
@@ -64,7 +64,7 @@ describe('useRollCall', () => {
 
         expect(pollInterval).toBe(20_000)
         expect(ROLL_CALL_POLL_MS).toBe(20_000)
-        expect(pollOptions().only).toEqual(['squads', 'squad_id', 'session_state'])
+        expect(pollOptions().only).toEqual(['squads', 'squad_id', 'session'])
     })
 
     it('shows a tap at once, sends it, and lets the server answer once it is done', async () => {
@@ -74,7 +74,7 @@ describe('useRollCall', () => {
         expect(api.pending[31]).toBe(true)
         await flush()
         expect(puts.map((p) => [p.url, p.data])).toEqual([
-            ['serve.door.present:["dubai",31]', { present: true, revision: 0 }],
+            ['session.present:["abcd2345",31]', { present: true, revision: 0 }],
         ])
 
         puts[0]?.options.onFinish()
@@ -149,14 +149,14 @@ describe('useRollCall', () => {
         const { api } = host()
 
         api.mark(31, true, 0)
-        api.confirm(1, 5, 4)
+        api.confirm(5, 4)
         expect(api.confirming[5]).toBe(true)
         expect(pollOptions().onBefore()).toBe(false)
         await flush()
         puts[0]?.options.onFinish()
         await flush()
 
-        expect(puts[1]?.url).toBe('serve.door.head-count:["dubai",1,5]')
+        expect(puts[1]?.url).toBe('session.head-count:["abcd2345",5]')
         expect(puts[1]?.data).toEqual({ count: 4 })
         expect(puts[1]?.options.errorBag).toBe('head-count-5')
         puts[1]?.options.onFinish()
@@ -167,13 +167,13 @@ describe('useRollCall', () => {
     it("keeps a refused count's message by Squad, and clears it on the next try", async () => {
         const { api } = host()
 
-        api.confirm(1, 5, 999)
+        api.confirm(5, 999)
         await flush()
         puts[0]?.options.onError?.({ count: 'Please type a number from 0 to 200.' })
         puts[0]?.options.onFinish()
         expect(api.countErrors[5]).toBe('Please type a number from 0 to 200.')
 
-        api.confirm(1, 5, 4)
+        api.confirm(5, 4)
         expect(api.countErrors[5]).toBeUndefined()
     })
 
@@ -181,7 +181,7 @@ describe('useRollCall', () => {
         const { api } = host()
 
         api.mark(31, true, 0)
-        api.confirm(1, 5, 4)
+        api.confirm(5, 4)
         await flush()
         api.stop()
         expect(api.confirming).toEqual({})
@@ -194,8 +194,8 @@ describe('useRollCall', () => {
     it('keeps "Confirming…" until the last of two counts for one Squad is answered', async () => {
         const { api } = host()
 
-        api.confirm(1, 5, 3)
-        api.confirm(1, 5, 4)
+        api.confirm(5, 3)
+        api.confirm(5, 4)
         await flush()
         puts[0]?.options.onFinish()
         expect(api.confirming[5]).toBe(true)

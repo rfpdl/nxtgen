@@ -6,10 +6,12 @@ namespace App\Providers;
 
 use App\Data\Models\Church;
 use App\Data\Models\Satellite;
+use App\Data\Models\Session;
 use App\Data\Models\User;
 use App\Domains\Card\Jobs\GetCardRequestJob;
 use App\Domains\Card\Jobs\GetPrintListJob;
 use App\Domains\CheckIn\Jobs\GetCheckInJob;
+use App\Domains\CheckIn\Jobs\GetSessionByCodeJob;
 use App\Domains\Church\Jobs\GetRoleAssignmentJob;
 use App\Domains\Church\Jobs\GetSatelliteByCodeJob;
 use App\Domains\Church\Jobs\GetSatelliteBySlugJob;
@@ -59,6 +61,10 @@ final class RouteBindingServiceProvider extends ServiceProvider
             }
         });
 
+        // A Session's address carries its code (spec item 16); RequireSessionAssignment then asks for a Role at its
+        // satellite.
+        Route::bind('session', fn (string $code): Session => $this->run(new GetSessionByCodeJob(code: $code)) ?? abort(404));
+
         $this->inChurch('family', fn (Church $church, int $id) => $this->run(new GetFamilyByIdJob(church: $church, id: $id)));
         $this->inChurch('schedule', fn (Church $church, int $id) => $this->run(new GetScheduleJob(church: $church, id: $id)));
         $this->inChurch('checkIn', fn (Church $church, int $id) => $this->run(new GetCheckInJob(church: $church, id: $id)));
@@ -89,14 +95,19 @@ final class RouteBindingServiceProvider extends ServiceProvider
         });
     }
 
-    /** `{$name}` as the model `$find` gives, within the church of the address's satellite. */
+    /** `{$name}` as the model `$find` gives, within the church of the address's satellite — or its Session's. */
     private function inChurch(string $name, Closure $find): void
     {
         Route::bind($name, function (string $id, RoutingRoute $route) use ($find) {
             $satellite = $route->parameter('satellite');
-            abort_unless($satellite instanceof Satellite, 404);
+            $session = $route->parameter('session');
+            $church = match (true) {
+                $satellite instanceof Satellite => $satellite->church,
+                $session instanceof Session => $session->satellite->church,
+                default => abort(404),
+            };
 
-            return $find($satellite->church, (int) $id);
+            return $find($church, (int) $id);
         });
     }
 }

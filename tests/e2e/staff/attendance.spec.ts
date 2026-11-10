@@ -1,3 +1,4 @@
+import { goToDoor } from '../support/door'
 import { savedDownload } from '../support/download'
 import { type Locator, type Page } from '@playwright/test'
 import { expect, test } from '../support/test'
@@ -32,11 +33,7 @@ function doorSaturday(): string {
 
 /** Ben of this browser's own Cruz family is in at 1PM (checked in now, unless an earlier try already did). */
 async function checkInBen(page: Page, project: string): Promise<void> {
-    await page.goto(`/${DUBAI}/serve/door`)
-    // The class picker is a row of chips, a radio group (the Bold look): pick 1PM.
-    const chip = page.getByTestId('door-class').getByRole('radio', { name: CLASSES.onePm.name })
-    await chip.click()
-    await expect(chip).toHaveAttribute('aria-checked', 'true')
+    await goToDoor(page, CLASSES.onePm.name)
     await page.getByTestId('door-search').fill('Cruz')
     await page.getByTestId('door-search').press('Enter')
     const card = page
@@ -147,9 +144,8 @@ test("an admin sees the roll call — present ✓, the Squad's head count and th
     const page = await admin.newPage()
     const [, , tala, faith] = ROLL_CALL.girls[project]
 
-    // At the door, 1PM: this browser's Tala and Faith.
-    await page.goto(`/${DUBAI}/serve/door`)
-    await page.getByTestId('door-class').getByRole('radio', { name: CLASSES.onePm.name }).click()
+    // At 1PM's door (from Serve): this browser's Tala and Faith.
+    await goToDoor(page, CLASSES.onePm.name)
     await page.getByTestId('door-search').fill('Reyes')
     await page.getByTestId('door-search').press('Enter')
     const card = page
@@ -233,13 +229,13 @@ test("an admin sees the roll call — present ✓, the Squad's head count and th
 test('a Lifeshaper has no Attendance @story#113', async ({ browser }) => {
     const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const page = await lifeshaper.newPage()
-    await page.goto(`/${DUBAI}/serve/door`)
+    await page.goto(`/${DUBAI}/serve`)
     // The menu opened (a sheet on a narrow screen), then the whole page: no Attendance anywhere.
-    await expect((await menuOf(page)).getByTestId('nav-door')).toBeVisible()
+    await expect((await menuOf(page)).getByTestId('nav-today')).toBeVisible()
     await expect(page.getByRole('link', { name: 'Attendance' })).toHaveCount(0)
 
     await page.goto(`/${DUBAI}/admin/attendance`)
     // Only serving here: an Admin page sends them to this satellite's Serve (spec item 10).
-    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/door$`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve$`))
     await lifeshaper.close()
 })

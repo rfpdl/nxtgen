@@ -4,6 +4,23 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-11-10 (Issue 12 built — the Session's own address)
+
+- **Opening a class gives its Session a code — 8 letters and digits, the same kind as a satellite's registration
+  code — and its door is `/<code>/checkin`, its Who's in `/<code>/whos-in`** (spec item 16). Everything done there
+  (check in, Undo, present, head count, Close) is at the same code. Reopened the same day, it keeps its code (Roy).
+  It is the one staff address without the satellite first (the address rule names it); the satellite is the
+  Session's, so the bar and menu are that satellite's.
+- **Who may open it: staff whose Role at the Session's satellite covers the class** — a Lifeshaper or admin there, or
+  that class's class admin. Anyone else, a code nobody has, or another church's: "not found"; a stranger signs in
+  first. A closed Session's door and Who's in stay readable (look, don't change); after midnight it shows closed.
+- **The old door page goes** (Roy's answer 1), with no redirect: `/dubai/serve` is now Serve's first page — today's
+  classes, each with "Go to the door" once open, "Not open yet" (Open for its admin) before, "See who was in" after.
+  Opening lands on the class's door. The Serve menu's "Check in" is now "Today". Issue 13 splits the page into
+  "Open now" and "Today" and adds the bar's dropdown of open classes (Claude's call, reversible: a first Serve page
+  now, so no page points nowhere between the two issues).
+- The code is matched exactly (upper case is another code).
+
 ## 2026-11-10 (Issue 11 built — an admin opens and closes a Session)
 
 - **Opening a class makes its Session for the day; it is open until an admin closes it or until midnight at the

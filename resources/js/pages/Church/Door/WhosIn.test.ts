@@ -1,5 +1,5 @@
 import WhosIn from '@/pages/Church/Door/WhosIn.vue'
-import type { DoorClass, SessionState, WhosInSquad } from '@/types'
+import type { DoorSession, SessionState, WhosInSquad } from '@/types'
 import { makeSatellite } from '@/tests/satellite'
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -22,7 +22,14 @@ vi.mock('ziggy-js', () => ({
     route: (name: string, params: unknown) => `${name}:${JSON.stringify(params)}`,
 }))
 
-const onePm: DoorClass = { id: 1, name: '1PM', times: '13:00–15:00' }
+const onePm: DoorSession = {
+    code: 'abcd2345',
+    class_id: 1,
+    name: '1PM',
+    times: '13:00–15:00',
+    date_label: 'Sat 31 Oct',
+    state: 'open',
+}
 const girls: WhosInSquad = {
     id: 5,
     name: 'Level 2 Girls',
@@ -45,10 +52,7 @@ const girls: WhosInSquad = {
 function page(squads: WhosInSquad[], sessionState: SessionState = 'open') {
     return mount(WhosIn, {
         props: {
-            today: 'Sat 31 Oct',
-            classes: [onePm],
-            class_id: 1,
-            session_state: sessionState,
+            session: { ...onePm, state: sessionState },
             squads,
             squad_id: null,
         },
@@ -68,24 +72,24 @@ describe("Who's in", () => {
         expect(polls).toEqual([20_000])
     })
 
-    it('sends a Squad leader with no one in yet to Check in, on the same class', () => {
+    it('sends a Squad leader with no one in yet to Check in, at the same Session', () => {
         const wrapper = page([])
 
         expect(wrapper.find('[data-testid="whos-in-empty"]').text()).toContain(
             'No one checked in yet',
         )
         expect(wrapper.find('[data-testid="go-check-in"]').attributes('href')).toBe(
-            'serve.door.show:{"satellite":"dubai","class":1}',
+            'session.checkin:"abcd2345"',
         )
         expect(wrapper.find('[data-testid="squad-picker"]').exists()).toBe(false)
     })
 
-    it('keeps the class when a Squad chip is picked', async () => {
+    it("stays at the Session's code when a Squad chip is picked", async () => {
         const wrapper = page([girls])
 
         await wrapper.find('[data-testid="squad-picker"] [data-value="5"]').trigger('click')
 
-        expect(gets).toEqual([{ url: 'serve.door.whos-in:"dubai"', data: { class: 1, squad: 5 } }])
+        expect(gets).toEqual([{ url: 'session.whos-in:"abcd2345"', data: { squad: 5 } }])
     })
 
     it('shows a closed class read-only: it says so, and its Squads take no taps (Roy 2026-11-10)', () => {

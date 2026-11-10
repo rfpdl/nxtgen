@@ -62,8 +62,8 @@ const amaraHealth: ChildHealth = {
     guardian_notes: null,
 }
 
-function card(classId: number | null = 5, family: DoorFamily = cruz) {
-    return mount(DoorFamilyCard, { props: { family, levels, classId, healths: {} } })
+function card(sessionCode: string | null = 'abcd2345', family: DoorFamily = cruz) {
+    return mount(DoorFamilyCard, { props: { family, levels, sessionCode, healths: {} } })
 }
 
 function tick(wrapper: ReturnType<typeof card>, index: number) {
@@ -99,7 +99,7 @@ describe('DoorFamilyCard', () => {
         await button.trigger('click')
 
         expect(routerPost).toHaveBeenCalledWith(
-            'serve.door.check-in:["dubai",5]',
+            'session.check-ins.store:"abcd2345"',
             { children: [{ child_id: 1, level: null, make_active: false }] },
             expect.objectContaining({ preserveScroll: true }),
         )
@@ -107,7 +107,7 @@ describe('DoorFamilyCard', () => {
 
     it('starts with the children a scanned card named ticked — "Check in 1 child" is one tap — and the others not', async () => {
         const wrapper = mount(DoorFamilyCard, {
-            props: { family: cruz, levels, classId: 5, healths: {}, preTicked: [1] },
+            props: { family: cruz, levels, sessionCode: 'abcd2345', healths: {}, preTicked: [1] },
         })
 
         const ticks = wrapper.findAll('[data-testid="tick-child"]')
@@ -117,7 +117,7 @@ describe('DoorFamilyCard', () => {
         await button.trigger('click')
 
         expect(routerPost).toHaveBeenCalledWith(
-            'serve.door.check-in:["dubai",5]',
+            'session.check-ins.store:"abcd2345"',
             { children: [{ child_id: 1, level: null, make_active: false }] },
             expect.objectContaining({ preserveScroll: true }),
         )
@@ -125,7 +125,13 @@ describe('DoorFamilyCard', () => {
 
     it('never pre-ticks a scanned child who is already in, and gives one with no Level the age suggestion', () => {
         const wrapper = mount(DoorFamilyCard, {
-            props: { family: cruz, levels, classId: 5, healths: {}, preTicked: [2, 4] },
+            props: {
+                family: cruz,
+                levels,
+                sessionCode: 'abcd2345',
+                healths: {},
+                preTicked: [2, 4],
+            },
         })
 
         expect(wrapper.find('[data-testid="check-in"]').text()).toBe('Check in 1 child')
@@ -145,7 +151,7 @@ describe('DoorFamilyCard', () => {
             ],
         }
         const wrapper = mount(DoorFamilyCard, {
-            props: { family, levels, classId: 5, healths: {}, preTicked: [3, 5] },
+            props: { family, levels, sessionCode: 'abcd2345', healths: {}, preTicked: [3, 5] },
         })
 
         expect(wrapper.find('[data-testid="check-in"]').text()).toBe('Tick to check in')
@@ -191,7 +197,7 @@ describe('DoorFamilyCard', () => {
 
         await wrapper.find('[data-testid="undo"]').trigger('click')
         expect(routerPut).toHaveBeenCalledWith(
-            'serve.door.undo:["dubai",40]',
+            'session.undo:["abcd2345",40]',
             {},
             expect.objectContaining({ preserveScroll: true }),
         )
@@ -208,7 +214,7 @@ describe('DoorFamilyCard', () => {
     })
 
     it('links each child to the family page only when the viewer may open it', async () => {
-        const may = card(5, { ...cruz, can_open: true })
+        const may = card('abcd2345', { ...cruz, can_open: true })
         await may.find('[data-testid="child-expand"]').trigger('click')
         expect(may.find('[data-testid="open-family"]').attributes('href')).toBe(
             'serve.families.show:["dubai",7]',

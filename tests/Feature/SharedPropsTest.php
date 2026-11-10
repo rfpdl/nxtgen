@@ -40,9 +40,9 @@ it('gives a class admin the Admin area for their class only (TODO #9)', function
     $church = church(['slug' => 'ccf']);
     $classAdmin = classAdminOf(scheduleAt(satelliteOf($church, ['slug' => 'dubai'])));
 
-    actingAs($classAdmin)->get('/dubai/serve/door')->assertInertia(fn (AssertableInertia $p) => $p
+    actingAs($classAdmin)->get('/dubai/serve')->assertInertia(fn (AssertableInertia $p) => $p
         ->where('church_nav.can_use_admin', true)->where('church_nav.can_use_full_admin', false)->where('church_nav.can_manage_classes', true));
-    actingAs($classAdmin)->get('/dubai')->assertRedirect('/dubai/serve/door');
+    actingAs($classAdmin)->get('/dubai')->assertRedirect('/dubai/serve');
 });
 
 it('tells the staff menu which area the page is in (Roy 2026-11-06)', function (): void {
@@ -53,7 +53,7 @@ it('tells the staff menu which area the page is in (Roy 2026-11-06)', function (
     // People is now a satellite's Admin page like the rest (DECISIONS 2026-11-08): area `admin`, no church-wide area.
     actingAs($admin)->get('/dubai/admin/families')->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav.area', 'admin'));
     actingAs($admin)->get('/dubai/admin/people')->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav.area', 'admin'));
-    actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dubai)))->get('/dubai/serve/door')
+    actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dubai)))->get('/dubai/serve')
         ->assertInertia(fn (AssertableInertia $p) => $p->where('church_nav.area', 'serve')->where('church_nav.can_use_admin', false));
 });
 
@@ -99,7 +99,7 @@ it('gives a staff page the satellites its viewer may open, for the bar — and n
     $admin = staffMember(RoleEnum::Admin, atSatellite($dubai));
     grantRole($admin, RoleEnum::Lifeshaper, atSatellite($sharjah));
 
-    actingAs($admin)->get('/dubai/serve/door')->assertInertia(fn (AssertableInertia $p) => $p
+    actingAs($admin)->get('/dubai/serve')->assertInertia(fn (AssertableInertia $p) => $p
         ->where('open_satellites', [['name' => 'CCF Dubai', 'slug' => 'dubai'], ['name' => 'CCF Sharjah', 'slug' => 'sharjah']]));
     get('/dubai/register')->assertInertia(fn (AssertableInertia $p) => $p->where('open_satellites', []));
 });

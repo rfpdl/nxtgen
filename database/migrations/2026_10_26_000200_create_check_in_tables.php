@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\Schema;
  *
  * `schedule_sessions` (GLOSSARY "Session"): one class (Schedule) on one date. An admin opening the class makes it
  * (spec item 15), and the unique (schedule_id, date) key makes two admins pressing at once share one; it is open until
- * closed (closed_at) or until midnight at the satellite — a past date is closed, with no job needed. The table is
+ * closed (closed_at) or until midnight at the satellite — a past date is closed, with no job needed. Its code is its
+ * address (`/<code>/checkin`, spec item 16), the same kind as a satellite's registration code. The table is
  * not called `sessions`: Laravel's database session driver owns that name.
  *
  * `check_ins` (GLOSSARY "Check-in"): a child at a Session, by whom and when, in THIS satellite's Squad for the
@@ -29,6 +30,7 @@ return new class extends Migration
             $table->foreignId('satellite_id')->comment('The satellite whose class this is')->constrained()->restrictOnDelete();
             $table->foreignId('schedule_id')->comment('The class (Schedule) that met')->constrained()->restrictOnDelete();
             $table->date('date')->comment('The day it met, in the church\'s timezone');
+            $table->char('code', 8)->collation('ascii_bin')->unique()->comment('Its address, /<code>/checkin (spec item 16): made when first opened, kept on reopening; case-sensitive');
             $table->timestampTz('opened_at')->comment('When an admin first opened it');
             $table->foreignId('opened_by')->nullable()->comment('Who first opened it')->constrained('users')->nullOnDelete();
             $table->timestampTz('closed_at')->nullable()->comment('When an admin closed it; null = open (on its date)');

@@ -150,8 +150,8 @@ describe('the Classes page', function (): void {
         // DECISIONS 2026-11-08: a Lifeshaper opening an Admin page is sent to the door — one at both satellites too.
         $atBoth = staffMember(RoleEnum::Lifeshaper, atSatellite($dxb));
         grantRole($atBoth, RoleEnum::Lifeshaper, atSatellite($house));
-        actingAs($atBoth)->get('/dxb/admin/classes')->assertRedirect('/dxb/serve/door');
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->get('/dxb/admin/classes')->assertRedirect('/dxb/serve/door');
+        actingAs($atBoth)->get('/dxb/admin/classes')->assertRedirect('/dxb/serve');
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->get('/dxb/admin/classes')->assertRedirect('/dxb/serve');
     });
 });
 
@@ -338,7 +338,7 @@ describe('a class admin', function (): void {
         actingAs($classAdmin)->post('/dxb/admin/classes', classForm(['name' => 'Nope']))->assertNotFound();
         // DECISIONS 2026-11-08: a class admin opening a full-Admin page is sent to the door.
         foreach (['/dxb/admin/families', '/dxb/admin/children', '/dxb/admin/card-requests', '/dxb/admin/links', '/dxb/admin/people'] as $page) {
-            actingAs($classAdmin)->get($page)->assertRedirect('/dxb/serve/door');
+            actingAs($classAdmin)->get($page)->assertRedirect('/dxb/serve');
         }
 
         expect([$sevenPm->fresh()?->name, Schedule::query()->where('name', 'Nope')->exists()])->toBe(['7PM', false]);

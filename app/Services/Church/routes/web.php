@@ -8,8 +8,8 @@ declare(strict_types=1);
 |--------------------------------------------------------------------------
 |
 | The satellite is in the address and the church never is (Roy 2026-11-07, spec items 5–6): /{satellite}/admin
-| (managing families, children, classes, cards, People…) and /{satellite}/serve (the everyday app: the door,
-| registering). A page shows that satellite only (DECISIONS 2026-11-08). The admin area sends someone who only serves
+| (managing families, children, classes, cards, People…) and /{satellite}/serve (the everyday app: today's classes,
+| registering; each opened class's door is at its own code — routes/session.php). A page shows that satellite only (DECISIONS 2026-11-08). The admin area sends someone who only serves
 | here to Serve (RequireAdminArea); what each person may do inside is still AccessScope's (plan §3.2), never the
 | URL's. An action is under each area whose pages use it, so a page never leaves its area; route names follow the
 | address. Ids in the URL are looked up within this church only.
@@ -27,6 +27,7 @@ use App\Services\Church\Http\Controllers\MovingUp\Controller as MovingUpControll
 use App\Services\Church\Http\Controllers\People\Controller as PeopleController;
 use App\Services\Church\Http\Controllers\Poster\Controller as PosterController;
 use App\Services\Church\Http\Controllers\Schedule\Controller as ScheduleController;
+use App\Services\Church\Http\Controllers\Serve\Controller as ServeController;
 use App\Services\Church\Http\Middleware\RequireAdminArea;
 use Illuminate\Support\Facades\Route;
 
@@ -112,17 +113,11 @@ Route::prefix('admin')->name('admin.')->group(function () use ($familyPages): vo
 
 // ── Serve ────────────────────────────────────────────────────────────────────────────────────────────────────────
 Route::prefix('serve')->name('serve.')->group(function () use ($familyPages): void {
-    // The door (DECISIONS 2026-10-26): pick today's class, find a family, check children in; undo a mistake.
-    Route::get('/door', [DoorController::class, 'show'])->name('door.show');
-    // An admin opens and closes today's Session of a class (spec item 15).
+    // Serve's first page (spec items 16–17): today's classes — each open one a link to its own door (`/<code>/checkin`,
+    // routes/session.php), each not yet open with "Open" for its admin.
+    Route::get('/', [ServeController::class, 'show'])->name('home');
+    // An admin opens today's class (spec item 15): its Session, with its code, and on to its door.
     Route::post('/classes/{schedule}/session', [DoorController::class, 'open'])->whereNumber('schedule')->name('sessions.open');
-    Route::put('/classes/{schedule}/session/close', [DoorController::class, 'close'])->whereNumber('schedule')->name('sessions.close');
-    Route::post('/classes/{schedule}/check-ins', [DoorController::class, 'checkIn'])->whereNumber('schedule')->name('door.check-in');
-    Route::put('/check-ins/{checkIn}/undo', [DoorController::class, 'undo'])->whereNumber('checkIn')->name('door.undo');
-    // Its Who's in tab (DECISIONS 2026-10-28 — roll call): today's class by Squad; tap a child present; confirm a head count.
-    Route::get('/door/whos-in', [DoorController::class, 'whosIn'])->name('door.whos-in');
-    Route::put('/check-ins/{checkIn}/present', [DoorController::class, 'present'])->whereNumber('checkIn')->name('door.present');
-    Route::put('/classes/{schedule}/squads/{squad}/head-count', [DoorController::class, 'headCount'])->whereNumber(['schedule', 'squad'])->name('door.head-count');
 
     $familyPages(false);
 

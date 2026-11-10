@@ -12,7 +12,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /** One class (Schedule) on one date, e.g. Saturday 31 Oct, 1PM at CCF Dubai (GLOSSARY "Session"). Made when an admin
- * opens the class (spec item 15); open until closed, or until midnight at the satellite. The table is
+ * opens the class (spec item 15); open until closed, or until midnight at the satellite. Its `code` is its address
+ * (`/<code>/checkin`, spec item 16). The table is
  * `schedule_sessions` — Laravel's session driver owns `sessions`.
  *
  * @property int $id
@@ -20,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $satellite_id
  * @property int $schedule_id
  * @property CarbonImmutable $date
+ * @property string $code
  * @property CarbonImmutable $opened_at
  * @property int|null $opened_by
  * @property CarbonImmutable|null $closed_at
@@ -58,6 +60,12 @@ final class Session extends Model
     public function isOpenOn(CarbonInterface $today): bool
     {
         return $this->date->isSameDay($today) && $this->closed_at === null;
+    }
+
+    /** Its address names it by its code, never its id (spec item 16): `route('session.checkin', $session)`. */
+    public function getRouteKeyName(): string
+    {
+        return 'code';
     }
 
     /** @return BelongsTo<Church, $this> */

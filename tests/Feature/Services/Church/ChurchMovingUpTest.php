@@ -153,7 +153,7 @@ describe('the Moving-Up page', function (): void {
 
         actingAs($houseAdmin)->get('/dxb/admin/moving-up')->assertNotFound();
         // DECISIONS 2026-11-08: a Lifeshaper opening an Admin page is sent to the door.
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->get('/dxb/admin/moving-up')->assertRedirect('/dxb/serve/door');
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->get('/dxb/admin/moving-up')->assertRedirect('/dxb/serve');
     });
 });
 

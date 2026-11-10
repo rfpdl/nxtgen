@@ -6,6 +6,7 @@ namespace Database\Factories;
 
 use App\Data\Models\Schedule;
 use App\Data\Models\Session;
+use App\Foundation\Support\SatelliteCode;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -22,6 +23,7 @@ final class SessionFactory extends Factory
             'satellite_id' => fn (array $attributes): mixed => Schedule::query()->whereKey(self::id($attributes['schedule_id']))->value('satellite_id'),
             'church_id' => fn (array $attributes): mixed => Schedule::query()->whereKey(self::id($attributes['schedule_id']))->value('church_id'),
             'date' => '2026-10-31',
+            'code' => SatelliteCode::random(),
             'opened_at' => now(),
         ];
     }

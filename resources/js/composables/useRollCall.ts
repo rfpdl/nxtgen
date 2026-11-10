@@ -9,17 +9,18 @@ export const ROLL_CALL_POLL_MS = 20_000
 type Cancellable = { cancel: () => void }
 
 /**
- * Who's in's taps, head counts and refresh (roll call, DECISIONS 2026-10-28).
+ * Who's in's taps, head counts and refresh (roll call, DECISIONS 2026-10-28), at the Session whose `code` is the
+ * page's address (spec item 16).
  *
  * - A tap shows at once (`pending`, by Check-in id); a head count shows "Confirming…" (`confirming`, by Squad id). Both
  *   go to the server one after another, in the order made, so a quick tap on a second child neither cancels the first
  *   nor lets an older answer overwrite a newer one. A refused count's message is kept by Squad id (`countErrors`).
  * - The refresh (every 20 s, `squads` only) is skipped while anything is waiting, and a refresh already on its way is
  *   cancelled when a tap or a count starts: it read the list before and would undo it until the next one.
- * - `stop()` drops what is not yet sent — when the page is left, or before a chip moves to another class or Squad,
+ * - `stop()` drops what is not yet sent — when the page is left, or before a chip moves to another Squad,
  *   so nothing queued fires from the next page.
  */
-export function useRollCall(slug: () => string) {
+export function useRollCall(code: () => string) {
     const pending = reactive<Record<number, boolean>>({})
     const confirming = reactive<Record<number, boolean>>({})
     const countErrors = reactive<Record<number, string>>({})
@@ -32,7 +33,7 @@ export function useRollCall(slug: () => string) {
 
     usePoll(ROLL_CALL_POLL_MS, () => ({
         // Whether the class is still open too: closed elsewhere, the taps stop (Astra, issue 11).
-        only: ['squads', 'squad_id', 'session_state'],
+        only: ['squads', 'squad_id', 'session'],
         onBefore: () => waiting.size === 0 && Object.keys(confirming).length === 0,
         onCancelToken: (token: Cancellable) => {
             refreshing = token
@@ -82,17 +83,17 @@ export function useRollCall(slug: () => string) {
     function mark(checkInId: number, present: boolean, revision: number): void {
         pending[checkInId] = present
         waiting.set(checkInId, (waiting.get(checkInId) ?? 0) + 1)
-        enqueue(route('serve.door.present', [slug(), checkInId]), { present, revision }, () => {
+        enqueue(route('session.present', [code(), checkInId]), { present, revision }, () => {
             if (answered(waiting, checkInId)) delete pending[checkInId]
         })
     }
 
-    function confirm(classId: number, squadId: number, count: number): void {
+    function confirm(squadId: number, count: number): void {
         confirming[squadId] = true
         counting.set(squadId, (counting.get(squadId) ?? 0) + 1)
         delete countErrors[squadId]
         enqueue(
-            route('serve.door.head-count', [slug(), classId, squadId]),
+            route('session.head-count', [code(), squadId]),
             { count },
             () => {
                 if (answered(counting, squadId)) delete confirming[squadId]

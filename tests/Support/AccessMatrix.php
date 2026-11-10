@@ -102,18 +102,19 @@ final class AccessMatrix
             'admin.people.roles.destroy' => [AccessRowEnum::GrantRoles, Actor::editingFamily()],
             // ── Serve: any staff ──
             'serve.poster' => [AccessRowEnum::StaffArea, Actor::staff()],
-            // The door (DECISIONS 2026-10-26): every staff member opens it (their own satellites' classes); checking in at
-            // Home's class, and undoing it, needs a Role covering Home.
-            'serve.door.show' => [AccessRowEnum::CheckIn, Actor::staff()],
+            // Serve's first page (spec items 16–17): every staff member, their own satellite's classes today.
+            'serve.home' => [AccessRowEnum::CheckIn, Actor::staff()],
             // Opening and closing Home's class (spec item 15): an admin over Home, or the class's own class admin.
             'serve.sessions.open' => [AccessRowEnum::OpenSession, [Actor::HomeAndAwayAdmin, Actor::HomeAdmin, Actor::ClassAdmin]],
-            'serve.sessions.close' => [AccessRowEnum::OpenSession, [Actor::HomeAndAwayAdmin, Actor::HomeAdmin, Actor::ClassAdmin]],
-            'serve.door.check-in' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
-            'serve.door.undo' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
-            // Who's in (DECISIONS 2026-10-28): the door's people; marking a Home child present, as Undo.
-            'serve.door.whos-in' => [AccessRowEnum::CheckIn, Actor::staff()],
-            'serve.door.present' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
-            'serve.door.head-count' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
+            'session.close' => [AccessRowEnum::OpenSession, [Actor::HomeAndAwayAdmin, Actor::HomeAdmin, Actor::ClassAdmin]],
+            // Home's 1PM door at its own address (spec item 16) and its Who's in (DECISIONS 2026-10-28): a Role covering
+            // Home — anyone else is "not found" there.
+            'session.checkin' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
+            'session.check-ins.store' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
+            'session.undo' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
+            'session.whos-in' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
+            'session.present' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
+            'session.head-count' => [AccessRowEnum::CheckIn, Actor::coveringHome()],
             'family.show' => [AccessRowEnum::OwnFamily, Actor::parents()],
             'family.update' => [AccessRowEnum::OwnFamily, Actor::parents()],
             'family.children.store' => [AccessRowEnum::OwnFamily, Actor::parents()],

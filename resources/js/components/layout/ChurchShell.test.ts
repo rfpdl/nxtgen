@@ -4,7 +4,7 @@ import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const page = {
-    url: '/dubai/serve/door?class=1',
+    url: '/dubai/serve',
     props: {
         flash: {},
         church: { name: 'CCF', slug: 'ccf' },
@@ -31,7 +31,7 @@ vi.mock('@inertiajs/vue3', () => ({
 }))
 
 const PATHS: Record<string, string> = {
-    'serve.door.show': 'serve/door',
+    'serve.home': 'serve',
     'serve.families.index': 'serve/families',
     'serve.poster': 'serve/poster',
     'admin.families.index': 'admin/families',
@@ -49,7 +49,7 @@ vi.mock('ziggy-js', () => ({
 }))
 
 beforeEach(() => {
-    page.url = '/dubai/serve/door?class=1'
+    page.url = '/dubai/serve'
     page.props.church_nav.area = 'serve'
     page.props.church_nav.can_use_admin = false
     page.props.church_nav.can_use_full_admin = false
@@ -75,8 +75,8 @@ describe('ChurchShell', () => {
         })
 
         expect(wrapper.text()).toContain('CCF')
-        expect(wrapper.find('[data-testid="nav-door"]').text()).toBe('Check in')
-        expect(labels(wrapper)).toEqual(['Check in', 'Families', 'QR poster', 'Password'])
+        expect(wrapper.find('[data-testid="nav-today"]').text()).toBe('Today')
+        expect(labels(wrapper)).toEqual(['Today', 'Families', 'QR poster', 'Password'])
         expect(wrapper.find('[data-testid="nav-families"]').attributes('href')).toBe(
             'http://app.test/dubai/serve/families',
         )
@@ -131,7 +131,7 @@ describe('ChurchShell', () => {
             'http://app.test/dubai/admin/families',
         )
         expect(wrapper.find('[data-testid="nav-serve"]').attributes('href')).toBe(
-            'http://app.test/dubai/serve/door',
+            'http://app.test/dubai/serve',
         )
         expect(wrapper.find('[data-testid="page-name"]').text()).toBe('Families')
         Object.assign(page.props.church_nav, {
@@ -157,9 +157,9 @@ describe('ChurchShell', () => {
     })
 
     it('names the page in the bar: from the menu item it is under, else the title it is given, else the church', () => {
-        expect(mount(ChurchShell).find('[data-testid="page-name"]').text()).toBe('Check in')
+        expect(mount(ChurchShell).find('[data-testid="page-name"]').text()).toBe('Today')
         expect(mount(ChurchShell).find('[aria-current="page"]').attributes('data-testid')).toBe(
-            'nav-door',
+            'nav-today',
         )
 
         page.url = '/dubai/serve/families/12'
@@ -236,7 +236,7 @@ describe('ChurchShell', () => {
 
         const sheet = document.body.querySelector('[data-testid="menu-sheet"]')
         expect(sheet?.getAttribute('role')).toBe('dialog')
-        expect(sheet?.querySelector('[data-testid="nav-door"]')?.textContent).toBe('Check in')
+        expect(sheet?.querySelector('[data-testid="nav-today"]')?.textContent).toBe('Today')
         expect(sheet?.querySelector('[data-testid="backup-password"]')).not.toBeNull()
         expect(sheet?.querySelector('[data-testid="sign-out"]')).not.toBeNull()
         wrapper.unmount()

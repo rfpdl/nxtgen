@@ -137,7 +137,7 @@ describe('the People page', function (): void {
         ['htc' => $htc] = peopleChurch();
         $lifeshaper = staffMember(RoleEnum::Lifeshaper, atSatellite($htc));
 
-        actingAs($lifeshaper)->get('/htc/admin/people')->assertRedirect('/htc/serve/door');
+        actingAs($lifeshaper)->get('/htc/admin/people')->assertRedirect('/htc/serve');
         actingAs($lifeshaper)->post('/htc/admin/people', addPerson('new@example.com', RoleEnum::Lifeshaper, ScopeTypeEnum::Satellite, $htc->id))
             ->assertNotFound();
 
@@ -405,7 +405,7 @@ it('lets the platform admin open any satellite\'s Admin and Serve, and keeps the
     staffMember(RoleEnum::Admin, atSatellite($dubai), ['name' => 'Dina Dubai']);
     $platform = User::factory()->create(['name' => 'Pat Platform', 'is_platform_admin' => true]);
 
-    actingAs($platform)->get('/dubai/serve/door')->assertOk();
+    actingAs($platform)->get('/dubai/serve')->assertOk();
     actingAs($platform)->get('/dubai/admin/people')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
         ->where('people', fn (Collection $people): bool => $people->pluck('name')->all() === ['Dina Dubai']));
     actingAs($platform)->get('/home')->assertRedirect('/dubai');

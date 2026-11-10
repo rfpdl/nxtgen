@@ -3,7 +3,7 @@ import { RadioGroupItem, RadioGroupRoot } from 'reka-ui'
 import { useId } from 'vue'
 
 /**
- * Pick one of a few, as big pressable chips (the Bold look) — the door's class picker, instead of a dropdown that
+ * Pick one of a few, as big pressable chips (the Bold look) — a class's "Every week" or "One date", instead of a dropdown that
  * hides the choice. A radio group to a screen reader and the keyboard (reka-ui: one Tab stop, arrow keys move),
  * named by `label` — or by a visible question elsewhere (`labelledby`, its id); the model is the option's own
  * value. Like TextField: `required`, and an `error` shown under the chips and tied to the group (`aria-describedby`,

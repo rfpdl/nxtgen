@@ -119,29 +119,28 @@ describe('closing a Session', function (): void {
         ['onePm' => $onePm, 'admin' => $admin] = sessionsChurch();
         $session = sessionOf($onePm);
 
-        actingAs($admin)->put("/dxb/serve/classes/{$onePm->id}/session/close")
+        actingAs($admin)->put("/{$session->code}/close")
             ->assertRedirect()->assertSessionHas('success', '1PM is closed.');
         expect([$session->fresh()?->closed_by, $session->fresh()?->isOpenOn(CarbonImmutable::parse('2026-10-31'))])->toBe([$admin->id, false]);
 
         $session->update(['closed_at' => null]);
-        actingAs(classAdminOf($onePm))->put("/dxb/serve/classes/{$onePm->id}/session/close")->assertSessionHas('success');
+        actingAs(classAdminOf($onePm))->put("/{$session->code}/close")->assertSessionHas('success');
         expect($session->fresh()?->closed_at)->not->toBeNull();
     });
 
-    it('is refused to a Lifeshaper, another class\'s class admin, an admin elsewhere, and when nothing is open today @story#205', function (): void {
+    it('is refused to a Lifeshaper, another class\'s class admin, an admin elsewhere, someone with no Role and a stranger @story#205', function (): void {
         ['dxb' => $dxb, 'house' => $house, 'onePm' => $onePm, 'sevenPm' => $sevenPm, 'admin' => $admin] = sessionsChurch();
         $session = sessionOf($onePm);
 
-        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->put("/dxb/serve/classes/{$onePm->id}/session/close")->assertNotFound();
-        actingAs(classAdminOf($sevenPm))->put("/dxb/serve/classes/{$onePm->id}/session/close")->assertNotFound();
-        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->put("/dxb/serve/classes/{$onePm->id}/session/close")->assertNotFound();
-        actingAs($admin)->put("/dxb/serve/classes/{$sevenPm->id}/session/close")->assertNotFound();
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->put("/{$session->code}/close")->assertNotFound();
+        actingAs(classAdminOf($sevenPm))->put("/{$session->code}/close")->assertNotFound();
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->put("/{$session->code}/close")->assertNotFound();
 
         expect($session->fresh()?->closed_at)->toBeNull();
 
-        actingAs(User::factory()->create())->put("/dxb/serve/classes/{$onePm->id}/session/close")->assertNotFound();   // no Role here
+        actingAs(User::factory()->create())->put("/{$session->code}/close")->assertNotFound();   // no Role here
         auth()->logout();
-        put("/dxb/serve/classes/{$onePm->id}/session/close")->assertRedirect('/login');
+        put("/{$session->code}/close")->assertRedirect('/login');
         expect($session->fresh()?->closed_at)->toBeNull();
     });
 
@@ -150,7 +149,7 @@ describe('closing a Session', function (): void {
         $session = sessionOf($onePm);
         $session->update(['closed_at' => '2026-10-31 05:00:00']);
 
-        actingAs($admin)->put("/dxb/serve/classes/{$onePm->id}/session/close")->assertSessionHas('success', '1PM is closed.');
+        actingAs($admin)->put("/{$session->code}/close")->assertSessionHas('success', '1PM is closed.');
 
         expect($session->fresh()?->closed_at?->toDateTimeString())->toBe('2026-10-31 05:00:00');
     });
@@ -166,13 +165,14 @@ describe('midnight at the satellite (spec item 15)', function (): void {
         $tick = fn (int $id): array => ['children' => [['child_id' => $id, 'level' => null, 'make_active' => false]]];
 
         travelTo(CarbonImmutable::parse('2026-10-31 23:59:00', 'Asia/Dubai'));
-        actingAs($admin)->post("/dxb/serve/classes/{$onePm->id}/check-ins", $tick($amara->id))->assertSessionHas('success');
+        actingAs($admin)->post("/{$session->code}/check-ins", $tick($amara->id))->assertSessionHas('success');
 
         travelTo(CarbonImmutable::parse('2026-10-31 20:30:00', 'UTC'));   // 00:30 on Sunday in Dubai
-        actingAs($admin)->post("/dxb/serve/classes/{$onePm->id}/check-ins", $tick($ben->id))->assertNotFound();
-        actingAs($admin)->put("/dxb/serve/check-ins/{$in->id}/undo")->assertNotFound();
+        actingAs($admin)->post("/{$session->code}/check-ins", $tick($ben->id))->assertSessionHas('error', '1PM is closed.');
+        actingAs($admin)->put("/{$session->code}/check-ins/{$in->id}/undo")->assertSessionHas('error', '1PM is closed.');
+        actingAs($admin)->get("/{$session->code}/checkin")->assertInertia(fn (AssertableInertia $page) => $page->where('session.state', 'closed'));
         actingAs($admin)->post("/dxb/serve/classes/{$onePm->id}/session")->assertNotFound();
-        actingAs($admin)->get('/dxb/serve/door')->assertInertia(fn (AssertableInertia $page) => $page->where('today', 'Sun 1 Nov')->where('classes.0.name', 'Sunday school'));
+        actingAs($admin)->get('/dxb/serve')->assertInertia(fn (AssertableInertia $page) => $page->where('today', 'Sun 1 Nov')->where('classes.0.name', 'Sunday school'));
 
         expect([$in->fresh()?->isIn(), $session->fresh()?->isOpenOn(CarbonImmutable::parse('2026-11-01'))])->toBe([true, false]);
     });
@@ -195,7 +195,7 @@ describe('Attendance', function (): void {
         ['dxb' => $dxb, 'onePm' => $onePm, 'admin' => $admin] = sessionsChurch();
         $session = sessionOf($onePm);
         checkedIn($session, childOf(familyAt($dxb), ['level' => 2, 'gender' => 'girl']));
-        actingAs($admin)->put("/dxb/serve/classes/{$onePm->id}/session/close");
+        actingAs($admin)->put("/{$session->code}/close");
 
         actingAs($admin)->get("/dxb/admin/attendance?class={$onePm->id}&date=2026-10-31")
             ->assertInertia(fn (AssertableInertia $page) => $page->where('total', 1));

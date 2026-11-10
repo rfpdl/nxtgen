@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Church\Features\Door;
 
 use App\Data\Models\CheckIn;
+use App\Data\Models\Session;
 use App\Domains\CheckIn\Jobs\GetSessionForUpdateJob;
 use App\Domains\CheckIn\Jobs\UpdateCheckInPresenceJob;
 use App\Domains\Church\Jobs\GetChurchTodayJob;
@@ -30,19 +31,22 @@ use Illuminate\Support\Facades\DB;
     title: 'Mark a child present',
     persona: 'Squad leader (any staff)',
     happyPaths: ['story#119' => 'A Squad leader taps a checked-in child present, and taps again to unmark them; only the latest mark is kept, with who and when'],
-    unhappyPaths: ['story#120' => 'Only today\'s, at a satellite their Role covers, in this church; a child whose Check-in was undone is refused'],
+    unhappyPaths: ['story#120' => 'Only a Check-in of the Session at the address, while it is open, at a satellite their Role covers, in this church; a child whose Check-in was undone is refused'],
 )]
 #[AccessRow(AccessRowEnum::CheckIn)]
 final class MarkPresentFeature extends BaseChurchFeature
 {
-    public function __construct(private readonly CheckIn $checkIn) {}
+    public function __construct(
+        private readonly Session $session,
+        private readonly CheckIn $checkIn,
+    ) {}
 
     public function handle(MarkPresentInput $input): RedirectResponse
     {
         $church = $this->church();
         $checkIn = $this->checkIn;
-        abort_unless($this->scope()->canCheckInTo($checkIn->session->schedule), 404);
-        abort_unless($checkIn->session->date->isSameDay($this->run(new GetChurchTodayJob(church: $church))), 404);
+        // A Check-in of THIS Session (spec item 16: the address names it); a Session not open today is closed.
+        abort_unless($checkIn->session_id === $this->session->id, 404);
 
         // A closed Session is looked at, not changed (Roy 2026-11-10): asked under its lock, the date read after it,
         // so an admin closing it at this moment comes before or after the tap, never between (Astra, issue 11).

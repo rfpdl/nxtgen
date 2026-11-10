@@ -114,6 +114,9 @@ function requestFor(string $route, AccessWorld $w): array
     if ($route === 'satellite.home') {
         return ['GET', '/home-sat', []];
     }
+    if (str_starts_with($route, 'session.')) {
+        return sessionRequestFor($route, $w);
+    }
     if (str_starts_with($route, 'family.') || $route === 'photos.child') {
         return familyRequestFor($route, $w, $c, $photo, $newChild);
     }
@@ -173,17 +176,32 @@ function requestFor(string $route, AccessWorld $w): array
         'schedules.store' => ['POST', "{$base}/classes", ['satellite_id' => $w->home->id, 'name' => 'Special class', 'one_time' => true, 'weekday' => null, 'date' => '2026-12-24', 'starts_at' => '18:00', 'ends_at' => '20:00']],
         'schedules.update' => ['PUT', "{$base}/classes/{$w->schedule->id}", ['name' => '1PM', 'one_time' => false, 'weekday' => 'saturday', 'date' => null, 'starts_at' => '13:30', 'ends_at' => '15:00']],
         'schedules.retire' => ['PUT', "{$base}/classes/{$w->schedule->id}/retire", []],
-        'door.show' => ['GET', "{$base}/door?q=Amara", []],
+        'home' => ['GET', $base, []],
         'sessions.open' => ['POST', "{$base}/classes/{$w->schedule->id}/session", []],
-        'sessions.close' => ['PUT', "{$base}/classes/{$w->schedule->id}/session/close", []],
-        'door.check-in' => ['POST', "{$base}/classes/{$w->schedule->id}/check-ins", ['children' => [['child_id' => $w->visitor->id, 'level' => 1, 'make_active' => false]]]],
-        'door.undo' => ['PUT', "{$base}/check-ins/{$w->checkIn->id}/undo", []],
-        'door.whos-in' => ['GET', "{$base}/door/whos-in", []],
-        'door.present' => ['PUT', "{$base}/check-ins/{$w->checkIn->id}/present", ['present' => true, 'revision' => $w->checkIn->revision]],
-        'door.head-count' => ['PUT', "{$base}/classes/{$w->schedule->id}/squads/{$w->checkIn->squad_id}/head-count", ['count' => 3]],
         'attendance.show' => ['GET', "{$base}/attendance?class={$w->schedule->id}&date=2026-10-31", []],
         'attendance.export' => ['GET', "{$base}/attendance/export?class={$w->schedule->id}&date=2026-10-31", []],
         default => throw new LogicException("No request for {$route} — add it to requestFor()."),
+    };
+}
+
+/**
+ * A request at Home's 1PM Session's own address (spec item 16): its code, not the satellite.
+ *
+ * @return array{0: string, 1: string, 2: array<string, mixed>}
+ */
+function sessionRequestFor(string $route, AccessWorld $w): array
+{
+    $base = '/'.$w->checkIn->session->code;
+
+    return match ($route) {
+        'session.checkin' => ['GET', "{$base}/checkin?q=Amara", []],
+        'session.close' => ['PUT', "{$base}/close", []],
+        'session.check-ins.store' => ['POST', "{$base}/check-ins", ['children' => [['child_id' => $w->visitor->id, 'level' => 1, 'make_active' => false]]]],
+        'session.undo' => ['PUT', "{$base}/check-ins/{$w->checkIn->id}/undo", []],
+        'session.whos-in' => ['GET', "{$base}/whos-in", []],
+        'session.present' => ['PUT', "{$base}/check-ins/{$w->checkIn->id}/present", ['present' => true, 'revision' => $w->checkIn->revision]],
+        'session.head-count' => ['PUT', "{$base}/squads/{$w->checkIn->squad_id}/head-count", ['count' => 3]],
+        default => throw new LogicException("No request for {$route} — add it to sessionRequestFor()."),
     };
 }
 
@@ -286,9 +304,9 @@ function printListOf(AccessWorld $w): PrintList
 function quietChanges(): array
 {
     return [
-        'serve.door.present' => fn (AccessWorld $w): bool => $w->checkIn->fresh()?->isPresent() === true,
+        'session.present' => fn (AccessWorld $w): bool => $w->checkIn->fresh()?->isPresent() === true,
         'admin.links.move' => fn (AccessWorld $w): bool => SatelliteLink::query()->where('satellite_id', $w->home->id)->orderBy('position')->value('label') === 'Second',
-        'serve.door.head-count' => fn (AccessWorld $w): bool => SquadHeadCount::query()->where('session_id', $w->checkIn->session_id)->where('squad_id', $w->checkIn->squad_id)->value('head_count') === 3,
+        'session.head-count' => fn (AccessWorld $w): bool => SquadHeadCount::query()->where('session_id', $w->checkIn->session_id)->where('squad_id', $w->checkIn->squad_id)->value('head_count') === 3,
     ];
 }
 
@@ -309,7 +327,7 @@ function outcomeOf(TestResponse $response, string $method, ?bool $worked = null,
     if ($status === 404) {
         return '404';
     }
-    if ($status === 302 && $adminPage && $path === '/home-sat/serve/door') {
+    if ($status === 302 && $adminPage && $path === '/home-sat/serve') {
         return 'serve';
     }
     if ($status === 200 && $method === 'GET') {
@@ -340,7 +358,7 @@ function expectCell(string $route, Actor $actor, string $expected): void
     Notification::fake();
     Storage::fake('photos');
     // The door is asked about on the Saturday its classes meet.
-    if (str_starts_with($route, 'serve.door.') || str_starts_with($route, 'serve.sessions.')) {
+    if (str_starts_with($route, 'session.') || str_starts_with($route, 'serve.sessions.') || $route === 'serve.home') {
         travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
     }
     $world = AccessWorld::make();
@@ -525,22 +543,24 @@ describe('Classes, for admins', function (): void {
 });
 
 describe('the door, for staff', function (): void {
-    it('opens the door for any staff, with their own satellites\' classes @story#103 @story#104', cellTest())
-        ->with(cells('serve.door.show'));
+    it('opens Serve\'s first page for any staff, with their own satellite\'s classes today @story#208 @story#209', cellTest())
+        ->with(cells('serve.home'));
     it('lets Home\'s class be opened only by an admin over Home or its class admin @story#202 @story#203', cellTest())
         ->with(cells('serve.sessions.open'));
     it('lets Home\'s class be closed only by an admin over Home or its class admin @story#204 @story#205', cellTest())
-        ->with(cells('serve.sessions.close'));
+        ->with(cells('session.close'));
+    it('opens Home\'s 1PM door at its own address only for staff whose Role covers Home @story#103 @story#104 @story#206 @story#207', cellTest())
+        ->with(cells('session.checkin'));
     it('lets children be checked in at Home\'s class only by staff whose Role covers Home @story#106 @story#109', cellTest())
-        ->with(cells('serve.door.check-in'));
+        ->with(cells('session.check-ins.store'));
     it('lets a Check-in at Home be undone only by staff whose Role covers Home @story#110 @story#111', cellTest())
-        ->with(cells('serve.door.undo'));
-    it('opens Who\'s in for any staff, with their own satellites\' classes @story#117 @story#118', cellTest())
-        ->with(cells('serve.door.whos-in'));
+        ->with(cells('session.undo'));
+    it('opens Who\'s in at its own address only for staff whose Role covers Home @story#117 @story#118 @story#206 @story#207', cellTest())
+        ->with(cells('session.whos-in'));
     it('lets a child at Home\'s class be marked present only by staff whose Role covers Home @story#119 @story#120', cellTest())
-        ->with(cells('serve.door.present'));
+        ->with(cells('session.present'));
     it('lets a head count at Home\'s class be confirmed only by staff whose Role covers Home @story#121 @story#123', cellTest())
-        ->with(cells('serve.door.head-count'));
+        ->with(cells('session.head-count'));
 });
 
 describe('Attendance, for admins', function (): void {
@@ -612,7 +632,7 @@ function guessesFrom(Actor $actor, string $slug, Closure $payloadThere): array
 it('refuses another church\'s admin who puts ccf\'s ids in their OWN satellite\'s address @story#29 @story#49 @story#51 @story#100 @story#102 @story#109 @story#111 @story#120 @story#123 @story#131 @story#137 @story#139 @story#141 @story#143 @story#145 @story#147 @story#149 @story#159 @story#161 @story#169 @story#171 @story#173 @story#177 @story#179 @story#203 @story#205', function (): void {
     $answers = guessesFrom(Actor::OtherChurch, 'other', fn (AccessWorld $w): array => familyEdit($w->otherChurch->satellites()->firstOrFail()));
 
-    expect($answers)->toHaveCount(43)
+    expect($answers)->toHaveCount(38)   // the door's actions moved to the Session's own address (spec item 16), refused there by RequireSessionAssignment
         ->and(array_unique(array_values($answers)))->toBe(['404'], (string) json_encode($answers, JSON_PRETTY_PRINT));
 });
 

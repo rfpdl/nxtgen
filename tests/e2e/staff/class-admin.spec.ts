@@ -6,9 +6,9 @@ import { DUBAI, CLASSES, SATELLITES, sessionFile, uniqueEmail } from '../support
 
 /*
  * A class admin (TODO #9; plan §3.2 "Class admin (S)"): an admin of CCF Dubai makes someone Admin of CCF Dubai · 1PM on
- * People; they sign in from the email and find their class at the door and on Classes — and no other.
+ * People; they sign in from the email and find their class on Serve and on Classes — and no other.
  */
-test('an admin makes someone class admin of 1PM; they see only 1PM at the door and on Classes @story#180 @story#182 @story#183', async ({
+test('an admin makes someone class admin of 1PM; they see only 1PM on Serve and on Classes @story#180 @story#182 @story#183', async ({
     page,
     browser,
 }) => {
@@ -27,12 +27,12 @@ test('an admin makes someone class admin of 1PM; they see only 1PM at the door a
     await admin.close()
     expect((await latestMail(email, before)).subject).toContain('You have been added')
 
-    // Cleo, on her own device: the church's address opens the door — 1PM only.
+    // Cleo, on her own device: the church's address opens Serve — today's 1PM only.
     await openEmailedLink(page, email, before)
-    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/door`))
-    const classes = page.getByTestId('door-class').getByRole('radio')
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve$`))
+    const classes = page.getByTestId('serve-class')
     await expect(classes).toHaveCount(1)
-    await expect(classes).toContainText(CLASSES.onePm.name)
+    await expect(classes.getByRole('heading')).toHaveText(CLASSES.onePm.name)
 
     // Admin: her Classes — 1PM, no "+ Add a class" — and nothing else of Admin.
     await navTo(page, 'Admin')
@@ -41,5 +41,5 @@ test('an admin makes someone class admin of 1PM; they see only 1PM at the door a
     await expect(page.getByTestId('open-add-schedule')).toHaveCount(0)
     await page.goto(`/${DUBAI}/admin/families`)
     // A class admin opens only Classes and Attendance in Admin: anything else sends them to Serve (spec item 10).
-    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/door$`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve$`))
 })

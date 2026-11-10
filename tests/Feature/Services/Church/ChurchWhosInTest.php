@@ -6,6 +6,7 @@ use App\Data\Models\CheckIn;
 use App\Data\Models\Child;
 use App\Data\Models\Satellite;
 use App\Data\Models\Schedule;
+use App\Data\Models\Session;
 use App\Data\Models\Squad;
 use App\Data\Models\SquadHeadCount;
 use App\Data\Models\User;
@@ -24,7 +25,6 @@ use function Tests\Support\checkedIn;
 use function Tests\Support\childOf;
 use function Tests\Support\church;
 use function Tests\Support\familyAt;
-use function Tests\Support\grantRole;
 use function Tests\Support\guardianOf;
 use function Tests\Support\satelliteOf;
 use function Tests\Support\scheduleAt;
@@ -34,8 +34,8 @@ use function Tests\Support\withCommittedWorld;
 
 /*
  * Who's in, the door's second tab (DECISIONS 2026-10-28; GLOSSARY "Roll call", "Squad leader"): the children checked
- * in to today's class by Squad, and a tap marks a child present. Same class picker, day and people as the door; the
- * tap has the same access as Undo. AccessScope::canCheckInAt owns who may; these prove the screens ask it.
+ * in to a Session by Squad, at its own address (`/<code>/whos-in`, spec item 16), and a tap marks a child present.
+ * Same people as the door; the tap has the same access as Undo. AccessScope::canCheckInAt owns who may; these prove the screens ask it.
  *
  * It is Saturday 31 Oct 2026, 09:00 in Dubai, throughout.
  */
@@ -55,6 +55,9 @@ function whosInChurch(): array
     scheduleAt($dxb, ['name' => 'Sunday school', 'weekday' => WeekdayEnum::Sunday]);
     scheduleAt($house, ['name' => '10AM', 'weekday' => WeekdayEnum::Saturday]);
 
+    // An admin has opened today's 1PM (spec item 15): its Who's in is at its code (spec item 16).
+    sessionOf($onePm);
+
     $cruz = familyAt($dxb);
     guardianOf($cruz, User::factory()->create(), ['first_name' => 'Maria', 'last_name' => 'Cruz', 'phone' => '0501234567']);
     $girl = fn (string $nickname, int $level, ?string $allergies = null): Child => childOf($cruz, ['nickname' => $nickname, 'first_name' => $nickname, 'middle_name' => null, 'last_name' => 'Cruz', 'gender' => GenderEnum::Girl, 'level' => $level, 'allergies' => $allergies, 'illnesses' => $allergies === null ? null : 'Asthma']);
@@ -72,10 +75,22 @@ function whosInChurch(): array
     ];
 }
 
+/** Today's 1PM Session, which an admin opened (whosInChurch). */
+function whosInSession(): Session
+{
+    return Session::query()->whereHas('schedule', fn ($q) => $q->where('name', '1PM'))->whereDate('date', '2026-10-31')->sole();
+}
+
+/** An address at 1PM's own door (spec item 16): `/<code>{$path}`. */
+function whosInDoor(string $path): string
+{
+    return '/'.whosInSession()->code.$path;
+}
+
 describe('the Who\'s in page', function (): void {
     it('lists today\'s class by Squad in the Attendance order — each with how many are present and its head count — children by nickname @story#117 @story#121', function (): void {
         $w = whosInChurch();
-        $session = sessionOf($w['onePm']);
+        $session = whosInSession();
         $sofia = checkedIn($session, $w['sofia'], ['present_at' => now(), 'present_by' => $w['lifeshaper']->id]);
         $amara = checkedIn($session, $w['amara']);
         $bea = checkedIn($session, $w['bea']);
@@ -85,11 +100,10 @@ describe('the Who\'s in page', function (): void {
         checkedIn(sessionOf(Schedule::query()->where('name', '7PM')->sole()), $w['visitor']);
         SquadHeadCount::factory()->create(['session_id' => $session->id, 'squad_id' => $amara->squad_id, 'head_count' => 3, 'counted_at' => CarbonImmutable::parse('2026-10-31 08:50:00', 'Asia/Dubai')->utc(), 'counted_by' => User::factory()->create(['name' => 'Joy Santos'])->id]);
 
-        actingAs($w['lifeshaper'])->get('/dxb/serve/door/whos-in')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($w['lifeshaper'])->get(whosInDoor('/whos-in'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
             ->component('Church/Door/WhosIn')
-            ->where('today', 'Sat 31 Oct')
-            ->has('classes', 2)
-            ->where('class_id', $w['onePm']->id)
+            ->where('session.name', '1PM')
+            ->where('session.date_label', 'Sat 31 Oct')
             ->where('squad_id', null)
             ->where('squads', [
                 ['id' => $kai->squad_id, 'name' => 'Level 1', 'level' => ['number' => 1, 'name' => 'Level 1'], 'present' => 1, 'count' => 1, 'children' => [
@@ -111,11 +125,11 @@ describe('the Who\'s in page', function (): void {
     it('tells two children of one nickname apart in a Squad by first and last name — no middle name @story#117', function (): void {
         $w = whosInChurch();
         $santos = childOf(familyAt($w['dxb']), ['nickname' => 'Amara', 'first_name' => 'Amara', 'middle_name' => 'Joy', 'last_name' => 'Santos', 'gender' => GenderEnum::Girl, 'level' => 2]);
-        $session = sessionOf($w['onePm']);
+        $session = whosInSession();
         checkedIn($session, $w['amara']);
         checkedIn($session, $santos);
 
-        actingAs($w['lifeshaper'])->get('/dxb/serve/door/whos-in')->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($w['lifeshaper'])->get(whosInDoor('/whos-in'))->assertInertia(fn (AssertableInertia $page) => $page
             ->where('squads.0.children.0.nickname', 'Amara')
             ->where('squads.0.children.0.short_name', 'Amara Cruz')
             ->where('squads.0.children.1.nickname', 'Amara')
@@ -124,59 +138,40 @@ describe('the Who\'s in page', function (): void {
 
     it('keeps the Squad picked with ?squad=, and falls back to All when that Squad has no one in @story#117', function (): void {
         $w = whosInChurch();
-        $session = sessionOf($w['onePm']);
+        $session = whosInSession();
         $amara = checkedIn($session, $w['amara']);
         $kai = checkedIn($session, $w['kai']);
 
-        actingAs($w['lifeshaper'])->get("/dxb/serve/door/whos-in?class={$w['onePm']->id}&squad={$amara->squad_id}")->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($w['lifeshaper'])->get(whosInDoor("/whos-in?squad={$amara->squad_id}"))->assertInertia(fn (AssertableInertia $page) => $page
             ->where('squad_id', $amara->squad_id)->has('squads', 2));
 
         $kai->forceFill(['undone_at' => now()])->save();
-        actingAs($w['lifeshaper'])->get("/dxb/serve/door/whos-in?class={$w['onePm']->id}&squad={$kai->squad_id}")->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($w['lifeshaper'])->get(whosInDoor("/whos-in?squad={$kai->squad_id}"))->assertInertia(fn (AssertableInertia $page) => $page
             ->where('squad_id', null)->has('squads', 1));
     });
 
     it('shows no Squads before anyone is checked in to the class @story#117', function (): void {
         $w = whosInChurch();
 
-        actingAs($w['lifeshaper'])->get('/dxb/serve/door/whos-in')->assertInertia(fn (AssertableInertia $page) => $page
-            ->where('class_id', $w['onePm']->id)->where('squads', [])->where('squad_id', null));
+        actingAs($w['lifeshaper'])->get(whosInDoor('/whos-in'))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('session.name', '1PM')->where('squads', [])->where('squad_id', null));
     });
 
-    it('gives a Role at both satellites each satellite\'s classes, and says when none meets today @story#117', function (): void {
+    it('is not found for a Session at a satellite the Role does not cover, or another church\'s @story#118 @story#207', function (): void {
         $w = whosInChurch();
-        // DECISIONS 2026-11-08: no church-wide Role — the Lifeshaper Role at both satellites instead.
-        $everywhere = staffMember(RoleEnum::Lifeshaper, atSatellite($w['dxb']));
-        grantRole($everywhere, RoleEnum::Lifeshaper, atSatellite($w['house']));
+        $theirs = sessionOf(scheduleAt(Satellite::factory()->for(church(['slug' => 'other']))->create()));
+        $houseDoor = sessionOf(Schedule::query()->where('satellite_id', $w['house']->id)->sole());
 
-        // Every satellite's, one satellite at a time: the address satellite's classes (DECISIONS 2026-11-08).
-        actingAs($everywhere)->get('/dxb/serve/door/whos-in')->assertInertia(fn (AssertableInertia $page) => $page->has('classes', 2));
-        actingAs($everywhere)->get('/house/serve/door/whos-in')->assertInertia(fn (AssertableInertia $page) => $page
-            ->has('classes', 1)->where('classes.0.name', '10AM'));
-
-        travelTo(CarbonImmutable::parse('2026-11-02 09:00:00', 'Asia/Dubai'));   // a Monday
-        actingAs($w['lifeshaper'])->get('/dxb/serve/door/whos-in')->assertInertia(fn (AssertableInertia $page) => $page
-            ->where('today', 'Mon 2 Nov')->where('classes', [])->where('class_id', null)->where('squads', []));
-    });
-
-    it('refuses a class at a satellite the Role does not cover, another church\'s, or not meeting today @story#118', function (): void {
-        $w = whosInChurch();
-        $sunday = Schedule::query()->where('name', 'Sunday school')->sole();
-        $theirs = scheduleAt(Satellite::factory()->for(church(['slug' => 'other']))->create());
-        $houseClass = Schedule::query()->where('satellite_id', $w['house']->id)->sole();
-
-        foreach ([$houseClass, $theirs, $sunday] as $class) {
-            actingAs($w['lifeshaper'])->get("/dxb/serve/door/whos-in?class={$class->id}")->assertNotFound();
+        foreach ([$houseDoor, $theirs] as $session) {
+            actingAs($w['lifeshaper'])->get("/{$session->code}/whos-in")->assertNotFound();
         }
-        // Nor at House's own address, where the Role is not (DECISIONS 2026-11-08).
-        actingAs($w['lifeshaper'])->get("/house/serve/door/whos-in?class={$houseClass->id}")->assertNotFound();
     });
 
     it('never sends a photo, a phone number or a health detail @story#118', function (): void {
         $w = whosInChurch();
-        checkedIn(sessionOf($w['onePm']), $w['amara']);
+        checkedIn(whosInSession(), $w['amara']);
 
-        $json = (string) json_encode(actingAs($w['lifeshaper'])->get('/dxb/serve/door/whos-in')->viewData('page'));
+        $json = (string) json_encode(actingAs($w['lifeshaper'])->get(whosInDoor('/whos-in'))->viewData('page'));
 
         expect(preg_match('/Peanuts|Asthma|0501234567|photo/', $json))->toBe(0)
             ->and($json)->toContain('Amara');
@@ -186,77 +181,78 @@ describe('the Who\'s in page', function (): void {
         whosInChurch();
         $parent = User::query()->whereHas('guardians')->firstOrFail();
 
-        actingAs($parent)->get('/dxb/serve/door/whos-in')->assertNotFound();
+        actingAs($parent)->get(whosInDoor('/whos-in'))->assertNotFound();
         auth()->logout();
-        get('/dxb/serve/door/whos-in')->assertRedirect('/login');
+        get(whosInDoor('/whos-in'))->assertRedirect('/login');
     });
 });
 
 describe('marking a child present', function (): void {
     it('marks a child present with who and when, saying nothing — the tick says it — and a second tap unmarks them @story#119', function (): void {
         $w = whosInChurch();
-        $in = checkedIn(sessionOf($w['onePm']), $w['amara']);
+        $in = checkedIn(whosInSession(), $w['amara']);
 
-        actingAs($w['lifeshaper'])->put("/dxb/serve/check-ins/{$in->id}/present", ['present' => true, 'revision' => 0])
+        actingAs($w['lifeshaper'])->put(whosInDoor("/check-ins/{$in->id}/present"), ['present' => true, 'revision' => 0])
             ->assertRedirect()->assertSessionMissing('success')->assertSessionMissing('error');
         expect([$in->fresh()?->isPresent(), $in->fresh()?->present_by, $in->fresh()?->present_at?->toDateTimeString()])
             ->toBe([true, $w['lifeshaper']->id, '2026-10-31 05:00:00']);
 
-        actingAs($w['lifeshaper'])->put("/dxb/serve/check-ins/{$in->id}/present", ['present' => false, 'revision' => 0])
+        actingAs($w['lifeshaper'])->put(whosInDoor("/check-ins/{$in->id}/present"), ['present' => false, 'revision' => 0])
             ->assertRedirect()->assertSessionMissing('success');
         expect([$in->fresh()?->isPresent(), $in->fresh()?->present_by])->toBe([false, null]);
     });
 
     it('drops the mark when the door undoes the Check-in, and a re-check-in starts unmarked @story#119', function (): void {
         $w = whosInChurch();
-        $in = checkedIn(sessionOf($w['onePm']), $w['amara']);
-        actingAs($w['lifeshaper'])->put("/dxb/serve/check-ins/{$in->id}/present", ['present' => true, 'revision' => 0]);
+        $in = checkedIn(whosInSession(), $w['amara']);
+        actingAs($w['lifeshaper'])->put(whosInDoor("/check-ins/{$in->id}/present"), ['present' => true, 'revision' => 0]);
 
-        actingAs($w['lifeshaper'])->put("/dxb/serve/check-ins/{$in->id}/undo");
-        actingAs($w['lifeshaper'])->get('/dxb/serve/door/whos-in')->assertInertia(fn (AssertableInertia $page) => $page->where('squads', []));
+        actingAs($w['lifeshaper'])->put(whosInDoor("/check-ins/{$in->id}/undo"));
+        actingAs($w['lifeshaper'])->get(whosInDoor('/whos-in'))->assertInertia(fn (AssertableInertia $page) => $page->where('squads', []));
 
-        actingAs($w['lifeshaper'])->post("/dxb/serve/classes/{$w['onePm']->id}/check-ins", ['children' => [['child_id' => $w['amara']->id, 'level' => null, 'make_active' => false]]]);
-        actingAs($w['lifeshaper'])->get('/dxb/serve/door/whos-in')->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($w['lifeshaper'])->post(whosInDoor('/check-ins'), ['children' => [['child_id' => $w['amara']->id, 'level' => null, 'make_active' => false]]]);
+        actingAs($w['lifeshaper'])->get(whosInDoor('/whos-in'))->assertInertia(fn (AssertableInertia $page) => $page
             ->where('squads.0.present', 0)->where('squads.0.children.0.present', false));
     });
 
     it('refuses a child whose Check-in was undone, saying why, and marks nothing @story#120', function (): void {
         $w = whosInChurch();
-        $in = checkedIn(sessionOf($w['onePm']), $w['amara'], ['undone_at' => now()]);
+        $in = checkedIn(whosInSession(), $w['amara'], ['undone_at' => now()]);
 
-        actingAs($w['lifeshaper'])->put("/dxb/serve/check-ins/{$in->id}/present", ['present' => true, 'revision' => 0])
+        actingAs($w['lifeshaper'])->put(whosInDoor("/check-ins/{$in->id}/present"), ['present' => true, 'revision' => 0])
             ->assertRedirect()->assertSessionHas('error', 'Amara is not checked in any more.');
         expect($in->fresh()?->isPresent())->toBeFalse();
     });
 
     it('refuses a tap made before an Undo and a re-check-in — the child was checked in again, so tap again — and marks nothing @story#120', function (): void {
         $w = whosInChurch();
-        $in = checkedIn(sessionOf($w['onePm']), $w['amara']);
-        actingAs($w['lifeshaper'])->put("/dxb/serve/check-ins/{$in->id}/undo");
-        actingAs($w['lifeshaper'])->post("/dxb/serve/classes/{$w['onePm']->id}/check-ins", ['children' => [['child_id' => $w['amara']->id, 'level' => null, 'make_active' => false]]]);
+        $in = checkedIn(whosInSession(), $w['amara']);
+        actingAs($w['lifeshaper'])->put(whosInDoor("/check-ins/{$in->id}/undo"));
+        actingAs($w['lifeshaper'])->post(whosInDoor('/check-ins'), ['children' => [['child_id' => $w['amara']->id, 'level' => null, 'make_active' => false]]]);
 
-        actingAs($w['lifeshaper'])->put("/dxb/serve/check-ins/{$in->id}/present", ['present' => true, 'revision' => 0])
+        actingAs($w['lifeshaper'])->put(whosInDoor("/check-ins/{$in->id}/present"), ['present' => true, 'revision' => 0])
             ->assertRedirect()->assertSessionHas('error', 'Amara was checked in again — please tap again.');
         expect([$in->fresh()?->isIn(), $in->fresh()?->isPresent(), $in->fresh()?->revision])->toBe([true, false, 1]);
 
-        actingAs($w['lifeshaper'])->get('/dxb/serve/door/whos-in')->assertInertia(fn (AssertableInertia $page) => $page->where('squads.0.children.0.revision', 1));
-        actingAs($w['lifeshaper'])->put("/dxb/serve/check-ins/{$in->id}/present", ['present' => true, 'revision' => 1])->assertSessionMissing('error');
+        actingAs($w['lifeshaper'])->get(whosInDoor('/whos-in'))->assertInertia(fn (AssertableInertia $page) => $page->where('squads.0.children.0.revision', 1));
+        actingAs($w['lifeshaper'])->put(whosInDoor("/check-ins/{$in->id}/present"), ['present' => true, 'revision' => 1])->assertSessionMissing('error');
         expect($in->fresh()?->isPresent())->toBeTrue();
     });
 
-    it('marks only at a satellite the Role covers, only today, in this church, and needs a yes or no @story#120', function (): void {
+    it('marks only a Check-in of the Session at the address, at a satellite the Role covers, in this church, and needs a yes or no @story#120', function (): void {
         $w = whosInChurch();
         $atHouse = checkedIn(sessionOf(Schedule::query()->where('satellite_id', $w['house']->id)->sole()), $w['visitor']);
         $lastWeek = checkedIn(sessionOf($w['onePm'], '2026-10-24'), $w['amara']);
-        $today = checkedIn(sessionOf($w['onePm']), $w['sofia']);
+        $today = checkedIn(whosInSession(), $w['sofia']);
 
-        actingAs($w['lifeshaper'])->put("/dxb/serve/check-ins/{$atHouse->id}/present", ['present' => true, 'revision' => 0])->assertNotFound();
-        actingAs($w['lifeshaper'])->put("/house/serve/check-ins/{$atHouse->id}/present", ['present' => true, 'revision' => 0])->assertNotFound();
-        actingAs($w['lifeshaper'])->put("/dxb/serve/check-ins/{$lastWeek->id}/present", ['present' => true, 'revision' => 0])->assertNotFound();
+        actingAs($w['lifeshaper'])->put(whosInDoor("/check-ins/{$atHouse->id}/present"), ['present' => true, 'revision' => 0])->assertNotFound();
+        $houseDoor = $atHouse->session->code;
+        actingAs($w['lifeshaper'])->put("/{$houseDoor}/check-ins/{$atHouse->id}/present", ['present' => true, 'revision' => 0])->assertNotFound();
+        actingAs($w['lifeshaper'])->put(whosInDoor("/check-ins/{$lastWeek->id}/present"), ['present' => true, 'revision' => 0])->assertNotFound();
         $other = church(['slug' => 'other']);
         $otherSatellite = satelliteOf($other, ['slug' => 'other']);
-        actingAs(staffMember(RoleEnum::Admin, atSatellite($otherSatellite)))->put("/other/serve/check-ins/{$today->id}/present", ['present' => true, 'revision' => 0])->assertNotFound();
-        actingAs($w['lifeshaper'])->put("/dxb/serve/check-ins/{$today->id}/present", [])->assertSessionHasErrors(['present', 'revision']);
+        actingAs(staffMember(RoleEnum::Admin, atSatellite($otherSatellite)))->put(whosInDoor("/check-ins/{$today->id}/present"), ['present' => true, 'revision' => 0])->assertNotFound();
+        actingAs($w['lifeshaper'])->put(whosInDoor("/check-ins/{$today->id}/present"), [])->assertSessionHasErrors(['present', 'revision']);
 
         expect(CheckIn::query()->whereNotNull('present_at')->count())->toBe(0);
     });
@@ -265,8 +261,8 @@ describe('marking a child present', function (): void {
 describe('confirming a head count', function (): void {
     it('confirms a Squad\'s head count with who and when, saying nothing — the Squad\'s line says it — and replaces it when confirmed again @story#121', function (): void {
         $w = whosInChurch();
-        $in = checkedIn(sessionOf($w['onePm']), $w['amara']);
-        $url = "/dxb/serve/classes/{$w['onePm']->id}/squads/{$in->squad_id}/head-count";
+        $in = checkedIn(whosInSession(), $w['amara']);
+        $url = whosInDoor("/squads/{$in->squad_id}/head-count");
 
         actingAs($w['lifeshaper'])->put($url, ['count' => 2])->assertRedirect()->assertSessionMissing('success')->assertSessionHasNoErrors();
         travelTo(CarbonImmutable::parse('2026-10-31 13:20:00', 'Asia/Dubai'));
@@ -274,7 +270,7 @@ describe('confirming a head count', function (): void {
 
         $row = SquadHeadCount::query()->sole();
         expect([$row->head_count, $row->counted_by, $row->squad_id])->toBe([1, $w['lifeshaper']->id, $in->squad_id]);
-        actingAs($w['lifeshaper'])->get('/dxb/serve/door/whos-in')->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($w['lifeshaper'])->get(whosInDoor('/whos-in'))->assertInertia(fn (AssertableInertia $page) => $page
             ->where('squads.0.head_count.count', 1)
             ->where('squads.0.head_count.counted_at', '13:20')
             ->where('squads.0.head_count.counted_by', explode(' ', $w['lifeshaper']->name)[0]));
@@ -282,14 +278,14 @@ describe('confirming a head count', function (): void {
 
     it('sends the count beside who is in NOW, so a later Undo shows as a mismatch on the next load @story#122', function (): void {
         $w = whosInChurch();
-        $session = sessionOf($w['onePm']);
+        $session = whosInSession();
         $amara = checkedIn($session, $w['amara'], ['present_at' => now()]);
         $sofia = checkedIn($session, $w['sofia']);
-        actingAs($w['lifeshaper'])->put("/dxb/serve/classes/{$w['onePm']->id}/squads/{$amara->squad_id}/head-count", ['count' => 2]);
+        actingAs($w['lifeshaper'])->put(whosInDoor("/squads/{$amara->squad_id}/head-count"), ['count' => 2]);
 
-        actingAs($w['lifeshaper'])->put("/dxb/serve/check-ins/{$sofia->id}/undo");
+        actingAs($w['lifeshaper'])->put(whosInDoor("/check-ins/{$sofia->id}/undo"));
 
-        actingAs($w['lifeshaper'])->get('/dxb/serve/door/whos-in')->assertInertia(fn (AssertableInertia $page) => $page
+        actingAs($w['lifeshaper'])->get(whosInDoor('/whos-in'))->assertInertia(fn (AssertableInertia $page) => $page
             ->where('squads.0.count', 1)
             ->where('squads.0.head_count.count', 2)
             ->where('squads.0.children', [['id' => $amara->id, 'nickname' => 'Amara', 'revision' => 0, 'short_name' => 'Amara Cruz', 'has_allergies' => true, 'present' => true]]));
@@ -297,12 +293,12 @@ describe('confirming a head count', function (): void {
 
     it('keeps ONE head count when two leaders confirm the same Squad at the same moment, through the whole request — first count or a later one @story#121', function (bool $counted): void {
         $w = whosInChurch();
-        $in = checkedIn(sessionOf($w['onePm']), $w['amara']);
+        $in = checkedIn(whosInSession(), $w['amara']);
         if ($counted) {
             SquadHeadCount::factory()->create(['session_id' => $in->session_id, 'squad_id' => $in->squad_id, 'head_count' => 9]);
         }
         $other = staffMember(RoleEnum::Lifeshaper, atSatellite($w['dxb']));
-        $url = "/dxb/serve/classes/{$w['onePm']->id}/squads/{$in->squad_id}/head-count";
+        $url = whosInDoor("/squads/{$in->squad_id}/head-count");
 
         withCommittedWorld(function () use ($w, $other, $url): void {
             $answers = atTheSameTime(
@@ -316,45 +312,40 @@ describe('confirming a head count', function (): void {
         });
     })->with(['no count yet' => [false], 'already counted' => [true]]);
 
-    it('refuses before the class has a Session, for a Squad with no one in, and another day\'s, satellite\'s or church\'s class @story#123', function (): void {
+    it('refuses a Squad with no one in, and another satellite\'s or church\'s Session @story#123', function (): void {
         $w = whosInChurch();
         $girls = Squad::query()->where('satellite_id', $w['dxb']->id)->where('level', 2)->where('gender', 'girl')->sole();
         $put = fn (User $who, string $url) => actingAs($who)->put($url, ['count' => 2])->assertNotFound();
 
-        actingAs($w['lifeshaper'])->put("/dxb/serve/classes/{$w['onePm']->id}/squads/{$girls->id}/head-count", ['count' => 2])
-            ->assertSessionHas('error', '1PM is not open yet.');   // not opened yet (spec item 15)
-
-        $session = sessionOf($w['onePm']);
+        $session = whosInSession();
         checkedIn($session, $w['ben']);
         checkedIn($session, $w['sofia'], ['undone_at' => now()]);
-        $put($w['lifeshaper'], "/dxb/serve/classes/{$w['onePm']->id}/squads/{$girls->id}/head-count");   // only an undone child
+        $put($w['lifeshaper'], whosInDoor("/squads/{$girls->id}/head-count"));   // only an undone child
 
         $house = Schedule::query()->where('satellite_id', $w['house']->id)->sole();
         $atHouse = checkedIn(sessionOf($house), $w['visitor']);
-        $put($w['lifeshaper'], "/dxb/serve/classes/{$house->id}/squads/{$atHouse->squad_id}/head-count");
-        $sunday = Schedule::query()->where('name', 'Sunday school')->sole();
-        $put($w['lifeshaper'], "/dxb/serve/classes/{$sunday->id}/squads/{$girls->id}/head-count");
-        $other = church(['slug' => 'other']);
-        $otherSatellite = satelliteOf($other, ['slug' => 'other']);
-        $put(staffMember(RoleEnum::Admin, atSatellite($otherSatellite)), "/other/serve/classes/{$w['onePm']->id}/squads/{$atHouse->squad_id}/head-count");
+        $put($w['lifeshaper'], "/{$atHouse->session->code}/squads/{$atHouse->squad_id}/head-count");   // not their satellite
+        $put($w['lifeshaper'], whosInDoor("/squads/{$atHouse->squad_id}/head-count"));                 // House's Squad, not 1PM's
+        $otherSatellite = satelliteOf(church(['slug' => 'other']), ['slug' => 'other']);
+        $put(staffMember(RoleEnum::Admin, atSatellite($otherSatellite)), whosInDoor("/squads/{$girls->id}/head-count"));
 
         expect(SquadHeadCount::query()->count())->toBe(0);
     });
 
     it('needs a whole number from 0 to 200 @story#123', function (mixed $count): void {
         $w = whosInChurch();
-        $in = checkedIn(sessionOf($w['onePm']), $w['amara']);
+        $in = checkedIn(whosInSession(), $w['amara']);
 
-        actingAs($w['lifeshaper'])->put("/dxb/serve/classes/{$w['onePm']->id}/squads/{$in->squad_id}/head-count", ['count' => $count])
+        actingAs($w['lifeshaper'])->put(whosInDoor("/squads/{$in->squad_id}/head-count"), ['count' => $count])
             ->assertSessionHasErrors(['count' => 'Please type a number from 0 to 200.']);
         expect(SquadHeadCount::query()->count())->toBe(0);
     })->with(['none' => [null], 'below 0' => [-1], 'over 200' => [201], 'not whole' => [2.5], 'not a number' => ['four'], 'a yes (JSON true is not 1)' => [true]]);
 
     it('takes 0 and 200, the ends of the range @story#121', function (int $count): void {
         $w = whosInChurch();
-        $in = checkedIn(sessionOf($w['onePm']), $w['amara']);
+        $in = checkedIn(whosInSession(), $w['amara']);
 
-        actingAs($w['lifeshaper'])->put("/dxb/serve/classes/{$w['onePm']->id}/squads/{$in->squad_id}/head-count", ['count' => $count])->assertSessionHasNoErrors();
+        actingAs($w['lifeshaper'])->put(whosInDoor("/squads/{$in->squad_id}/head-count"), ['count' => $count])->assertSessionHasNoErrors();
         expect(SquadHeadCount::query()->sole()->head_count)->toBe($count);
     })->with([0, 200]);
 });
@@ -362,16 +353,16 @@ describe('confirming a head count', function (): void {
 describe('a closed Session (spec item 15)', function (): void {
     it('shows Who\'s in, read-only: no present taps, no head count @story#202', function (): void {
         $w = whosInChurch();
-        $session = sessionOf($w['onePm']);
+        $session = whosInSession();
         $in = checkedIn($session, $w['amara']);
         $session->update(['closed_at' => now()]);
 
-        actingAs($w['lifeshaper'])->get('/dxb/serve/door/whos-in')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
-            ->where('session_state', 'closed')
+        actingAs($w['lifeshaper'])->get(whosInDoor('/whos-in'))->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
+            ->where('session.state', 'closed')
             ->has('squads', 1));
-        actingAs($w['lifeshaper'])->put("/dxb/serve/check-ins/{$in->id}/present", ['present' => true, 'revision' => $in->revision])
+        actingAs($w['lifeshaper'])->put(whosInDoor("/check-ins/{$in->id}/present"), ['present' => true, 'revision' => $in->revision])
             ->assertSessionHas('error', '1PM is closed.');
-        actingAs($w['lifeshaper'])->put("/dxb/serve/classes/{$w['onePm']->id}/squads/{$in->squad_id}/head-count", ['count' => 3])
+        actingAs($w['lifeshaper'])->put(whosInDoor("/squads/{$in->squad_id}/head-count"), ['count' => 3])
             ->assertSessionHas('error', '1PM is closed.');
 
         expect([$in->fresh()?->present_at, SquadHeadCount::query()->count()])->toBe([null, 0]);

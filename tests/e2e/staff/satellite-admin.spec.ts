@@ -45,7 +45,7 @@ test("a satellite admin cannot open another satellite's Admin or Serve — not f
     // Their own satellite opens; Dubai's address is not found for them (spec item 10).
     await page.goto(`/${SHARJAH}/admin/families`)
     await expect(page.getByRole('heading', { name: 'Families', level: 1 })).toBeVisible()
-    for (const path of ['admin/families', 'admin/people', 'serve/door']) {
+    for (const path of ['admin/families', 'admin/people', 'serve']) {
         expect((await page.goto(`/${DUBAI}/${path}`))?.status(), path).toBe(404)
     }
 })
@@ -95,6 +95,6 @@ test('a Lifeshaper does not get the People page @story#75', async ({ browser }) 
     await expect(page.getByRole('link', { name: 'People' })).toHaveCount(0)
     await page.goto(`/${DUBAI}/admin/people`)
     // Only serving here: an Admin page sends them to this satellite's Serve (spec item 10).
-    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/door$`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve$`))
     await lifeshaper.close()
 })

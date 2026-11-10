@@ -101,8 +101,10 @@ export type SatelliteSchedules = App.Domains.Schedule.DataObjects.SatelliteSched
 export type SatelliteLink = App.Domains.Church.DataObjects.SatelliteLinkData
 export type SatelliteLinks = App.Domains.Church.DataObjects.SatelliteLinksData
 export type PosterLink = App.Domains.Church.DataObjects.PosterLinkData
-/** The door (DECISIONS 2026-10-26/27): one of today's classes, a family found, one of its children, a child checked in, a child's health. */
-export type DoorClass = App.Domains.CheckIn.DataObjects.DoorClassData
+/** The door (DECISIONS 2026-10-26/27): a family found, one of its children, a child checked in, a child's health. */
+/** The Session a door or Who's in page is at (spec item 16), and one of today's classes on Serve's first page. */
+export type DoorSession = App.Domains.CheckIn.DataObjects.DoorSessionData
+export type ServeClass = App.Domains.CheckIn.DataObjects.ServeClassData
 /** Where today's Session of a class stands (spec item 15): not open yet, open, or closed. */
 export type SessionState = App.Enums.SessionStateEnum
 export type DoorFamily = App.Domains.CheckIn.DataObjects.DoorFamilyData

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Data\Models\Session;
 use App\Data\Models\User;
 use App\Domains\CheckIn\Jobs\CreateSessionJob;
+use App\Foundation\Support\SatelliteCode;
 use Carbon\CarbonImmutable;
 
 use function Pest\Laravel\travelTo;
@@ -30,6 +31,15 @@ it('makes the class\'s Session for the date, at the class\'s satellite, open and
     expect([$session?->church_id, $session?->satellite_id, $session?->schedule_id, $session?->date->toDateString()])
         ->toBe([$class->church_id, $class->satellite_id, $class->id, '2026-10-31'])
         ->and([$session?->opened_at->toDateTimeString(), $session?->opened_by, $session?->closed_at])->toBe(['2026-10-31 08:00:00', $admin->id, null]);
+});
+
+it('gives the Session a code of 8 letters and digits — its own address (spec item 16)', function (): void {
+    $satellite = satelliteOf(church());
+    $onePm = (new CreateSessionJob(schedule: scheduleAt($satellite, ['name' => '1PM']), date: CarbonImmutable::parse('2026-10-31'), by: null))->handle();
+    $sevenPm = (new CreateSessionJob(schedule: scheduleAt($satellite, ['name' => '7PM', 'starts_at' => '19:00']), date: CarbonImmutable::parse('2026-10-31'), by: null))->handle();
+
+    expect(SatelliteCode::looksLikeOne($onePm->code))->toBeTrue()
+        ->and($onePm->code)->not->toBe($sevenPm->code);
 });
 
 it('gives back the Session already there, and makes another only for another date or class', function (): void {

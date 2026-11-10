@@ -1,4 +1,5 @@
 import { type Page } from '@playwright/test'
+import { serveClass } from '../support/door'
 import { navTo } from '../support/menu'
 import { checkLayout, expect, test } from '../support/test'
 import {
@@ -89,7 +90,7 @@ test("an admin sees CCF Dubai's classes, adds a weekly one, edits its time and r
     await admin.close()
 })
 
-test('an admin adds a one-time class: the door offers it on its date and not the day after @story#97 @story#95', async ({
+test('an admin adds a one-time class: Serve lists it on its date and not the day after @story#97 @story#95', async ({
     browser,
 }) => {
     const admin = await browser.newContext({ storageState: sessionFile('admin') })
@@ -114,9 +115,9 @@ test('an admin adds a one-time class: the door offers it on its date and not the
         /^.*Sat \d{1,2} \w{3} \d{4} · 22:00–23:00/,
     )
 
-    // On its date the door offers it…
-    await page.goto(`/${DUBAI}/serve/door`)
-    await expect(page.getByTestId('door-class').getByRole('radio', { name })).toBeVisible()
+    // On its date Serve lists it, not open yet…
+    await page.goto(`/${DUBAI}/serve`)
+    await expect(serveClass(page, name).getByTestId('serve-class-state')).toHaveText('Not open yet')
 
     // …and the day after it does not; Classes lists it under "Past".
     const later = await browser.newContext({
@@ -124,13 +125,10 @@ test('an admin adds a one-time class: the door offers it on its date and not the
         extraHTTPHeaders: DAY_AFTER,
     })
     const after = await later.newPage()
-    await after.goto(`/${DUBAI}/serve/door`)
-    await expect(after).toHaveURL(new RegExp(`/${DUBAI}/serve/door$`))
+    await after.goto(`/${DUBAI}/serve`)
+    await expect(after).toHaveURL(new RegExp(`/${DUBAI}/serve$`))
     await expect(after.getByTestId('no-class')).toBeVisible()
-    await expect(
-        after.getByTestId('door-class').getByRole('radio', { name: CLASSES.onePm.name }),
-    ).toHaveCount(0)
-    await expect(after.getByRole('radio', { name })).toHaveCount(0)
+    await expect(after.getByTestId('serve-class')).toHaveCount(0)
     await after.goto(`/${DUBAI}/admin/classes`)
     await expect(
         after.getByTestId('past-schedules').getByTestId('schedule').filter({ hasText: name }),
@@ -164,11 +162,11 @@ test("a satellite admin sees only their own satellite's classes @story#95", asyn
 test('a Lifeshaper has no Classes menu and no Classes page @story#96', async ({ browser }) => {
     const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const page = await lifeshaper.newPage()
-    await page.goto(`/${DUBAI}/serve/door`)
+    await page.goto(`/${DUBAI}/serve`)
     await expect(page.getByRole('link', { name: 'Classes' })).toHaveCount(0)
 
     await page.goto(`/${DUBAI}/admin/classes`)
     // Only serving here: an Admin page sends them to this satellite's Serve (spec item 10).
-    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/door$`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve$`))
     await lifeshaper.close()
 })

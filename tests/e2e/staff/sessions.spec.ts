@@ -1,4 +1,5 @@
 import { type Locator, type Page } from '@playwright/test'
+import { DOOR_URL, WHOS_IN_URL, goToDoor, serveClass } from '../support/door'
 import { checkLayout, expect, test } from '../support/test'
 import {
     DOOR,
@@ -29,18 +30,11 @@ function child(card: Locator, nickname: string): Locator {
         .filter({ has: card.page().getByTestId('child-name').getByText(nickname, { exact: true }) })
 }
 
-async function pickClass(page: Page, name: string): Promise<void> {
-    await page.goto(`/${DUBAI}/serve/door`)
-    await page.getByTestId('door-class').getByRole('radio', { name }).click()
-    await expect(page.getByTestId('door-class').getByRole('radio', { name })).toHaveAttribute(
-        'aria-checked',
-        'true',
-    )
-}
-
 test('an admin opens a class, a Lifeshaper checks a child in, the admin closes it and the next check-in is refused @story#202 @story#204 @story#106 @story#109', async ({
     browser,
 }, info) => {
+    // Two people, a class made, opened, closed and retired: late in a full run Safari takes over a minute.
+    test.setTimeout(90_000)
     const admin = await browser.newContext({ storageState: sessionFile('admin') })
     const adminPage = await admin.newPage()
 
@@ -58,22 +52,25 @@ test('an admin opens a class, a Lifeshaper checks a child in, the admin closes i
     await expect(adminPage.getByTestId('flash-success')).toContainText(`Added "${name}"`)
     const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     try {
-        // Not open yet: a Lifeshaper sees no search, and no Open button.
+        // Not open yet: on Serve a Lifeshaper sees the class, but no way to its door, and no Open button.
         const door = await lifeshaper.newPage()
-        await pickClass(door, name)
-        await expect(door.getByTestId('session-controls')).toContainText(`${name} is not open yet.`)
-        await expect(door.getByTestId('session-open')).toHaveCount(0)
-        await expect(door.getByTestId('door-search')).toHaveCount(0)
+        await door.goto(`/${DUBAI}/serve`)
+        const waiting = serveClass(door, name)
+        await expect(waiting.getByTestId('serve-class-state')).toHaveText('Not open yet')
+        await expect(waiting.getByTestId('serve-door')).toHaveCount(0)
+        await expect(waiting.getByTestId('serve-open')).toHaveCount(0)
 
-        // The admin opens it.
-        await pickClass(adminPage, name)
+        // The admin opens it from its card on Serve, and lands on its own door.
+        await adminPage.goto(`/${DUBAI}/serve`)
         await checkLayout(adminPage)
-        await adminPage.getByTestId('session-open').click()
+        await serveClass(adminPage, name).getByTestId('serve-open').click()
+        await expect(adminPage).toHaveURL(DOOR_URL)
         await expect(adminPage.getByTestId('flash-success')).toContainText(`${name} is open.`)
+        await expect(adminPage.getByTestId('door-heading')).toHaveText(name)
         await expect(adminPage.getByTestId('session-state')).toHaveText('Open')
 
-        // The Lifeshaper checks Amara in.
-        await pickClass(door, name)
+        // The Lifeshaper goes from Serve to its door and checks Amara in.
+        await goToDoor(door, name)
         await door.getByTestId('door-search').fill('Cruz')
         await door.getByTestId('door-search').press('Enter')
         const card = family(door, info.project.name)
@@ -82,6 +79,11 @@ test('an admin opens a class, a Lifeshaper checks a child in, the admin closes i
         await expect(door.getByTestId('flash-success')).toContainText(
             `Checked in ${DOOR.cruz.allergic}.`,
         )
+        // Who's in, at the same code (spec item 16), lists her — on a second tab, so the door keeps its search.
+        const roll = await lifeshaper.newPage()
+        await roll.goto(door.url().replace(/\/checkin.*$/, '/whos-in'))
+        await expect(roll).toHaveURL(WHOS_IN_URL)
+        await expect(roll.getByTestId('child-name')).toHaveText([DOOR.cruz.allergic])
 
         // Ben is ticked — and meanwhile the admin closes the class, after a second tap.
         await child(card, DOOR.cruz.active).getByTestId('tick-child').check()
@@ -105,6 +107,10 @@ test('an admin opens a class, a Lifeshaper checks a child in, the admin closes i
         ])
         await expect(door.getByTestId('checked-in-undo')).toHaveCount(0)
         await expect(door.getByTestId('bar-satellite')).toContainText(SATELLITES.dxb)
+        // A closed class's Who's in stays readable — no taps (spec item 16).
+        await roll.reload()
+        await expect(roll.getByTestId('child-name')).toHaveText([DOOR.cruz.allergic])
+        await expect(roll.getByTestId('present-toggle')).toBeDisabled()
     } finally {
         // Retired even when a step failed, so the door's Saturday is left to the other journeys.
         await adminPage.goto(`/${DUBAI}/admin/classes`)

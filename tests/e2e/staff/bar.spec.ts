@@ -42,7 +42,7 @@ test('a Lifeshaper of one satellite sees its name in the bar, and no dropdown', 
 }) => {
     const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const page = await lifeshaper.newPage()
-    await page.goto(`/${DUBAI}/serve/door`)
+    await page.goto(`/${DUBAI}/serve`)
 
     await expect(page.getByTestId('bar-satellite')).toHaveText(SATELLITES.dxb)
     await expect(page.locator('button[data-testid="bar-satellite"]')).toHaveCount(0)

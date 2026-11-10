@@ -1,6 +1,7 @@
 import { type Locator, type Page } from '@playwright/test'
+import { DOOR_URL, WHOS_IN_URL, goToDoor } from '../support/door'
 import { expect, test } from '../support/test'
-import { DUBAI, CLASSES, DOOR, ROLL_CALL, sessionFile, type DoorProject } from '../support/world'
+import { CLASSES, DOOR, ROLL_CALL, sessionFile, type DoorProject } from '../support/world'
 
 /*
  * Journey — a Squad leader's roll call, on their phone (DECISIONS 2026-10-28): check two girls in at 1PM, switch to
@@ -10,10 +11,6 @@ import { DUBAI, CLASSES, DOOR, ROLL_CALL, sessionFile, type DoorProject } from '
  * its own Reyes girls (E2ESeeder) and reads "N of M present" before comparing after.
  */
 test.use({ storageState: sessionFile('lifeshaper') })
-
-function onePm(page: Page): Locator {
-    return page.getByTestId('door-class').getByRole('radio', { name: CLASSES.onePm.name })
-}
 
 function child(page: Page, nickname: string): Locator {
     return page
@@ -43,10 +40,8 @@ test("marks children present by Squad on Who's in, keeps the class across the ta
     const project = info.project.name as DoorProject
     const [sofia, isabel] = ROLL_CALL.girls[project]
 
-    // At the door, 1PM: check this browser's two Reyes girls in.
-    await page.goto(`/${DUBAI}/serve/door`)
-    await onePm(page).click()
-    await expect(onePm(page)).toHaveAttribute('aria-checked', 'true')
+    // At 1PM's door (from Serve): check this browser's two Reyes girls in.
+    await goToDoor(page, CLASSES.onePm.name)
     await page.getByTestId('door-search').fill('Reyes')
     await page.getByTestId('door-search').press('Enter')
     const card = page
@@ -67,7 +62,8 @@ test("marks children present by Squad on Who's in, keeps the class across the ta
     // Who's in, still 1PM; pick Level 2 Girls.
     await page.getByTestId('door-tab-whos-in').click()
     await expect(page.getByTestId('door-tab-whos-in')).toHaveAttribute('aria-current', 'page')
-    await expect(onePm(page)).toHaveAttribute('aria-checked', 'true')
+    await expect(page).toHaveURL(WHOS_IN_URL)
+    await expect(page.getByTestId('door-heading')).toHaveText(CLASSES.onePm.name)
     const chip = page.getByTestId('squad-picker').getByRole('radio', { name: ROLL_CALL.squad })
     await chip.click()
     await expect(chip).toHaveAttribute('aria-checked', 'true')
@@ -132,7 +128,8 @@ test("marks children present by Squad on Who's in, keeps the class across the ta
     // Back on Check in, the class is still 1PM. Undo Isabel there: she leaves Who's in, and her mark with her.
     await page.getByTestId('door-tab-check-in').click()
     await expect(page.getByTestId('door-tab-check-in')).toHaveAttribute('aria-current', 'page')
-    await expect(onePm(page)).toHaveAttribute('aria-checked', 'true')
+    await expect(page).toHaveURL(DOOR_URL)
+    await expect(page.getByTestId('door-heading')).toHaveText(CLASSES.onePm.name)
     await page
         .getByTestId('checked-in-row')
         .filter({ has: page.getByTestId('checked-in-name').getByText(isabel, { exact: true }) })

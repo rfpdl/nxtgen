@@ -19,7 +19,7 @@ test('a staff member sets a backup password, signs in with it on /loginp — nev
     const password = `church-morning-${Date.now()}`
 
     await signInByEmail(page, email)
-    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/door`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve$`))
     await (await menuOf(page)).getByTestId('backup-password').click()
     await page.getByTestId('new-password').fill(password)
     await page.getByTestId('new-password-confirm').fill(password)
@@ -41,14 +41,14 @@ test('a staff member sets a backup password, signs in with it on /loginp — nev
 
     await phone.getByTestId('password-password').fill(password)
     await phone.getByTestId('password-submit').click()
-    await expect(phone).toHaveURL(new RegExp(`/${DUBAI}/serve/door`))
+    await expect(phone).toHaveURL(new RegExp(`/${DUBAI}/serve$`))
 
     await phone.goto('/loginc')
     await expect(phone).toHaveURL(/\/login$/)
     await expect(phone.getByTestId('flash-success')).toHaveText(
         'Signed out. This device is cleared.',
     )
-    await phone.goto(`/${DUBAI}/serve/door`)
+    await phone.goto(`/${DUBAI}/serve`)
     await expect(phone).toHaveURL(/\/login$/)
     await other.close()
 })

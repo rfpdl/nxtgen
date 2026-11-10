@@ -232,9 +232,9 @@ describe('the Attendance page', function (): void {
         $parent = User::query()->whereHas('guardians')->firstOrFail();
 
         // DECISIONS 2026-11-08: a Lifeshaper opening an Admin page is sent to the door.
-        actingAs($lifeshaper)->get('/dxb/admin/attendance')->assertRedirect('/dxb/serve/door');
-        actingAs($lifeshaper)->get('/dxb/serve/door')->assertInertia(fn (AssertableInertia $page) => $page->where('church_nav.can_see_attendance', false));
-        actingAs($admin)->get('/dxb/serve/door')->assertInertia(fn (AssertableInertia $page) => $page->where('church_nav.can_see_attendance', true));
+        actingAs($lifeshaper)->get('/dxb/admin/attendance')->assertRedirect('/dxb/serve');
+        actingAs($lifeshaper)->get('/dxb/serve')->assertInertia(fn (AssertableInertia $page) => $page->where('church_nav.can_see_attendance', false));
+        actingAs($admin)->get('/dxb/serve')->assertInertia(fn (AssertableInertia $page) => $page->where('church_nav.can_see_attendance', true));
         actingAs($parent)->get('/dxb/admin/attendance')->assertNotFound();
         auth()->logout();
         get('/dxb/admin/attendance')->assertRedirect('/login');
@@ -271,7 +271,7 @@ describe('the Attendance Excel', function (): void {
         actingAs(staffMember(RoleEnum::Admin, atSatellite($house)))->get("/dxb/admin/attendance/export?class={$onePm->id}&date=2026-10-31")->assertNotFound();
         actingAs($admin)->get("/dxb/admin/attendance/export?class={$theirs->id}&date=2026-10-31")->assertNotFound();
         // DECISIONS 2026-11-08: a Lifeshaper opening an Admin page is sent to the door — never the Excel.
-        actingAs($lifeshaper)->get("/dxb/admin/attendance/export?class={$onePm->id}&date=2026-10-31")->assertRedirect('/dxb/serve/door');
+        actingAs($lifeshaper)->get("/dxb/admin/attendance/export?class={$onePm->id}&date=2026-10-31")->assertRedirect('/dxb/serve');
     });
 });
 

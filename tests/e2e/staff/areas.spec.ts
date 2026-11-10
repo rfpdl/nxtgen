@@ -7,14 +7,14 @@ import { DUBAI, sessionFile } from '../support/world'
  * Families, the QR poster — and NxtGen Admin for admins. The church's address opens each person's own.
  */
 
-test("a Lifeshaper's satellite address opens Serve: the door, Families without Excel, and no Admin @story#42", async ({
+test("a Lifeshaper's satellite address opens Serve: today's classes, Families without Excel, and no Admin @story#42", async ({
     browser,
 }) => {
     const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const page = await lifeshaper.newPage()
 
     await page.goto(`/${DUBAI}`)
-    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/door`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve$`))
     await navTo(page, 'Families')
     await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/families`))
     await expect(page.getByTestId('register-family')).toBeVisible()
@@ -23,11 +23,11 @@ test("a Lifeshaper's satellite address opens Serve: the door, Families without E
 
     await page.goto(`/${DUBAI}/admin/families`)
     // Only serving here: an Admin page sends them to this satellite's Serve (spec item 10).
-    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/door$`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve$`))
     await lifeshaper.close()
 })
 
-test("an admin's satellite address opens Admin, and the menu goes to Serve's door and back @story#42", async ({
+test("an admin's satellite address opens Admin, and the menu goes to Serve and back @story#42", async ({
     browser,
 }) => {
     const admin = await browser.newContext({ storageState: sessionFile('admin') })
@@ -38,7 +38,7 @@ test("an admin's satellite address opens Admin, and the menu goes to Serve's doo
     await expect(page.getByTestId('export')).toBeVisible()
 
     await navTo(page, 'Serve')
-    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve/door`))
+    await expect(page).toHaveURL(new RegExp(`/${DUBAI}/serve$`))
     await navTo(page, 'Admin')
     await expect(page).toHaveURL(new RegExp(`/${DUBAI}/admin/families`))
     await admin.close()

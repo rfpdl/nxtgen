@@ -21,7 +21,8 @@ const props = withDefaults(
     defineProps<{
         family: DoorFamily
         levels: LevelOption[]
-        classId: number | null
+        /** The Session's code (spec item 16); null where no class is open to check in to. */
+        sessionCode: string | null
         healths: Record<number, ChildHealth | null>
         /** The child ONE name card named exactly (slice 3): ticked to start with, so "Check in 1 child" is one tap. */
         preTicked?: number[]
@@ -79,7 +80,7 @@ const label = computed(() => {
 })
 
 function checkIn(): void {
-    if (props.classId === null || !ready.value) {
+    if (props.sessionCode === null || !ready.value) {
         return
     }
     const payload: CheckInInput = {
@@ -90,7 +91,7 @@ function checkIn(): void {
         })),
     }
     sending.value = true
-    router.post(route('serve.door.check-in', [satellite.value.slug, props.classId]), payload, {
+    router.post(route('session.check-ins.store', props.sessionCode), payload, {
         preserveScroll: true,
         onSuccess: () => {
             for (const pick of Object.values(picks)) {
@@ -104,11 +105,7 @@ function checkIn(): void {
 }
 
 function undo(checkInId: number): void {
-    router.put(
-        route('serve.door.undo', [satellite.value.slug, checkInId]),
-        {},
-        { preserveScroll: true },
-    )
+    router.put(route('session.undo', [props.sessionCode, checkInId]), {}, { preserveScroll: true })
 }
 </script>
 
@@ -125,7 +122,7 @@ function undo(checkInId: number): void {
                     v-model:make-active="picks[child.id]!.makeActive"
                     :child="child"
                     :levels="levels"
-                    :can-check-in="classId !== null"
+                    :can-check-in="sessionCode !== null"
                     :health="healths[child.id]"
                     :family-href="familyHref"
                     @undo="undo"
@@ -134,7 +131,7 @@ function undo(checkInId: number): void {
             </template>
         </ul>
         <AppButton
-            v-if="classId !== null"
+            v-if="sessionCode !== null"
             size="lg"
             block
             class="mt-2 mb-1.5"

@@ -68,6 +68,7 @@ function addressOf(Route $route, AccessWorld $world): string
 {
     $values = [
         'satellite' => $world->home->slug,
+        'session' => $world->checkIn->session->code,
         'family' => (string) $world->family->id,
         'child' => (string) $world->child->id,
         'purpose' => 'login',

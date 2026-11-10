@@ -47,6 +47,8 @@ function crossChurchOnPurpose(): array
         'CreateSatelliteJob.php — Squad' => 'Squad::createChartFor makes the new satellite\'s own Squads, each in its church — it reads nothing (as ChurchSeeder).',
         'GetOpenSatellitesJob.php — Satellite' => '"Pick your satellite" and the bar\'s switch: the satellites this login may open, in any church (Satellite::openTo); each carries its church.',
         'GetOwnGuardianJob.php — Guardian' => 'The parent\'s own page, `/family`: the address names no church, so the church is read FROM the login\'s own guardian row (RequireGuardian).',
+        'GetSessionByCodeJob.php — Session' => 'A Session\'s address is its code (spec item 16), naming no church or satellite: the satellite is read FROM the Session (codes are unique), then RequireSessionAssignment asks for a Role there.',
+        'CreateSessionJob.php — Session' => 'A new Session\'s code must be nobody\'s, in any church: its address names a Session and never a church (spec item 16).',
         'GetSatelliteByCodeJob.php — Satellite' => 'A QR poster\'s registration code (spec item 7) names a satellite and never a church: the church is read FROM the satellite (codes are unique), and the page forwards to its address.',
         'GetSatelliteBySlugJob.php — Satellite' => 'The address names a satellite and never a church (spec item 5): the church is read FROM the satellite (its slug is unique), then every id in the address is looked up within it (RouteBindingServiceProvider).',
         'GetChildWithFamilyJob.php — Child' => 'A photo link carries only the child id: the church is read FROM the child, then the viewer is checked against it (ShowChildPhotoFeature).',

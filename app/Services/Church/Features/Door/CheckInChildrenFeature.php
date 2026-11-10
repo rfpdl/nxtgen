@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Church\Features\Door;
 
-use App\Data\Models\Schedule;
-use App\Domains\CheckIn\Jobs\GetSessionJob;
+use App\Data\Models\Session;
 use App\Domains\Church\Jobs\GetChurchTodayJob;
 use App\Domains\Family\Jobs\GetChurchChildrenJob;
 use App\Enums\AccessRowEnum;
@@ -21,8 +20,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Arr;
 
 /**
- * "Check in N children" at the door (DECISIONS 2026-10-26): the ticked children of a family, into a class meeting
- * today at a satellite the viewer's Role covers, while an admin has it open (spec item 15) — late children too. Any child of the church may be checked in — a visitor joins THIS
+ * "Check in N children" at the door (DECISIONS 2026-10-26): the ticked children of a family, into the Session at
+ * the address (spec item 16; RequireSessionAssignment: a Role covering its class), while an admin has it open (spec
+ * item 15) — late children too. Any child of the church may be checked in — a visitor joins THIS
  * satellite's Squad. Each child has its own result (CheckInChildOperation): the page says who is in and, apart, who
  * was not and why.
  *
@@ -37,25 +37,21 @@ use Illuminate\Support\Arr;
     ],
     unhappyPaths: [
         'story#108' => 'A Graduated child is refused with the reason; an inactive child not made active, and a child with no Level, are not checked in',
-        'story#109' => 'Only a class meeting today at a satellite their Role covers, and only while it is open — not before an admin opens it, nor once closed; only this church\'s children, at least one child and a Level from the chart',
+        'story#109' => 'Only at a Session their Role covers, and only while it is open — not once closed, nor after midnight; only this church\'s children, at least one child and a Level from the chart',
     ],
 )]
 #[AccessRow(AccessRowEnum::CheckIn)]
 final class CheckInChildrenFeature extends BaseChurchFeature
 {
-    public function __construct(private readonly Schedule $schedule) {}
+    public function __construct(private readonly Session $session) {}
 
     public function handle(CheckInInput $input): RedirectResponse
     {
         $church = $this->church();
-        $class = $this->schedule;
-        abort_unless($this->scope()->canCheckInTo($class), 404);
-        $today = $this->run(new GetChurchTodayJob(church: $church));
-        abort_unless($class->meetsOn($today), 404);
+        $session = $this->session;
         // Only while an admin has it open (spec item 15) — the Operation asks again under the Session's lock.
-        $session = $this->run(new GetSessionJob(schedule: $class, date: $today));
-        $refusal = SessionStateEnum::of($session, $today)->refusal($class->name);
-        if ($refusal !== null || $session === null) {
+        $refusal = SessionStateEnum::of($session, $this->run(new GetChurchTodayJob(church: $church)))->refusal($session->schedule->name);
+        if ($refusal !== null) {
             return back()->with('error', $refusal);
         }
 

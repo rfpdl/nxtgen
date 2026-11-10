@@ -69,7 +69,7 @@ describe('the Links page', function (): void {
         // DECISIONS 2026-11-08: a Lifeshaper opening an Admin page is sent to the door — one at both satellites too.
         $both = staffMember(RoleEnum::Lifeshaper, atSatellite($dxb));
         grantRole($both, RoleEnum::Lifeshaper, atSatellite($house));
-        actingAs($both)->get('/dxb/admin/links')->assertRedirect('/dxb/serve/door');
+        actingAs($both)->get('/dxb/admin/links')->assertRedirect('/dxb/serve');
     });
 });
 

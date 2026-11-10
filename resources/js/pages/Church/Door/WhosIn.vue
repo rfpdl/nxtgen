@@ -1,40 +1,35 @@
 <script setup lang="ts">
-import { useSatellite } from '@/composables/useSatellite'
 import AppButton from '@/components/atoms/AppButton.vue'
 import ChoiceChips from '@/components/atoms/ChoiceChips.vue'
 import EmptyState from '@/components/atoms/EmptyState.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
-import DoorClassPicker from '@/components/molecules/DoorClassPicker.vue'
+import PageHeader from '@/components/atoms/PageHeader.vue'
 import DoorTabs from '@/components/molecules/DoorTabs.vue'
 import SessionControls from '@/components/molecules/SessionControls.vue'
 import WhosInSquadCard from '@/components/molecules/WhosInSquadCard.vue'
 import { useRollCall } from '@/composables/useRollCall'
-import type { DoorClass, SessionState, WhosInSquad } from '@/types'
+import type { DoorSession, WhosInSquad } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { route } from 'ziggy-js'
 
 /**
- * Who's in, the door's second tab (roll call, DECISIONS 2026-10-28): the same class picker and day as Check in; the
- * children checked in to the chosen class, by Squad, each Squad with "N of M present"; chips pick one Squad
+ * Who's in, the door's second tab (roll call, DECISIONS 2026-10-28), at the Session's own address (spec item 16:
+ * `/<code>/whos-in`): the class and its date, as on Check in; the children checked in to it, by Squad, each Squad with "N of M present"; chips pick one Squad
  * (`?squad=`) or all. A tap on a child marks them present or unmarks them — shown at once, then confirmed by the
  * server; under each Squad, its head count is confirmed (issue 02). The list refreshes about every 20 seconds, so
  * children checked in at the door appear (useRollCall).
  */
 const props = defineProps<{
-    today: string
-    classes: DoorClass[]
-    class_id: number | null
-    /** Spec item 15: a closed class is looked at, not changed (Roy 2026-11-10). */
-    session_state: SessionState
+    /** The Session at this address (spec item 16); closed, it is looked at, not changed (Roy 2026-11-10). */
+    session: DoorSession
     squads: WhosInSquad[]
     squad_id: number | null
 }>()
 
 const ALL = 'all'
-const satellite = useSatellite()
 const { pending, confirming, countErrors, mark, confirm, stop } = useRollCall(
-    () => satellite.value.slug,
+    () => props.session.code,
 )
 
 const squadChips = computed(() => [
@@ -52,21 +47,14 @@ const shown = computed(() =>
         }),
 )
 
-const className = computed(() => props.classes.find((c) => c.id === props.class_id)?.name ?? '')
+const checkInHref = computed(() => route('session.checkin', props.session.code))
 
-const checkInHref = computed(() =>
-    route('serve.door.show', {
-        satellite: satellite.value.slug,
-        class: props.class_id ?? undefined,
-    }),
-)
-
-/** Another class or Squad: the taps not yet sent are dropped first, so none fires from the next page. */
-function visit(params: { class?: number; squad?: number | null }): void {
+/** Another Squad: the taps not yet sent are dropped first, so none fires from the next page. */
+function visit(params: { squad?: number | null }): void {
     stop()
     router.get(
-        route('serve.door.whos-in', satellite.value.slug),
-        { class: params.class ?? props.class_id ?? undefined, squad: params.squad ?? undefined },
+        route('session.whos-in', props.session.code),
+        { squad: params.squad ?? undefined },
         { preserveScroll: true },
     )
 }
@@ -78,57 +66,51 @@ function pickSquad(id: string | number | null): void {
 
 <template>
     <Head title="Who's in" />
-    <ChurchShell>
+    <ChurchShell title="Who's in">
         <div class="flex flex-col gap-4" data-surface="door">
-            <DoorTabs current="whos-in" :class-id="class_id" />
-            <DoorClassPicker
-                :today="today"
-                :classes="classes"
-                :class-id="class_id"
-                @pick="(id) => visit({ class: id })"
+            <DoorTabs current="whos-in" :code="session.code" />
+            <PageHeader
+                :title="session.name"
+                :sub="`${session.date_label} · ${session.times}`"
+                title-testid="door-heading"
             />
 
-            <template v-if="class_id !== null">
-                <SessionControls
-                    v-if="session_state !== 'open'"
-                    :class-name="className"
-                    :state="session_state"
-                    :can-open="false"
-                />
-                <EmptyState
-                    v-if="squads.length === 0"
-                    title="No one checked in yet"
-                    data-testid="whos-in-empty"
-                >
-                    Children show here, by Squad, once they are checked in at the door.
-                    <template #action>
-                        <AppButton :href="checkInHref" data-testid="go-check-in"
-                            >Go to Check in</AppButton
-                        >
-                    </template>
-                </EmptyState>
-                <template v-else>
-                    <ChoiceChips
-                        label="Squad"
-                        :options="squadChips"
-                        :model-value="squad_id ?? ALL"
-                        data-testid="squad-picker"
-                        @update:model-value="pickSquad"
-                    />
-                    <WhosInSquadCard
-                        v-for="squad in shown"
-                        :key="squad.id"
-                        :squad="squad"
-                        :read-only="session_state !== 'open'"
-                        :confirming="confirming[squad.id] === true"
-                        :count-error="countErrors[squad.id]"
-                        @present="mark"
-                        @confirm="
-                            (count: number) =>
-                                class_id !== null && confirm(class_id, squad.id, count)
-                        "
-                    />
+            <SessionControls
+                v-if="session.state !== 'open'"
+                :class-name="session.name"
+                :state="session.state"
+                :can-open="false"
+            />
+            <EmptyState
+                v-if="squads.length === 0"
+                title="No one checked in yet"
+                data-testid="whos-in-empty"
+            >
+                Children show here, by Squad, once they are checked in at the door.
+                <template #action>
+                    <AppButton :href="checkInHref" data-testid="go-check-in"
+                        >Go to Check in</AppButton
+                    >
                 </template>
+            </EmptyState>
+            <template v-else>
+                <ChoiceChips
+                    label="Squad"
+                    :options="squadChips"
+                    :model-value="squad_id ?? ALL"
+                    data-testid="squad-picker"
+                    @update:model-value="pickSquad"
+                />
+                <WhosInSquadCard
+                    v-for="squad in shown"
+                    :key="squad.id"
+                    :squad="squad"
+                    :read-only="session.state !== 'open'"
+                    :confirming="confirming[squad.id] === true"
+                    :count-error="countErrors[squad.id]"
+                    @present="mark"
+                    @confirm="(count: number) => confirm(squad.id, count)"
+                />
             </template>
         </div>
     </ChurchShell>

@@ -391,28 +391,40 @@ const DOOR_CHILD = ['check_in_id', 'full_name', 'has_allergies', 'id', 'level.na
  */
 const DOOR_CHECK_IN = ['checked_in_at', 'id', 'level.name', 'level.number', 'nickname', 'squad'];
 
-describe('the door', function (): void {
-    it('shows any staff today\'s classes, who is in, and the church-wide families with an allergy flag only — no photo, phone or health detail @story#103 @story#104 @story#116', function (Actor $actor): void {
+/** The Session a door or Who's in page is at (DoorSessionData): its code, class, times, date and state — nothing else. */
+const DOOR_SESSION = ['session.class_id', 'session.code', 'session.date_label', 'session.name', 'session.state', 'session.times'];
+
+describe('Serve\'s first page', function (): void {
+    it('shows any staff today\'s classes — name, times, state, its door\'s code — and nothing about anyone @story#208', function (Actor $actor): void {
         travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
-        // A Role covering Home opens Home's 1PM, which Amara is in; Away's staff see their 7PM, with no one in yet.
-        $home = in_array($actor, Actor::coveringHome(), true);
-        $props = propsOf($actor, fn (AccessWorld $w): string => $home ? "/home-sat/serve/door?class={$w->schedule->id}&q=Amara" : '/home-sat/serve/door?q=Amara');
-        $checkedIn = $home ? prefixed('checked_in.*', DOOR_CHECK_IN) : ['checked_in'];
+        $props = propsOf($actor, fn (AccessWorld $w): string => '/home-sat/serve');
+
+        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, ['today'], prefixed('classes.*', ['can_open', 'code', 'id', 'name', 'state', 'times'])))
+            ->and(forbiddenOnLists($props))->toBe([]);
+    })->with(actors(...Actor::coveringHome()));
+});
+
+describe('the door', function (): void {
+    it('shows staff whose Role covers Home its 1PM — who is in, and the church-wide families with an allergy flag only — no photo, phone or health detail @story#103 @story#104 @story#116 @story#206', function (Actor $actor): void {
+        travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
+        // Home's 1PM, which Amara is in, at its own address (spec item 16).
+        $props = propsOf($actor, fn (AccessWorld $w): string => "/{$w->checkIn->session->code}/checkin?q=Amara");
 
         expect(keyPaths($props))->toBe(allowlist(
             STAFF_FRAME,
-            $checkedIn,
+            prefixed('checked_in.*', DOOR_CHECK_IN),
+            DOOR_SESSION,
             // "Amara" is also tried as a name card; no child's full name is just that, and families are found, so no card.
-            ['can_open', 'class_id', 'classes.*.id', 'classes.*.name', 'classes.*.times', 'levels.*.level', 'levels.*.name', 'query', 'scan', 'session_state', 'today'],
+            ['can_open', 'levels.*.level', 'levels.*.name', 'query', 'scan'],
             prefixed('families.*', ['can_open', 'id', 'name', 'primary_name', 'satellite', ...prefixed('children.*', DOOR_CHILD)]),
         ))
             ->and(forbiddenOnLists($props))->toBe([])
             ->and(data_get($props, 'families.0.children.0.nickname'))->toBe('Amara');
-    })->with(actors(...Actor::staff()));
+    })->with(actors(...Actor::coveringHome()));
 
     it('sends a scanned name card as its code and the children it names — no more than any search @story#128', function (): void {
         travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
-        $props = propsOf(Actor::HomeLifeshaper, fn (AccessWorld $w): string => "/home-sat/serve/door?class={$w->schedule->id}&card=1&q={$w->child->name_key}");
+        $props = propsOf(Actor::HomeLifeshaper, fn (AccessWorld $w): string => "/{$w->checkIn->session->code}/checkin?card=1&q={$w->child->name_key}");
 
         expect(array_values(array_filter(keyPaths($props), fn (string $p): bool => str_starts_with($p, 'scan'))))->toBe(['scan.child_ids.*', 'scan.code', 'scan.match', 'scan.note'])
             ->and(forbiddenOnLists($props))->toBe([])
@@ -424,10 +436,8 @@ describe('the door', function (): void {
         Storage::fake('photos');
         $world = AccessWorld::make();
         $user = $world->user($actor) ?? throw new \LogicException('Staff sign in.');
-        // Each at their own satellite's door; the door finds any child of the church (a visiting family).
-        $at = $actor === Actor::AwayLifeshaper ? 'away' : 'home-sat';
-
-        $response = actingAs($user)->get("/{$at}/serve/door?q=Amara&health={$world->child->id}", [
+        // At Home's 1PM door; the door finds any child of the church.
+        $response = actingAs($user)->get("/{$world->checkIn->session->code}/checkin?q=Amara&health={$world->child->id}", [
             'X-Inertia' => 'true',
             'X-Inertia-Version' => (string) app(HandleInertiaRequests::class)->version(request()),
             'X-Inertia-Partial-Component' => 'Church/Door/Index',
@@ -439,7 +449,7 @@ describe('the door', function (): void {
         expect(array_values(array_filter(keyPaths($props), fn (string $p): bool => ! in_array($p, allowlist(STAFF_FRAME), true))))
             ->toBe(prefixed('health', ['allergies', 'dislikes', 'fears', 'guardian_notes', 'id', 'illnesses', 'nickname']))
             ->and(data_get($props, 'health.allergies'))->toBe('Peanuts');
-    })->with(actors(Actor::HomeLifeshaper, Actor::AwayLifeshaper));
+    })->with(actors(Actor::HomeLifeshaper, Actor::ClassAdmin));
 });
 
 /**
@@ -449,21 +459,15 @@ describe('the door', function (): void {
 const WHOS_IN_CHILD = ['has_allergies', 'id', 'nickname', 'present', 'revision', 'short_name'];
 
 describe('Who\'s in', function (): void {
-    it('shows any staff today\'s classes and who is in by Squad, with an allergy flag, the present mark and the head count only — no photo, phone or health detail @story#117 @story#118 @story#121', function (Actor $actor): void {
+    it('shows staff whose Role covers Home who is in at its 1PM by Squad, with an allergy flag, the present mark and the head count only — no photo, phone or health detail @story#117 @story#118 @story#121 @story#206', function (Actor $actor): void {
         travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
-        // A Role covering Home opens Home's 1PM, which Amara is in; Away's staff see their 7PM, with no one in yet.
-        $home = in_array($actor, Actor::coveringHome(), true);
-        $props = propsOf($actor, fn (AccessWorld $w): string => $home ? "/home-sat/serve/door/whos-in?class={$w->schedule->id}" : '/home-sat/serve/door/whos-in');
-        $squads = $home ? prefixed('squads.*', ['count', 'id', 'level.name', 'level.number', 'name', 'present', ...prefixed('children.*', WHOS_IN_CHILD), ...prefixed('head_count', ['count', 'counted_at', 'counted_by'])]) : ['squads'];
+        $props = propsOf($actor, fn (AccessWorld $w): string => "/{$w->checkIn->session->code}/whos-in");
+        $squads = prefixed('squads.*', ['count', 'id', 'level.name', 'level.number', 'name', 'present', ...prefixed('children.*', WHOS_IN_CHILD), ...prefixed('head_count', ['count', 'counted_at', 'counted_by'])]);
 
-        expect(keyPaths($props))->toBe(allowlist(
-            STAFF_FRAME,
-            $squads,
-            ['class_id', 'classes.*.id', 'classes.*.name', 'classes.*.times', 'session_state', 'squad_id', 'today'],
-        ))
+        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, $squads, DOOR_SESSION, ['squad_id']))
             ->and(forbiddenOnLists($props))->toBe([])
-            ->and(data_get($props, 'squads.0.children.0.nickname'))->toBe($home ? 'Amara' : null);
-    })->with(actors(...Actor::staff()));
+            ->and(data_get($props, 'squads.0.children.0.nickname'))->toBe('Amara');
+    })->with(actors(...Actor::coveringHome()));
 });
 
 /** A child on the Attendance page (AttendanceChildData) — the Excel's columns, and the roll call's present mark: no health detail, phone or photo. */

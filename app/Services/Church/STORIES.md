@@ -53,12 +53,16 @@ decided by `AccessScope` against the access-matrix row the Feature declares (`#[
 
 ## Classes
 - A class (GLOSSARY "Schedule") belongs to one Satellite: a name, and a day and start/end time only if it has them.
-  A class with a day shows at the door only on that day; one with no day shows every day.
+  A weekly class is offered on its day every week, a one-time class on its date only; one whose date has gone is on
+  Classes' "Past" list.
 - Satellite admins manage their Satellite's classes, a class admin their class; a Lifeshaper has no Classes page.
 - A class is retired, never deleted (Sessions will point at it). Two active classes at a Satellite never share a
   name; a retired class's name is free again.
 
 ## The door (check-in)
+- Serve's first page lists today's classes; an admin opens one there and goes on to its door, which is at the
+  Session's own code (`/<code>/checkin`, Who's in `/<code>/whos-in`, spec item 16) — for staff whose Role at its
+  satellite covers the class, anyone else "not found". Reopened the same day it keeps its code.
 - A Session (one class on one date) is made when an admin of the satellite, or of that class, opens it — on its date
   only — and is open until closed or until midnight at the satellite; reopened the same day, it is the same Session.
   Children are checked in, undone, marked present and counted only while it is open (spec item 15). One Check-in per
@@ -69,7 +73,8 @@ decided by `AccessScope` against the access-matrix row the Feature declares (`#[
 - Graduated children are refused. An inactive child is made active again first (the door asks), and a child with no
   Level gets one picked at the door (their age's suggestion first) — both saved and noted on the child's history. The
   door never changes a Level a child has.
-- Undo keeps the row (who and when it was undone); checking the child in again revives it. Only today's Check-ins.
+- Undo keeps the row (who and when it was undone); checking the child in again revives it. Only the open Session's
+  Check-ins, at its own address.
 - The search shows no photo or phone and only an allergy yes/no; health details only when a child's row is opened.
 
 ## Attendance

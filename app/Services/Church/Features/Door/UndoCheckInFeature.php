@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Church\Features\Door;
 
 use App\Data\Models\CheckIn;
+use App\Data\Models\Session;
 use App\Domains\CheckIn\Jobs\GetSessionForUpdateJob;
 use App\Domains\CheckIn\Jobs\UpdateCheckInAsUndoneJob;
 use App\Domains\Church\Jobs\GetChurchTodayJob;
@@ -26,19 +27,22 @@ use Illuminate\Support\Facades\DB;
     title: 'Undo a Check-in',
     persona: 'Lifeshaper (any staff)',
     happyPaths: ['story#110' => 'Staff undo a Check-in made by mistake; the child can be checked in again'],
-    unhappyPaths: ['story#111' => 'Only today\'s, at a satellite their Role covers, in this church'],
+    unhappyPaths: ['story#111' => 'Only a Check-in of the Session at the address, while it is open, at a satellite their Role covers, in this church'],
 )]
 #[AccessRow(AccessRowEnum::CheckIn)]
 final class UndoCheckInFeature extends BaseChurchFeature
 {
-    public function __construct(private readonly CheckIn $checkIn) {}
+    public function __construct(
+        private readonly Session $session,
+        private readonly CheckIn $checkIn,
+    ) {}
 
     public function handle(): RedirectResponse
     {
         $church = $this->church();
         $checkIn = $this->checkIn;
-        abort_unless($this->scope()->canCheckInTo($checkIn->session->schedule), 404);
-        abort_unless($checkIn->session->date->isSameDay($this->run(new GetChurchTodayJob(church: $church))), 404);
+        // A Check-in of THIS Session (spec item 16: the address names it); a Session not open today is closed.
+        abort_unless($checkIn->session_id === $this->session->id, 404);
 
         // A closed Session is looked at, not changed (Roy 2026-11-10): asked under its lock, the date read after it,
         // so an admin closing it at this moment comes before or after the Undo, never between (Astra, issue 11).

@@ -30,7 +30,7 @@ const items = computed<ShellItem[]>(() => {
     const inAdmin = nav?.area === 'admin'
     // A class admin (TODO #9) has only Classes and Attendance in Admin.
     const full = nav?.can_use_full_admin === true
-    const all: (ShellItem | false)[] = inAdmin
+    const all: ((ShellItem & { exact?: boolean }) | false)[] = inAdmin
         ? [
               full && {
                   label: 'Families',
@@ -58,14 +58,11 @@ const items = computed<ShellItem[]>(() => {
                   label: 'People',
                   href: route('admin.people.index', slug),
               },
-              { label: 'Serve', href: route('serve.door.show', slug), testid: 'nav-serve' },
+              { label: 'Serve', href: route('serve.home', slug), testid: 'nav-serve' },
           ]
         : [
-              {
-                  label: 'Check in',
-                  href: route('serve.door.show', slug),
-                  testid: 'nav-door',
-              },
+              // Serve's first page: current there only — every Serve address is under it.
+              { label: 'Today', href: route('serve.home', slug), testid: 'nav-today', exact: true },
               {
                   label: 'Families',
                   href: route('serve.families.index', slug),
@@ -81,8 +78,11 @@ const items = computed<ShellItem[]>(() => {
     all.push({ label: 'Password', href: route('account.password'), testid: 'backup-password' })
     const path = page.url.split('?')[0] ?? ''
     return all
-        .filter((item): item is ShellItem => item !== false)
-        .map((item) => ({ ...item, current: isUnder(path, pathOf(item.href)) }))
+        .filter((item): item is ShellItem & { exact?: boolean } => item !== false)
+        .map(({ exact, ...item }) => ({
+            ...item,
+            current: exact === true ? path === pathOf(item.href) : isUnder(path, pathOf(item.href)),
+        }))
 })
 
 const title = computed(

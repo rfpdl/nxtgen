@@ -28,7 +28,7 @@ final class RequireAdminArea
             // A GET is a page to open: send them to Serve. Anything else is an act they may not do here.
             abort_unless($request->isMethod('GET'), 404);
 
-            return redirect()->route('serve.door.show', RouteSatellite::from($request));
+            return redirect()->route('serve.home', RouteSatellite::from($request));
         }
 
         return $next($request);

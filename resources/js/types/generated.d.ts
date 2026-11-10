@@ -115,6 +115,22 @@ declare namespace App {
                     child_ids: number[]
                     note: string | null
                 }
+                export type DoorSessionData = {
+                    code: string
+                    class_id: number
+                    name: string
+                    times: string
+                    date_label: string
+                    state: App.Enums.SessionStateEnum
+                }
+                export type ServeClassData = {
+                    id: number
+                    name: string
+                    times: string
+                    state: App.Enums.SessionStateEnum
+                    code: string | null
+                    can_open: boolean
+                }
                 export type SquadHeadCountData = {
                     count: number
                     counted_at: string
@@ -586,7 +602,6 @@ declare namespace App {
                     email: string
                 }
                 export type DoorQueryInput = {
-                    class: number | null
                     squad: number | null
                     card: boolean
                 }

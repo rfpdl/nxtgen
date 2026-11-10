@@ -1,19 +1,12 @@
 import { type Locator, type Page } from '@playwright/test'
+import { goToDoor } from '../support/door'
 import { expect, test } from '../support/test'
-import {
-    DUBAI,
-    CLASSES,
-    DOOR,
-    SATELLITES,
-    SCAN,
-    sessionFile,
-    type DoorProject,
-} from '../support/world'
+import { CLASSES, DOOR, SATELLITES, SCAN, sessionFile, type DoorProject } from '../support/world'
 
 /*
- * Journey — a Lifeshaper at the door, on their phone (DECISIONS 2026-10-26): pick today's 1PM, search the church,
- * tick a family's children and check them in; undo a mistake. The e2e server's door day is a Saturday, when 1PM
- * meets. Each browser checks in its own Cruz family (E2ESeeder), but all three share today's 1PM Session — so the
+ * Journey — a Lifeshaper at the door, on their phone (DECISIONS 2026-10-26): from Serve go to today's 1PM door,
+ * search the church, tick a family's children and check them in; undo a mistake. The e2e server's door day is a
+ * Saturday, when 1PM meets. Each browser checks in its own Cruz family (E2ESeeder), but all three share today's 1PM Session — so the
  * count is read before and compared after (the browsers run one after another, never at once).
  */
 test.use({ storageState: sessionFile('lifeshaper') })
@@ -23,13 +16,11 @@ function guardian(project: string): string {
 }
 
 async function openDoor(page: Page): Promise<void> {
-    await page.goto(`/${DUBAI}/serve/door`)
-    // The class picker is a row of chips, a radio group (the Bold look): pick 1PM.
-    const chip = page.getByTestId('door-class').getByRole('radio', { name: CLASSES.onePm.name })
-    await chip.click()
-    await expect(chip).toHaveAttribute('aria-checked', 'true')
-    // Today alone: the satellite is in the bar (spec item 13).
-    await expect(page.getByTestId('door-heading')).toHaveText(/^Sat \d{1,2} \w{3}$/)
+    // From Serve's first page, today's 1PM card leads to its own door (spec item 16).
+    await goToDoor(page, CLASSES.onePm.name)
+    // The class is the heading, today and its times under it; the satellite is in the bar (spec item 13).
+    await expect(page.getByTestId('door-heading')).toHaveText(CLASSES.onePm.name)
+    await expect(page.getByText(/^Sat \d{1,2} \w{3} · 13:00–15:00$/)).toBeVisible()
     await expect(page.getByTestId('bar-satellite')).toContainText(SATELLITES.dxb)
     // Phone first: nothing pushes the page sideways.
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(

@@ -139,12 +139,12 @@ it('remembers the satellite last opened, on the account, and lands there next ti
     expect($user->fresh()?->last_satellite_id)->toBe($sharjah->id);
     actingAs($user)->get('/home')->assertRedirect('/sharjah');
 
-    actingAs($user)->get('/dubai/serve/door')->assertOk();
+    actingAs($user)->get('/dubai/serve')->assertOk();
     actingAs($user)->get('/home')->assertRedirect('/dubai');
 
     // Written only when it changes (review, issue 08): another Dubai page writes nothing.
     DB::enableQueryLog();
-    actingAs($user)->get('/dubai/serve/door')->assertOk();
+    actingAs($user)->get('/dubai/serve')->assertOk();
     DB::disableQueryLog();
     expect(collect(DB::getQueryLog())->pluck('query')->filter(fn (mixed $q): bool => is_string($q) && str_starts_with($q, 'update `users`'))->all())->toBe([]);
 });
@@ -179,7 +179,7 @@ describe('remembering the choice', function (): void {
         grantRole($user, RoleEnum::Lifeshaper, atSatellite($sharjah));
 
         actingAs($user)->post('/home/choice', ['place' => "serve:{$church->id}"])->assertRedirect('/pick');
-        actingAs($user)->get('/sharjah/serve/door')->assertOk();
+        actingAs($user)->get('/sharjah/serve')->assertOk();
 
         actingAs($user)->withCookie('nxtgen_landing', "serve:{$church->id}")->get('/home')->assertRedirect('/sharjah');
         // A Choose page opened before the change still sends them on.

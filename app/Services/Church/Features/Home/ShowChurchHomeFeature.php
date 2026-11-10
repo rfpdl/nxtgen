@@ -12,7 +12,7 @@ use Illuminate\Http\RedirectResponse;
 
 /**
  * The satellite's address opens the person's area there (Roy 2026-11-06): an admin's is Admin (the families list),
- * everyone else's Serve (the door).
+ * everyone else's Serve (today's classes).
  *
  * @extends BaseChurchFeature<RedirectResponse>
  */
@@ -28,6 +28,6 @@ final class ShowChurchHomeFeature extends BaseChurchFeature
     {
         return $this->scope()->canUseFullAdmin()
             ? redirect()->route('admin.families.index', $this->satellite())
-            : redirect()->route('serve.door.show', $this->satellite());
+            : redirect()->route('serve.home', $this->satellite());
     }
 }

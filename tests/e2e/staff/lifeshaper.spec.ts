@@ -1,9 +1,11 @@
+import { goToDoor } from '../support/door'
 import { checkLayout, expect, test } from '../support/test'
 import { fillChild, fillFamily } from '../support/forms'
 import { latestMail, mailCount } from '../support/mailbox'
 import { openMenu } from '../support/menu'
 import { signInByEmail } from '../support/sign-in'
 import {
+    CLASSES,
     DUBAI,
     FAMILIES,
     SATELLITES,
@@ -182,7 +184,7 @@ test('on a narrow screen the menu is a sheet: Password and Sign out are in it, f
         (page.viewportSize()?.width ?? 0) >= 1024,
         'From 1024px the menu is a row: no sheet to test.',
     )
-    await page.goto(`/${DUBAI}/serve/door`)
+    await goToDoor(page, CLASSES.onePm.name)
     await expect(page.getByTestId('menu-open')).toBeVisible()
     await openMenu(page)
     const sheet = page.getByTestId('menu-sheet')
@@ -213,7 +215,7 @@ test('turning the screen past 1024px closes an open menu sheet — the row and t
 }) => {
     // Sizes of its own: a tablet upright (768px, the sheet) turned on its side (1024px, the row).
     await page.setViewportSize({ width: 768, height: 1024 })
-    await page.goto(`/${DUBAI}/serve/door`)
+    await goToDoor(page, CLASSES.onePm.name)
     await openMenu(page)
     await expect(page.getByTestId('menu-sheet')).toBeVisible()
 

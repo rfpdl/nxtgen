@@ -75,6 +75,7 @@ _Avoid_: Class (in code), event series, service, session
 One Schedule on one date (e.g. Saturday 31 Oct, 1PM at CCF Dubai). An admin opens it (which gives it its code) and
 closes it, or it closes at midnight; a Child is checked in only while it is open, late or not. A closed Session can be
 looked at, not changed.
+_Its address_: `/<code>/checkin` (the door) and `/<code>/whos-in` — the code it gets when first opened.
 _Avoid_: Event, occurrence, service
 
 **Check-in**:

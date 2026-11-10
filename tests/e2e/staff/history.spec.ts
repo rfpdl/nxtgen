@@ -1,3 +1,4 @@
+import { goToDoor } from '../support/door'
 import { expect, test } from '../support/test'
 import { registerAndConfirm } from '../support/forms'
 import {
@@ -34,8 +35,7 @@ test("staff see a child's attendance on the family page; the parent never does @
     // A Lifeshaper checks Amara in at 1PM and ticks her present on Who's in.
     const staff = await browser.newContext({ storageState: sessionFile('lifeshaper') })
     const door = await staff.newPage()
-    await door.goto(`/${DUBAI}/serve/door`)
-    await door.getByTestId('door-class').getByRole('radio', { name: CLASSES.onePm.name }).click()
+    await goToDoor(door, CLASSES.onePm.name)
     await door.getByTestId('door-search').fill(surname)
     await door.getByTestId('door-search').press('Enter')
     const card = door.getByTestId('door-family').filter({ hasText: `Rhea ${surname}` })
@@ -69,8 +69,7 @@ test("staff see a child's attendance on the family page; the parent never does @
 
     // Undone at the door: the line is gone.
     const familyPage = door.url()
-    await door.goto(`/${DUBAI}/serve/door`)
-    await door.getByTestId('door-class').getByRole('radio', { name: CLASSES.onePm.name }).click()
+    await goToDoor(door, CLASSES.onePm.name)
     await door.getByTestId('door-search').fill(surname)
     await door.getByTestId('door-search').press('Enter')
     await card.getByTestId('door-child').getByTestId('undo').click()
