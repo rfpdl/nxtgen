@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { useSatellite } from '@/composables/useSatellite'
 import AppShell from '@/components/layout/AppShell.vue'
+import ClassSwitch from '@/components/atoms/ClassSwitch.vue'
 import SatelliteSwitch from '@/components/atoms/SatelliteSwitch.vue'
 import { useChurch } from '@/composables/useChurch'
-import type { SharedProps, ShellItem } from '@/types'
+import type { SessionChoice, SharedProps, ShellItem } from '@/types'
 import { usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { route } from 'ziggy-js'
@@ -18,7 +19,11 @@ import { route } from 'ziggy-js'
  * The bar names the page: `title` if given, else the menu item whose address the page is under, else the church.
  * The church is the page's shared `church`; what to show comes from the shared `church_nav`.
  */
-const props = defineProps<{ title?: string }>()
+const props = defineProps<{
+    title?: string
+    /** On a class's door or Who's in (Roy 2026-11-10): the class, and its satellite's classes open now — the bar's dropdown. */
+    classSwitch?: { current: SessionChoice; classes: SessionChoice[] }
+}>()
 
 const church = useChurch()
 const satellite = useSatellite()
@@ -102,7 +107,13 @@ function isUnder(path: string, base: string): boolean {
 <template>
     <AppShell :title="title" :items="items">
         <template #end>
-            <SatelliteSwitch :current="satellite" :satellites="page.props.open_satellites" />
+            <!-- On a class's page the dropdown jumps between its satellite's open classes (Roy 2026-11-10). -->
+            <ClassSwitch
+                v-if="props.classSwitch !== undefined"
+                :current="props.classSwitch.current"
+                :classes="props.classSwitch.classes"
+            />
+            <SatelliteSwitch v-else :current="satellite" :satellites="page.props.open_satellites" />
         </template>
         <slot />
     </AppShell>

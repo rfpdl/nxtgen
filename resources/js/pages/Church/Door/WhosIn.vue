@@ -8,7 +8,7 @@ import DoorTabs from '@/components/molecules/DoorTabs.vue'
 import SessionControls from '@/components/molecules/SessionControls.vue'
 import WhosInSquadCard from '@/components/molecules/WhosInSquadCard.vue'
 import { useRollCall } from '@/composables/useRollCall'
-import type { DoorSession, WhosInSquad } from '@/types'
+import type { DoorSession, SessionChoice, WhosInSquad } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { route } from 'ziggy-js'
@@ -23,6 +23,8 @@ import { route } from 'ziggy-js'
 const props = defineProps<{
     /** The Session at this address (spec item 16); closed, it is looked at, not changed (Roy 2026-11-10). */
     session: DoorSession
+    /** The bar's dropdown (Roy 2026-11-10): the satellite's classes open now that this person may open. */
+    open_classes: SessionChoice[]
     squads: WhosInSquad[]
     squad_id: number | null
 }>()
@@ -66,7 +68,13 @@ function pickSquad(id: string | number | null): void {
 
 <template>
     <Head title="Who's in" />
-    <ChurchShell title="Who's in">
+    <ChurchShell
+        title="Who's in"
+        :class-switch="{
+            current: { code: session.code, name: session.name },
+            classes: open_classes,
+        }"
+    >
         <div class="flex flex-col gap-4" data-surface="door">
             <DoorTabs current="whos-in" :code="session.code" />
             <PageHeader

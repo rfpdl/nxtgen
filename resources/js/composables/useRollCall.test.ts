@@ -64,7 +64,7 @@ describe('useRollCall', () => {
 
         expect(pollInterval).toBe(20_000)
         expect(ROLL_CALL_POLL_MS).toBe(20_000)
-        expect(pollOptions().only).toEqual(['squads', 'squad_id', 'session'])
+        expect(pollOptions().only).toEqual(['squads', 'squad_id', 'session', 'open_classes'])
     })
 
     it('shows a tap at once, sends it, and lets the server answer once it is done', async () => {

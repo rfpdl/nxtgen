@@ -18,6 +18,7 @@ import type {
     DoorScan,
     LevelOption,
     DoorSession,
+    SessionChoice,
 } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { Search } from 'lucide-vue-next'
@@ -39,6 +40,8 @@ import { route } from 'ziggy-js'
 const props = defineProps<{
     /** The Session at this address (spec item 16): its class, date and state (spec item 15). */
     session: DoorSession
+    /** The bar's dropdown (Roy 2026-11-10): the satellite's classes open now that this person may open. */
+    open_classes: SessionChoice[]
     /** An admin of the class: closes it here, and opens it again. */
     can_open: boolean
     checked_in: DoorCheckIn[]
@@ -108,7 +111,13 @@ function openHealth(childId: number): void {
 
 <template>
     <Head title="Check in" />
-    <ChurchShell title="Check in">
+    <ChurchShell
+        title="Check in"
+        :class-switch="{
+            current: { code: session.code, name: session.name },
+            classes: open_classes,
+        }"
+    >
         <div class="flex flex-col gap-4" data-surface="door">
             <DoorTabs current="check-in" :code="session.code" />
             <PageHeader

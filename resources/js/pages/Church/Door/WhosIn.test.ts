@@ -53,6 +53,7 @@ function page(squads: WhosInSquad[], sessionState: SessionState = 'open') {
     return mount(WhosIn, {
         props: {
             session: { ...onePm, state: sessionState },
+            open_classes: [{ code: onePm.code, name: onePm.name }],
             squads,
             squad_id: null,
         },

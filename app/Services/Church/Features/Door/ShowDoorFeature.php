@@ -14,8 +14,10 @@ use App\Domains\CheckIn\DataObjects\DoorCheckInData;
 use App\Domains\CheckIn\DataObjects\DoorFamilyData;
 use App\Domains\CheckIn\DataObjects\DoorScanData;
 use App\Domains\CheckIn\DataObjects\DoorSessionData;
+use App\Domains\CheckIn\DataObjects\SessionChoiceData;
 use App\Domains\CheckIn\Jobs\GetCheckedInChildrenJob;
 use App\Domains\CheckIn\Jobs\GetDoorCardJob;
+use App\Domains\CheckIn\Jobs\GetOpenSessionsJob;
 use App\Domains\Church\Jobs\GetChurchTodayJob;
 use App\Domains\Family\Jobs\GetChurchChildJob;
 use App\Domains\Family\Jobs\SearchFamiliesJob;
@@ -49,6 +51,7 @@ use Inertia\Response;
         'story#105' => 'Opening a child\'s row shows their health details, status and Level, and the family page link when the viewer may open the family',
         'story#116' => 'Before and below any search, staff see who is checked in to the chosen class today, newest first — nickname, Squad and time — and can undo one from there',
         'story#206' => 'Opening a class gives it a code: its door is `/<code>/checkin` and its Who\'s in `/<code>/whos-in`, for staff whose Role at its satellite covers the class; opened again the same day it keeps the code; closed, its Who\'s in stays readable',
+        'story#210' => 'On a class\'s door and Who\'s in the bar names the class, and its dropdown lists the satellite\'s classes open now that the person may open — each a jump to its door (Roy 2026-11-10)',
         'story#128' => 'A name card\'s code — read by the camera or typed by a desk scanner — finds the child\'s family with the child ticked when ONE child matches exactly; several, or a close match, show the families with nobody ticked and a note',
     ],
     unhappyPaths: [
@@ -80,6 +83,11 @@ final class ShowDoorFeature extends BaseChurchFeature
         return Inertia::render('Church/Door/Index', [
             // Spec item 15: check-in only while open; an admin of the class closes it here, and opens it again.
             'session' => DoorSessionData::fromModel($session, $today),
+            // The bar's dropdown (Roy 2026-11-10): the satellite's classes open now whose door this person may open.
+            'open_classes' => array_map(SessionChoiceData::fromModel(...), array_values(array_filter(
+                $this->run(new GetOpenSessionsJob(satellite: $this->satellite(), today: $today)),
+                fn (Session $open): bool => $this->scope()->canCheckInTo($open->schedule),
+            ))),
             // Opening again is only on its own day (Astra, issue 12): another day's Open would open TODAY's Session.
             'can_open' => $session->date->isSameDay($today) && $this->scope()->canOpenSessionOf($session->schedule),
             'checked_in' => array_map(fn (CheckIn $c): DoorCheckInData => DoorCheckInData::fromCheckIn($c, $church->timezone), $checkIns),

@@ -18,10 +18,10 @@ function guardian(project: string): string {
 async function openDoor(page: Page): Promise<void> {
     // From Serve's first page, today's 1PM card leads to its own door (spec item 16).
     await goToDoor(page, CLASSES.onePm.name)
-    // The class is the heading, today and its times under it; the satellite is in the bar (spec item 13).
+    // The class is the heading, today and its times under it; the bar names the class (Roy 2026-11-10).
     await expect(page.getByTestId('door-heading')).toHaveText(CLASSES.onePm.name)
     await expect(page.getByText(/^Sat \d{1,2} \w{3} · 13:00–15:00$/)).toBeVisible()
-    await expect(page.getByTestId('bar-satellite')).toContainText(SATELLITES.dxb)
+    await expect(page.getByTestId('bar-class')).toContainText(CLASSES.onePm.name)
     // Phone first: nothing pushes the page sideways.
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         page.viewportSize()?.width ?? 0,

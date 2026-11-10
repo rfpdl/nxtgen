@@ -392,7 +392,8 @@ const DOOR_CHILD = ['check_in_id', 'full_name', 'has_allergies', 'id', 'level.na
 const DOOR_CHECK_IN = ['checked_in_at', 'id', 'level.name', 'level.number', 'nickname', 'squad'];
 
 /** The Session a door or Who's in page is at (DoorSessionData): its code, class, times, date and state — nothing else. */
-const DOOR_SESSION = ['session.class_id', 'session.code', 'session.date_label', 'session.name', 'session.state', 'session.times'];
+/** …and the bar's dropdown there (Roy 2026-11-10): the satellite's open classes, each its code and name only. */
+const DOOR_SESSION = ['open_classes.*.code', 'open_classes.*.name', 'session.class_id', 'session.code', 'session.date_label', 'session.name', 'session.state', 'session.times'];
 
 describe('Serve\'s first page', function (): void {
     it('shows any staff today\'s classes — name, times, state, its door\'s code — and nothing about anyone @story#208', function (Actor $actor): void {

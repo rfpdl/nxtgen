@@ -32,8 +32,9 @@ export function useRollCall(code: () => string) {
     let refreshing: Cancellable | null = null
 
     usePoll(ROLL_CALL_POLL_MS, () => ({
-        // Whether the class is still open too: closed elsewhere, the taps stop (Astra, issue 11).
-        only: ['squads', 'squad_id', 'session'],
+        // Whether the class is still open too: closed elsewhere, the taps stop (Astra, issue 11); and the bar's classes
+        // open now, so one opened or closed elsewhere shows (Astra, issue 13).
+        only: ['squads', 'squad_id', 'session', 'open_classes'],
         onBefore: () => waiting.size === 0 && Object.keys(confirming).length === 0,
         onCancelToken: (token: Cancellable) => {
             refreshing = token

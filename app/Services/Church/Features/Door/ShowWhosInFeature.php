@@ -6,7 +6,9 @@ namespace App\Services\Church\Features\Door;
 
 use App\Data\Models\Session;
 use App\Domains\CheckIn\DataObjects\DoorSessionData;
+use App\Domains\CheckIn\DataObjects\SessionChoiceData;
 use App\Domains\CheckIn\DataObjects\WhosInSquadData;
+use App\Domains\CheckIn\Jobs\GetOpenSessionsJob;
 use App\Domains\CheckIn\Jobs\GetSessionAttendanceJob;
 use App\Domains\CheckIn\Jobs\GetSessionHeadCountsJob;
 use App\Domains\Church\Jobs\GetChurchTodayJob;
@@ -54,6 +56,11 @@ final class ShowWhosInFeature extends BaseChurchFeature
         return Inertia::render('Church/Door/WhosIn', [
             // A closed Session's Who's in stays readable, and read-only (spec item 16; Roy 2026-11-10).
             'session' => DoorSessionData::fromModel($session, $today),
+            // The bar's dropdown (Roy 2026-11-10): the satellite's classes open now whose door this person may open.
+            'open_classes' => array_map(SessionChoiceData::fromModel(...), array_values(array_filter(
+                $this->run(new GetOpenSessionsJob(satellite: $this->satellite(), today: $today)),
+                fn (Session $open): bool => $this->scope()->canCheckInTo($open->schedule),
+            ))),
             'squads' => $squads,
             'squad_id' => collect($squads)->contains(fn (WhosInSquadData $s): bool => $s->id === $address->squad) ? $address->squad : null,
         ]);

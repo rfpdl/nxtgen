@@ -105,6 +105,8 @@ export type PosterLink = App.Domains.Church.DataObjects.PosterLinkData
 /** The Session a door or Who's in page is at (spec item 16), and one of today's classes on Serve's first page. */
 export type DoorSession = App.Domains.CheckIn.DataObjects.DoorSessionData
 export type ServeClass = App.Domains.CheckIn.DataObjects.ServeClassData
+/** One of the satellite's classes open now, in the bar's dropdown on a class's page (Roy 2026-11-10). */
+export type SessionChoice = App.Domains.CheckIn.DataObjects.SessionChoiceData
 /** Where today's Session of a class stands (spec item 15): not open yet, open, or closed. */
 export type SessionState = App.Enums.SessionStateEnum
 export type DoorFamily = App.Domains.CheckIn.DataObjects.DoorFamilyData

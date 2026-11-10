@@ -4,6 +4,17 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-11-10 (Issue 13 built — Serve: "Open now" and "Today")
+
+- **Serve's first page (`/dubai/serve`) has two parts: "Open now" — the classes open, each "Go to the door" — and
+  "Today" — the rest of today's classes** (spec item 17): not open yet ("Open" for its admin; a Lifeshaper sees "Not
+  open yet", Roy's answer 5) and closed ones, which say "Closed" with "See who was in" (Claude's call, reversible: the
+  spec names only open and not-yet-open). A part with no class is not shown; no class at all: "No class today".
+- **On a class's door and Who's in, the bar names the class, and its dropdown lists the satellite's classes open now
+  that the person may open — each a jump to its door** (Roy's answer 6). With nowhere else to go, the class's name
+  alone; from a closed class, the one open now is enough (Astra). Who's in's 20-second refresh keeps the list
+  current (Astra); a class retired while open is not listed (review). Every other page keeps the satellite dropdown.
+
 ## 2026-11-10 (Issue 12 built — the Session's own address)
 
 - **Opening a class gives its Session a code — 8 letters and digits, the same kind as a satellite's registration

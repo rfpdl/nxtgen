@@ -96,11 +96,6 @@ declare namespace App {
                     check_in_id: number | null
                     suggested_level: number | null
                 }
-                export type DoorClassData = {
-                    id: number
-                    name: string
-                    times: string
-                }
                 export type DoorFamilyData = {
                     id: number
                     name: string
@@ -130,6 +125,10 @@ declare namespace App {
                     state: App.Enums.SessionStateEnum
                     code: string | null
                     can_open: boolean
+                }
+                export type SessionChoiceData = {
+                    code: string
+                    name: string
                 }
                 export type SquadHeadCountData = {
                     count: number

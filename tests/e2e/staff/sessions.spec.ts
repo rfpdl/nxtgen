@@ -1,14 +1,7 @@
 import { type Locator, type Page } from '@playwright/test'
 import { DOOR_URL, WHOS_IN_URL, goToDoor, serveClass } from '../support/door'
 import { checkLayout, expect, test } from '../support/test'
-import {
-    DOOR,
-    DUBAI,
-    SATELLITES,
-    doorSaturday,
-    sessionFile,
-    type DoorProject,
-} from '../support/world'
+import { DOOR, DUBAI, doorSaturday, sessionFile, type DoorProject } from '../support/world'
 
 /*
  * An admin opens and closes a class for the day (spec item 15; Roy 2026-11-10: the class, not "check-in"). On its
@@ -55,7 +48,12 @@ test('an admin opens a class, a Lifeshaper checks a child in, the admin closes i
         // Not open yet: on Serve a Lifeshaper sees the class, but no way to its door, and no Open button.
         const door = await lifeshaper.newPage()
         await door.goto(`/${DUBAI}/serve`)
-        const waiting = serveClass(door, name)
+        // On Serve it is under "Today" (spec item 17), not "Open now".
+        const waiting = door
+            .getByTestId('today')
+            .getByTestId('serve-class')
+            .filter({ hasText: name })
+        await expect(door.getByTestId('open-now').getByText(name)).toHaveCount(0)
         await expect(waiting.getByTestId('serve-class-state')).toHaveText('Not open yet')
         await expect(waiting.getByTestId('serve-door')).toHaveCount(0)
         await expect(waiting.getByTestId('serve-open')).toHaveCount(0)
@@ -68,6 +66,13 @@ test('an admin opens a class, a Lifeshaper checks a child in, the admin closes i
         await expect(adminPage.getByTestId('flash-success')).toContainText(`${name} is open.`)
         await expect(adminPage.getByTestId('door-heading')).toHaveText(name)
         await expect(adminPage.getByTestId('session-state')).toHaveText('Open')
+        // Serve now lists it under "Open now", with 1PM and 7PM, no longer under "Today".
+        await adminPage.goto(`/${DUBAI}/serve`)
+        await expect(
+            adminPage.getByTestId('open-now').getByTestId('serve-class').filter({ hasText: name }),
+        ).toBeVisible()
+        await expect(adminPage.getByTestId('today').getByText(name)).toHaveCount(0)
+        await goToDoor(adminPage, name)
 
         // The Lifeshaper goes from Serve to its door and checks Amara in.
         await goToDoor(door, name)
@@ -106,7 +111,7 @@ test('an admin opens a class, a Lifeshaper checks a child in, the admin closes i
             new RegExp(DOOR.cruz.allergic),
         ])
         await expect(door.getByTestId('checked-in-undo')).toHaveCount(0)
-        await expect(door.getByTestId('bar-satellite')).toContainText(SATELLITES.dxb)
+        await expect(door.getByTestId('bar-class')).toContainText(name)
         // A closed class's Who's in stays readable — no taps (spec item 16).
         await roll.reload()
         await expect(roll.getByTestId('child-name')).toHaveText([DOOR.cruz.allergic])

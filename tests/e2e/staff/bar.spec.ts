@@ -1,11 +1,13 @@
 import { type Page } from '@playwright/test'
-import { expect, test } from '../support/test'
-import { DUBAI, SATELLITES, SHARJAH, sessionFile } from '../support/world'
+import { DOOR_URL, goToDoor } from '../support/door'
+import { checkLayout, expect, test } from '../support/test'
+import { CLASSES, DUBAI, SATELLITES, SHARJAH, sessionFile } from '../support/world'
 
 /*
  * The bar and switching satellite (spec items 11, 13; Roy 2026-11-08). The demo admin serves at all three satellites:
  * the bar's satellite is a menu, and picking another opens that satellite's home — which is then where they land
- * when they come back. A Lifeshaper of one satellite sees its name, no dropdown.
+ * when they come back. A Lifeshaper of one satellite sees its name, no dropdown. On a class's door the bar is the class,
+ * its dropdown the satellite's classes open now (Roy 2026-11-10).
  */
 
 /** Opens the bar's satellite menu and picks `name`. */
@@ -65,4 +67,32 @@ test('a person who serves at several satellites and used none yet picks one @sto
     await page.getByTestId('pick-satellite').filter({ hasText: SATELLITES.dxb }).click()
     await expect(page).toHaveURL(new RegExp(`/${DUBAI}/admin/families$`))
     await admin.close()
+})
+
+test("on a class's door the bar lists the satellite's classes open now, and jumps to another's door (Roy 2026-11-10) @story#210", async ({
+    browser,
+}) => {
+    const lifeshaper = await browser.newContext({ storageState: sessionFile('lifeshaper') })
+    const page = await lifeshaper.newPage()
+    await goToDoor(page, CLASSES.onePm.name)
+
+    const button = page.getByTestId('bar-class')
+    await expect(button).toContainText(CLASSES.onePm.name)
+    await button.click()
+    const menu = page.getByTestId('bar-class-menu')
+    await expect(menu.getByRole('link', { name: CLASSES.onePm.name, exact: true })).toHaveAttribute(
+        'aria-current',
+        'page',
+    )
+    await checkLayout(page)
+    await menu.getByRole('link', { name: CLASSES.sevenPm.name, exact: true }).click()
+
+    await expect(page).toHaveURL(DOOR_URL)
+    await expect(page.getByTestId('door-heading')).toHaveText(CLASSES.sevenPm.name)
+    await expect(page.getByTestId('bar-class')).toContainText(CLASSES.sevenPm.name)
+    // Elsewhere the bar is the satellite again.
+    await page.goto(`/${DUBAI}/serve`)
+    await expect(page.getByTestId('bar-class')).toHaveCount(0)
+    await expect(page.getByTestId('bar-satellite')).toHaveText(SATELLITES.dxb)
+    await lifeshaper.close()
 })

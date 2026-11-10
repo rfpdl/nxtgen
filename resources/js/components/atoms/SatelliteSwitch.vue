@@ -21,7 +21,7 @@ onClickOutside(root, () => (open.value = false))
 </script>
 
 <template>
-    <div v-if="satellites.length > 1" ref="root" class="relative">
+    <div v-if="satellites.length > 1" ref="root" class="relative" @keydown.esc="open = false">
         <button
             type="button"
             :aria-expanded="open ? 'true' : 'false'"
@@ -44,7 +44,6 @@ onClickOutside(root, () => (open.value = false))
             aria-label="Satellites"
             class="bg-surface rounded-card border-border absolute top-full left-0 z-30 mt-1 flex min-w-56 flex-col gap-1 border-2 p-2 shadow-lg md:right-0 md:left-auto"
             data-testid="bar-satellite-menu"
-            @keydown.esc="open = false"
         >
             <Link
                 v-for="satellite in satellites"
