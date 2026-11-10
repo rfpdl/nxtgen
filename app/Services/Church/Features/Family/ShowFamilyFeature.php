@@ -21,6 +21,7 @@ use App\Domains\Family\Jobs\GetFamilyNotesJob;
 use App\Domains\Family\Jobs\GetFamilyOpenDuplicatesJob;
 use App\Domains\Level\Jobs\GetLevelsJob;
 use App\Enums\AccessRowEnum;
+use App\Enums\CardMoveEnum;
 use App\Enums\CardReasonEnum;
 use App\Enums\ChildStatusEnum;
 use App\Foundation\Attributes\AccessRow;
@@ -106,7 +107,9 @@ final class ShowFamilyFeature extends BaseChurchFeature
             'admin_controls' => $inAdmin && $canEdit,
             'can_set_level' => $canSetLevel,
             'levels' => $canSetLevel ? $this->run(new GetLevelsJob) : [],
-            'enums' => [...FamilyFormEnums::toFrontend(), 'child_status' => ChildStatusEnum::toFrontend(), 'card_reason' => CardReasonEnum::toFrontend(CardReasonEnum::staffChoices())],
+            'enums' => [...FamilyFormEnums::toFrontend(), 'child_status' => ChildStatusEnum::toFrontend(), 'card_reason' => CardReasonEnum::toFrontend(CardReasonEnum::staffChoices()),
+                // The desk's move on a child's card, in CardMoveEnum's words ("Given").
+                'card_move' => CardMoveEnum::toFrontend([CardMoveEnum::Give])],
         ]);
     }
 }

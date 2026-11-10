@@ -33,6 +33,10 @@ final class ShowConfirmLinkFeature extends BaseAuthFeature
     {
         return Inertia::render('Auth/ConfirmLink', [
             'purpose' => $this->purpose,
+            // The page's words are the enum's (TODO #41): never retyped in Vue.
+            'title' => $this->purpose->label(),
+            'prompt' => $this->purpose->prompt(),
+            'button' => $this->purpose->button(),
             'action' => route($this->purpose->routeName(), $this->token),
         ]);
     }

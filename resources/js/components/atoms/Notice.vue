@@ -2,9 +2,10 @@
 /**
  * A short message in the page (the Bold look): `danger` when something did not work (an alert, read out at once),
  * `warning` when staff should check something, `info` for a by-the-way (both read out politely, as a status). Bold
- * text on a soft tint of the colour; the words carry the meaning, never the colour alone.
+ * text on a soft tint of the colour; the words carry the meaning, never the colour alone. A backend enum's colour
+ * (EnumColor — `success`, `muted` too) is taken as it comes.
  */
-type Tone = 'danger' | 'warning' | 'info'
+type Tone = 'danger' | 'warning' | 'info' | 'success' | 'muted'
 
 withDefaults(defineProps<{ tone?: Tone }>(), { tone: 'info' })
 
@@ -12,6 +13,8 @@ const TONES: Record<Tone, string> = {
     danger: 'bg-danger-soft text-danger',
     warning: 'bg-warning-soft text-warning',
     info: 'bg-info-soft text-info',
+    success: 'bg-success-soft text-success',
+    muted: 'bg-surface-sunken text-text',
 }
 </script>
 

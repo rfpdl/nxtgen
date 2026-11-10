@@ -9,6 +9,7 @@ use App\Enums\CardFeeEnum;
 use App\Enums\CardMoveEnum;
 use App\Enums\CardStepEnum;
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
@@ -27,6 +28,9 @@ final class CardRequestData extends Data
         public int $child_id,
         public CardStepEnum $step,
         public CardFeeEnum $fee,
+        /** CardFeeEnum::color — the Pill's colour, amber while not paid (the frontend's EnumColor). */
+        #[LiteralTypeScriptType("'success' | 'info' | 'warning' | 'danger' | 'muted'")]
+        public string $fee_color,
         public string $summary,
         /** @var list<CardMoveEnum> the moves offered at the desk now: Give, once printed (the rest are on Cards) */
         public array $moves,
@@ -41,6 +45,7 @@ final class CardRequestData extends Data
             child_id: $request->child_id,
             step: $request->step,
             fee: $fee,
+            fee_color: $fee->color(),
             summary: "{$request->step->label()} · {$fee->label()}",
             moves: array_values(array_filter($request->moves(), fn (CardMoveEnum $m): bool => in_array($m, self::DESK_MOVES, true))),
         );

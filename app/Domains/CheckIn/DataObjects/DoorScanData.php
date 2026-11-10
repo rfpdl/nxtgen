@@ -6,6 +6,7 @@ namespace App\Domains\CheckIn\DataObjects;
 
 use App\Enums\CardMatchEnum;
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
@@ -19,6 +20,9 @@ final class DoorScanData extends Data
     public function __construct(
         public string $code,
         public CardMatchEnum $match,
+        /** CardMatchEnum::color — the alert's tone at the door (the frontend's EnumColor). */
+        #[LiteralTypeScriptType("'success' | 'info' | 'warning' | 'danger' | 'muted'")]
+        public string $color,
         public array $child_ids,
         /** "No child matches this card: …", "Check this is the right child …"; null on one exact match. */
         public ?string $note,
@@ -27,6 +31,6 @@ final class DoorScanData extends Data
     /** @param list<int> $matched the children the card named */
     public static function of(string $code, CardMatchEnum $match, array $matched): self
     {
-        return new self(code: $code, match: $match, child_ids: $match->ticks() ? $matched : [], note: $match->note($code));
+        return new self(code: $code, match: $match, color: $match->color(), child_ids: $match->ticks() ? $matched : [], note: $match->note($code));
     }
 }

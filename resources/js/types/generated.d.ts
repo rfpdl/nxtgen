@@ -7,6 +7,7 @@ declare namespace App {
                     child_id: number
                     step: App.Enums.CardStepEnum
                     fee: App.Enums.CardFeeEnum
+                    fee_color: 'success' | 'info' | 'warning' | 'danger' | 'muted'
                     summary: string
                     moves: App.Enums.CardMoveEnum[]
                 }
@@ -22,6 +23,7 @@ declare namespace App {
                     step_label: string
                     fee: App.Enums.CardFeeEnum
                     fee_label: string
+                    fee_color: 'success' | 'info' | 'warning' | 'danger' | 'muted'
                     refused_reason: string | null
                     moves: App.Enums.CardMoveEnum[]
                 }
@@ -107,6 +109,7 @@ declare namespace App {
                 export type DoorScanData = {
                     code: string
                     match: App.Enums.CardMatchEnum
+                    color: 'success' | 'info' | 'warning' | 'danger' | 'muted'
                     child_ids: number[]
                     note: string | null
                 }

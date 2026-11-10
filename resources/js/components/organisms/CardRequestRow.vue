@@ -72,11 +72,7 @@ function refuse(): void {
             {{ request.reason_label }}<template v-if="request.note"> — {{ request.note }}</template>
         </p>
         <p class="flex flex-wrap items-center gap-2">
-            <Pill
-                :variant="request.fee === 'not_paid' ? 'warning' : 'info'"
-                data-testid="card-fee"
-                >{{ request.fee_label }}</Pill
-            >
+            <Pill :variant="request.fee_color" data-testid="card-fee">{{ request.fee_label }}</Pill>
             <span v-if="request.moves.length === 0" class="text-text-muted" data-testid="card-step"
                 >{{ request.step_label
                 }}<template v-if="request.refused_reason"

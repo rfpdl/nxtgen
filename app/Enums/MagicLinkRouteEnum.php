@@ -56,6 +56,26 @@ enum MagicLinkRouteEnum: string implements HasEnumMetadata
         };
     }
 
+    /** What pressing the confirm page's button does, under its title (label()). */
+    public function prompt(): string
+    {
+        return match ($this) {
+            self::Login => 'Press the button to finish signing in.',
+            self::Verify => 'Press the button to tell us this email is yours.',
+            self::Claim => 'Press the button to connect your family to this email.',
+        };
+    }
+
+    /** The confirm page's one button. */
+    public function button(): string
+    {
+        return match ($this) {
+            self::Login => 'Continue to sign in',
+            self::Verify => 'Yes, this is my email',
+            self::Claim => 'Connect my family',
+        };
+    }
+
     /** Shown as plain text, never as a coloured badge. */
     public function color(): string
     {

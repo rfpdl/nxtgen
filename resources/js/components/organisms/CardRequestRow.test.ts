@@ -39,6 +39,7 @@ const asked: Row = {
     step: 'asked',
     step_label: 'Asked',
     fee: 'not_paid',
+    fee_color: 'warning',
     fee_label: 'AED 10 · not paid',
     refused_reason: null,
     moves: ['mark_paid', 'refuse'],
@@ -66,6 +67,14 @@ describe('CardRequestRow', () => {
         expect(wrapper.find('[data-testid="card-reason"]').text()).toBe('Lost — Lost at the park')
         expect(wrapper.find('[data-testid="card-fee"]').text()).toBe('AED 10 · not paid')
         expect(wrapper.find('[data-testid="card-fee"]').classes()).toContain('bg-warning-soft')
+    })
+
+    it('colours the fee as the server says (CardFeeEnum::color), never from the fee here', () => {
+        const wrapper = mount(CardRequestRow, {
+            props: { request: { ...asked, fee_color: 'info' } },
+        })
+
+        expect(wrapper.find('[data-testid="card-fee"]').classes()).toContain('bg-info-soft')
     })
 
     it('offers exactly the moves the server sends, in its order — and nothing for a closed one', () => {

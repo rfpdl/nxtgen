@@ -96,6 +96,9 @@ describe('opening a link', function (): void {
         get('/magic/login/'.$token)->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
             ->component('Auth/ConfirmLink')
             ->where('purpose', 'login')
+            ->where('title', 'Sign in')
+            ->where('prompt', 'Press the button to finish signing in.')
+            ->where('button', 'Continue to sign in')
             ->where('action', url('/magic/login/'.$token)));
 
         assertGuest();

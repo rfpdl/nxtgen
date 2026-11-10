@@ -32,4 +32,12 @@ describe('Notice', () => {
         expect(wrapper.attributes('role')).toBe('status')
         expect(wrapper.classes()).toContain('bg-info-soft')
     })
+
+    it("takes any backend enum's colour as it comes (EnumColor) — success and muted too", () => {
+        const ok = mount(Notice, { props: { tone: 'success' }, slots: { default: 'Done' } })
+        expect(ok.find('p').classes()).toContain('bg-success-soft')
+        expect(ok.find('p').attributes('role')).toBe('status')
+        const muted = mount(Notice, { props: { tone: 'muted' }, slots: { default: 'Note' } })
+        expect(muted.find('p').classes()).toContain('bg-surface-sunken')
+    })
 })

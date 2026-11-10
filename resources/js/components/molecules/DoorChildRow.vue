@@ -98,9 +98,11 @@ function onLevel(value: string | number | null): void {
                         <Pill v-if="child.has_allergies" variant="danger" data-testid="allergy-flag"
                             >⚠ Allergies</Pill
                         >
-                        <Pill v-if="inactive">Inactive</Pill>
+                        <Pill v-if="inactive" data-testid="child-status-pill">{{
+                            child.status_label
+                        }}</Pill>
                         <span v-if="graduated" class="text-text-muted font-semibold"
-                            >Graduated — cannot be checked in</span
+                            >{{ child.status_label }} — cannot be checked in</span
                         >
                     </span>
                 </span>

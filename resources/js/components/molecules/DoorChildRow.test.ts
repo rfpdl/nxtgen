@@ -167,6 +167,17 @@ describe('DoorChildRow', () => {
         expect(wrapper.text()).toContain('Graduated — cannot be checked in')
     })
 
+    it("names an inactive or Graduated child's status in the server's words (status_label)", () => {
+        expect(
+            row({ status: 'inactive', status_label: 'Resting' })
+                .find('[data-testid="child-status-pill"]')
+                .text(),
+        ).toBe('Resting')
+        expect(row({ status: 'graduated', status_label: 'Moved on' }).text()).toContain(
+            'Moved on — cannot be checked in',
+        )
+    })
+
     it('asks "Make active again?" for a ticked inactive child, and unticks on No', async () => {
         const inactive = { status: 'inactive', status_label: 'Inactive' } as const
         expect(row(inactive).text()).toContain('Inactive')

@@ -10,6 +10,7 @@ use App\Enums\CardMoveEnum;
 use App\Enums\CardStepEnum;
 use App\Foundation\Support\Money;
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
@@ -32,6 +33,9 @@ final class CardRequestRowData extends Data
         public string $step_label,
         public CardFeeEnum $fee,
         public string $fee_label,
+        /** CardFeeEnum::color — the Pill's colour, amber while not paid (the frontend's EnumColor). */
+        #[LiteralTypeScriptType("'success' | 'info' | 'warning' | 'danger' | 'muted'")]
+        public string $fee_color,
         public ?string $refused_reason,
         /** @var list<CardMoveEnum> the moves the server allows now (CardMoveEnum) — the row offers these, no others */
         public array $moves,
@@ -54,6 +58,7 @@ final class CardRequestRowData extends Data
             step_label: $request->step->label(),
             fee: $fee,
             fee_label: $fee === CardFeeEnum::Free ? 'Free' : Money::aed($request->fee_minor)." · {$fee->label()}",
+            fee_color: $fee->color(),
             refused_reason: $request->refused_reason,
             moves: $request->moves(),
         );

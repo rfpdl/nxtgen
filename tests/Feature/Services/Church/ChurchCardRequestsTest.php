@@ -144,9 +144,9 @@ describe('the family page', function (): void {
         actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->get("/dxb/serve/families/{$amara->family_id}")
             ->assertInertia(fn (AssertableInertia $p) => $p
                 ->where('card_requests', [
-                    ['id' => $asked->id, 'child_id' => $amara->id, 'step' => 'asked', 'fee' => 'not_paid', 'summary' => 'Asked · not paid', 'moves' => []],
-                    ['id' => $paid->id, 'child_id' => $ben->id, 'step' => 'printed', 'fee' => 'paid', 'summary' => 'Printed · paid', 'moves' => ['give']],
-                    ['id' => $free->id, 'child_id' => $cy->id, 'step' => 'asked', 'fee' => 'free', 'summary' => 'Asked · free', 'moves' => []],
+                    ['id' => $asked->id, 'child_id' => $amara->id, 'step' => 'asked', 'fee' => 'not_paid', 'fee_color' => 'warning', 'summary' => 'Asked · not paid', 'moves' => []],
+                    ['id' => $paid->id, 'child_id' => $ben->id, 'step' => 'printed', 'fee' => 'paid', 'fee_color' => 'info', 'summary' => 'Printed · paid', 'moves' => ['give']],
+                    ['id' => $free->id, 'child_id' => $cy->id, 'step' => 'asked', 'fee' => 'free', 'fee_color' => 'info', 'summary' => 'Asked · free', 'moves' => []],
                 ])
                 ->where('enums.card_reason', [
                     ['value' => 'lost', 'label' => 'Lost', 'color' => 'muted'],

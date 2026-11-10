@@ -286,7 +286,7 @@ describe('a name card at the door', function (): void {
             ->has('families', 1)
             ->where('families.0.primary_name', 'Maria Cruz')
             ->has('families.0.children', 4)
-            ->where('scan', ['code' => 'AMARAJOYCRUZ', 'match' => 'exact', 'child_ids' => [$amara->id], 'note' => null]));
+            ->where('scan', ['code' => 'AMARAJOYCRUZ', 'match' => 'exact', 'color' => 'success', 'child_ids' => [$amara->id], 'note' => null]));
     })->with([
         'a desk scanner types it' => ['q=AMARAJOYCRUZ'],
         'in lower case' => ['q=amarajoycruz'],
@@ -301,6 +301,7 @@ describe('a name card at the door', function (): void {
         actingAs($lifeshaper)->get(door('/checkin?q=AMARAJOYCRUZ'))->assertInertia(fn (AssertableInertia $page) => $page
             ->has('families', 2)
             ->where('scan.match', 'several')
+            ->where('scan.color', 'warning')
             ->where('scan.child_ids', [])
             ->where('scan.note', 'More than one child matches this card — tick the right one.'));
     });
@@ -321,7 +322,7 @@ describe('a name card at the door', function (): void {
 
         actingAs($lifeshaper)->get(door('/checkin?q=NOBODYHEREATALL&card=1'))->assertInertia(fn (AssertableInertia $page) => $page
             ->where('families', [])
-            ->where('scan', ['code' => 'NOBODYHEREATALL', 'match' => 'none', 'child_ids' => [], 'note' => 'No child matches this card: NOBODYHEREATALL']));
+            ->where('scan', ['code' => 'NOBODYHEREATALL', 'match' => 'none', 'color' => 'danger', 'child_ids' => [], 'note' => 'No child matches this card: NOBODYHEREATALL']));
         // Typed in capitals, it is a surname: the families, and no card note.
         actingAs($lifeshaper)->get(door('/checkin?q=SANTOS'))->assertInertia(fn (AssertableInertia $page) => $page
             ->has('families', 1)

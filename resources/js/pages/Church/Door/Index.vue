@@ -70,9 +70,6 @@ function visit(params: { q?: string; card?: boolean }): void {
     )
 }
 
-/** A card no child matches (nothing else found) is an alert; a close match or several children ask staff to check. */
-const scanTone = computed(() => (props.scan?.match === 'none' ? 'danger' : 'warning'))
-
 /** A name card the camera read: search by it, as a card (so no match says so). */
 function scanned(code: string): void {
     q.value = code
@@ -159,7 +156,7 @@ function openHealth(childId: number): void {
                 </form>
                 <ScanCardSheet v-model:open="scanning" @code="scanned" />
 
-                <Notice v-if="scan?.note" :tone="scanTone" data-testid="scan-note">{{
+                <Notice v-if="scan?.note" :tone="scan.color" data-testid="scan-note">{{
                     scan.note
                 }}</Notice>
                 <EmptyState v-if="query && families.length === 0 && scan?.match !== 'none'">

@@ -1,5 +1,5 @@
 import ChildCardRequest from '@/components/organisms/ChildCardRequest.vue'
-import type { CardFee } from '@/types'
+import { enums } from '@/tests/enumPage'
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { reactive } from 'vue'
@@ -107,26 +107,56 @@ describe('ChildCardRequest', () => {
         expect(wrapper.find('[data-testid="card-note"]').attributes('aria-invalid')).toBe('true')
     })
 
-    it("shows an open request in the server's words instead of the button, amber only while not paid", () => {
-        const mountWith = (fee: CardFee, summary: string) =>
+    it("shows an open request in the server's words and colour instead of the button", () => {
+        const mountWith = (fee_color: 'warning' | 'info', summary: string) =>
             mount(ChildCardRequest, {
                 props: {
-                    request: { id: 9, child_id: 4, step: 'asked', fee, summary, moves: [] },
+                    request: {
+                        id: 9,
+                        child_id: 4,
+                        step: 'asked',
+                        fee: 'not_paid',
+                        fee_color,
+                        summary,
+                        moves: [],
+                    },
                     action,
                 },
             })
 
-        const notPaid = mountWith('not_paid', 'Asked · not paid')
+        const notPaid = mountWith('warning', 'Asked · not paid')
         const pill = notPaid.find('[data-testid="card-request-step"]')
         expect(pill.text()).toBe('Card: Asked · not paid')
         expect(pill.classes()).toContain('bg-warning-soft')
         expect(notPaid.find('[data-testid="new-card"]').exists()).toBe(false)
-        for (const fee of ['paid', 'free'] as const) {
-            expect(
-                mountWith(fee, `Asked · ${fee}`)
-                    .find('[data-testid="card-request-step"]')
-                    .classes(),
-            ).toContain('bg-info-soft')
+        // The colour is the server's (CardFeeEnum::color), never worked out here from the fee.
+        expect(
+            mountWith('info', 'Asked · paid').find('[data-testid="card-request-step"]').classes(),
+        ).toContain('bg-info-soft')
+    })
+
+    it("names the desk's move as the server words it (CardMoveEnum)", () => {
+        const given = enums.card_move.find((o) => o.value === 'give')!
+        const before = given.label
+        given.label = 'Handed over'
+        try {
+            const button = mount(ChildCardRequest, {
+                props: {
+                    request: {
+                        id: 9,
+                        child_id: 4,
+                        step: 'printed',
+                        fee: 'paid',
+                        fee_color: 'info',
+                        summary: 'Printed · paid',
+                        moves: ['give'],
+                    },
+                    action,
+                },
+            }).find('[data-testid="card-given"]')
+            expect(button.text()).toBe('Handed over')
+        } finally {
+            given.label = before
         }
     })
 
@@ -138,6 +168,7 @@ describe('ChildCardRequest', () => {
                     child_id: 4,
                     step: 'printed',
                     fee: 'paid',
+                    fee_color: 'info',
                     summary: 'Printed · paid',
                     moves: ['give'],
                 },
@@ -157,6 +188,7 @@ describe('ChildCardRequest', () => {
                     child_id: 4,
                     step: 'approved',
                     fee: 'paid',
+                    fee_color: 'info',
                     summary: 'Approved · paid',
                     moves: [],
                 },

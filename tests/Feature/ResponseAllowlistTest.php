@@ -63,7 +63,7 @@ const LITE_FAMILY = ['can_open', 'can_resend', ...LIST_CHILD, 'email_confirmed',
 
 /** A family opened by staff, minus what only an editor gets (Church/Families/Show). */
 const FAMILY_VIEW = [
-    'admin_controls', 'can_set_level', 'enums.card_reason', 'enums.child_status', 'enums.gender', 'enums.lifestage', 'enums.relationship',
+    'admin_controls', 'can_set_level', 'enums.card_move', 'enums.card_reason', 'enums.child_status', 'enums.gender', 'enums.lifestage', 'enums.relationship',
     'family.area', 'family.can_edit', 'family.email', 'family.email_confirmed', 'family.id', 'family.primary_name',
     'family.registered_by', 'family.satellite',
     'family.children.*.allergies', 'family.children.*.date_of_birth', 'family.children.*.dislikes', 'family.children.*.fears',
@@ -76,7 +76,7 @@ const FAMILY_VIEW = [
     'attendance.*.child_id', 'attendance.*.check_ins.*.class', 'attendance.*.check_ins.*.date', 'attendance.*.check_ins.*.id',
     'attendance.*.check_ins.*.present', 'attendance.*.check_ins.*.satellite', 'attendance.*.check_ins.*.squad',
     // Each child's open Card request (name cards) — staff only: its step and whether it is paid. No note or reason.
-    'card_requests.*.child_id', 'card_requests.*.fee', 'card_requests.*.id', 'card_requests.*.moves', 'card_requests.*.step', 'card_requests.*.summary',
+    'card_requests.*.child_id', 'card_requests.*.fee', 'card_requests.*.fee_color', 'card_requests.*.id', 'card_requests.*.moves', 'card_requests.*.step', 'card_requests.*.summary',
 ];
 
 /** The staff family page in Serve, with a Card request open for the child (so its fields are listed, not just an empty key). */
@@ -259,7 +259,7 @@ describe('Cards, for admins', function (): void {
         });
 
         expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, ['enums.card_move', 'enums.card_tab', 'print_lists', 'q', 'tab', 'pagination.last_page', 'pagination.page', 'pagination.per_page', 'pagination.total'], prefixed('requests.*', [
-            'child_name', 'family_id', 'family_name', 'fee', 'fee_label', 'id', 'moves.*', 'note', 'reason_label', 'refused_reason', 'satellite', 'step', 'step_label',
+            'child_name', 'family_id', 'family_name', 'fee', 'fee_color', 'fee_label', 'id', 'moves.*', 'note', 'reason_label', 'refused_reason', 'satellite', 'step', 'step_label',
         ])))->and(forbiddenOnLists($props))->toBe([]);
     })->with(actors(Actor::HomeAndAwayAdmin, Actor::HomeAdmin));
 
@@ -427,7 +427,7 @@ describe('the door', function (): void {
         travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
         $props = propsOf(Actor::HomeLifeshaper, fn (AccessWorld $w): string => "/{$w->checkIn->session->code}/checkin?card=1&q={$w->child->name_key}");
 
-        expect(array_values(array_filter(keyPaths($props), fn (string $p): bool => str_starts_with($p, 'scan'))))->toBe(['scan.child_ids.*', 'scan.code', 'scan.match', 'scan.note'])
+        expect(array_values(array_filter(keyPaths($props), fn (string $p): bool => str_starts_with($p, 'scan'))))->toBe(['scan.child_ids.*', 'scan.code', 'scan.color', 'scan.match', 'scan.note'])
             ->and(forbiddenOnLists($props))->toBe([])
             ->and(data_get($props, 'families.0.children.0.nickname'))->toBe('Amara');
     });
