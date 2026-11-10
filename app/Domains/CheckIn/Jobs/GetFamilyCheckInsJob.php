@@ -30,7 +30,7 @@ final class GetFamilyCheckInsJob extends BaseJob
             ->get()
             ->sortBy([
                 fn (CheckIn $a, CheckIn $b): int => $b->session->date <=> $a->session->date,
-                fn (CheckIn $a, CheckIn $b): int => ($b->session->schedule->startsAt() ?? '') <=> ($a->session->schedule->startsAt() ?? ''),
+                fn (CheckIn $a, CheckIn $b): int => $b->session->schedule->startsAt() <=> $a->session->schedule->startsAt(),
                 fn (CheckIn $a, CheckIn $b): int => $b->id <=> $a->id,
             ])
             ->all());

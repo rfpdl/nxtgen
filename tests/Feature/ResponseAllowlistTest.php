@@ -367,7 +367,7 @@ describe('the Classes page', function (): void {
     it('shows admins each satellite\'s classes — names, days and times, no people — and an away admin only Away @story#95', function (Actor $actor, string $at, array $satellites): void {
         $props = propsOf($actor, fn (AccessWorld $w): string => "/{$at}/admin/classes");
 
-        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, ['enums.weekday', 'satellites.*.can_add', 'satellites.*.id', 'satellites.*.name'], prefixed('satellites.*.schedules.*', ['ends_at', 'id', 'name', 'starts_at', 'weekday', 'weekday_label'])))
+        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, ['enums.weekday', 'satellites.*.can_add', 'satellites.*.id', 'satellites.*.name', 'satellites.*.past'], prefixed('satellites.*.schedules.*', ['date', 'date_label', 'ends_at', 'id', 'name', 'starts_at', 'weekday', 'weekday_label'])))
             ->and(collect(listAt($props, 'satellites'))->pluck('name')->all())->toBe($satellites);
     })->with([
         // A page shows only the satellite in its address (DECISIONS 2026-11-08): an admin at Home and Away sees Home's

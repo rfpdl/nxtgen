@@ -15,8 +15,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Add a class at the satellite in the address (DECISIONS 2026-10-26, 2026-11-08): a name, an optional day and
- * start/end time. A satellite this admin does not look after is a 404; a name an active class there already has is
+ * Add a class at the satellite in the address (DECISIONS 2026-10-26, 2026-11-08): a name, weekly on a day or one-time
+ * on a date (spec item 14), and a start and an end time. A satellite this admin does not look after is a 404; a name an active class there already has is
  * refused on the name field (the database holds it).
  *
  * @extends BaseChurchFeature<RedirectResponse>
@@ -24,8 +24,8 @@ use Illuminate\Validation\ValidationException;
 #[UserStory(
     title: 'Add a class',
     persona: 'satellite admin',
-    happyPaths: ['story#97' => 'An Admin adds a class with a name, and a day and times if it has them'],
-    unhappyPaths: ['story#98' => 'Only at a satellite they look after; a name is needed, times are HH:MM and the end comes after the start; no two active classes at a satellite share a name'],
+    happyPaths: ['story#97' => 'An Admin adds a class with a name, weekly on a day or one-time on a date, and its start and end times'],
+    unhappyPaths: ['story#98' => 'Only at a satellite they look after; a name, the day or the date, and both times as HH:MM are needed, the end after the start; no two active classes at a satellite share a name'],
 )]
 #[AccessRow(AccessRowEnum::ManageClasses)]
 final class AddScheduleFeature extends BaseChurchFeature
@@ -42,7 +42,8 @@ final class AddScheduleFeature extends BaseChurchFeature
             $this->run(new CreateScheduleJob(
                 satellite: $satellite,
                 name: $input->name,
-                weekday: $input->weekday,
+                weekday: $input->weekly(),
+                date: $input->oneTimeDate(),
                 startsAt: $input->starts_at,
                 endsAt: $input->ends_at,
             ));

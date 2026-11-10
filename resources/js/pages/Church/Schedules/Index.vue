@@ -7,7 +7,7 @@ import { Head } from '@inertiajs/vue3'
 
 /**
  * Classes (GLOSSARY "Schedule", DECISIONS 2026-10-26): each satellite this admin looks after, with its classes.
- * A class with a day shows at the door only on that day; one with no day shows every day.
+ * A weekly class shows at the door on its day every week; a one-time class on its date only (spec item 14).
  */
 defineProps<{ satellites: SatelliteSchedulesProp[] }>()
 </script>
@@ -17,7 +17,7 @@ defineProps<{ satellites: SatelliteSchedulesProp[] }>()
     <ChurchShell>
         <PageHeader
             title="Classes"
-            sub="A class with a day shows at the door only on that day. A class with no set day shows every day."
+            sub="A weekly class shows at the door on its day every week. A one-time class shows on its date only."
         />
         <SatelliteSchedules
             v-for="satellite in satellites"

@@ -12,28 +12,31 @@ use function Tests\Support\satelliteOf;
 use function Tests\Support\scheduleAt;
 
 /*
- * The door's class picker (DECISIONS 2026-10-26): today's classes at the satellites the viewer's Role covers — a class
- * with a day only on that day, one with no day every day; never a retired class or another church's.
+ * Today's classes (DECISIONS 2026-10-26) at the satellites the viewer's Role covers — a weekly class on its weekday, a
+ * one-time class on its date only (spec item 14); never a retired class or another church's.
  */
 
 it('lists the classes meeting today at the asked-for satellites, in start-time order', function (): void {
     $church = church();
     $dxb = satelliteOf($church, ['name' => 'CCF DXB']);
     $house = satelliteOf($church, ['name' => 'House Church']);
-    scheduleAt($dxb, ['name' => '7PM', 'weekday' => WeekdayEnum::Saturday, 'starts_at' => '19:00']);
+    scheduleAt($dxb, ['name' => '7PM', 'weekday' => WeekdayEnum::Saturday, 'starts_at' => '19:00', 'ends_at' => '21:00']);
     scheduleAt($dxb, ['name' => '1PM', 'weekday' => WeekdayEnum::Saturday, 'starts_at' => '13:00']);
-    scheduleAt($dxb, ['name' => 'Special class', 'weekday' => null, 'starts_at' => null]);
+    scheduleAt($dxb, ['name' => 'Halloween party', 'weekday' => null, 'date' => '2026-10-31', 'starts_at' => '16:00', 'ends_at' => '18:00']);
+    scheduleAt($dxb, ['name' => 'True Life Day 1', 'weekday' => null, 'date' => '2026-11-02', 'starts_at' => '09:00', 'ends_at' => '12:00']);
     scheduleAt($dxb, ['name' => 'Sunday school', 'weekday' => WeekdayEnum::Sunday]);
-    scheduleAt($dxb, ['name' => 'Old class', 'weekday' => null, 'is_active' => false]);
+    scheduleAt($dxb, ['name' => 'Old class', 'is_active' => false]);
     scheduleAt($house, ['name' => '10AM', 'weekday' => WeekdayEnum::Saturday, 'starts_at' => '10:00']);
 
     $saturday = CarbonImmutable::parse('2026-10-31');
     $names = fn (array $classes): array => collect($classes)->pluck('name')->all();
 
     expect($names((new GetTodaysSchedulesJob(church: $church, satelliteIds: [$dxb->id], today: $saturday))->handle()))
-        ->toBe(['1PM', '7PM', 'Special class'])
+        ->toBe(['1PM', 'Halloween party', '7PM'])
         ->and($names((new GetTodaysSchedulesJob(church: $church, satelliteIds: [$dxb->id], today: CarbonImmutable::parse('2026-11-02')))->handle()))
-        ->toBe(['Special class']);
+        ->toBe(['True Life Day 1'])
+        ->and($names((new GetTodaysSchedulesJob(church: $church, satelliteIds: [$dxb->id], today: $saturday->addWeek()))->handle()))
+        ->toBe(['1PM', '7PM']);
 });
 
 it('lists by satellite, never another church\'s even when handed its satellite, and nothing for no satellite', function (): void {
@@ -56,9 +59,9 @@ it('adds a class admin\'s own classes to the satellites asked for — not their 
     $church = church();
     $dxb = satelliteOf($church, ['name' => 'CCF DXB']);
     $house = satelliteOf($church, ['name' => 'House']);
-    scheduleAt($dxb, ['name' => '1PM', 'weekday' => null]);
-    $sevenPm = scheduleAt($dxb, ['name' => '7PM', 'weekday' => null]);
-    scheduleAt($house, ['name' => '10AM', 'weekday' => null]);
+    scheduleAt($dxb, ['name' => '1PM', 'weekday' => WeekdayEnum::Saturday]);
+    $sevenPm = scheduleAt($dxb, ['name' => '7PM', 'weekday' => WeekdayEnum::Saturday]);
+    scheduleAt($house, ['name' => '10AM', 'weekday' => WeekdayEnum::Saturday]);
 
     $classes = (new GetTodaysSchedulesJob(church: $church, satelliteIds: [$house->id], today: CarbonImmutable::parse('2026-10-31'), alsoScheduleIds: [$sevenPm->id]))->handle();
 

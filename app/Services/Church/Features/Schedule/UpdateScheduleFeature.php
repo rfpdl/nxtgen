@@ -43,7 +43,8 @@ final class UpdateScheduleFeature extends BaseChurchFeature
             $this->run(new UpdateScheduleJob(
                 schedule: $schedule,
                 name: $input->name,
-                weekday: $input->weekday,
+                weekday: $input->weekly(),
+                date: $input->oneTimeDate(),
                 startsAt: $input->starts_at,
                 endsAt: $input->ends_at,
             ));

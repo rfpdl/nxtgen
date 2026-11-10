@@ -1,5 +1,9 @@
-# 11 — An admin opens and closes a Session's check-in (TODO #35)
-Status: ready-for-agent (Roy answered 2026-11-10, `../batch-c-plan.md`)
+# 11 — An admin opens and closes a Session (TODO #35)
+Status: ready-for-agent (Roy answered 2026-11-10, `../batch-c-plan.md`; DECISIONS 2026-11-10 "before building")
+
+Roy 2026-11-10: "i dont think we will close check in, we can close the session" — a child may come ¾ into the class.
+So an admin opens and closes the **Session**; while it is open everything at its door works (check-in, undo, Who's
+in, present, head count); closed, it is read-only.
 Spec item 15 (reverses DECISIONS 2026-10-26 "never opened or closed"). A Session is one class on one date. An admin
 (the satellite's, or that class's) opens its check-in any time on that date, never another day; closes it; reopens
 it the same day. It is closed at midnight, satellite time, with no job needed (a past date is closed). A Child is

@@ -17,7 +17,7 @@ const chips = computed(() =>
     props.classes.map((c) => ({
         value: c.id,
         label: c.name,
-        sub: c.times ?? '',
+        sub: c.times,
     })),
 )
 

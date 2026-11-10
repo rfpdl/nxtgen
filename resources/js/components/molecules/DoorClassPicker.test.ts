@@ -9,7 +9,7 @@ vi.mock('@inertiajs/vue3', () => ({
 
 const onePm: DoorClass = { id: 1, name: '1PM', times: '13:00–15:00' }
 const sevenPm: DoorClass = { id: 2, name: '7PM', times: '19:00–21:00' }
-const tenAm: DoorClass = { id: 3, name: '10AM', times: null }
+const tenAm: DoorClass = { id: 3, name: '10AM', times: '10:00–12:00' }
 
 describe('DoorClassPicker', () => {
     it('heads the page with today alone — the satellite is in the bar (spec item 13) — and a chip per class', () => {
@@ -30,7 +30,7 @@ describe('DoorClassPicker', () => {
 
         expect(wrapper.findAll('[role="radio"]').map((c) => c.text())).toEqual([
             '1PM 13:00–15:00',
-            '10AM',
+            '10AM 10:00–12:00',
         ])
     })
 

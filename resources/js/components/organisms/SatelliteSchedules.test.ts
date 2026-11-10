@@ -25,12 +25,15 @@ const dxb: SatelliteSchedulesProp = {
     id: 3,
     name: 'CCF DXB',
     can_add: true,
+    past: [],
     schedules: [
         {
             id: 4,
             name: '1PM',
             weekday: 'saturday',
             weekday_label: 'Saturdays',
+            date: null,
+            date_label: null,
             starts_at: '13:00',
             ends_at: '15:00',
         },
@@ -39,6 +42,8 @@ const dxb: SatelliteSchedulesProp = {
             name: '7PM',
             weekday: 'saturday',
             weekday_label: 'Saturdays',
+            date: null,
+            date_label: null,
             starts_at: '19:00',
             ends_at: '21:00',
         },
@@ -55,6 +60,42 @@ describe('SatelliteSchedules', () => {
         expect(wrapper.findAll('[data-testid="schedule"]')).toHaveLength(2)
         expect(wrapper.find('[data-testid="open-add-schedule"]').text()).toBe('+ Add a class')
         expect(wrapper.find('[data-testid="add-schedule"]').exists()).toBe(false)
+    })
+
+    it('lists one-time classes whose date has gone under "Past", only when there are some — Retire only', async () => {
+        expect(
+            mount(SatelliteSchedules, { props: { satellite: dxb } })
+                .find('[data-testid="past-schedules"]')
+                .exists(),
+        ).toBe(false)
+
+        const past = {
+            id: 9,
+            name: 'Halloween party',
+            weekday: null,
+            weekday_label: null,
+            date: '2026-10-31',
+            date_label: 'Sat 31 Oct 2026',
+            starts_at: '16:00',
+            ends_at: '18:00',
+        }
+        const wrapper = mount(SatelliteSchedules, {
+            props: { satellite: { ...dxb, past: [past] } },
+        })
+        const list = wrapper.find('[data-testid="past-schedules"]')
+
+        expect(list.text()).toContain('Past')
+        expect(list.text()).toContain('Halloween party')
+        expect(list.text()).toContain('Sat 31 Oct 2026 · 16:00–18:00')
+        expect(list.find('[data-testid="edit-schedule"]').exists()).toBe(false)
+
+        await list.find('[data-testid="retire-schedule"]').trigger('click')
+        await list.find('[data-testid="confirm-retire"]').trigger('click')
+        expect(routerPut).toHaveBeenCalledWith(
+            'admin.schedules.retire:["dubai",9]',
+            {},
+            expect.anything(),
+        )
     })
 
     it('opens the add form on the button, and closes it again when the form is done', async () => {

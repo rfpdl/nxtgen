@@ -13,9 +13,9 @@ use Illuminate\Database\Eloquent\Builder;
 
 /**
  * The classes meeting `$today` (the church's date) at the asked-for satellites of this church (the address satellite,
- * or none) and `$alsoScheduleIds`, a class admin's own classes (TODO #9). A class with a day meets only on that day; one with no day meets every day
- * (DECISIONS 2026-10-26). Active classes only, with their satellite, by satellite name then start time (a class with
- * no time last) then name.
+ * or none) and `$alsoScheduleIds`, a class admin's own classes (TODO #9). A weekly class meets on its weekday, a
+ * one-time class on its date only (spec item 14; Schedule::meetsOn). Active classes only, with their satellite, by
+ * satellite name then start time then name.
  *
  * @extends BaseJob<list<Schedule>>
  */
@@ -41,12 +41,12 @@ final class GetTodaysSchedulesJob extends BaseJob
             ->where(fn (Builder $w) => $w
                 ->whereIn('satellite_id', $this->satelliteIds)
                 ->orWhereIn('id', $this->alsoScheduleIds))
-            ->where(fn (Builder $q) => $q->whereNull('weekday')->orWhere('weekday', WeekdayEnum::of($this->today)->value))
+            ->where(fn (Builder $q) => $q->where('weekday', WeekdayEnum::of($this->today)->value)->orWhereDate('date', $this->today->toDateString()))
             ->with('satellite')
             ->get()
             ->sortBy([
                 fn (Schedule $a, Schedule $b): int => mb_strtolower($a->satellite->name) <=> mb_strtolower($b->satellite->name),
-                fn (Schedule $a, Schedule $b): int => ($a->starts_at ?? '99') <=> ($b->starts_at ?? '99'),
+                fn (Schedule $a, Schedule $b): int => $a->starts_at <=> $b->starts_at,
                 fn (Schedule $a, Schedule $b): int => mb_strtolower($a->name) <=> mb_strtolower($b->name),
             ]);
 

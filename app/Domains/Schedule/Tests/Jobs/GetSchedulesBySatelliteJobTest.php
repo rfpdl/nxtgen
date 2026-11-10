@@ -21,17 +21,18 @@ function scheduleNames(array $bySatellite): array
     return array_map(fn (array $schedules): array => array_map(fn (Schedule $s): string => $s->name, $schedules), $bySatellite);
 }
 
-it('lists each satellite\'s active classes by day, then time, then name — a class with no day last', function (): void {
+it('lists each satellite\'s active classes by day, then time, then name — one-time classes last, by date', function (): void {
     $church = church();
     $satellite = satelliteOf($church);
-    scheduleAt($satellite, ['name' => 'Special class', 'weekday' => null, 'starts_at' => null, 'ends_at' => null]);
+    scheduleAt($satellite, ['name' => 'Christmas party', 'weekday' => null, 'date' => '2026-12-24']);
+    scheduleAt($satellite, ['name' => 'True Life Day 1', 'weekday' => null, 'date' => '2026-12-21']);
     scheduleAt($satellite, ['name' => '7PM', 'weekday' => WeekdayEnum::Saturday, 'starts_at' => '19:00', 'ends_at' => '21:00']);
     scheduleAt($satellite, ['name' => '1PM', 'weekday' => WeekdayEnum::Saturday, 'starts_at' => '13:00', 'ends_at' => '15:00']);
-    scheduleAt($satellite, ['name' => 'Midweek', 'weekday' => WeekdayEnum::Wednesday, 'starts_at' => '19:00', 'ends_at' => null]);
+    scheduleAt($satellite, ['name' => 'Midweek', 'weekday' => WeekdayEnum::Wednesday, 'starts_at' => '19:00', 'ends_at' => '20:30']);
 
     $found = (new GetSchedulesBySatelliteJob(church: $church, satelliteIds: [$satellite->id]))->handle();
 
-    expect(scheduleNames($found))->toBe([$satellite->id => ['Midweek', '1PM', '7PM', 'Special class']]);
+    expect(scheduleNames($found))->toBe([$satellite->id => ['Midweek', '1PM', '7PM', 'True Life Day 1', 'Christmas party']]);
 });
 
 it('keys several satellites in one go — one with no classes is an empty list', function (): void {

@@ -8,17 +8,21 @@ const onePm: Schedule = {
     name: '1PM',
     weekday: 'saturday',
     weekday_label: 'Saturdays',
+    date: null,
+    date_label: null,
     starts_at: '13:00',
     ends_at: '15:00',
 }
 
-const special: Schedule = {
+const party: Schedule = {
     id: 5,
-    name: 'Special class',
+    name: 'Christmas party',
     weekday: null,
     weekday_label: null,
-    starts_at: null,
-    ends_at: null,
+    date: '2026-12-24',
+    date_label: 'Thu 24 Dec 2026',
+    starts_at: '18:00',
+    ends_at: '20:00',
 }
 
 describe('ScheduleCard', () => {
@@ -29,13 +33,18 @@ describe('ScheduleCard', () => {
         expect(wrapper.text()).toContain('Saturdays · 13:00–15:00')
     })
 
-    it('says a class with no day meets any day, and shows a start with no end', () => {
-        expect(mount(ScheduleCard, { props: { schedule: special } }).text()).toContain('Any day')
+    it('shows a one-time class on its date', () => {
+        expect(mount(ScheduleCard, { props: { schedule: party } }).text()).toContain(
+            'Thu 24 Dec 2026 · 18:00–20:00',
+        )
+    })
 
-        const startOnly = mount(ScheduleCard, {
-            props: { schedule: { ...onePm, ends_at: null } },
-        })
-        expect(startOnly.text()).toContain('Saturdays · from 13:00')
+    it('shows a past class without Edit, but it can be retired (its name is free again)', () => {
+        const wrapper = mount(ScheduleCard, { props: { schedule: party, past: true } })
+
+        expect(wrapper.text()).toContain('Thu 24 Dec 2026 · 18:00–20:00')
+        expect(wrapper.find('[data-testid="edit-schedule"]').exists()).toBe(false)
+        expect(wrapper.find('[data-testid="retire-schedule"]').exists()).toBe(true)
     })
 
     it('asks to edit', async () => {

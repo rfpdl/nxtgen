@@ -113,7 +113,7 @@ it('makes a satellite\'s class, in the satellite\'s church, active on Saturdays 
     $satellite = satelliteOf(church());
 
     $class = scheduleAt($satellite, ['name' => '7PM', 'starts_at' => '19:00', 'ends_at' => '21:00']);
-    $special = scheduleAt($satellite, ['name' => 'Special class', 'weekday' => null, 'is_active' => false]);
+    $special = scheduleAt($satellite, ['name' => 'Special class', 'weekday' => null, 'date' => '2026-12-24', 'is_active' => false]);
 
     expect([$class->church_id, $class->satellite_id, $class->name, $class->weekday, $class->is_active])
         ->toBe([$satellite->church_id, $satellite->id, '7PM', WeekdayEnum::Saturday, true])

@@ -24,8 +24,20 @@ const onePm: Schedule = {
     name: '1PM',
     weekday: 'saturday',
     weekday_label: 'Saturdays',
+    date: null,
+    date_label: null,
     starts_at: '13:00',
     ends_at: '15:00',
+}
+
+const party: Schedule = {
+    ...onePm,
+    id: 5,
+    name: 'Christmas party',
+    weekday: null,
+    weekday_label: null,
+    date: '2026-12-24',
+    date_label: 'Thu 24 Dec 2026',
 }
 
 describe('ScheduleForm', () => {
@@ -34,14 +46,15 @@ describe('ScheduleForm', () => {
         put.mockReset()
     })
 
-    it('offers "no set day" and every day from the page\'s weekday enum', () => {
+    it("starts weekly, offering every day from the page's weekday enum, and no date", () => {
         const wrapper = mount(ScheduleForm, {
             props: { action: '/dubai/admin/classes', submitLabel: 'Add class' },
         })
 
+        expect(wrapper.find('[data-testid="schedule-date"]').exists()).toBe(false)
         const labels = wrapper.find('[data-testid="schedule-weekday"]').findAll('option')
         expect(labels.map((o) => o.text())).toEqual([
-            'No set day (shows every day)',
+            'Choose the day',
             'Monday',
             'Tuesday',
             'Wednesday',
@@ -52,20 +65,26 @@ describe('ScheduleForm', () => {
         ])
     })
 
-    it('adds a class — at the satellite in the address, never one it names — with no day or times if none are given', async () => {
+    it('adds a one-time class on a date — at the satellite in the address, never one it names', async () => {
         const wrapper = mount(ScheduleForm, {
             props: { action: '/dubai/admin/classes', submitLabel: 'Add class' },
         })
 
-        await wrapper.find('[data-testid="schedule-name"]').setValue('Special class')
+        await wrapper.find('[data-testid="schedule-name"]').setValue('Christmas party')
+        await wrapper.find('[data-testid="schedule-one-time"]').trigger('click')
+        expect(wrapper.find('[data-testid="schedule-weekday"]').exists()).toBe(false)
+        await wrapper.find('[data-testid="schedule-date"]').setValue('2026-12-24')
+        await wrapper.find('[data-testid="schedule-starts-at"]').setValue('18:00')
+        await wrapper.find('[data-testid="schedule-ends-at"]').setValue('20:00')
         await wrapper.find('form').trigger('submit')
 
         expect(form).not.toHaveProperty('satellite_id')
         expect(form).toMatchObject({
-            name: 'Special class',
-            weekday: '',
-            starts_at: '',
-            ends_at: '',
+            name: 'Christmas party',
+            one_time: true,
+            date: '2026-12-24',
+            starts_at: '18:00',
+            ends_at: '20:00',
         })
         expect(post).toHaveBeenCalledWith('/dubai/admin/classes', expect.anything())
         expect(put).not.toHaveBeenCalled()
@@ -76,7 +95,12 @@ describe('ScheduleForm', () => {
             props: { action: '/dubai/admin/classes/4', schedule: onePm, submitLabel: 'Save' },
         })
 
-        expect(form).toMatchObject({ name: '1PM', weekday: 'saturday', starts_at: '13:00' })
+        expect(form).toMatchObject({
+            name: '1PM',
+            one_time: false,
+            weekday: 'saturday',
+            starts_at: '13:00',
+        })
         await wrapper.find('[data-testid="schedule-starts-at"]').setValue('13:30')
         await wrapper.find('form').trigger('submit')
 
@@ -85,6 +109,15 @@ describe('ScheduleForm', () => {
 
         await wrapper.find('[data-testid="schedule-cancel"]').trigger('click')
         expect(wrapper.emitted('done')).toHaveLength(1)
+    })
+
+    it('edits a one-time class from its date', () => {
+        const wrapper = mount(ScheduleForm, {
+            props: { action: '/dubai/admin/classes/5', schedule: party, submitLabel: 'Save' },
+        })
+
+        expect(form).toMatchObject({ one_time: true, date: '2026-12-24', weekday: '' })
+        expect(wrapper.find('[data-testid="schedule-date"]').exists()).toBe(true)
     })
 
     it('adds a class and says it is done, so the page can close the form', async () => {

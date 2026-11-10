@@ -14,6 +14,7 @@ import { route } from 'ziggy-js'
  * One satellite on the Classes page: its classes (GLOSSARY "Schedule") in the order of the week, one opened for
  * editing at a time in place, and "+ Add a class", which opens the add form until it is saved or cancelled — so a
  * phone is not one long form per satellite (Roy's look, 2026-10-26). A class admin (TODO #9) adds none (`can_add`).
+ * One-time classes whose date has gone are listed under "Past" (Roy 2026-11-10), with Retire only.
  */
 defineProps<{ satellite: SatelliteSchedules }>()
 
@@ -68,5 +69,19 @@ function retire(scheduleId: number): void {
             @click="adding = true"
             >+ Add a class</AppButton
         >
+        <div
+            v-if="satellite.past.length > 0"
+            class="flex flex-col gap-3"
+            data-testid="past-schedules"
+        >
+            <SectionHeading level="3">Past</SectionHeading>
+            <ScheduleCard
+                v-for="schedule in satellite.past"
+                :key="schedule.id"
+                :schedule="schedule"
+                past
+                @retire="retire"
+            />
+        </div>
     </section>
 </template>

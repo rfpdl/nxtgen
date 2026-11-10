@@ -5,22 +5,24 @@ import type { Schedule } from '@/types'
 import { computed, ref } from 'vue'
 
 /**
- * One class (GLOSSARY "Schedule") on the Classes page: its name, day and times, with Edit and Retire. Retiring
- * asks once more, saying what it means, before it is sent.
+ * One class (GLOSSARY "Schedule") on the Classes page: its name, its day (weekly) or date (one-time) and times, with
+ * Edit and Retire. Retiring asks once more, saying what it means, before it is sent. A `past` class — a one-time class
+ * whose date has gone (Roy 2026-11-10) — has no Edit; retiring it frees its name for next year's.
  */
-const props = defineProps<{ schedule: Schedule }>()
+const props = defineProps<{ schedule: Schedule; past?: boolean }>()
 
 const emit = defineEmits<{ edit: []; retire: [scheduleId: number] }>()
 
 const confirming = ref(false)
 
 const when = computed(() => {
-    const day = props.schedule.weekday_label ?? 'Any day'
-    const { starts_at: starts, ends_at: ends } = props.schedule
-    if (starts !== null && ends !== null) return `${day} · ${starts}–${ends}`
-    if (starts !== null) return `${day} · from ${starts}`
-    if (ends !== null) return `${day} · until ${ends}`
-    return day
+    const {
+        weekday_label: day,
+        date_label: date,
+        starts_at: starts,
+        ends_at: ends,
+    } = props.schedule
+    return `${day ?? date ?? ''} · ${starts}–${ends}`
 })
 
 function retire(): void {
@@ -40,7 +42,12 @@ function retire(): void {
             <p class="text-text-muted text-lg">{{ when }}</p>
         </div>
         <div v-if="!confirming" class="flex flex-wrap items-center gap-3">
-            <AppButton variant="secondary" data-testid="edit-schedule" @click="$emit('edit')">
+            <AppButton
+                v-if="!past"
+                variant="secondary"
+                data-testid="edit-schedule"
+                @click="$emit('edit')"
+            >
                 Edit
             </AppButton>
             <AppButton variant="link" data-testid="retire-schedule" @click="confirming = true">

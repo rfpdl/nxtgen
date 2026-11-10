@@ -1,5 +1,5 @@
 # 10 — A class is weekly or one-time (TODO #35)
-Status: ready-for-agent (Roy answered 2026-11-10, `../batch-c-plan.md`)
+Status: done 2026-11-10 (built test-first; reviews below)
 Spec item 14. A class is either weekly (a weekday, start and end time) or one-time (one date, start and end time —
 True Life, the Christmas party). The end is after the start. A several-day event is several one-time classes. The
 demo "Any day" class goes. Each class is at one satellite. Done when: an admin adds "Christmas party" for one date;

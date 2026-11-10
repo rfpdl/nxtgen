@@ -24,9 +24,15 @@ final class ScheduleFactory extends Factory
             'name' => fake()->unique()->numerify('Class ###'),
             'weekday' => WeekdayEnum::Saturday,
             'starts_at' => '13:00',
-            'ends_at' => '15:00',
+            // Two hours after the start (never past 23:59), so a test that names only a start still ends after it.
+            'ends_at' => fn (array $attributes): string => self::time($attributes['starts_at']) >= '22:00' ? '23:59' : date('H:i', (int) strtotime(self::time($attributes['starts_at']).' +2 hours')),
             'is_active' => true,
         ];
+    }
+
+    private static function time(mixed $value): string
+    {
+        return is_string($value) ? $value : throw new \InvalidArgumentException('Expected a time.');
     }
 
     /** Factory attributes arrive as mixed; a related id is always an int (or a model). */

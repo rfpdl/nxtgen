@@ -10,7 +10,7 @@ use App\Enums\WeekdayEnum;
 use App\Foundation\Jobs\BaseJob;
 
 /**
- * Add a class (Schedule) at a satellite. A name another ACTIVE class there has is refused by the database
+ * Add a class (Schedule) at a satellite: weekly on `$weekday`, or one-time on `$date` (Y-m-d) — the other null. A name another ACTIVE class there has is refused by the database
  * (UniqueConstraintViolationException) — the Feature turns that into words on the name field.
  *
  * @extends BaseJob<Schedule>
@@ -21,8 +21,9 @@ final class CreateScheduleJob extends BaseJob
         private readonly Satellite $satellite,
         private readonly string $name,
         private readonly ?WeekdayEnum $weekday,
-        private readonly ?string $startsAt,
-        private readonly ?string $endsAt,
+        private readonly ?string $date,
+        private readonly string $startsAt,
+        private readonly string $endsAt,
     ) {}
 
     public function handle(): Schedule
@@ -32,6 +33,7 @@ final class CreateScheduleJob extends BaseJob
             'satellite_id' => $this->satellite->id,
             'name' => $this->name,
             'weekday' => $this->weekday,
+            'date' => $this->date,
             'starts_at' => $this->startsAt,
             'ends_at' => $this->endsAt,
             'is_active' => true,

@@ -33,6 +33,17 @@ it('runs a request that says so as if it were that many minutes later', function
         ->and(CarbonImmutable::now()->toDateTimeString())->toBe('2026-11-03 21:00:00');
 });
 
+it('moves the door\'s day by as much — a one-time class is not offered the day after (issue 10)', function (): void {
+    Route::get('/__test/door-today', fn () => response()->json(['day' => config('nxtgen.door_today')]));
+    app()->register(E2EServiceProvider::class, force: true);
+    config(['nxtgen.door_today' => '2026-11-07']);
+
+    withHeader(MoveE2EClock::HEADER, '1440')->get('/__test/door-today')->assertJson(['day' => '2026-11-08']);
+
+    // …and puts it back for the next request.
+    expect(config('nxtgen.door_today'))->toBe('2026-11-07');
+});
+
 it('never sweeps away saved sign-ins, whatever a request\'s clock says', function (): void {
     // Laravel clears old sessions on a random request (the lottery), by that request's clock. A week ahead, every
     // staff member's saved sign-in looks a week old and goes — and every staff journey after it fails. An e2e

@@ -40,10 +40,11 @@ it('gives the door every case to try', function (): void {
         ->and(Guardian::query()->whereNull('user_id')->count())->toBeGreaterThanOrEqual(1);   // a second guardian, no login
 });
 
-it('adds a class with no set day, so the door has a class to try on any day', function (): void {
+it('makes every demo class weekly — the "Any day" class is gone (spec item 14)', function (): void {
     seed(DatabaseSeeder::class);
 
-    expect(Schedule::query()->whereNull('weekday')->pluck('name')->all())->toBe(['Any day (demo)']);
+    expect(Schedule::query()->orderBy('name')->get()->map(fn (Schedule $s): string => "{$s->name} {$s->weekday?->value}")->all())
+        ->toBe(['1PM saturday', '7PM saturday']);
 });
 
 it('is safe to run again', function (): void {
@@ -52,6 +53,5 @@ it('is safe to run again', function (): void {
 
     seed(DemoFamiliesSeeder::class);
 
-    expect(Family::query()->count())->toBe($families)
-        ->and(Schedule::query()->whereNull('weekday')->count())->toBe(1);
+    expect(Family::query()->count())->toBe($families);
 });

@@ -81,7 +81,7 @@ final class GetAttendanceSelectionJob extends BaseJob
 
         $today = $this->sessions()->whereDate('date', $this->today->toDateString())->get()
             ->sortBy([
-                fn (Session $a, Session $b): int => ($a->schedule->starts_at ?? '99') <=> ($b->schedule->starts_at ?? '99'),
+                fn (Session $a, Session $b): int => $a->schedule->starts_at <=> $b->schedule->starts_at,
                 fn (Session $a, Session $b): int => $a->id <=> $b->id,
             ])
             ->first();

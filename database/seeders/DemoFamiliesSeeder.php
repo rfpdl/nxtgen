@@ -8,7 +8,6 @@ use App\Data\Models\Child;
 use App\Data\Models\Church;
 use App\Data\Models\Family;
 use App\Data\Models\Satellite;
-use App\Data\Models\Schedule;
 use App\Domains\Family\DataObjects\ChildDetailsData;
 use App\Domains\Family\DataObjects\FamilyRegistrationData;
 use App\Domains\Family\DataObjects\GuardianDetailsData;
@@ -27,8 +26,8 @@ use Illuminate\Database\Seeder;
  *
  * Every case the door and the lists show: each Level and Squad, an allergy, an inactive child, a Graduated one, one
  * with no Level, a visiting CCF Sharjah family, a second guardian (no login). Ages are worked out from today, so
- * the suggested Levels stay right whenever it runs. Plus "Any day (demo)": a class with no set day, so the door has
- * something to check into on any day of the week.
+ * the suggested Levels stay right whenever it runs. (The "Any day (demo)" class went with spec item 14: every class is
+ * weekly or one-time — add a one-time class for today to try the door on another day.)
  */
 final class DemoFamiliesSeeder extends Seeder
 {
@@ -37,11 +36,6 @@ final class DemoFamiliesSeeder extends Seeder
         $ccf = Church::query()->where('slug', 'ccf')->firstOrFail();
         $dxb = Satellite::query()->where('church_id', $ccf->id)->where('slug', 'dubai')->firstOrFail();
         $house = Satellite::query()->where('church_id', $ccf->id)->where('slug', 'sharjah')->firstOrFail();
-
-        Schedule::query()->firstOrCreate(
-            ['church_id' => $ccf->id, 'satellite_id' => $dxb->id, 'name' => 'Any day (demo)', 'is_active' => true],
-            ['weekday' => null, 'starts_at' => null, 'ends_at' => null],
-        );
 
         if (Family::query()->where('church_id', $ccf->id)->exists()) {
             return;   // already seeded: never a second copy of every family

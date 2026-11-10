@@ -72,8 +72,9 @@ every week — "1PM" on Saturdays) or **one-time** (one date — "True Life Day 
 _Avoid_: Class (in code), event series, service, session
 
 **Session**:
-One Schedule on one date (e.g. Saturday 31 Oct, 1PM at CCF Dubai). An admin opens its check-in (which gives it its
-code) and closes it, or it closes at midnight; a Child is checked in only while it is open.
+One Schedule on one date (e.g. Saturday 31 Oct, 1PM at CCF Dubai). An admin opens it (which gives it its code) and
+closes it, or it closes at midnight; a Child is checked in only while it is open, late or not. A closed Session can be
+looked at, not changed.
 _Avoid_: Event, occurrence, service
 
 **Check-in**:

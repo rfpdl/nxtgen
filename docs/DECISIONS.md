@@ -4,6 +4,33 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-11-10 (Issue 10 built — a class is weekly or one-time)
+
+- **Every class is weekly (a weekday) or one-time (one date), never both, and always has a start and an end time,
+  the end after the start** (spec item 14) — held by the database. The "Any day (demo)" class is gone: to try the
+  door on another day, add a one-time class for today. The Classes form asks "Every week" or "One date".
+- **A one-time class whose date has gone is on Classes' "Past" list, newest first** (Roy's answer 4), with Retire
+  but no Edit (Claude's call, reversible). Attendance keeps its Sessions.
+- **A one-time class's date may be any date, past ones too** (Claude's call, reversible): a past date just lands on
+  "Past". Two one-time classes may not share a name while both are listed (the same rule as weekly ones) — call it
+  "Christmas party 2026", or retire last year's.
+- **The schedules table was changed in place** (the app is not live — Roy): a working database needs
+  `php artisan migrate:fresh --seed`.
+- In the browser tests a request may ask for the day after (`X-E2E-Clock-Ahead`): the door's day moves with it, and
+  the e2e sign-in lasts two days so a staff member stays signed in there.
+
+## 2026-11-10 (Batch C, before building — Roy)
+
+- **An admin opens and closes the Session, not "check-in"** (Roy: "i dont think we will close check in, we can close
+  the session. coz sometimes there is a kid who comes lets say 3/4 of the class already"). While a Session is open
+  everything at its door works — check-in, undo, Who's in, present, head count — for the whole class, late children
+  too. Closed (by an admin, or at midnight), it is read-only: Who's in can be looked at, nothing changes. It can be
+  reopened the same day.
+- **A helper for the day may do anything in Serve at that satellite** (Roy, confirming his answer 2): every open
+  Session's door, Families, registering — never Admin — while their Session is open. Issue 14's page checks are
+  changed to match (they said another Session and Families were 404).
+- **An admin adds a helper on People** (Roy): a choice beside Admin and Lifeshaper, for one of today's classes.
+
 ## 2026-11-10 (Batch C planned — classes and Sessions, TODO #35)
 
 Roy answered the six open questions (`tasks/2026-11-07-ccf-nxtgen/batch-c-plan.md`):

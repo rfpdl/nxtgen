@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppButton from '@/components/atoms/AppButton.vue'
 import Card from '@/components/atoms/Card.vue'
+import ChoiceChips from '@/components/atoms/ChoiceChips.vue'
 import SelectField from '@/components/atoms/SelectField.vue'
 import TextField from '@/components/atoms/TextField.vue'
 import { useEnum } from '@/composables/useEnum'
@@ -9,7 +10,8 @@ import { useForm } from '@inertiajs/vue3'
 import { computed } from 'vue'
 
 /**
- * Add or edit a class (GLOSSARY "Schedule"): a name, and a day and start/end time if it has them. Without a saved
+ * Add or edit a class (GLOSSARY "Schedule"; spec item 14): a name; every week on a day, or one date (a one-time class —
+ * the Christmas party); and a start and an end time. Without a saved
  * `schedule` it ADDS a class (POST) — at the satellite in the address, which the server reads from `action`
  * (DECISIONS 2026-11-08); given one it EDITS that one (PUT, satellite never changes). The days come from the page's `enums.weekday`; the server checks the times (HH:MM, end after start).
  * `done` says it was saved or cancelled, so the page can close it.
@@ -26,7 +28,9 @@ const { options: weekdays } = useEnum('weekday')
 
 const form = useForm<Draft<ScheduleInput>>({
     name: props.schedule?.name ?? '',
+    one_time: props.schedule !== undefined && props.schedule.date !== null,
     weekday: props.schedule?.weekday ?? '',
+    date: props.schedule?.date ?? '',
     starts_at: props.schedule?.starts_at ?? '',
     ends_at: props.schedule?.ends_at ?? '',
 })
@@ -52,6 +56,15 @@ const weekdayOptions = computed(() =>
 function setWeekday(value: string | number | null): void {
     form.weekday = (value ?? '') as typeof form.weekday
 }
+
+const often = [
+    { value: 'weekly', label: 'Every week', testid: 'schedule-weekly' },
+    { value: 'once', label: 'One date', testid: 'schedule-one-time' },
+]
+const howOften = computed({
+    get: () => (form.one_time ? 'once' : 'weekly'),
+    set: (value: string | number | null) => (form.one_time = value === 'once'),
+})
 </script>
 
 <template>
@@ -70,9 +83,24 @@ function setWeekday(value: string | number | null): void {
                 :error="form.errors.name"
                 data-testid="schedule-name"
             />
+            <ChoiceChips
+                v-model="howOften"
+                label="How often"
+                :options="often"
+                data-testid="schedule-how-often"
+            />
+            <TextField
+                v-if="form.one_time"
+                v-model="form.date"
+                type="date"
+                label="Date"
+                :error="form.errors.date"
+                data-testid="schedule-date"
+            />
             <SelectField
+                v-else
                 label="Day"
-                placeholder="No set day (shows every day)"
+                placeholder="Choose the day"
                 :options="weekdayOptions"
                 :model-value="form.weekday || null"
                 :error="form.errors.weekday"

@@ -31,7 +31,7 @@ use Symfony\Component\Mime\Address;
  * The door's day is the next Saturday (today, on a Saturday): CCF DXB's 1PM and 7PM meet only on Saturdays, and the
  * Lifeshaper journeys check children into 1PM whatever day the suite runs. Only the door reads it
  * (GetChurchTodayJob); every other clock is the real one — unless a journey's request asks for a later one
- * (MoveE2EClock: a link opened after it has expired). So old sessions are never cleared here: by a moved clock,
+ * (MoveE2EClock: a link opened after it has expired; the day after a one-time class), which moves the door's day too. So old sessions are never cleared here: by a moved clock,
  * every saved sign-in would look old.
  */
 final class E2EServiceProvider extends ServiceProvider

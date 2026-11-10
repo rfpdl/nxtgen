@@ -99,7 +99,7 @@ declare namespace App {
                 export type DoorClassData = {
                     id: number
                     name: string
-                    times: string | null
+                    times: string
                 }
                 export type DoorFamilyData = {
                     id: number
@@ -382,6 +382,7 @@ declare namespace App {
                     id: number
                     name: string
                     schedules: App.Domains.Schedule.DataObjects.ScheduleData[]
+                    past: App.Domains.Schedule.DataObjects.ScheduleData[]
                     can_add: boolean
                 }
                 export type ScheduleData = {
@@ -389,8 +390,10 @@ declare namespace App {
                     name: string
                     weekday: App.Enums.WeekdayEnum | null
                     weekday_label: string | null
-                    starts_at: string | null
-                    ends_at: string | null
+                    date: string | null
+                    date_label: string | null
+                    starts_at: string
+                    ends_at: string
                 }
             }
         }
@@ -617,9 +620,11 @@ declare namespace App {
                 }
                 export type ScheduleInput = {
                     name: string
+                    one_time: boolean
                     weekday: App.Enums.WeekdayEnum | null
-                    starts_at: string | null
-                    ends_at: string | null
+                    date: string | null
+                    starts_at: string
+                    ends_at: string
                 }
                 export type UpdateChildLevelInput = {
                     level: number

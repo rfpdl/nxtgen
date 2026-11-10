@@ -35,6 +35,20 @@ export const FAMILIES = {
 
 export const SATELLITES = { dxb: 'CCF Dubai', house: 'CCF Sharjah' } as const
 
+/**
+ * The e2e server's door day as `YYYY-MM-DD` (E2EServiceProvider::doorSaturday): today in Dubai if it is a Saturday,
+ * else the next Saturday.
+ */
+export function doorSaturday(): string {
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Dubai' })
+    const date = new Date(`${today}T00:00:00Z`)
+    date.setUTCDate(date.getUTCDate() + ((6 - date.getUTCDay() + 7) % 7))
+    return date.toISOString().slice(0, 10)
+}
+
+/** A request header that runs it a day later (MoveE2EClock) — the door's day too. */
+export const DAY_AFTER = { 'X-E2E-Clock-Ahead': String(24 * 60) } as const
+
 /** CCF Dubai's Saturday classes (DemoChurchSeeder). CCF Sharjah has none. */
 export const CLASSES = {
     onePm: { name: '1PM', when: 'Saturdays · 13:00–15:00' },

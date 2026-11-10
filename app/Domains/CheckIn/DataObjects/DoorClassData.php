@@ -15,23 +15,16 @@ final class DoorClassData extends Data
     public function __construct(
         public int $id,
         public string $name,
-        /** "13:00–15:00", "from 13:00", or null when the class has no time. */
-        public ?string $times,
+        /** "13:00–15:00" */
+        public string $times,
     ) {}
 
     public static function fromModel(Schedule $schedule): self
     {
-        $start = $schedule->startsAt();
-        $end = $schedule->endsAt();
-
         return new self(
             id: $schedule->id,
             name: $schedule->name,
-            times: match (true) {
-                $start !== null && $end !== null => "{$start}–{$end}",
-                $start !== null => "from {$start}",
-                default => null,
-            },
+            times: "{$schedule->startsAt()}–{$schedule->endsAt()}",
         );
     }
 }
