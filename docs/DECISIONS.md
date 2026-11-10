@@ -4,6 +4,24 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-11-10 (Issue 14 built — a helper for the day)
+
+- **An admin adds a helper on People** (Roy): "Helper for the day · CCF Dubai · 1PM today" sits beside the other
+  Roles; name and email, and the helper is emailed a sign-in link. The Role is held at one Session.
+- **Only for a class open now** (Claude's call, reversible): a Session exists once an admin opens the class, so a
+  helper is added at the door's time; one not opened yet, or closed, is not offered.
+- **While that Session is open the helper may do anything a Lifeshaper may in Serve at its satellite** (Roy: "no need
+  to do RBAC now, anything in serve") — every open door there, Families, registering — and never Admin. Once it
+  closes, by an admin or at midnight, they find nothing ("not found"; signing in says "nothing here yet"); opened
+  again the same day, they are back. People lists a helper on their Session's day only.
+- Reviews (Astra, code + test): a helper's day is matched to THEIR church's date (another church's clock never
+  counts); the platform gives no helper and no Role at a Session; a Helper Role is never a whole satellite's; a
+  helper is not staff for a password; a retired class ends its helpers' day; platform People names helpers too.
+- **The enums' words are the backend's only** (Roy 2026-11-10: "we have enum from backend, can we just share it to
+  frontend instead of retyping"): a class's state on Serve ("Not open yet", "Open", "Closed") and its colour, and the
+  door's "1PM is closed." come from SessionStateEnum in the page's data — no copy in Vue. A pill takes an enum's
+  colour as it comes.
+
 ## 2026-11-10 (Issue 13 built — Serve: "Open now" and "Today")
 
 - **Serve's first page (`/dubai/serve`) has two parts: "Open now" — the classes open, each "Go to the door" — and

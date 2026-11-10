@@ -23,11 +23,6 @@ final class GetChurchTodayJob extends BaseJob
 
     public function handle(): CarbonImmutable
     {
-        $fixed = config('nxtgen.door_today');
-        if (is_string($fixed) && $fixed !== '') {
-            return CarbonImmutable::parse($fixed, $this->church->timezone)->startOfDay();
-        }
-
-        return CarbonImmutable::now($this->church->timezone)->startOfDay();
+        return $this->church->today();
     }
 }

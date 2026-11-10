@@ -45,7 +45,7 @@ enum SessionStateEnum: string implements HasEnumMetadata
     public function color(): string
     {
         return match ($this) {
-            self::NotOpen => 'neutral',
+            self::NotOpen => 'muted',
             self::Open => 'success',
             self::Closed => 'warning',
         };

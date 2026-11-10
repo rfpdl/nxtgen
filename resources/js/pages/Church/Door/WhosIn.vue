@@ -87,6 +87,9 @@ function pickSquad(id: string | number | null): void {
                 v-if="session.state !== 'open'"
                 :class-name="session.name"
                 :state="session.state"
+                :notice="session.notice"
+                :state-label="session.state_label"
+                :state-color="session.state_color"
                 :can-open="false"
             />
             <EmptyState

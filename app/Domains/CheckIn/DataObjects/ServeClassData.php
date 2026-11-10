@@ -9,6 +9,7 @@ use App\Data\Models\Session;
 use App\Enums\SessionStateEnum;
 use Carbon\CarbonInterface;
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
@@ -25,6 +26,11 @@ final class ServeClassData extends Data
         /** "13:00–15:00" */
         public string $times,
         public SessionStateEnum $state,
+        /** "Not open yet", "Open", "Closed" — the enum's own words and colour (SessionStateEnum), never retyped on screen. */
+        public string $state_label,
+        /** HasEnumMetadata::color — the frontend's EnumColor. */
+        #[LiteralTypeScriptType("'success' | 'info' | 'warning' | 'danger' | 'muted'")]
+        public string $state_color,
         /** Its door is `/<code>/checkin`; null until an admin opens it. */
         public ?string $code,
         public bool $can_open,
@@ -36,7 +42,9 @@ final class ServeClassData extends Data
             id: $class->id,
             name: $class->name,
             times: "{$class->startsAt()}–{$class->endsAt()}",
-            state: SessionStateEnum::of($session, $today),
+            state: $state = SessionStateEnum::of($session, $today),
+            state_label: $state->label(),
+            state_color: $state->color(),
             code: $session?->code,
             can_open: $canOpen,
         );

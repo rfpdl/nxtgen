@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Church\Features\People;
 
 use App\Data\Models\RoleAssignment;
+use App\Domains\CheckIn\Jobs\GetSessionsByIdJob;
 use App\Domains\Church\DataObjects\RoleScope;
 use App\Domains\Schedule\Jobs\GetSchedulesByIdJob;
 use App\Enums\AccessRowEnum;
@@ -40,9 +41,12 @@ final class RemoveStaffRoleFeature extends BaseChurchFeature
 
         $assignment = $this->assignment;
         // A class admin's Role (TODO #9) is removed by whoever may give it: the class's satellite says who.
-        $class = $assignment->scope_type === ScopeTypeEnum::Schedule
-            ? $this->run(new GetSchedulesByIdJob(church: $church, ids: [$assignment->scope_id]))[$assignment->scope_id] ?? null
-            : null;
+        // …and a helper's (spec item 18) by its Session's.
+        $class = match ($assignment->scope_type) {
+            ScopeTypeEnum::Schedule => $this->run(new GetSchedulesByIdJob(church: $church, ids: [$assignment->scope_id]))[$assignment->scope_id] ?? null,
+            ScopeTypeEnum::Session => $this->run(new GetSessionsByIdJob(church: $church, ids: [$assignment->scope_id]))[$assignment->scope_id] ?? null,
+            ScopeTypeEnum::Satellite => null,
+        };
         abort_unless($assignment->is_active && $scope->canGrant($assignment->role, RoleScope::ofAssignment($assignment, $class)), 404);
 
         $refused = $this->run(new RemoveRoleOperation(church: $church, assignment: $assignment));

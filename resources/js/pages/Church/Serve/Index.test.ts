@@ -22,6 +22,8 @@ const make = (name: string, state: ServeClass['state'], canOpen = false): ServeC
     name,
     times: '13:00–15:00',
     state,
+    state_label: state,
+    state_color: 'muted',
     code: state === 'not_open' ? null : `code${name}`,
     can_open: canOpen,
 })

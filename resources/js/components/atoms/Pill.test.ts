@@ -44,4 +44,13 @@ describe('Pill', () => {
             'Level 3',
         )
     })
+
+    it("takes a backend enum's colour as it comes — muted is the neutral pill", () => {
+        expect(mount(Pill, { props: { variant: 'muted' } }).classes()).toContain(
+            'bg-surface-sunken',
+        )
+        expect(mount(Pill, { props: { variant: 'success' } }).classes()).toContain(
+            'bg-success-soft',
+        )
+    })
 })

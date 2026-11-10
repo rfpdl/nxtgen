@@ -393,14 +393,14 @@ const DOOR_CHECK_IN = ['checked_in_at', 'id', 'level.name', 'level.number', 'nic
 
 /** The Session a door or Who's in page is at (DoorSessionData): its code, class, times, date and state — nothing else. */
 /** …and the bar's dropdown there (Roy 2026-11-10): the satellite's open classes, each its code and name only. */
-const DOOR_SESSION = ['open_classes.*.code', 'open_classes.*.name', 'session.class_id', 'session.code', 'session.date_label', 'session.name', 'session.state', 'session.times'];
+const DOOR_SESSION = ['open_classes.*.code', 'open_classes.*.name', 'session.class_id', 'session.code', 'session.date_label', 'session.name', 'session.notice', 'session.state', 'session.state_color', 'session.state_label', 'session.times'];
 
 describe('Serve\'s first page', function (): void {
     it('shows any staff today\'s classes — name, times, state, its door\'s code — and nothing about anyone @story#208', function (Actor $actor): void {
         travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
         $props = propsOf($actor, fn (AccessWorld $w): string => '/home-sat/serve');
 
-        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, ['today'], prefixed('classes.*', ['can_open', 'code', 'id', 'name', 'state', 'times'])))
+        expect(keyPaths($props))->toBe(allowlist(STAFF_FRAME, ['today'], prefixed('classes.*', ['can_open', 'code', 'id', 'name', 'state', 'state_color', 'state_label', 'times'])))
             ->and(forbiddenOnLists($props))->toBe([]);
     })->with(actors(...Actor::coveringHome()));
 });

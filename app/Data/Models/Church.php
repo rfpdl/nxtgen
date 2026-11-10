@@ -50,6 +50,20 @@ final class Church extends Model
         return $this->hasMany(Satellite::class);
     }
 
+    /**
+     * Today's date at the church — in ITS timezone, at midnight (GetChurchTodayJob says why). `nxtgen.door_today` is set
+     * ONLY by E2EServiceProvider (APP_ENV=e2e): the browser journeys run on the door's Saturday.
+     */
+    public function today(): CarbonImmutable
+    {
+        $fixed = config('nxtgen.door_today');
+        if (is_string($fixed) && $fixed !== '') {
+            return CarbonImmutable::parse($fixed, $this->timezone)->startOfDay();
+        }
+
+        return CarbonImmutable::now($this->timezone)->startOfDay();
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';

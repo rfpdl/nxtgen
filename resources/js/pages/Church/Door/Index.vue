@@ -134,6 +134,9 @@ function openHealth(childId: number): void {
             <SessionControls
                 :class-name="session.name"
                 :state="session.state"
+                :notice="session.notice"
+                :state-label="session.state_label"
+                :state-color="session.state_color"
                 :can-open="can_open"
                 @open="openClass"
                 @close="closeClass"

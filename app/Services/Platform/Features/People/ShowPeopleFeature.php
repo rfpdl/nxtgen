@@ -7,6 +7,7 @@ namespace App\Services\Platform\Features\People;
 use App\Data\Models\RoleAssignment;
 use App\Data\Models\Satellite;
 use App\Data\Models\Schedule;
+use App\Domains\CheckIn\Jobs\GetSessionsByIdJob;
 use App\Domains\Church\DataObjects\GrantOptionData;
 use App\Domains\Church\DataObjects\RoleScope;
 use App\Domains\Church\DataObjects\StaffMemberData;
@@ -47,7 +48,12 @@ final class ShowPeopleFeature extends BasePlatformFeature
             ->filter(fn (RoleAssignment $a): bool => $a->scope_type === ScopeTypeEnum::Schedule)
             ->map(fn (RoleAssignment $a): int => $a->scope_id)->unique()->all())));
 
-        $people = $roles->groupBy('user_id')->map(function ($held) use ($names, $classes): StaffMemberData {
+        // Helpers for the day (spec item 18), named by their Session.
+        $sessions = $this->run(new GetSessionsByIdJob(church: $church, ids: array_values($roles
+            ->filter(fn (RoleAssignment $a): bool => $a->scope_type === ScopeTypeEnum::Session)
+            ->map(fn (RoleAssignment $a): int => $a->scope_id)->unique()->all())));
+
+        $people = $roles->groupBy('user_id')->map(function ($held) use ($names, $classes, $sessions): StaffMemberData {
             /** @var RoleAssignment $first */
             $first = $held->first();
 
@@ -55,7 +61,7 @@ final class ShowPeopleFeature extends BasePlatformFeature
                 id: $first->user->id,
                 name: $first->user->name,
                 email: $first->user->email,
-                roles: array_values($held->map(fn (RoleAssignment $a): StaffRoleData => StaffRoleData::fromModel($a, $names, $classes, canRemove: true))->all()),
+                roles: array_values($held->map(fn (RoleAssignment $a): StaffRoleData => StaffRoleData::fromModel($a, $names, $classes, canRemove: true, sessions: $sessions))->all()),
             );
         })->sortBy(fn (StaffMemberData $p): string => mb_strtolower($p->name))->values();
 

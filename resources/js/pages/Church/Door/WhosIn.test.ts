@@ -29,6 +29,9 @@ const onePm: DoorSession = {
     times: '13:00–15:00',
     date_label: 'Sat 31 Oct',
     state: 'open',
+    state_label: 'Open',
+    state_color: 'success',
+    notice: null,
 }
 const girls: WhosInSquad = {
     id: 5,
@@ -52,7 +55,11 @@ const girls: WhosInSquad = {
 function page(squads: WhosInSquad[], sessionState: SessionState = 'open') {
     return mount(WhosIn, {
         props: {
-            session: { ...onePm, state: sessionState },
+            session: {
+                ...onePm,
+                state: sessionState,
+                notice: sessionState === 'closed' ? '1PM is closed.' : null,
+            },
             open_classes: [{ code: onePm.code, name: onePm.name }],
             squads,
             squad_id: null,

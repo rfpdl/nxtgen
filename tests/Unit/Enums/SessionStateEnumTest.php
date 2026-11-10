@@ -15,3 +15,11 @@ it('says why nothing can change, in plain words — and nothing while open', fun
         ->and(SessionStateEnum::Closed->refusal('1PM'))->toBe('1PM is closed.')
         ->and(SessionStateEnum::Open->refusal('1PM'))->toBeNull();
 });
+
+it('names each state for the screen, with its colour — the one wording the pages show (no copy on the frontend)', function (): void {
+    expect(SessionStateEnum::toFrontend())->toBe([
+        ['value' => 'not_open', 'label' => 'Not open yet', 'color' => 'muted'],
+        ['value' => 'open', 'label' => 'Open', 'color' => 'success'],
+        ['value' => 'closed', 'label' => 'Closed', 'color' => 'warning'],
+    ]);
+});

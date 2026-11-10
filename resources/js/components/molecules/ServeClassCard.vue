@@ -14,13 +14,6 @@ import { route } from 'ziggy-js'
 const props = defineProps<{ serveClass: ServeClass }>()
 const emit = defineEmits<{ open: [classId: number] }>()
 
-const STATES = {
-    open: { label: 'Open', variant: 'success' },
-    not_open: { label: 'Not open yet', variant: 'neutral' },
-    closed: { label: 'Closed', variant: 'warning' },
-} as const
-
-const state = computed(() => STATES[props.serveClass.state])
 /** Open: its door. Closed: its Who's in, to look at (spec item 16). */
 const door = computed(() => {
     const { code, state } = props.serveClass
@@ -38,7 +31,10 @@ const door = computed(() => {
         <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
             <h3 class="text-text text-xl font-bold">{{ serveClass.name }}</h3>
             <p class="text-text-muted text-lg">{{ serveClass.times }}</p>
-            <Pill :variant="state.variant" data-testid="serve-class-state">{{ state.label }}</Pill>
+            <!-- The state's words and colour are the enum's own (SessionStateEnum), sent with the class. -->
+            <Pill :variant="serveClass.state_color" data-testid="serve-class-state">{{
+                serveClass.state_label
+            }}</Pill>
         </div>
         <div class="flex flex-wrap items-center gap-3">
             <AppButton

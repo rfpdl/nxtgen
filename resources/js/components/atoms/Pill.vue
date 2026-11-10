@@ -9,7 +9,8 @@ import { computed } from 'vue'
  * otherwise a `variant`: `danger` for a warning flag (allergies), a status, or `neutral`. Every pair is ≥7:1.
  * The colour never carries the meaning alone: the words are in the pill.
  */
-type Variant = 'neutral' | 'success' | 'warning' | 'info' | 'danger'
+/** A backend enum's colour (EnumColor, HasEnumMetadata::color) is taken as it comes: `muted` is the neutral pill. */
+type Variant = 'neutral' | 'muted' | 'success' | 'warning' | 'info' | 'danger'
 
 const props = withDefaults(defineProps<{ variant?: Variant; level?: Level | null }>(), {
     variant: 'neutral',
@@ -18,6 +19,7 @@ const props = withDefaults(defineProps<{ variant?: Variant; level?: Level | null
 
 const VARIANTS: Record<Variant, string> = {
     neutral: 'bg-surface-sunken text-text',
+    muted: 'bg-surface-sunken text-text',
     success: 'bg-success-soft text-success',
     warning: 'bg-warning-soft text-warning',
     info: 'bg-info-soft text-info',

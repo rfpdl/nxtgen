@@ -117,12 +117,17 @@ declare namespace App {
                     times: string
                     date_label: string
                     state: App.Enums.SessionStateEnum
+                    state_label: string
+                    state_color: 'success' | 'info' | 'warning' | 'danger' | 'muted'
+                    notice: string | null
                 }
                 export type ServeClassData = {
                     id: number
                     name: string
                     times: string
                     state: App.Enums.SessionStateEnum
+                    state_label: string
+                    state_color: 'success' | 'info' | 'warning' | 'danger' | 'muted'
                     code: string | null
                     can_open: boolean
                 }
@@ -465,8 +470,8 @@ declare namespace App {
         export type RegistrationSourceEnum = 'self' | 'staff' | 'import'
         export type RelationshipEnum =
             'mother' | 'father' | 'guardian' | 'grandparent' | 'aunt_uncle' | 'sibling' | 'other'
-        export type RoleEnum = 'admin' | 'lifeshaper'
-        export type ScopeTypeEnum = 'satellite' | 'schedule'
+        export type RoleEnum = 'admin' | 'lifeshaper' | 'helper'
+        export type ScopeTypeEnum = 'satellite' | 'schedule' | 'session'
         export type SessionStateEnum = 'not_open' | 'open' | 'closed'
         export type WeekdayEnum =
             'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'

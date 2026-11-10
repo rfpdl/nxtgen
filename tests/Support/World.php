@@ -124,6 +124,18 @@ function atClass(Schedule $schedule): RoleScope
     return new RoleScope($schedule->satellite->church()->firstOrFail(), ScopeTypeEnum::Schedule, $schedule->id);
 }
 
+/** A helper's place (spec item 18): one Session — one class on one day. */
+function atSession(Session $session): RoleScope
+{
+    return new RoleScope($session->satellite->church()->firstOrFail(), ScopeTypeEnum::Session, $session->id);
+}
+
+/** A new user who is a helper for the day at `$session` (spec item 18). */
+function helperAt(Session $session): User
+{
+    return staffMember(RoleEnum::Helper, atSession($session));
+}
+
 /** A new user who is class admin of `$schedule` (TODO #9). */
 function classAdminOf(Schedule $schedule): User
 {

@@ -112,7 +112,7 @@ describe('the door page', function (): void {
 
         actingAs($lifeshaper)->get(door('/checkin'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
             ->component('Church/Door/Index')
-            ->where('session', ['code' => $session->code, 'class_id' => $session->schedule_id, 'name' => '1PM', 'times' => '13:00–15:00', 'date_label' => 'Sat 31 Oct', 'state' => 'open'])
+            ->where('session', ['code' => $session->code, 'class_id' => $session->schedule_id, 'name' => '1PM', 'times' => '13:00–15:00', 'date_label' => 'Sat 31 Oct', 'state' => 'open', 'state_label' => 'Open', 'state_color' => 'success', 'notice' => null])
             ->where('satellite.slug', 'dxb')
             ->has('checked_in', 1)
             ->where('families', []));

@@ -7,6 +7,7 @@ namespace App\Operations\Church;
 use App\Data\Models\Church;
 use App\Data\Models\Satellite;
 use App\Data\Models\Schedule;
+use App\Data\Models\Session;
 use App\Data\Models\User;
 use App\Domains\Auth\Jobs\CreateMagicLinkJob;
 use App\Domains\Auth\Jobs\SendMagicLinkJob;
@@ -35,7 +36,7 @@ final class GiveRoleOperation extends Operation
         private readonly string $name,
         private readonly string $email,
         private readonly RoleEnum $role,
-        private readonly Satellite|Schedule $place,
+        private readonly Satellite|Schedule|Session $place,
         private readonly string $label,
         private readonly User $by,
     ) {}

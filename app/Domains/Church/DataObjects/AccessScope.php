@@ -189,15 +189,18 @@ final readonly class AccessScope
 
     /**
      * The role-grant ceiling (spec item 9): an admin here gives and removes any Role at this satellite — Admin or
-     * Lifeshaper — and the Admin Role at its classes (a class admin, TODO #9: the class's satellite known). Nobody gives
+     * Lifeshaper — a helper for the day at one of its Sessions (spec item 18), and the Admin Role at its classes (a class admin, TODO #9: the class's satellite known). Nobody gives
      * a Role anywhere else. Removing a role uses the same rule. The caller still checks a satellite id belongs to this
      * church (GetSatelliteJob) — this object knows ids, not ownership.
      */
     public function canGrant(RoleEnum $role, RoleScope $scope): bool
     {
         return match ($scope->type) {
-            ScopeTypeEnum::Satellite => in_array($scope->id, $this->adminSatelliteIds, true),
+            ScopeTypeEnum::Satellite => $role !== RoleEnum::Helper && in_array($scope->id, $this->adminSatelliteIds, true),
             ScopeTypeEnum::Schedule => $role === RoleEnum::Admin && $scope->satelliteId !== null
+                && in_array($scope->satelliteId, $this->adminSatelliteIds, true),
+            // A helper for the day (spec item 18), at one of this satellite's Sessions.
+            ScopeTypeEnum::Session => $role === RoleEnum::Helper && $scope->satelliteId !== null
                 && in_array($scope->satelliteId, $this->adminSatelliteIds, true),
         };
     }

@@ -6,11 +6,15 @@ namespace App\Services\Church\Features\People;
 
 use App\Data\Models\RoleAssignment;
 use App\Data\Models\Schedule;
+use App\Data\Models\Session;
+use App\Domains\CheckIn\Jobs\GetOpenSessionsJob;
+use App\Domains\CheckIn\Jobs\GetSessionsByIdJob;
 use App\Domains\Church\DataObjects\GrantOptionData;
 use App\Domains\Church\DataObjects\RoleScope;
 use App\Domains\Church\DataObjects\SatelliteOptionData;
 use App\Domains\Church\DataObjects\StaffMemberData;
 use App\Domains\Church\DataObjects\StaffRoleData;
+use App\Domains\Church\Jobs\GetChurchTodayJob;
 use App\Domains\Church\Jobs\GetStaffRolesJob;
 use App\Domains\Schedule\Jobs\GetSchedulesByIdJob;
 use App\Domains\Schedule\Jobs\GetSchedulesBySatelliteJob;
@@ -55,7 +59,12 @@ final class ShowPeopleFeature extends BaseChurchFeature
             ->filter(fn (RoleAssignment $a): bool => $a->scope_type === ScopeTypeEnum::Schedule)
             ->map(fn (RoleAssignment $a): int => $a->scope_id)->unique()->all())));
 
-        $people = $roles->groupBy('user_id')->map(function ($held) use ($scope, $satelliteNames, $classes): StaffMemberData {
+        // Helpers for the day (spec item 18): their Sessions, to name each Role and to ask who may remove it.
+        $sessions = $this->run(new GetSessionsByIdJob(church: $church, ids: array_values($roles
+            ->filter(fn (RoleAssignment $a): bool => $a->scope_type === ScopeTypeEnum::Session)
+            ->map(fn (RoleAssignment $a): int => $a->scope_id)->unique()->all())));
+
+        $people = $roles->groupBy('user_id')->map(function ($held) use ($scope, $satelliteNames, $classes, $sessions): StaffMemberData {
             /** @var RoleAssignment $first */
             $first = $held->first();
 
@@ -67,7 +76,12 @@ final class ShowPeopleFeature extends BaseChurchFeature
                     $a,
                     $satelliteNames,
                     $classes,
-                    canRemove: $scope->canGrant($a->role, RoleScope::ofAssignment($a, $classes[$a->scope_id] ?? null)),
+                    canRemove: $scope->canGrant($a->role, RoleScope::ofAssignment($a, match ($a->scope_type) {
+                        ScopeTypeEnum::Schedule => $classes[$a->scope_id] ?? null,
+                        ScopeTypeEnum::Session => $sessions[$a->scope_id] ?? null,
+                        ScopeTypeEnum::Satellite => null,
+                    })),
+                    sessions: $sessions,
                 ))->all()),
             );
         })->sortBy(fn (StaffMemberData $p): string => mb_strtolower($p->name))->values();
@@ -77,7 +91,7 @@ final class ShowPeopleFeature extends BaseChurchFeature
             'grant_options' => $this->grantOptions($satellites, $this->run(new GetSchedulesBySatelliteJob(
                 church: $church,
                 satelliteIds: array_map(fn (SatelliteOptionData $s): int => $s->id, $satellites),
-            ))),
+            )), $this->run(new GetOpenSessionsJob(satellite: $here, today: $this->run(new GetChurchTodayJob(church: $church))))),
         ]);
     }
 
@@ -86,9 +100,10 @@ final class ShowPeopleFeature extends BaseChurchFeature
      *
      * @param  list<SatelliteOptionData>  $satellites
      * @param  array<int, list<Schedule>>  $classes  by satellite id
+     * @param  list<Session>  $openNow  this satellite's Sessions open now: a helper for the day at each (spec item 18)
      * @return list<GrantOptionData>
      */
-    private function grantOptions(array $satellites, array $classes): array
+    private function grantOptions(array $satellites, array $classes, array $openNow): array
     {
         $places = [];
         foreach ($satellites as $satellite) {
@@ -98,9 +113,13 @@ final class ShowPeopleFeature extends BaseChurchFeature
             }
         }
 
+        foreach ($openNow as $session) {
+            $places[] = [RoleScope::of($session), StaffRoleData::sessionName($session)];
+        }
+
         $options = [];
         foreach ($places as [$place, $name]) {
-            foreach ([RoleEnum::Admin, RoleEnum::Lifeshaper] as $role) {
+            foreach ([RoleEnum::Admin, RoleEnum::Lifeshaper, RoleEnum::Helper] as $role) {
                 if ($this->scope()->canGrant($role, $place)) {
                     $options[] = new GrantOptionData(label: StaffRoleData::label($role, $place, $name), role: $role, scope_type: $place->type, scope_id: $place->id);
                 }

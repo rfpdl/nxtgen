@@ -7,6 +7,7 @@ namespace App\Domains\Church\Jobs;
 use App\Data\Models\RoleAssignment;
 use App\Data\Models\Satellite;
 use App\Data\Models\Schedule;
+use App\Data\Models\Session;
 use App\Data\Models\User;
 use App\Domains\Church\DataObjects\AccessScope;
 use App\Enums\RoleEnum;
@@ -41,15 +42,45 @@ final class GetAccessScopeJob extends BaseJob
         // The platform admin (spec item 12) is an admin at every satellite, with no Role — so on no satellite's People.
         $admin = $this->user->is_platform_admin ? [$this->satellite->id] : $here(RoleEnum::Admin);
 
+        // A helper for the day (spec item 18) works here as a Lifeshaper does — while their Session is open, and never as
+        // an admin (Roy 2026-11-10: "anything in serve").
+        $helping = $this->helpingHere(array_values($assignments
+            ->filter(fn (RoleAssignment $a): bool => $a->role === RoleEnum::Helper && $a->scope_type === ScopeTypeEnum::Session)
+            ->map(fn (RoleAssignment $a): int => $a->scope_id)
+            ->all()));
+
         return new AccessScope(
             churchId: $this->satellite->church_id,
             adminSatelliteIds: $admin,
-            lifeshaperSatelliteIds: $here(RoleEnum::Lifeshaper),
+            lifeshaperSatelliteIds: $helping ? array_values(array_unique([...$here(RoleEnum::Lifeshaper), $this->satellite->id])) : $here(RoleEnum::Lifeshaper),
             adminSchedules: $this->classesHere(array_values($assignments
                 ->filter(fn (RoleAssignment $a): bool => $a->role === RoleEnum::Admin && $a->scope_type === ScopeTypeEnum::Schedule)
                 ->map(fn (RoleAssignment $a): int => $a->scope_id)
                 ->all())),
         );
+    }
+
+    /**
+     * Whether one of a helper's Sessions is at this satellite and open now (its date the church's today, not closed —
+     * spec item 15): their access ends when it closes, or at midnight, with no job.
+     *
+     * @param  list<int>  $sessionIds
+     */
+    private function helpingHere(array $sessionIds): bool
+    {
+        if ($sessionIds === []) {
+            return false;
+        }
+
+        return Session::query()
+            ->where('church_id', $this->satellite->church_id)
+            ->where('satellite_id', $this->satellite->id)
+            ->whereIn('id', $sessionIds)
+            ->whereDate('date', $this->satellite->church->today()->toDateString())
+            ->whereNull('closed_at')
+            // A class retired mid-day ends its helpers' day too (review).
+            ->whereHas('schedule', fn ($q) => $q->where('is_active', true))
+            ->exists();
     }
 
     /**

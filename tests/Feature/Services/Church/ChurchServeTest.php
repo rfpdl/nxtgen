@@ -54,7 +54,7 @@ it('shows an admin today\'s classes — an open one with its door\'s code, one n
         ->component('Church/Serve/Index')
         ->where('today', 'Sat 31 Oct')
         ->has('classes', 2)
-        ->where('classes.0', ['id' => $onePm->id, 'name' => '1PM', 'times' => '13:00–15:00', 'state' => 'open', 'code' => $session->code, 'can_open' => true])
+        ->where('classes.0', ['id' => $onePm->id, 'name' => '1PM', 'times' => '13:00–15:00', 'state' => 'open', 'state_label' => 'Open', 'state_color' => 'success', 'code' => $session->code, 'can_open' => true])
         ->where('classes.1.name', '7PM')
         ->where('classes.1.state', 'not_open')
         ->where('classes.1.code', null)

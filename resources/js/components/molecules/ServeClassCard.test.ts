@@ -12,6 +12,8 @@ const onePm: ServeClass = {
     name: '1PM',
     times: '13:00–15:00',
     state: 'open',
+    state_label: 'Open',
+    state_color: 'success',
     code: 'abcd2345',
     can_open: false,
 }
@@ -30,9 +32,17 @@ describe('ServeClassCard', () => {
     })
 
     it('says a class is not open yet, with Open for its admin only', async () => {
-        const notOpen = { ...onePm, state: 'not_open' as const, code: null }
+        const notOpen = {
+            ...onePm,
+            state: 'not_open' as const,
+            state_label: 'Not open yet (from the server)',
+            state_color: 'muted' as const,
+            code: null,
+        }
         const lifeshaper = mount(ServeClassCard, { props: { serveClass: notOpen } })
-        expect(lifeshaper.find('[data-testid="serve-class-state"]').text()).toBe('Not open yet')
+        expect(lifeshaper.find('[data-testid="serve-class-state"]').text()).toBe(
+            'Not open yet (from the server)',
+        )
         expect(lifeshaper.find('[data-testid="serve-door"]').exists()).toBe(false)
         expect(lifeshaper.find('[data-testid="serve-open"]').exists()).toBe(false)
 
@@ -45,7 +55,13 @@ describe('ServeClassCard', () => {
     })
 
     it('lets anyone look at a closed class, and its admin open it again', () => {
-        const closed = { ...onePm, state: 'closed' as const, can_open: true }
+        const closed = {
+            ...onePm,
+            state: 'closed' as const,
+            state_label: 'Closed',
+            state_color: 'warning' as const,
+            can_open: true,
+        }
         const wrapper = mount(ServeClassCard, { props: { serveClass: closed } })
 
         expect(wrapper.find('[data-testid="serve-class-state"]').text()).toBe('Closed')

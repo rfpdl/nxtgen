@@ -55,18 +55,35 @@ final class Satellite extends Model
             return;
         }
 
-        // Exactly GetAccessScopeJob's rule (a parity test holds them together): an active Role at the satellite, or the
-        // Admin Role at one of its active classes — each row in the satellite's own church.
+        // Exactly GetAccessScopeJob's rule (a parity test holds them together): an active Role at the satellite, the
+        // Admin Role at one of its active classes, or a helper's Session open there today — each row in the satellite's
+        // own church.
         $roles = fn (ScopeTypeEnum $type): Builder => RoleAssignment::query()
             ->where('user_id', $user->id)->where('is_active', true)->where('scope_type', $type)
             ->whereColumn('role_assignments.church_id', 'satellites.church_id');
         $query->where(fn (Builder $q) => $q
-            ->whereExists($roles(ScopeTypeEnum::Satellite)->whereColumn('role_assignments.scope_id', 'satellites.id'))
+            ->whereExists($roles(ScopeTypeEnum::Satellite)->whereColumn('role_assignments.scope_id', 'satellites.id')
+                ->whereIn('role_assignments.role', [RoleEnum::Admin, RoleEnum::Lifeshaper]))
             ->orWhereExists($roles(ScopeTypeEnum::Schedule)->where('role_assignments.role', RoleEnum::Admin)
                 ->whereExists(Schedule::query()->whereColumn('schedules.id', 'role_assignments.scope_id')
                     ->whereColumn('schedules.satellite_id', 'satellites.id')
                     ->whereColumn('schedules.church_id', 'satellites.church_id')
-                    ->where('schedules.is_active', true))));
+                    ->where('schedules.is_active', true)))
+            // A helper for the day (spec item 18), while their Session there is open: its date the church's today.
+            ->orWhereExists($roles(ScopeTypeEnum::Session)->where('role_assignments.role', RoleEnum::Helper)
+                ->whereExists(Session::query()->whereColumn('schedule_sessions.id', 'role_assignments.scope_id')
+                    ->whereColumn('schedule_sessions.satellite_id', 'satellites.id')
+                    ->whereColumn('schedule_sessions.church_id', 'satellites.church_id')
+                    ->whereNull('schedule_sessions.closed_at')
+                    ->whereExists(Schedule::query()->whereColumn('schedules.id', 'schedule_sessions.schedule_id')->where('schedules.is_active', true))
+                    // Each church's own today, for its own Sessions only (Astra): another church's clock never counts.
+                    ->where(function (Builder $today): void {
+                        foreach (Church::query()->get(['id', 'timezone']) as $church) {
+                            $today->orWhere(fn (Builder $its) => $its
+                                ->where('schedule_sessions.church_id', $church->id)
+                                ->whereDate('schedule_sessions.date', $church->today()->toDateString()));
+                        }
+                    }))));
     }
 
     /** Its address is its slug (`/dubai/…`, Roy 2026-11-07), so a link built from the model says `dubai`. */

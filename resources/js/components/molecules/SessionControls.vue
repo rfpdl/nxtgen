@@ -2,7 +2,7 @@
 import AppButton from '@/components/atoms/AppButton.vue'
 import Notice from '@/components/atoms/Notice.vue'
 import Pill from '@/components/atoms/Pill.vue'
-import type { SessionState } from '@/types'
+import type { EnumColor, SessionState } from '@/types'
 import { ref } from 'vue'
 
 /**
@@ -10,7 +10,16 @@ import { ref } from 'vue'
  * open yet, open, or closed — looked at, not changed. Its admin (`canOpen`) opens it, closes it after a second tap
  * that says what closing means, and opens it again the same day.
  */
-defineProps<{ className: string; state: SessionState; canOpen: boolean }>()
+defineProps<{
+    className: string
+    state: SessionState
+    /** Why nothing changes now — the backend's words (SessionStateEnum::refusal), the same a refused check-in gets. */
+    notice: string | null
+    /** The state's word and colour when open — the backend's (SessionStateEnum::label, ::color). */
+    stateLabel: string
+    stateColor: EnumColor
+    canOpen: boolean
+}>()
 const emit = defineEmits<{ open: []; close: [] }>()
 
 const confirming = ref(false)
@@ -24,14 +33,14 @@ function close(): void {
 <template>
     <div class="flex flex-col gap-3" data-testid="session-controls">
         <Notice v-if="state === 'not_open'" tone="warning">
-            {{ className }} is not open yet.
+            {{ notice }}
             <template v-if="!canOpen">An admin opens it.</template>
         </Notice>
         <Notice v-else-if="state === 'closed'" tone="warning">
-            {{ className }} is closed. It can be looked at, not changed.
+            {{ notice }} It can be looked at, not changed.
         </Notice>
         <div v-else class="flex flex-wrap items-center gap-3">
-            <Pill variant="success" data-testid="session-state">Open</Pill>
+            <Pill :variant="stateColor" data-testid="session-state">{{ stateLabel }}</Pill>
             <AppButton
                 v-if="canOpen && !confirming"
                 variant="link"

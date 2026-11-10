@@ -10,7 +10,7 @@ use App\Foundation\Jobs\BaseJob;
 use Carbon\CarbonImmutable;
 
 /**
- * A satellite's Sessions open on `$today` (spec item 15: its date, not closed) of active classes, with their class, by start time then
+ * A satellite's Sessions open on `$today` (spec item 15: its date, not closed) of active classes, with their class and satellite, by start time then
  * name — the bar's dropdown on a class's page (Roy 2026-11-10). WHICH of them a person may open is the caller's.
  *
  * @extends BaseJob<list<Session>>
@@ -32,7 +32,7 @@ final class GetOpenSessionsJob extends BaseJob
             ->whereNull('closed_at')
             // A class retired while open is no longer anyone's to go to (review, issue 13).
             ->whereHas('schedule', fn ($q) => $q->where('is_active', true))
-            ->with('schedule')
+            ->with(['schedule', 'satellite'])
             ->get()
             ->sortBy([
                 fn (Session $a, Session $b): int => $a->schedule->starts_at <=> $b->schedule->starts_at,

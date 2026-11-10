@@ -8,6 +8,7 @@ use App\Data\Models\Session;
 use App\Enums\SessionStateEnum;
 use Carbon\CarbonInterface;
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
@@ -28,6 +29,13 @@ final class DoorSessionData extends Data
         /** "Sat 31 Oct" */
         public string $date_label,
         public SessionStateEnum $state,
+        /** "Open" — the enum's own word and colour (SessionStateEnum), never retyped on screen. */
+        public string $state_label,
+        /** HasEnumMetadata::color — the frontend's EnumColor. */
+        #[LiteralTypeScriptType("'success' | 'info' | 'warning' | 'danger' | 'muted'")]
+        public string $state_color,
+        /** Why nothing changes now — "1PM is closed." — the same words a refused check-in gets; null while open. */
+        public ?string $notice,
     ) {}
 
     public static function fromModel(Session $session, CarbonInterface $today): self
@@ -40,7 +48,10 @@ final class DoorSessionData extends Data
             name: $class->name,
             times: "{$class->startsAt()}–{$class->endsAt()}",
             date_label: $session->date->format('D j M'),
-            state: SessionStateEnum::of($session, $today),
+            state: $state = SessionStateEnum::of($session, $today),
+            state_label: $state->label(),
+            state_color: $state->color(),
+            notice: $state->refusal($class->name),
         );
     }
 }

@@ -6,6 +6,7 @@ namespace App\Domains\User\Jobs;
 
 use App\Data\Models\RoleAssignment;
 use App\Data\Models\User;
+use App\Enums\RoleEnum;
 use App\Foundation\Jobs\BaseJob;
 
 /**
@@ -21,6 +22,7 @@ final class GetUserIsStaffJob extends BaseJob
     public function handle(): bool
     {
         return $this->user->is_platform_admin
-            || RoleAssignment::query()->where('user_id', $this->user->id)->where('is_active', true)->exists();
+            // A helper for the day (spec item 18) is not staff for good: their one day is no reason to keep a password.
+            || RoleAssignment::query()->where('user_id', $this->user->id)->where('is_active', true)->where('role', '!=', RoleEnum::Helper)->exists();
     }
 }

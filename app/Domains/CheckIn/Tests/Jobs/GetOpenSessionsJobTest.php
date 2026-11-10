@@ -26,5 +26,5 @@ it('lists the satellite\'s Sessions open today, by start time, with their class'
     $open = (new GetOpenSessionsJob(satellite: $satellite, today: CarbonImmutable::parse('2026-10-31')))->handle();
 
     expect(array_map(fn (Session $s): int => $s->id, $open))->toBe([$onePm->id, $sevenPm->id])
-        ->and($open[0]->relationLoaded('schedule'))->toBeTrue();
+        ->and([$open[0]->relationLoaded('schedule'), $open[0]->relationLoaded('satellite')])->toBe([true, true]);   // People names each (issue 14)
 });
