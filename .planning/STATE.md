@@ -18,7 +18,7 @@
 | **Also 2026-11-06** | The test map (`make test-map`, TODO #10) and the "No Level" filter on Children and Families (plan §13 q5) — both reviewed by Astra and pushed |
 | **Next step** | Roy tries Moving-Up (Children → Moving-Up; `php artisan migrate`), the test map (`make test-map`) and the No Level filter, and confirms the Claude calls in DECISIONS 2026-11-06 (and 2026-11-03). Open: offline check-in, #29 merge, #9 class admin roles |
 | **Waiting on Roy** | Laravel Cloud + mail provider + Registry CSV (TODO #23); a real-iPhone photo try (TODO #16) |
-| **Gate** | `make check` green (Codex review fixes, 2026-11-10) — 3100+ Pest, 530+ Vitest · `make e2e`: 976 passed, 13 skipped; 5 Safari journeys timed out late in the 35-minute run (password ×3, the open/close journey ×2 — its limit now 2 minutes) and all pass on `--last-failed` (TODO #38) |
+| **Gate** | `make check` green (2026-11-10, after the Batch C Astra review) · `make e2e`: 976 passed, 13 skipped; 5 Safari journeys timed out late in the 34-minute run (password ×3, open/close, a Lifeshaper's own family) and all pass on `--last-failed` (TODO #38) |
 
 ## Where to look
 

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Data\Models\CheckIn;
 use App\Data\Models\Satellite;
 use App\Data\Models\Schedule;
 use App\Data\Models\Session;
@@ -199,5 +200,27 @@ describe('Attendance', function (): void {
 
         actingAs($admin)->get("/dxb/admin/attendance?class={$onePm->id}&date=2026-10-31")
             ->assertInertia(fn (AssertableInertia $page) => $page->where('total', 1));
+    });
+});
+
+describe('retiring a class while it is open (Astra, Batch C)', function (): void {
+    it('closes its Session: its own address takes no check-in, Undo, present tap or head count after — and stays readable @story#204', function (): void {
+        ['dxb' => $dxb, 'onePm' => $onePm, 'admin' => $admin] = sessionsChurch();
+        $session = sessionOf($onePm);
+        $in = checkedIn($session, childOf(familyAt($dxb), ['level' => 2, 'gender' => 'girl']));
+        $late = childOf(familyAt($dxb), ['level' => 1, 'gender' => 'boy']);
+
+        actingAs($admin)->put("/dxb/admin/classes/{$onePm->id}/retire")->assertSessionHas('success');
+        expect($session->fresh()?->closed_at)->not->toBeNull();
+
+        foreach ([staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)), $admin] as $who) {
+            actingAs($who)->post("/{$session->code}/check-ins", ['children' => [['child_id' => $late->id, 'level' => null, 'make_active' => false]]])->assertSessionHas('error', '1PM is closed.');
+            actingAs($who)->put("/{$session->code}/check-ins/{$in->id}/undo")->assertSessionHas('error', '1PM is closed.');
+            actingAs($who)->put("/{$session->code}/check-ins/{$in->id}/present", ['present' => true, 'revision' => $in->revision])->assertSessionHas('error', '1PM is closed.');
+            actingAs($who)->put("/{$session->code}/squads/{$in->squad_id}/head-count", ['count' => 1])->assertSessionHas('error', '1PM is closed.');
+            actingAs($who)->get("/{$session->code}/whos-in")->assertOk();
+        }
+
+        expect([$in->fresh()?->isIn(), $in->fresh()?->present_at, CheckIn::query()->count()])->toBe([true, null, 1]);
     });
 });

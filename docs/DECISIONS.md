@@ -22,6 +22,8 @@ another) and these, fixed test-first:
   is; one whose day is gone, nowhere); Session cases for roles, scopes and grants; reopening in the browser (same
   code, children kept, check-in works again); a Platform Settings journey. The duplicate-check lookup names its
   church.
+- **Retiring a class while it is open closes its Session** (Astra, across Batch C): its own address then takes no
+  check-in, Undo, present tap or head count — before, the code still took them while Serve had hidden the class.
 - Left for later (TODO #42–#44): two console commands that skip the Lucid flow, hand-written page-prop types, a
   stronger close-vs-check-in race test; older enum words in Vue (TODO #41).
 
