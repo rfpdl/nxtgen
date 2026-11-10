@@ -424,6 +424,7 @@ declare namespace App {
             | 'moving_up'
             | 'manage_links'
             | 'delete_child_photo'
+            | 'open_session'
         export type CardFeeEnum = 'free' | 'paid' | 'not_paid'
         export type CardListTabEnum = 'asked' | 'approved' | 'printed' | 'closed'
         export type CardMatchEnum = 'exact' | 'several' | 'close' | 'none'
@@ -431,7 +432,7 @@ declare namespace App {
         export type CardReasonEnum = 'lost' | 'damaged' | 'first_card'
         export type CardStepEnum = 'asked' | 'approved' | 'printed' | 'given' | 'refused'
         export type CheckInResultEnum =
-            'checked_in' | 'already_in' | 'graduated' | 'inactive' | 'needs_level'
+            'checked_in' | 'already_in' | 'graduated' | 'inactive' | 'needs_level' | 'closed'
         export type ChildStatusEnum = 'active' | 'inactive' | 'graduated'
         export type DuplicateReasonEnum = 'same_phone' | 'same_name_dob'
         export type DuplicateStatusEnum = 'open' | 'dismissed' | 'confirmed'
@@ -451,6 +452,7 @@ declare namespace App {
             'mother' | 'father' | 'guardian' | 'grandparent' | 'aunt_uncle' | 'sibling' | 'other'
         export type RoleEnum = 'admin' | 'lifeshaper'
         export type ScopeTypeEnum = 'satellite' | 'schedule'
+        export type SessionStateEnum = 'not_open' | 'open' | 'closed'
         export type WeekdayEnum =
             'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'
     }

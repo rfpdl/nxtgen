@@ -126,4 +126,14 @@ describe('WhosInSquadCard', () => {
         expect(small?.classes()).toEqual(expect.arrayContaining(['text-text-muted', 'text-base']))
         expect(rows[1]?.find('[role="checkbox"]').text()).toContain('Amara Santos')
     })
+
+    it('is read-only once the class is closed: no taps, no head count', async () => {
+        const wrapper = mount(WhosInSquadCard, { props: { squad, readOnly: true } })
+
+        await wrapper.findAll('[data-testid="present-toggle"]')[0]?.trigger('click')
+        expect(wrapper.emitted('present')).toBeUndefined()
+        expect(wrapper.find('[data-testid="present-toggle"]').attributes('disabled')).toBeDefined()
+        expect(wrapper.find('[data-testid="head-count"]').exists()).toBe(false)
+        expect(wrapper.text()).toContain('1 of 3 present')
+    })
 })

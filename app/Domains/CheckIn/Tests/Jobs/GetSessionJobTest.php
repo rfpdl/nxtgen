@@ -20,7 +20,7 @@ it('finds the class\'s Session on the date', function (): void {
     expect((new GetSessionJob(schedule: $class, date: CarbonImmutable::parse('2026-10-31')))->handle()?->id)->toBe($session->id);
 });
 
-it('finds none before the first Check-in, nor another class\'s', function (): void {
+it('finds none before an admin opens it, nor another class\'s', function (): void {
     $satellite = satelliteOf(church());
     $onePm = scheduleAt($satellite, ['name' => '1PM']);
     sessionOf(scheduleAt($satellite, ['name' => '7PM']), '2026-10-31');

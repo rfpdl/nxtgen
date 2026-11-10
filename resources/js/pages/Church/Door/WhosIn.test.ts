@@ -1,5 +1,5 @@
 import WhosIn from '@/pages/Church/Door/WhosIn.vue'
-import type { DoorClass, WhosInSquad } from '@/types'
+import type { DoorClass, SessionState, WhosInSquad } from '@/types'
 import { makeSatellite } from '@/tests/satellite'
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -42,9 +42,16 @@ const girls: WhosInSquad = {
     ],
 }
 
-function page(squads: WhosInSquad[]) {
+function page(squads: WhosInSquad[], sessionState: SessionState = 'open') {
     return mount(WhosIn, {
-        props: { today: 'Sat 31 Oct', classes: [onePm], class_id: 1, squads, squad_id: null },
+        props: {
+            today: 'Sat 31 Oct',
+            classes: [onePm],
+            class_id: 1,
+            session_state: sessionState,
+            squads,
+            squad_id: null,
+        },
         global: { stubs: { ChurchShell: { template: '<div><slot /></div>' } } },
     })
 }
@@ -79,5 +86,14 @@ describe("Who's in", () => {
         await wrapper.find('[data-testid="squad-picker"] [data-value="5"]').trigger('click')
 
         expect(gets).toEqual([{ url: 'serve.door.whos-in:"dubai"', data: { class: 1, squad: 5 } }])
+    })
+
+    it('shows a closed class read-only: it says so, and its Squads take no taps (Roy 2026-11-10)', () => {
+        const wrapper = page([girls], 'closed')
+
+        expect(wrapper.text()).toContain('1PM is closed. It can be looked at, not changed.')
+        expect(wrapper.find('[data-testid="present-toggle"]').attributes('disabled')).toBeDefined()
+        expect(wrapper.find('[data-testid="head-count"]').exists()).toBe(false)
+        expect(wrapper.find('[data-testid="session-open"]').exists()).toBe(false)
     })
 })

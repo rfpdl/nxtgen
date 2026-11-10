@@ -114,6 +114,9 @@ Route::prefix('admin')->name('admin.')->group(function () use ($familyPages): vo
 Route::prefix('serve')->name('serve.')->group(function () use ($familyPages): void {
     // The door (DECISIONS 2026-10-26): pick today's class, find a family, check children in; undo a mistake.
     Route::get('/door', [DoorController::class, 'show'])->name('door.show');
+    // An admin opens and closes today's Session of a class (spec item 15).
+    Route::post('/classes/{schedule}/session', [DoorController::class, 'open'])->whereNumber('schedule')->name('sessions.open');
+    Route::put('/classes/{schedule}/session/close', [DoorController::class, 'close'])->whereNumber('schedule')->name('sessions.close');
     Route::post('/classes/{schedule}/check-ins', [DoorController::class, 'checkIn'])->whereNumber('schedule')->name('door.check-in');
     Route::put('/check-ins/{checkIn}/undo', [DoorController::class, 'undo'])->whereNumber('checkIn')->name('door.undo');
     // Its Who's in tab (DECISIONS 2026-10-28 — roll call): today's class by Squad; tap a child present; confirm a head count.

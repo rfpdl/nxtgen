@@ -174,6 +174,8 @@ function requestFor(string $route, AccessWorld $w): array
         'schedules.update' => ['PUT', "{$base}/classes/{$w->schedule->id}", ['name' => '1PM', 'one_time' => false, 'weekday' => 'saturday', 'date' => null, 'starts_at' => '13:30', 'ends_at' => '15:00']],
         'schedules.retire' => ['PUT', "{$base}/classes/{$w->schedule->id}/retire", []],
         'door.show' => ['GET', "{$base}/door?q=Amara", []],
+        'sessions.open' => ['POST', "{$base}/classes/{$w->schedule->id}/session", []],
+        'sessions.close' => ['PUT', "{$base}/classes/{$w->schedule->id}/session/close", []],
         'door.check-in' => ['POST', "{$base}/classes/{$w->schedule->id}/check-ins", ['children' => [['child_id' => $w->visitor->id, 'level' => 1, 'make_active' => false]]]],
         'door.undo' => ['PUT', "{$base}/check-ins/{$w->checkIn->id}/undo", []],
         'door.whos-in' => ['GET', "{$base}/door/whos-in", []],
@@ -338,7 +340,7 @@ function expectCell(string $route, Actor $actor, string $expected): void
     Notification::fake();
     Storage::fake('photos');
     // The door is asked about on the Saturday its classes meet.
-    if (str_starts_with($route, 'serve.door.')) {
+    if (str_starts_with($route, 'serve.door.') || str_starts_with($route, 'serve.sessions.')) {
         travelTo(CarbonImmutable::parse(AccessWorld::SATURDAY, 'Asia/Dubai'));
     }
     $world = AccessWorld::make();
@@ -525,6 +527,10 @@ describe('Classes, for admins', function (): void {
 describe('the door, for staff', function (): void {
     it('opens the door for any staff, with their own satellites\' classes @story#103 @story#104', cellTest())
         ->with(cells('serve.door.show'));
+    it('lets Home\'s class be opened only by an admin over Home or its class admin @story#202 @story#203', cellTest())
+        ->with(cells('serve.sessions.open'));
+    it('lets Home\'s class be closed only by an admin over Home or its class admin @story#204 @story#205', cellTest())
+        ->with(cells('serve.sessions.close'));
     it('lets children be checked in at Home\'s class only by staff whose Role covers Home @story#106 @story#109', cellTest())
         ->with(cells('serve.door.check-in'));
     it('lets a Check-in at Home be undone only by staff whose Role covers Home @story#110 @story#111', cellTest())
@@ -603,10 +609,10 @@ function guessesFrom(Actor $actor, string $slug, Closure $payloadThere): array
     return $answers;
 }
 
-it('refuses another church\'s admin who puts ccf\'s ids in their OWN satellite\'s address @story#29 @story#49 @story#51 @story#100 @story#102 @story#109 @story#111 @story#120 @story#123 @story#131 @story#137 @story#139 @story#141 @story#143 @story#145 @story#147 @story#149 @story#159 @story#161 @story#169 @story#171 @story#173 @story#177 @story#179', function (): void {
+it('refuses another church\'s admin who puts ccf\'s ids in their OWN satellite\'s address @story#29 @story#49 @story#51 @story#100 @story#102 @story#109 @story#111 @story#120 @story#123 @story#131 @story#137 @story#139 @story#141 @story#143 @story#145 @story#147 @story#149 @story#159 @story#161 @story#169 @story#171 @story#173 @story#177 @story#179 @story#203 @story#205', function (): void {
     $answers = guessesFrom(Actor::OtherChurch, 'other', fn (AccessWorld $w): array => familyEdit($w->otherChurch->satellites()->firstOrFail()));
 
-    expect($answers)->toHaveCount(41)
+    expect($answers)->toHaveCount(43)
         ->and(array_unique(array_values($answers)))->toBe(['404'], (string) json_encode($answers, JSON_PRETTY_PRINT));
 });
 

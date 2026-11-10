@@ -5,16 +5,19 @@ declare(strict_types=1);
 namespace App\Services\Church\Features\Door;
 
 use App\Data\Models\Schedule;
+use App\Domains\CheckIn\Jobs\GetSessionForUpdateJob;
 use App\Domains\CheckIn\Jobs\GetSessionJob;
 use App\Domains\CheckIn\Jobs\GetSessionSquadJob;
 use App\Domains\CheckIn\Jobs\UpdateSquadHeadCountJob;
 use App\Domains\Church\Jobs\GetChurchTodayJob;
 use App\Enums\AccessRowEnum;
+use App\Enums\SessionStateEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
 use App\Services\Church\Data\HeadCountInput;
 use App\Services\Church\Features\BaseChurchFeature;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 
 /**
  * "Confirm head count" under a Squad on Who's in (roll call, DECISIONS 2026-10-28): how many children the Squad leader
@@ -50,10 +53,25 @@ final class ConfirmHeadCountFeature extends BaseChurchFeature
         abort_unless($class->meetsOn($today), 404);
 
         $session = $this->run(new GetSessionJob(schedule: $class, date: $today));
-        abort_if($session === null, 404);
+        if ($session === null) {
+            return back()->with('error', SessionStateEnum::NotOpen->refusal($class->name));
+        }
         $squad = $this->run(new GetSessionSquadJob(session: $session, id: $this->squadId));
 
-        $this->run(new UpdateSquadHeadCountJob(session: $session, squad: $squad, count: $input->count, by: $this->staff()));
+        // Only while an admin has it open (spec item 15): asked under the Session's lock, the date read after it, so a
+        // close at this moment comes before or after the count, never between (Astra, issue 11).
+        $refusal = DB::transaction(function () use ($church, $class, $session, $squad, $input): ?string {
+            $locked = $this->run(new GetSessionForUpdateJob(session: $session));
+            $refusal = SessionStateEnum::of($locked, $this->run(new GetChurchTodayJob(church: $church)))->refusal($class->name);
+            if ($refusal === null) {
+                $this->run(new UpdateSquadHeadCountJob(session: $locked, squad: $squad, count: $input->count, by: $this->staff()));
+            }
+
+            return $refusal;
+        });
+        if ($refusal !== null) {
+            return back()->with('error', $refusal);
+        }
 
         return back();
     }

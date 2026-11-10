@@ -25,6 +25,7 @@ use App\Domains\Level\Jobs\GetSuggestedLevelJob;
 use App\Domains\Schedule\Jobs\GetChosenScheduleJob;
 use App\Domains\Schedule\Jobs\GetTodaysSchedulesJob;
 use App\Enums\AccessRowEnum;
+use App\Enums\SessionStateEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
 use App\Services\Church\Data\DoorQueryInput;
@@ -82,6 +83,9 @@ final class ShowDoorFeature extends BaseChurchFeature
             'today' => $today->format('D j M'),
             'classes' => array_map(fn (Schedule $s): DoorClassData => DoorClassData::fromModel($s), $classes),
             'class_id' => $class?->id,
+            // Spec item 15: check-in only while open; an admin of the class opens and closes it here.
+            'session_state' => SessionStateEnum::of($session, $today),
+            'can_open' => $class !== null && $this->scope()->canOpenSessionOf($class),
             'checked_in' => array_map(fn (CheckIn $c): DoorCheckInData => DoorCheckInData::fromCheckIn($c, $church->timezone), $checkIns),
             'query' => $query,
             'scan' => $scan,

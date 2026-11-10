@@ -11,7 +11,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 /**
  * What happened to one child when Staff checked them in at the door (DECISIONS 2026-10-26): in (or already in), or
  * refused — Graduated children are no longer part of NxtGen, an inactive child is made active again first (the door
- * asks), and a child with no Level gets one picked first.
+ * asks), a child with no Level gets one picked first, and nobody is checked in to a closed Session (spec item 15).
  */
 #[TypeScript]
 enum CheckInResultEnum: string implements HasEnumMetadata
@@ -23,6 +23,7 @@ enum CheckInResultEnum: string implements HasEnumMetadata
     case Graduated = 'graduated';
     case Inactive = 'inactive';
     case NeedsLevel = 'needs_level';
+    case Closed = 'closed';
 
     /** After it, the child is in the Session. */
     public function isIn(): bool
@@ -39,6 +40,7 @@ enum CheckInResultEnum: string implements HasEnumMetadata
             self::Graduated => 'has Graduated from NxtGen',
             self::Inactive => 'is inactive — make them active again first',
             self::NeedsLevel => 'needs a Level first',
+            self::Closed => '— the class is closed',
         };
     }
 

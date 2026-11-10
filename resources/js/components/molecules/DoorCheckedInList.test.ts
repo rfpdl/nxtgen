@@ -54,4 +54,11 @@ describe('DoorCheckedInList', () => {
         )
         expect(wrapper.findAll('[data-testid="checked-in-row"]')).toHaveLength(0)
     })
+
+    it('offers no Undo once the class is closed', () => {
+        const wrapper = mount(DoorCheckedInList, { props: { checkIns, readOnly: true } })
+
+        expect(wrapper.findAll('[data-testid="checked-in-row"]')).toHaveLength(2)
+        expect(wrapper.find('[data-testid="checked-in-undo"]').exists()).toBe(false)
+    })
 })

@@ -10,7 +10,7 @@ use App\Foundation\Jobs\BaseJob;
 use Carbon\CarbonImmutable;
 
 /**
- * The class's Session on a date, if anyone has been checked in to it yet — looking at the door makes nothing.
+ * The class's Session on a date, if an admin has opened it (spec item 15) — looking at the door makes nothing.
  *
  * @extends BaseJob<Session|null>
  */

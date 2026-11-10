@@ -59,8 +59,10 @@ decided by `AccessScope` against the access-matrix row the Feature declares (`#[
   name; a retired class's name is free again.
 
 ## The door (check-in)
-- A Session (one class on one date) is never opened or closed: the first Check-in makes it. One Check-in per child
-  per Session, whatever number of phones press at once (the database's unique keys decide; tested with two real
+- A Session (one class on one date) is made when an admin of the satellite, or of that class, opens it — on its date
+  only — and is open until closed or until midnight at the satellite; reopened the same day, it is the same Session.
+  Children are checked in, undone, marked present and counted only while it is open (spec item 15). One Check-in per
+  child per Session, whatever number of phones press at once (the database's unique keys decide; tested with two real
   connections). "Today" is the church's date (its timezone), not the server's.
 - Staff see today's classes at the satellites their Roles cover; a class with a day only on that day. Any child of the church may be checked in, and joins THIS satellite's Squad for their Level
   and gender — a visiting child needs nothing.

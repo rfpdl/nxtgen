@@ -6,15 +6,16 @@ namespace App\Domains\CheckIn\Jobs;
 
 use App\Data\Models\Schedule;
 use App\Data\Models\Session;
+use App\Data\Models\User;
 use App\Foundation\Jobs\BaseJob;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\UniqueConstraintViolationException;
 
 /**
- * The class's Session on a date, made by the first Check-in (DECISIONS 2026-10-26: never opened or closed) — or the
- * one already there. The unique (schedule, date) key decides when two phones make it at once: one inserts, the other
- * reads that row with a LOCKING read (a plain read inside the caller's transaction sees only its own snapshot, which
- * cannot hold the other phone's new row; the locking read waits for its commit).
+ * The class's Session on a date, made open when an admin opens the class (spec item 15) — or the one already there,
+ * as it is (reopening is UpdateSessionAsOpenJob). The unique (schedule, date) key decides when two admins make it at
+ * once: one inserts, the other reads that row with a LOCKING read (a plain read inside the caller's transaction sees
+ * only its own snapshot, which cannot hold the other's new row; the locking read waits for its commit).
  *
  * @extends BaseJob<Session>
  */
@@ -23,6 +24,7 @@ final class CreateSessionJob extends BaseJob
     public function __construct(
         private readonly Schedule $schedule,
         private readonly CarbonImmutable $date,
+        private readonly ?User $by,
     ) {}
 
     public function handle(): Session
@@ -39,6 +41,7 @@ final class CreateSessionJob extends BaseJob
         try {
             return Session::query()->withSavepointIfNeeded(fn (): Session => Session::query()->create([
                 'church_id' => $church, 'satellite_id' => $this->schedule->satellite_id, 'schedule_id' => $this->schedule->id, 'date' => $date,
+                'opened_at' => now(), 'opened_by' => $this->by?->id,
             ]));
         } catch (UniqueConstraintViolationException) {
             return Session::query()->where('church_id', $church)->where('schedule_id', $this->schedule->id)->whereDate('date', $date)->lockForUpdate()->firstOrFail();

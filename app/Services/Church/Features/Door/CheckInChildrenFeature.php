@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Services\Church\Features\Door;
 
 use App\Data\Models\Schedule;
+use App\Domains\CheckIn\Jobs\GetSessionJob;
 use App\Domains\Church\Jobs\GetChurchTodayJob;
 use App\Domains\Family\Jobs\GetChurchChildrenJob;
 use App\Enums\AccessRowEnum;
 use App\Enums\CheckInResultEnum;
+use App\Enums\SessionStateEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
 use App\Operations\CheckIn\CheckInChildOperation;
@@ -20,7 +22,7 @@ use Illuminate\Support\Arr;
 
 /**
  * "Check in N children" at the door (DECISIONS 2026-10-26): the ticked children of a family, into a class meeting
- * today at a satellite the viewer's Role covers. Any child of the church may be checked in — a visitor joins THIS
+ * today at a satellite the viewer's Role covers, while an admin has it open (spec item 15) — late children too. Any child of the church may be checked in — a visitor joins THIS
  * satellite's Squad. Each child has its own result (CheckInChildOperation): the page says who is in and, apart, who
  * was not and why.
  *
@@ -30,12 +32,12 @@ use Illuminate\Support\Arr;
     title: 'Check children in',
     persona: 'Lifeshaper (any staff)',
     happyPaths: [
-        'story#106' => 'Staff tick a family\'s children and check them in to today\'s class; the first Check-in makes the Session, and each child joins this satellite\'s Squad for their Level and gender — a visiting child too; a child already in stays in once',
+        'story#106' => 'Staff tick a family\'s children and check them in to today\'s open class, however late; each child joins this satellite\'s Squad for their Level and gender — a visiting child too; a child already in stays in once',
         'story#107' => 'An inactive child is made active again first, and a child with no Level gets one picked at the door; both are saved and noted on the child\'s history',
     ],
     unhappyPaths: [
         'story#108' => 'A Graduated child is refused with the reason; an inactive child not made active, and a child with no Level, are not checked in',
-        'story#109' => 'Only a class meeting today at a satellite their Role covers, only this church\'s children, at least one child and a Level from the chart',
+        'story#109' => 'Only a class meeting today at a satellite their Role covers, and only while it is open — not before an admin opens it, nor once closed; only this church\'s children, at least one child and a Level from the chart',
     ],
 )]
 #[AccessRow(AccessRowEnum::CheckIn)]
@@ -50,6 +52,12 @@ final class CheckInChildrenFeature extends BaseChurchFeature
         abort_unless($this->scope()->canCheckInTo($class), 404);
         $today = $this->run(new GetChurchTodayJob(church: $church));
         abort_unless($class->meetsOn($today), 404);
+        // Only while an admin has it open (spec item 15) — the Operation asks again under the Session's lock.
+        $session = $this->run(new GetSessionJob(schedule: $class, date: $today));
+        $refusal = SessionStateEnum::of($session, $today)->refusal($class->name);
+        if ($refusal !== null || $session === null) {
+            return back()->with('error', $refusal);
+        }
 
         $children = $this->run(new GetChurchChildrenJob(church: $church, ids: array_map(fn (CheckInChildInput $c): int => $c->child_id, $input->children)));
 
@@ -57,8 +65,7 @@ final class CheckInChildrenFeature extends BaseChurchFeature
         foreach ($input->children as $ticked) {
             $child = $children[$ticked->child_id];
             $results[$child->displayName()] = $this->run(new CheckInChildOperation(
-                schedule: $class,
-                today: $today,
+                session: $session,
                 child: $child,
                 level: $ticked->level,
                 makeActive: $ticked->make_active,

@@ -4,6 +4,28 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-11-10 (Issue 11 built — an admin opens and closes a Session)
+
+- **Opening a class makes its Session for the day; it is open until an admin closes it or until midnight at the
+  satellite** (spec item 15) — a Session of another day is closed, with no job. Opening is only on the class's date
+  (another day is "not found"); a closed Session opened again the same day is the same Session, so its Check-ins stay.
+  This reverses DECISIONS 2026-10-26 "never opened or closed": the first Check-in no longer makes the Session.
+- **Who opens and closes: an admin of the satellite, or that class's class admin** — never a Lifeshaper, until the
+  Lifeshaper schedule (TODO #36).
+- **While open, everything at the door works — check-in (late children too), Undo, Who's in taps and the head count;
+  closed, it is looked at, not changed** (Roy). The door says "1PM is not open yet." / "1PM is closed." and hides the
+  search; Who's in shows its Squads with no taps and no head count.
+- **For now the admin opens and closes on the door page** (Claude's call, reversible): issue 12 moves the door to the
+  Session's own address, issue 13 puts "Open" on Serve's first page. Closing asks once more, saying nothing can change
+  after.
+- **Every change at the door — check-in, Undo, a present tap, a head count — reads the Session again under its lock,
+  and the church's date after the lock** (Astra): an admin closing it at that moment, or midnight passing while a
+  request waits, comes before or after, never half-way. Who's in's 20-second refresh carries whether the class is
+  still open. Closing a class another admin has just closed says "closed" (review), not an error page.
+  Attendance lists every opened Session, 0 children included.
+- In the browser tests 1PM and 7PM are open on the door's Saturday (as if an admin had opened them); the open/close
+  journey uses its own one-time class, so the shared 1PM stays open.
+
 ## 2026-11-10 (Issue 10 built — a class is weekly or one-time)
 
 - **Every class is weekly (a weekday) or one-time (one date), never both, and always has a start and an end time,

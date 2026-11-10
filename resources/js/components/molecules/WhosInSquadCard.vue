@@ -13,9 +13,16 @@ import type { WhosInSquad } from '@/types'
  * Under the list, the Squad's head count (HeadCountForm) — below the rows, so its lines never push a child from under
  * a finger.
  */
-withDefaults(defineProps<{ squad: WhosInSquad; confirming?: boolean; countError?: string }>(), {
-    countError: undefined,
-})
+withDefaults(
+    defineProps<{
+        squad: WhosInSquad
+        confirming?: boolean
+        countError?: string
+        /** A closed Session (Roy 2026-11-10): looked at, not changed — no taps, no head count. */
+        readOnly?: boolean
+    }>(),
+    { countError: undefined, readOnly: false },
+)
 const emit = defineEmits<{
     present: [checkInId: number, present: boolean, revision: number]
     confirm: [count: number]
@@ -43,6 +50,7 @@ const emit = defineEmits<{
             >
                 <CheckRow
                     :model-value="child.present"
+                    :disabled="readOnly"
                     data-testid="present-toggle"
                     @update:model-value="
                         (on: boolean) => emit('present', child.id, on, child.revision)
@@ -67,7 +75,7 @@ const emit = defineEmits<{
                 </CheckRow>
             </li>
         </ul>
-        <div class="border-border border-t-2 px-4 py-4">
+        <div v-if="!readOnly" class="border-border border-t-2 px-4 py-4">
             <HeadCountForm
                 :squad="squad"
                 :confirming="confirming"

@@ -8,6 +8,8 @@ use App\Data\Models\Child;
 use App\Data\Models\Church;
 use App\Data\Models\RoleAssignment;
 use App\Data\Models\Satellite;
+use App\Data\Models\Schedule;
+use App\Data\Models\Session;
 use App\Data\Models\User;
 use App\Domains\Family\DataObjects\ChildDetailsData;
 use App\Domains\Family\DataObjects\FamilyRegistrationData;
@@ -19,6 +21,8 @@ use App\Enums\RelationshipEnum;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
 use App\Operations\Registration\RegisterFamilyOperation;
+use App\Providers\E2EServiceProvider;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
 
 /**
@@ -31,7 +35,8 @@ use Illuminate\Database\Seeder;
  * (DOOR_GUARDIANS): a Cruz family at CCF Dubai — Amara (allergic), Ben, Noah (inactive), Lola (no Level), Gabe
  * (Graduated) — and a visiting Villa family at CCF Sharjah (Pia). Birthdays differ per browser, so no two are
  * "possible duplicates". For Who's in (roll call), a Reyes family at CCF Dubai with four Level 2 girls whose names are
- * the browser's own (ROLL_CALL_GIRLS): the browsers share one 1PM Session and its Squads, so each ticks its own. For
+ * the browser's own (ROLL_CALL_GIRLS): the browsers share one 1PM Session and its Squads, so each ticks its own —
+ * 1PM and 7PM are open on the door's Saturday, as if an admin had opened them (spec item 15). For
  * name cards, an Ocampo family of nine boys with no Card request (CARD_CHILDREN).
  */
 final class E2ESeeder extends Seeder
@@ -126,6 +131,14 @@ final class E2ESeeder extends Seeder
         // Different phones: a shared one would make the seed itself a "possible duplicate" no journey asked for.
         $this->family($ccf, $dxb, 'Maria', 'Dela Cruz', 'delacruz@nxtgen.test', '+971501000001', 'Miguel', 'Migs', GenderEnum::Boy, '2017-03-14');
         $this->family($ccf, $house, 'Grace', 'Santos', 'santos@nxtgen.test', '+971502000002', 'Bea', 'Bea', GenderEnum::Girl, '2018-07-02');
+
+        // An admin opened CCF Dubai's Saturday classes for the door's day (spec item 15).
+        $saturday = E2EServiceProvider::doorSaturday(CarbonImmutable::now(E2EServiceProvider::churchTimezone()));
+        foreach (Schedule::query()->where('satellite_id', $dxb->id)->whereIn('name', ['1PM', '7PM'])->get() as $class) {
+            Session::query()->create([
+                'church_id' => $ccf->id, 'satellite_id' => $dxb->id, 'schedule_id' => $class->id, 'date' => $saturday, 'opened_at' => now(),
+            ]);
+        }
 
         $place = 0;
         foreach (self::DOOR_GUARDIANS as $project => $first) {

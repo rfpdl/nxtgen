@@ -6,9 +6,10 @@ import EmptyState from '@/components/atoms/EmptyState.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import DoorClassPicker from '@/components/molecules/DoorClassPicker.vue'
 import DoorTabs from '@/components/molecules/DoorTabs.vue'
+import SessionControls from '@/components/molecules/SessionControls.vue'
 import WhosInSquadCard from '@/components/molecules/WhosInSquadCard.vue'
 import { useRollCall } from '@/composables/useRollCall'
-import type { DoorClass, WhosInSquad } from '@/types'
+import type { DoorClass, SessionState, WhosInSquad } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { route } from 'ziggy-js'
@@ -24,6 +25,8 @@ const props = defineProps<{
     today: string
     classes: DoorClass[]
     class_id: number | null
+    /** Spec item 15: a closed class is looked at, not changed (Roy 2026-11-10). */
+    session_state: SessionState
     squads: WhosInSquad[]
     squad_id: number | null
 }>()
@@ -48,6 +51,8 @@ const shown = computed(() =>
             return { ...s, children, present: children.filter((c) => c.present).length }
         }),
 )
+
+const className = computed(() => props.classes.find((c) => c.id === props.class_id)?.name ?? '')
 
 const checkInHref = computed(() =>
     route('serve.door.show', {
@@ -84,6 +89,12 @@ function pickSquad(id: string | number | null): void {
             />
 
             <template v-if="class_id !== null">
+                <SessionControls
+                    v-if="session_state !== 'open'"
+                    :class-name="className"
+                    :state="session_state"
+                    :can-open="false"
+                />
                 <EmptyState
                     v-if="squads.length === 0"
                     title="No one checked in yet"
@@ -108,6 +119,7 @@ function pickSquad(id: string | number | null): void {
                         v-for="squad in shown"
                         :key="squad.id"
                         :squad="squad"
+                        :read-only="session_state !== 'open'"
                         :confirming="confirming[squad.id] === true"
                         :count-error="countErrors[squad.id]"
                         @present="mark"

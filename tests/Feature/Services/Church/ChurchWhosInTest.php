@@ -136,7 +136,7 @@ describe('the Who\'s in page', function (): void {
             ->where('squad_id', null)->has('squads', 1));
     });
 
-    it('shows no Squads before the first Check-in of the class @story#117', function (): void {
+    it('shows no Squads before anyone is checked in to the class @story#117', function (): void {
         $w = whosInChurch();
 
         actingAs($w['lifeshaper'])->get('/dxb/serve/door/whos-in')->assertInertia(fn (AssertableInertia $page) => $page
@@ -321,7 +321,8 @@ describe('confirming a head count', function (): void {
         $girls = Squad::query()->where('satellite_id', $w['dxb']->id)->where('level', 2)->where('gender', 'girl')->sole();
         $put = fn (User $who, string $url) => actingAs($who)->put($url, ['count' => 2])->assertNotFound();
 
-        $put($w['lifeshaper'], "/dxb/serve/classes/{$w['onePm']->id}/squads/{$girls->id}/head-count");   // no Session yet
+        actingAs($w['lifeshaper'])->put("/dxb/serve/classes/{$w['onePm']->id}/squads/{$girls->id}/head-count", ['count' => 2])
+            ->assertSessionHas('error', '1PM is not open yet.');   // not opened yet (spec item 15)
 
         $session = sessionOf($w['onePm']);
         checkedIn($session, $w['ben']);
@@ -356,4 +357,23 @@ describe('confirming a head count', function (): void {
         actingAs($w['lifeshaper'])->put("/dxb/serve/classes/{$w['onePm']->id}/squads/{$in->squad_id}/head-count", ['count' => $count])->assertSessionHasNoErrors();
         expect(SquadHeadCount::query()->sole()->head_count)->toBe($count);
     })->with([0, 200]);
+});
+
+describe('a closed Session (spec item 15)', function (): void {
+    it('shows Who\'s in, read-only: no present taps, no head count @story#202', function (): void {
+        $w = whosInChurch();
+        $session = sessionOf($w['onePm']);
+        $in = checkedIn($session, $w['amara']);
+        $session->update(['closed_at' => now()]);
+
+        actingAs($w['lifeshaper'])->get('/dxb/serve/door/whos-in')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
+            ->where('session_state', 'closed')
+            ->has('squads', 1));
+        actingAs($w['lifeshaper'])->put("/dxb/serve/check-ins/{$in->id}/present", ['present' => true, 'revision' => $in->revision])
+            ->assertSessionHas('error', '1PM is closed.');
+        actingAs($w['lifeshaper'])->put("/dxb/serve/classes/{$w['onePm']->id}/squads/{$in->squad_id}/head-count", ['count' => 3])
+            ->assertSessionHas('error', '1PM is closed.');
+
+        expect([$in->fresh()?->present_at, SquadHeadCount::query()->count()])->toBe([null, 0]);
+    });
 });

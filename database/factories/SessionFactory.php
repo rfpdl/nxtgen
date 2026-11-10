@@ -22,6 +22,7 @@ final class SessionFactory extends Factory
             'satellite_id' => fn (array $attributes): mixed => Schedule::query()->whereKey(self::id($attributes['schedule_id']))->value('satellite_id'),
             'church_id' => fn (array $attributes): mixed => Schedule::query()->whereKey(self::id($attributes['schedule_id']))->value('church_id'),
             'date' => '2026-10-31',
+            'opened_at' => now(),
         ];
     }
 

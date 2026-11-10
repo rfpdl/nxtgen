@@ -1,5 +1,5 @@
 # 11 — An admin opens and closes a Session (TODO #35)
-Status: ready-for-agent (Roy answered 2026-11-10, `../batch-c-plan.md`; DECISIONS 2026-11-10 "before building")
+Status: done 2026-11-10 (DECISIONS 2026-11-10 "Issue 11 built")
 
 Roy 2026-11-10: "i dont think we will close check in, we can close the session" — a child may come ¾ into the class.
 So an admin opens and closes the **Session**; while it is open everything at its door works (check-in, undo, Who's

@@ -42,6 +42,7 @@ enum AccessRowEnum: string implements HasEnumMetadata
     case MovingUp = 'moving_up';
     case ManageLinks = 'manage_links';
     case DeleteChildPhoto = 'delete_child_photo';
+    case OpenSession = 'open_session';
 
     /** The rule, in the matrix's words: who may. */
     public function label(): string
@@ -69,6 +70,7 @@ enum AccessRowEnum: string implements HasEnumMetadata
             self::Cards => 'Cards (name card requests): the page — an admin of the satellite in the address, its families; mark paid, approve, refuse, mark printed — an admin of the family\'s home satellite',
             self::MovingUp => 'Moving-Up (every child to the next Level) and putting the last one back: per satellite, its admins',
             self::ManageLinks => 'Links (a satellite\'s own addresses on its QR poster): add, change, order, remove — satellite admin at their own',
+            self::OpenSession => 'Open and close a Session (a class on its date): satellite admin at their own; a class admin their class',
             self::DeleteChildPhoto => 'Delete a child\'s photo for good (a parent asking for erasure; it cannot be undone): an admin who may edit the family, in Admin',
             self::OwnFamily => 'The parent\'s own family: view, edit details, add/edit children (not status/Level)',
         };

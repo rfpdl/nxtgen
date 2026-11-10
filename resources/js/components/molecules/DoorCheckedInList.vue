@@ -11,7 +11,7 @@ import type { DoorCheckIn } from '@/types'
  * them, each with the nickname (bold), this satellite's Squad, the time and Undo — so the page is never empty before
  * a search. Undo is the page's to send. The Squad is a Pill in its Level's colour (the Bold look).
  */
-defineProps<{ checkIns: DoorCheckIn[] }>()
+withDefaults(defineProps<{ checkIns: DoorCheckIn[]; readOnly?: boolean }>(), { readOnly: false })
 const emit = defineEmits<{ undo: [checkInId: number] }>()
 </script>
 
@@ -32,6 +32,7 @@ const emit = defineEmits<{ undo: [checkInId: number] }>()
                     </p>
                     <span class="text-text-muted tabular-nums">{{ checkIn.checked_in_at }}</span>
                     <AppButton
+                        v-if="!readOnly"
                         variant="secondary"
                         data-testid="checked-in-undo"
                         @click="emit('undo', checkIn.id)"

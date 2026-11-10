@@ -14,6 +14,7 @@ use App\Domains\Church\Jobs\GetChurchTodayJob;
 use App\Domains\Schedule\Jobs\GetChosenScheduleJob;
 use App\Domains\Schedule\Jobs\GetTodaysSchedulesJob;
 use App\Enums\AccessRowEnum;
+use App\Enums\SessionStateEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
 use App\Services\Church\Data\DoorQueryInput;
@@ -59,6 +60,8 @@ final class ShowWhosInFeature extends BaseChurchFeature
             'today' => $today->format('D j M'),
             'classes' => array_map(fn (Schedule $s): DoorClassData => DoorClassData::fromModel($s), $classes),
             'class_id' => $class?->id,
+            // A closed Session's Who's in is read-only (Roy 2026-11-10).
+            'session_state' => SessionStateEnum::of($session, $today),
             'squads' => $squads,
             'squad_id' => collect($squads)->contains(fn (WhosInSquadData $s): bool => $s->id === $address->squad) ? $address->squad : null,
         ]);

@@ -49,6 +49,15 @@ trait ClassRules
             && ($this->canManageClassesAt($schedule->satellite) || isset($this->adminSchedules[$schedule->id]));
     }
 
+    /**
+     * Open and close this class's Session (spec item 15): an admin of its satellite, or its own class admin — until the
+     * Lifeshaper schedule (TODO #36) lets a scheduled Lifeshaper do it too.
+     */
+    public function canOpenSessionOf(Schedule $schedule): bool
+    {
+        return $this->canManageSchedule($schedule);
+    }
+
     /** @return list<int> the classes this person is class admin of */
     public function classAdminScheduleIds(): array
     {

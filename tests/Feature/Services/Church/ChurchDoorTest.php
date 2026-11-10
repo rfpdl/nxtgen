@@ -38,8 +38,8 @@ use function Tests\Support\staffMember;
 
 /*
  * Check in at the door (DECISIONS 2026-10-26; GLOSSARY "Session", "Check-in"): a Lifeshaper picks today's class,
- * searches the whole church, ticks a family's children and checks them in. The first Check-in makes the Session; each
- * child joins THIS satellite's Squad for their Level and gender — a visiting child too. Inactive → made active again
+ * searches the whole church, ticks a family's children and checks them in — while an admin has the class open (spec
+ * item 15); each child joins THIS satellite's Squad for their Level and gender — a visiting child too. Inactive → made active again
  * first; Graduated → refused; no Level → one picked at the door. AccessScope::canCheckInAt owns who may; these prove
  * the screens ask it.
  *
@@ -344,8 +344,9 @@ describe('a name card at the door', function (): void {
 });
 
 describe('checking children in', function (): void {
-    it('checks a family\'s children in to today\'s class, making the Session, each in this satellite\'s Squad @story#106', function (): void {
+    it('checks a family\'s children in to today\'s open class, each in this satellite\'s Squad @story#106', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'amara' => $amara, 'ben' => $ben] = doorChurch();
+        sessionOf($onePm);   // an admin opened 1PM (spec item 15)
 
         actingAs($lifeshaper)->post("/dxb/serve/classes/{$onePm->id}/check-ins", ticked([[$amara], [$ben]]))
             ->assertRedirect()->assertSessionHas('success', 'Checked in Amara and Ben.')->assertSessionMissing('error');
@@ -358,6 +359,7 @@ describe('checking children in', function (): void {
 
     it('checks a visiting child from another satellite in, in THIS satellite\'s Squad @story#106', function (): void {
         ['dxb' => $dxb, 'onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'visitor' => $visitor] = doorChurch();
+        sessionOf($onePm);   // an admin opened 1PM (spec item 15)
 
         actingAs($lifeshaper)->post("/dxb/serve/classes/{$onePm->id}/check-ins", ticked([[$visitor]]))->assertSessionHas('success', 'Checked in Bea.');
 
@@ -376,6 +378,7 @@ describe('checking children in', function (): void {
 
     it('makes an inactive child active again, noted, and checks them in @story#107', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'noah' => $noah] = doorChurch();
+        sessionOf($onePm);   // an admin opened 1PM (spec item 15)
 
         actingAs($lifeshaper)->post("/dxb/serve/classes/{$onePm->id}/check-ins", ticked([[$noah, null, true]]))->assertSessionHas('success', 'Checked in Noah.');
 
@@ -386,6 +389,7 @@ describe('checking children in', function (): void {
 
     it('saves the Level picked at the door for a child with none, notes it, and checks them in @story#107', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'lola' => $lola] = doorChurch();
+        sessionOf($onePm);   // an admin opened 1PM (spec item 15)
 
         actingAs($lifeshaper)->post("/dxb/serve/classes/{$onePm->id}/check-ins", ticked([[$lola, 3]]))->assertSessionHas('success', 'Checked in Lola.');
 
@@ -397,6 +401,7 @@ describe('checking children in', function (): void {
 
     it('never changes a Level the child already has at the door @story#107', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'amara' => $amara] = doorChurch();
+        sessionOf($onePm);   // an admin opened 1PM (spec item 15)
 
         actingAs($lifeshaper)->post("/dxb/serve/classes/{$onePm->id}/check-ins", ticked([[$amara, 4]]))->assertSessionHas('success');
 
@@ -405,6 +410,7 @@ describe('checking children in', function (): void {
 
     it('refuses a Graduated child, an inactive child not made active, and a child with no Level, saying why @story#108', function (): void {
         ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'amara' => $amara, 'noah' => $noah, 'lola' => $lola, 'ben' => $ben] = doorChurch();
+        sessionOf($onePm);   // an admin opened 1PM (spec item 15)
         $ben->forceFill(['status' => ChildStatusEnum::Graduated])->save();
 
         actingAs($lifeshaper)->post("/dxb/serve/classes/{$onePm->id}/check-ins", ticked([[$amara], [$ben, null, true], [$noah], [$lola]]))
@@ -418,6 +424,7 @@ describe('checking children in', function (): void {
 
     it('checks in only at a satellite the Role covers, a class meeting today, and this church\'s children @story#109', function (): void {
         ['house' => $house, 'onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'amara' => $amara] = doorChurch();
+        sessionOf($onePm);   // an admin opened 1PM (spec item 15)
         $houseClass = Schedule::query()->where('satellite_id', $house->id)->sole();
         $sunday = Schedule::query()->where('name', 'Sunday school')->sole();
         $otherChild = childOf(familyAt(Satellite::factory()->for(church())->create()), ['level' => 1]);
@@ -427,7 +434,7 @@ describe('checking children in', function (): void {
         actingAs($lifeshaper)->post("/dxb/serve/classes/{$sunday->id}/check-ins", ticked([[$amara]]))->assertNotFound();
         actingAs($lifeshaper)->post("/dxb/serve/classes/{$onePm->id}/check-ins", ticked([[$amara], [$otherChild]]))->assertNotFound();
 
-        expect(CheckIn::query()->count())->toBe(0)->and(Session::query()->count())->toBe(0);
+        expect(CheckIn::query()->count())->toBe(0)->and(Session::query()->count())->toBe(1);   // only the 1PM an admin opened
     });
 
     it('needs at least one ticked child, and a Level from the chart @story#109', function (): void {
@@ -466,6 +473,60 @@ describe('undoing a Check-in', function (): void {
 });
 
 /* A class admin (TODO #9; plan §3.2 "Check in / undo: events of S"): their own class at the door, no other. */
+describe('an open Session (spec item 15)', function (): void {
+    it('says whether the chosen class is open, and offers Open and Close to its admins only @story#202', function (): void {
+        ['dxb' => $dxb, 'onePm' => $onePm, 'lifeshaper' => $lifeshaper] = doorChurch();
+        $admin = staffMember(RoleEnum::Admin, atSatellite($dxb));
+
+        actingAs($lifeshaper)->get('/dxb/serve/door')->assertInertia(fn (AssertableInertia $p) => $p
+            ->where('session_state', 'not_open')->where('can_open', false));
+        actingAs($admin)->get('/dxb/serve/door')->assertInertia(fn (AssertableInertia $p) => $p
+            ->where('session_state', 'not_open')->where('can_open', true));
+
+        $session = sessionOf($onePm);
+        actingAs($lifeshaper)->get('/dxb/serve/door')->assertInertia(fn (AssertableInertia $p) => $p->where('session_state', 'open'));
+        $session->update(['closed_at' => now()]);
+        actingAs($admin)->get('/dxb/serve/door')->assertInertia(fn (AssertableInertia $p) => $p->where('session_state', 'closed')->where('can_open', true));
+
+        // Another class's class admin is offered only their own class — which they may open.
+        $sevenPm = Schedule::query()->where('name', '7PM')->sole();
+        actingAs(classAdminOf($sevenPm))->get('/dxb/serve/door')->assertInertia(fn (AssertableInertia $p) => $p
+            ->where('class_id', $sevenPm->id)->where('can_open', true));
+        actingAs(staffMember(RoleEnum::Lifeshaper, atSatellite($dxb)))->get('/dxb/serve/door')->assertInertia(fn (AssertableInertia $p) => $p->where('can_open', false));
+    });
+
+    it('checks nobody in before the class is opened, or once it is closed — saying so @story#109', function (): void {
+        ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'amara' => $amara] = doorChurch();
+
+        actingAs($lifeshaper)->post("/dxb/serve/classes/{$onePm->id}/check-ins", ticked([[$amara]]))
+            ->assertSessionHas('error', '1PM is not open yet.');
+        sessionOf($onePm)->update(['closed_at' => now()]);
+        actingAs($lifeshaper)->post("/dxb/serve/classes/{$onePm->id}/check-ins", ticked([[$amara]]))
+            ->assertSessionHas('error', '1PM is closed.');
+
+        expect(CheckIn::query()->count())->toBe(0);
+    });
+
+    it('checks a late child in while the class is still open (Roy: ¾ of the class in) @story#106', function (): void {
+        ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'amara' => $amara] = doorChurch();
+        sessionOf($onePm);
+        travelTo(CarbonImmutable::parse('2026-10-31 14:45:00', 'Asia/Dubai'));
+
+        actingAs($lifeshaper)->post("/dxb/serve/classes/{$onePm->id}/check-ins", ticked([[$amara]]))->assertSessionHas('success');
+    });
+
+    it('undoes nothing once the class is closed @story#111', function (): void {
+        ['onePm' => $onePm, 'lifeshaper' => $lifeshaper, 'ben' => $ben] = doorChurch();
+        $session = sessionOf($onePm);
+        $in = checkedIn($session, $ben);
+        $session->update(['closed_at' => now()]);
+
+        actingAs($lifeshaper)->put("/dxb/serve/check-ins/{$in->id}/undo")->assertSessionHas('error', '1PM is closed.');
+
+        expect($in->fresh()?->isIn())->toBeTrue();
+    });
+});
+
 describe('a class admin at the door', function (): void {
     it('is offered only their own class, and checks children in there @story#182', function (): void {
         ['onePm' => $onePm, 'amara' => $amara] = doorChurch();
@@ -473,6 +534,7 @@ describe('a class admin at the door', function (): void {
 
         actingAs($classAdmin)->get('/dxb/serve/door')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
             ->has('classes', 1)->where('classes.0.name', '1PM'));
+        sessionOf($onePm);
         actingAs($classAdmin)->post("/dxb/serve/classes/{$onePm->id}/check-ins", ['children' => [['child_id' => $amara->id, 'level' => null, 'make_active' => false]]])
             ->assertSessionHas('success');
 

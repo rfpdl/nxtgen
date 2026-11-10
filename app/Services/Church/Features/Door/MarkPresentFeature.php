@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace App\Services\Church\Features\Door;
 
 use App\Data\Models\CheckIn;
+use App\Domains\CheckIn\Jobs\GetSessionForUpdateJob;
 use App\Domains\CheckIn\Jobs\UpdateCheckInPresenceJob;
 use App\Domains\Church\Jobs\GetChurchTodayJob;
 use App\Enums\AccessRowEnum;
+use App\Enums\SessionStateEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
 use App\Services\Church\Data\MarkPresentInput;
 use App\Services\Church\Features\BaseChurchFeature;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 
 /**
  * A tap on Who's in (roll call, DECISIONS 2026-10-28): mark a checked-in child present in their Squad, or unmark
@@ -41,7 +44,21 @@ final class MarkPresentFeature extends BaseChurchFeature
         abort_unless($this->scope()->canCheckInTo($checkIn->session->schedule), 404);
         abort_unless($checkIn->session->date->isSameDay($this->run(new GetChurchTodayJob(church: $church))), 404);
 
-        if (! $this->run(new UpdateCheckInPresenceJob(checkIn: $checkIn, revision: $input->revision, present: $input->present, by: $this->staff()))) {
+        // A closed Session is looked at, not changed (Roy 2026-11-10): asked under its lock, the date read after it,
+        // so an admin closing it at this moment comes before or after the tap, never between (Astra, issue 11).
+        [$refusal, $marked] = DB::transaction(function () use ($church, $checkIn, $input): array {
+            $session = $this->run(new GetSessionForUpdateJob(session: $checkIn->session));
+            $refusal = SessionStateEnum::of($session, $this->run(new GetChurchTodayJob(church: $church)))->refusal($checkIn->session->schedule->name);
+
+            return $refusal !== null
+                ? [$refusal, false]
+                : [null, $this->run(new UpdateCheckInPresenceJob(checkIn: $checkIn, revision: $input->revision, present: $input->present, by: $this->staff()))];
+        });
+        if ($refusal !== null) {
+            return back()->with('error', $refusal);
+        }
+
+        if (! $marked) {
             $name = $checkIn->child->displayName();
 
             // In, but not the Check-in that was tapped: undone and checked in again since the page last showed it.

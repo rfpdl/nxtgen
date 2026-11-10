@@ -103,6 +103,8 @@ export type SatelliteLinks = App.Domains.Church.DataObjects.SatelliteLinksData
 export type PosterLink = App.Domains.Church.DataObjects.PosterLinkData
 /** The door (DECISIONS 2026-10-26/27): one of today's classes, a family found, one of its children, a child checked in, a child's health. */
 export type DoorClass = App.Domains.CheckIn.DataObjects.DoorClassData
+/** Where today's Session of a class stands (spec item 15): not open yet, open, or closed. */
+export type SessionState = App.Enums.SessionStateEnum
 export type DoorFamily = App.Domains.CheckIn.DataObjects.DoorFamilyData
 export type DoorChild = App.Domains.CheckIn.DataObjects.DoorChildData
 export type DoorCheckIn = App.Domains.CheckIn.DataObjects.DoorCheckInData

@@ -8,7 +8,7 @@ use App\Enums\CheckInResultEnum;
 
 it('has the outcomes of checking one child in', function (): void {
     expect(array_column(CheckInResultEnum::cases(), 'value'))
-        ->toBe(['checked_in', 'already_in', 'graduated', 'inactive', 'needs_level']);
+        ->toBe(['checked_in', 'already_in', 'graduated', 'inactive', 'needs_level', 'closed']);
 });
 
 it('says which outcomes put the child in', function (CheckInResultEnum $result, bool $in): void {
@@ -19,11 +19,13 @@ it('says which outcomes put the child in', function (CheckInResultEnum $result, 
     [CheckInResultEnum::Graduated, false],
     [CheckInResultEnum::Inactive, false],
     [CheckInResultEnum::NeedsLevel, false],
+    [CheckInResultEnum::Closed, false],
 ]);
 
 it('says why a child was not checked in, in plain words', function (): void {
     expect(CheckInResultEnum::Graduated->label())->toBe('has Graduated from NxtGen')
         ->and(CheckInResultEnum::Inactive->label())->toBe('is inactive — make them active again first')
         ->and(CheckInResultEnum::NeedsLevel->label())->toBe('needs a Level first')
+        ->and(CheckInResultEnum::Closed->label())->toBe('— the class is closed')
         ->and([CheckInResultEnum::CheckedIn->color(), CheckInResultEnum::Graduated->color()])->toBe(['success', 'danger']);
 });

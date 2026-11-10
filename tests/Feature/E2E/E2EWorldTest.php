@@ -7,8 +7,11 @@ use App\Data\Models\Child;
 use App\Data\Models\DuplicateCandidate;
 use App\Data\Models\Family;
 use App\Data\Models\Schedule;
+use App\Data\Models\Session;
 use App\Data\Models\User;
 use App\Enums\RoleEnum;
+use App\Providers\E2EServiceProvider;
+use Carbon\CarbonImmutable;
 use Database\Seeders\E2ESeeder;
 use Illuminate\Support\Str;
 
@@ -113,6 +116,11 @@ it('seeds exactly what the browser journeys expect', function (): void {
     // The platform admin is their own login; the demo admin is not one here (E2ESeeder::PLATFORM_ADMIN_EMAIL).
     expect($world)->toContain("'".E2ESeeder::PLATFORM_ADMIN_EMAIL."'")
         ->and(User::query()->where('is_platform_admin', true)->pluck('email')->all())->toBe([E2ESeeder::PLATFORM_ADMIN_EMAIL]);
+
+    // The door journeys check children in to 1PM on the door's Saturday: an admin has opened 1PM and 7PM (spec item 15).
+    $saturday = E2EServiceProvider::doorSaturday(CarbonImmutable::now(E2EServiceProvider::churchTimezone()));
+    expect(Session::query()->whereDate('date', $saturday)->whereNull('closed_at')->with('schedule')->get()->map(fn (Session $s): string => $s->schedule->name)->sort()->values()->all())
+        ->toBe(['1PM', '7PM']);
 
     expect($world)->toContain('`volunteer-${project}@nxtgen.test`');
     foreach (array_keys(E2ESeeder::DOOR_GUARDIANS) as $project) {

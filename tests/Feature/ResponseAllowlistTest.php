@@ -403,7 +403,7 @@ describe('the door', function (): void {
             STAFF_FRAME,
             $checkedIn,
             // "Amara" is also tried as a name card; no child's full name is just that, and families are found, so no card.
-            ['class_id', 'classes.*.id', 'classes.*.name', 'classes.*.times', 'levels.*.level', 'levels.*.name', 'query', 'scan', 'today'],
+            ['can_open', 'class_id', 'classes.*.id', 'classes.*.name', 'classes.*.times', 'levels.*.level', 'levels.*.name', 'query', 'scan', 'session_state', 'today'],
             prefixed('families.*', ['can_open', 'id', 'name', 'primary_name', 'satellite', ...prefixed('children.*', DOOR_CHILD)]),
         ))
             ->and(forbiddenOnLists($props))->toBe([])
@@ -459,7 +459,7 @@ describe('Who\'s in', function (): void {
         expect(keyPaths($props))->toBe(allowlist(
             STAFF_FRAME,
             $squads,
-            ['class_id', 'classes.*.id', 'classes.*.name', 'classes.*.times', 'squad_id', 'today'],
+            ['class_id', 'classes.*.id', 'classes.*.name', 'classes.*.times', 'session_state', 'squad_id', 'today'],
         ))
             ->and(forbiddenOnLists($props))->toBe([])
             ->and(data_get($props, 'squads.0.children.0.nickname'))->toBe($home ? 'Amara' : null);

@@ -59,12 +59,12 @@ beforeEach(() => {
 })
 
 describe('useRollCall', () => {
-    it('refreshes the list every 20 seconds, the Squads only', () => {
+    it('refreshes the list every 20 seconds — the Squads, and whether the class is still open (Astra, issue 11)', () => {
         host()
 
         expect(pollInterval).toBe(20_000)
         expect(ROLL_CALL_POLL_MS).toBe(20_000)
-        expect(pollOptions().only).toEqual(['squads', 'squad_id'])
+        expect(pollOptions().only).toEqual(['squads', 'squad_id', 'session_state'])
     })
 
     it('shows a tap at once, sends it, and lets the server answer once it is done', async () => {
