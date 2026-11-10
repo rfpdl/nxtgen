@@ -175,7 +175,6 @@ declare namespace App {
                     can_manage_cards: boolean
                     can_move_up: boolean
                     can_manage_links: boolean
-                    can_set_password: boolean
                 }
                 export type ChurchSettingsData = {
                     timezone: string
@@ -471,8 +470,8 @@ declare namespace App {
         export type RegistrationSourceEnum = 'self' | 'staff' | 'import'
         export type RelationshipEnum =
             'mother' | 'father' | 'guardian' | 'grandparent' | 'aunt_uncle' | 'sibling' | 'other'
-        export type RoleEnum = 'admin' | 'lifeshaper' | 'helper'
-        export type ScopeTypeEnum = 'satellite' | 'schedule' | 'session'
+        export type RoleEnum = 'admin' | 'lifeshaper'
+        export type ScopeTypeEnum = 'satellite' | 'schedule'
         export type SessionStateEnum = 'not_open' | 'open' | 'closed'
         export type WeekdayEnum =
             'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'

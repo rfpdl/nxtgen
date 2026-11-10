@@ -7,7 +7,6 @@ namespace App\Domains\Church\Jobs;
 use App\Data\Models\RoleAssignment;
 use App\Data\Models\Satellite;
 use App\Data\Models\Schedule;
-use App\Data\Models\Session;
 use App\Data\Models\User;
 use App\Domains\Church\DataObjects\RoleScope;
 use App\Enums\RoleEnum;
@@ -27,7 +26,7 @@ final class CreateRoleAssignmentJob extends BaseJob
     public function __construct(
         private readonly User $user,
         private readonly RoleEnum $role,
-        private readonly Satellite|Schedule|Session $place,
+        private readonly Satellite|Schedule $place,
         private readonly User $grantedBy,
     ) {}
 

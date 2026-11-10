@@ -4,6 +4,15 @@ Product and technical decisions, newest first. Each one says what was decided, b
 change of mind is a new entry, not a silent edit. The plan (`.planning/tasks/2026-10-14-nxtgen-v1/plan.md`)
 describes the design; this records the choices that shaped or changed it.
 
+## 2026-11-11 (No helper for the day — Roy)
+
+- **Helpers are taken out** (Roy, asked again in plain words: "a helper is a one-day extra Lifeshaper?" — "Don't need
+  helpers"). Someone who helps at a class is made a Lifeshaper on People, and removed there when they stop. Spec item
+  18 is dropped; issue 14 is wontfix. Gone: the Helper Role and the Session scope, the People choice, the helper's
+  access while a Session is open, the Password rule for helpers (every staff member has Password again), and their
+  tests and journey. The entries below about helpers are history.
+- **Closed classes stay under "Today" on Serve** with "Closed" and "See who was in" (Roy confirmed).
+
 ## 2026-11-10 (Codex review, whole codebase — Roy: "do a review with codex top to bottom")
 
 Roy asked, going to bed, for a top-to-bottom Codex review: Lucid conventions, and unit/feature/e2e tests up to date.

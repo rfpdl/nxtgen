@@ -37,27 +37,17 @@ enum Actor: string
     case ClassAdmin = 'class admin of Home 1PM';
     /** An admin of another church ("other", at its satellite `/other`). */
     case OtherChurch = 'other-church admin';
-    /** A helper for the day at Home's 1PM on the Saturday, while it is open (spec item 18): Serve at Home as a Lifeshaper. */
-    case HomeHelper = 'helper for the day at Home 1PM';
-    /** A helper for the day at last Saturday's 1PM: their day is gone, so nothing. */
-    case HomeHelperGone = 'helper whose day is gone';
-
-    /** @return list<self> the helpers for the day, asked about on the Saturday their Session is (or was) */
-    public static function helpers(): array
-    {
-        return [self::HomeHelper, self::HomeHelperGone];
-    }
 
     /** @return list<self> anyone with an active Role at Home — who may open Home's staff pages (`/home-sat/…`) */
     public static function staff(): array
     {
-        return [self::HomeAndAwayAdmin, self::HomeAdmin, self::HomeAndAwayLifeshaper, self::HomeLifeshaper, self::BothHats, self::HomeParentLifeshaper, self::ClassAdmin, self::HomeHelper];
+        return [self::HomeAndAwayAdmin, self::HomeAdmin, self::HomeAndAwayLifeshaper, self::HomeLifeshaper, self::BothHats, self::HomeParentLifeshaper, self::ClassAdmin];
     }
 
     /** @return list<self> staff who can see the world's family (AccessScope::canSeeFamily) — a class admin at Home too */
     public static function seeingFamily(): array
     {
-        return [self::HomeAndAwayAdmin, self::HomeAdmin, self::HomeAndAwayLifeshaper, self::HomeLifeshaper, self::BothHats, self::HomeParentLifeshaper, self::ClassAdmin, self::HomeHelper];
+        return [self::HomeAndAwayAdmin, self::HomeAdmin, self::HomeAndAwayLifeshaper, self::HomeLifeshaper, self::BothHats, self::HomeParentLifeshaper, self::ClassAdmin];
     }
 
     /**
@@ -66,7 +56,7 @@ enum Actor: string
      */
     public static function coveringHome(): array
     {
-        return [self::HomeAndAwayAdmin, self::HomeAdmin, self::HomeAndAwayLifeshaper, self::HomeLifeshaper, self::BothHats, self::HomeParentLifeshaper, self::ClassAdmin, self::HomeHelper];
+        return [self::HomeAndAwayAdmin, self::HomeAdmin, self::HomeAndAwayLifeshaper, self::HomeLifeshaper, self::BothHats, self::HomeParentLifeshaper, self::ClassAdmin];
     }
 
     /** @return list<self> staff who may edit it (AccessScope::canEditFamily) */

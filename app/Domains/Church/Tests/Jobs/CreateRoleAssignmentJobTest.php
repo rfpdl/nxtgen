@@ -13,7 +13,6 @@ use function Tests\Support\church;
 use function Tests\Support\grantRole;
 use function Tests\Support\satelliteOf;
 use function Tests\Support\scheduleAt;
-use function Tests\Support\sessionOf;
 
 /* Giving a role where it is held — one Satellite or one class (spec item 9: no church-wide Role) — in that place's church. */
 
@@ -64,20 +63,4 @@ it('switches a removed role back on, and says no when the role is already held',
         ->and(RoleAssignment::query()->where('user_id', $user->id)->sole()->is_active)->toBeTrue()
         ->and($grant())->toBeFalse()
         ->and(RoleAssignment::query()->where('user_id', $user->id)->count())->toBe(1);
-});
-
-it('gives a helper for the day their Role at one Session, in its church — again after it was taken away, once (spec item 18)', function (): void {
-    $satellite = satelliteOf(church());
-    $session = sessionOf(scheduleAt($satellite));
-    $admin = User::factory()->create();
-    $helper = User::factory()->create();
-
-    expect((new CreateRoleAssignmentJob(user: $helper, role: RoleEnum::Helper, place: $session, grantedBy: $admin))->handle())->toBeTrue();
-    $role = RoleAssignment::query()->where('user_id', $helper->id)->sole();
-    expect([$role->church_id, $role->scope_type, $role->scope_id, $role->granted_by])->toBe([$satellite->church_id, ScopeTypeEnum::Session, $session->id, $admin->id])
-        ->and((new CreateRoleAssignmentJob(user: $helper, role: RoleEnum::Helper, place: $session, grantedBy: $admin))->handle())->toBeFalse();
-
-    $role->update(['is_active' => false]);
-    expect((new CreateRoleAssignmentJob(user: $helper, role: RoleEnum::Helper, place: $session, grantedBy: $admin))->handle())->toBeTrue()
-        ->and(RoleAssignment::query()->where('user_id', $helper->id)->count())->toBe(1);
 });

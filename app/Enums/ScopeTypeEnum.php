@@ -15,15 +15,12 @@ enum ScopeTypeEnum: string implements HasEnumMetadata
 
     case Satellite = 'satellite';
     case Schedule = 'schedule';
-    /** One class on one day — a helper for the day's (spec item 18). */
-    case Session = 'session';
 
     public function label(): string
     {
         return match ($this) {
             self::Satellite => 'Satellite',
             self::Schedule => 'Class',
-            self::Session => 'Class today',
         };
     }
 

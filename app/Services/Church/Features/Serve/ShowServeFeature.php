@@ -29,10 +29,8 @@ use Inertia\Response;
     persona: 'staff',
     happyPaths: [
         'story#208' => 'Staff see today\'s classes at their satellite — each open one a link to its door at its own address; an admin opens one from here',
-        'story#213' => 'A helper for the day signs in from the email and may do anything a Lifeshaper may in Serve at that satellite while their Session is open — every open door, Families — never Admin (Roy 2026-11-10)',
     ],
     unhappyPaths: [
-        'story#214' => 'Once the helper\'s Session closes — by an admin, or at midnight — they find nothing: every page is "not found", and signing in lands on "nothing here yet"',
         'story#209' => 'Only the classes their Role covers at the satellite in the address — none of another satellite\'s, another day\'s or a retired one; no Open button for a Lifeshaper',
     ],
 )]

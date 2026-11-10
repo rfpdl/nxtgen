@@ -25,11 +25,9 @@ final class ChurchNavData extends Data
         public bool $can_manage_cards,
         public bool $can_move_up,
         public bool $can_manage_links,
-        /** A backup password (D7) — for staff who stay, never a helper for the day only (GetUserIsStaffJob). */
-        public bool $can_set_password,
     ) {}
 
-    public static function fromScope(AccessScope $scope, ?string $area, bool $canSetPassword): self
+    public static function fromScope(AccessScope $scope, ?string $area): self
     {
         return new self(
             area: $area,
@@ -41,7 +39,6 @@ final class ChurchNavData extends Data
             can_manage_cards: $scope->canManageCards(),
             can_move_up: $scope->canMoveUp(),
             can_manage_links: $scope->canManageLinks(),
-            can_set_password: $canSetPassword,
         );
     }
 }

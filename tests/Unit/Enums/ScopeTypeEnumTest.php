@@ -9,8 +9,8 @@ use App\Enums\ScopeTypeEnum;
  * every admin is a satellite's or a class's.
  */
 
-it('stores the three scopes — a satellite, a class, one class on one day (a helper\'s) — and no church-wide one', function (): void {
-    expect(array_column(ScopeTypeEnum::cases(), 'value'))->toBe(['satellite', 'schedule', 'session']);
+it('stores the two scopes, and no church-wide one', function (): void {
+    expect(array_column(ScopeTypeEnum::cases(), 'value'))->toBe(['satellite', 'schedule']);
 });
 
 it('shows a Schedule as "Class", the word people use', function (ScopeTypeEnum $scope, string $label): void {
@@ -18,5 +18,4 @@ it('shows a Schedule as "Class", the word people use', function (ScopeTypeEnum $
 })->with([
     [ScopeTypeEnum::Satellite, 'Satellite'],
     [ScopeTypeEnum::Schedule, 'Class'],
-    [ScopeTypeEnum::Session, 'Class today'],
 ]);

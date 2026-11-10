@@ -15,15 +15,12 @@ enum RoleEnum: string implements HasEnumMetadata
 
     case Admin = 'admin';
     case Lifeshaper = 'lifeshaper';
-    /** For one Session only (spec item 18): Serve at its satellite while it is open, nothing after (Roy 2026-11-10). */
-    case Helper = 'helper';
 
     public function label(): string
     {
         return match ($this) {
             self::Admin => 'Admin',
             self::Lifeshaper => 'Lifeshaper',
-            self::Helper => 'Helper for the day',
         };
     }
 

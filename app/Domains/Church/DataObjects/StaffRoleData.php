@@ -6,7 +6,6 @@ namespace App\Domains\Church\DataObjects;
 
 use App\Data\Models\RoleAssignment;
 use App\Data\Models\Schedule;
-use App\Data\Models\Session;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
 use Spatie\LaravelData\Data;
@@ -25,27 +24,16 @@ final class StaffRoleData extends Data
     /**
      * @param  array<int, string>  $satelliteNames  id => name, this church's satellites
      * @param  array<int, Schedule>  $classes  id => class, for class admins' roles (TODO #9)
-     * @param  array<int, Session>  $sessions  id => Session, for helpers' roles (spec item 18)
      */
-    public static function fromModel(RoleAssignment $assignment, array $satelliteNames, array $classes, bool $canRemove, array $sessions = []): self
+    public static function fromModel(RoleAssignment $assignment, array $satelliteNames, array $classes, bool $canRemove): self
     {
-        [$place, $name] = match ($assignment->scope_type) {
-            ScopeTypeEnum::Schedule => [$class = $classes[$assignment->scope_id] ?? null, $class === null ? null : self::className($class)],
-            ScopeTypeEnum::Session => [$session = $sessions[$assignment->scope_id] ?? null, $session === null ? null : self::sessionName($session)],
-            ScopeTypeEnum::Satellite => [null, $satelliteNames[$assignment->scope_id] ?? null],
-        };
+        $class = $assignment->scope_type === ScopeTypeEnum::Schedule ? $classes[$assignment->scope_id] ?? null : null;
 
         return new self(
             id: $assignment->id,
-            label: self::label($assignment->role, RoleScope::ofAssignment($assignment, $place), $name),
+            label: self::label($assignment->role, RoleScope::ofAssignment($assignment, $class), $class === null ? $satelliteNames[$assignment->scope_id] ?? null : self::className($class)),
             can_remove: $canRemove,
         );
-    }
-
-    /** How People names a helper's Session — it is today's: "CCF DXB · 1PM today". */
-    public static function sessionName(Session $session): string
-    {
-        return "{$session->satellite->name} · {$session->schedule->name} today";
     }
 
     /** How People names a class: its satellite, then its name — "CCF DXB · 1PM". */
@@ -60,7 +48,6 @@ final class StaffRoleData extends Data
         $where = match ($scope->type) {
             ScopeTypeEnum::Satellite => $placeName ?? 'a satellite',
             ScopeTypeEnum::Schedule => $placeName ?? 'a class',
-            ScopeTypeEnum::Session => $placeName ?? 'a class today',
         };
 
         return "{$role->label()} · {$where}";

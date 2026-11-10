@@ -8,17 +8,13 @@ use App\Data\Models\User;
 use App\Domains\Church\Jobs\GetAccessScopeJob;
 use App\Domains\Church\Jobs\GetOpenSatellitesJob;
 use App\Enums\RoleEnum;
-use Carbon\CarbonImmutable;
 
-use function Pest\Laravel\travelTo;
 use function Tests\Support\atClass;
 use function Tests\Support\atSatellite;
 use function Tests\Support\church;
 use function Tests\Support\grantRole;
-use function Tests\Support\helperAt;
 use function Tests\Support\satelliteOf;
 use function Tests\Support\scheduleAt;
-use function Tests\Support\sessionOf;
 
 /*
  * The satellites a person may open, in the order added (spec items 9–12) — "Pick your satellite" and the bar's switch:
@@ -71,14 +67,6 @@ it('offers exactly the satellites the access check lets them work at', function 
         'retired class admin' => fn (User $u) => $row($u, RoleEnum::Admin, 'schedule', scheduleAt($sharjah, ['is_active' => false])->id, $church->id),
         'row in the wrong church' => fn (User $u) => $row($u, RoleEnum::Admin, 'satellite', $dubai->id, $elsewhere->church_id),
         'platform admin' => fn (User $u) => $u->forceFill(['is_platform_admin' => true])->save(),
-        // A helper for the day (spec item 18): their Session open today, closed, of another day, of a retired class.
-        'helper, Session open' => fn (User $u) => $row($u, RoleEnum::Helper, 'session', sessionOf(scheduleAt($dubai), now()->toDateString())->id, $church->id),
-        'helper, Session closed' => fn (User $u) => $row($u, RoleEnum::Helper, 'session', tap(sessionOf(scheduleAt($dubai), now()->toDateString()))->update(['closed_at' => now()])->id, $church->id),
-        'helper, last week' => fn (User $u) => $row($u, RoleEnum::Helper, 'session', sessionOf(scheduleAt($dubai), now()->subWeek()->toDateString())->id, $church->id),
-        'helper, retired class' => fn (User $u) => $row($u, RoleEnum::Helper, 'session', sessionOf(scheduleAt($dubai, ['is_active' => false]), now()->toDateString())->id, $church->id),
-        // Rows no screen makes (an import might): a helper at a whole satellite, another Role at a Session.
-        'Helper Role at a satellite' => fn (User $u) => $row($u, RoleEnum::Helper, 'satellite', $sharjah->id, $church->id),
-        'Admin Role at a Session' => fn (User $u) => $row($u, RoleEnum::Admin, 'session', sessionOf(scheduleAt($sharjah), now()->toDateString())->id, $church->id),
     ];
 
     foreach ($people as $who => $give) {
@@ -90,17 +78,4 @@ it('offers exactly the satellites the access check lets them work at', function 
             expect(in_array($satellite->id, $open, true))->toBe($works, "{$who} at satellite {$satellite->id}");
         }
     }
-});
-
-it('offers a helper for the day their satellite only while their Session is open on THEIR church\'s today — whatever another church\'s clock says (Astra)', function (): void {
-    $dubai = church(['timezone' => 'Asia/Dubai']);
-    church(['timezone' => 'Pacific/Honolulu']);   // 14 hours behind: still Saturday when Dubai is on Sunday
-    $dxb = satelliteOf($dubai);
-    $helper = helperAt(sessionOf(scheduleAt($dxb), '2026-10-31'));
-
-    travelTo(CarbonImmutable::parse('2026-10-31 12:00:00', 'Asia/Dubai'));
-    expect(array_map(fn ($s) => $s->id, (new GetOpenSatellitesJob(user: $helper))->handle()))->toBe([$dxb->id]);
-
-    travelTo(CarbonImmutable::parse('2026-11-01 00:05:00', 'Asia/Dubai'));
-    expect((new GetOpenSatellitesJob(user: $helper))->handle())->toBe([]);
 });

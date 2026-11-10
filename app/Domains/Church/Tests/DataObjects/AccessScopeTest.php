@@ -21,7 +21,6 @@ use function Tests\Support\familyAt;
 use function Tests\Support\grantRole;
 use function Tests\Support\satelliteOf;
 use function Tests\Support\scheduleAt;
-use function Tests\Support\sessionOf;
 
 /*
  * The access matrix (plan §3.2), one rule per test. AccessScope is the ONE owner of these answers;
@@ -189,21 +188,6 @@ it('lets an admin here grant Admin and Lifeshaper at this satellite and Admin at
         // A class Role is only ever Admin (TODO #9), and its satellite must be known.
         ->and($scope->canGrant(RoleEnum::Lifeshaper, RoleScope::of($class)))->toBeFalse()
         ->and($scope->canGrant(RoleEnum::Admin, new RoleScope(ScopeTypeEnum::Schedule, $class->id)))->toBeFalse();
-});
-
-it('lets an admin here grant a helper for the day at one of its Sessions — and that Role only there, nor a Helper at a whole satellite (spec item 18)', function (): void {
-    ['htc' => $htc, 'house' => $house] = fx();
-    $user = User::factory()->create();
-    grantRole($user, RoleEnum::Admin, atSatellite($htc));
-    $session = sessionOf(scheduleAt($htc));
-    $scope = scopeAt($user, $htc);
-
-    expect($scope->canGrant(RoleEnum::Helper, RoleScope::of($session)))->toBeTrue()
-        ->and($scope->canGrant(RoleEnum::Admin, RoleScope::of($session)))->toBeFalse()
-        ->and($scope->canGrant(RoleEnum::Lifeshaper, RoleScope::of($session)))->toBeFalse()
-        ->and($scope->canGrant(RoleEnum::Helper, RoleScope::of($htc)))->toBeFalse()
-        ->and($scope->canGrant(RoleEnum::Helper, RoleScope::of(sessionOf(scheduleAt($house)))))->toBeFalse()
-        ->and($scope->canGrant(RoleEnum::Helper, new RoleScope(ScopeTypeEnum::Session, $session->id)))->toBeFalse();
 });
 
 it('lets an admin here grant nothing at another satellite or its classes, even one they are admin of too', function (): void {

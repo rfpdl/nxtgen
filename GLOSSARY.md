@@ -151,11 +151,6 @@ manages the Satellites themselves, every Role anywhere and the church's settings
 the menu's "Platform" link takes them there.
 _Avoid_: Super user, manager
 
-**Helper for the day**:
-The Role for one Session only: added by an admin on People for a class open now; while it is open they may do
-anything a Lifeshaper may in Serve at its Satellite, never Admin; when it closes, nothing.
-_Avoid_: Guest, temp, volunteer
-
 **Lifeshaper**:
 The Role that looks after children at a Schedule — checks them in and keeps their details right.
 _Avoid_: Teacher, volunteer, servant

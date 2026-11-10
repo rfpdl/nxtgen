@@ -33,9 +33,6 @@ final class GiveRoleFeature extends BasePlatformFeature
     public function handle(GiveRoleInput $input): RedirectResponse
     {
         $church = $this->church();
-        // A helper for the day is a satellite's, on its People, for a class open now (spec item 18): never from here,
-        // and no Role here is at one Session (review, issue 14).
-        abort_if($input->role === RoleEnum::Helper || $input->scope_type === ScopeTypeEnum::Session, 404);
         $at = $input->scope_type === ScopeTypeEnum::Schedule
             ? $this->run(new GetScheduleJob(church: $church, id: $input->scope_id))
             : $this->run(new GetSatelliteJob(church: $church, id: $input->scope_id));

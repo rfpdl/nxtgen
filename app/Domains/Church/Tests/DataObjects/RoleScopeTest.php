@@ -11,7 +11,6 @@ use function Tests\Support\atSatellite;
 use function Tests\Support\church;
 use function Tests\Support\satelliteOf;
 use function Tests\Support\scheduleAt;
-use function Tests\Support\sessionOf;
 use function Tests\Support\staffMember;
 
 /*
@@ -24,13 +23,6 @@ it('is one class, carrying the class\'s satellite, when the place is a class', f
     $class = scheduleAt($satellite);
 
     expect(RoleScope::of($class))->toEqual(new RoleScope(ScopeTypeEnum::Schedule, $class->id, $satellite->id));
-});
-
-it('is one Session, carrying its satellite, when the place is a helper\'s Session (spec item 18)', function (): void {
-    $satellite = satelliteOf(church());
-    $session = sessionOf(scheduleAt($satellite));
-
-    expect(RoleScope::of($session))->toEqual(new RoleScope(ScopeTypeEnum::Session, $session->id, $satellite->id));
 });
 
 it('is one satellite when the place is a satellite', function (): void {

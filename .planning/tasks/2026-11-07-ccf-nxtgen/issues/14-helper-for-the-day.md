@@ -1,5 +1,5 @@
 # 14 — A helper for the day (TODO #35)
-Status: done 2026-11-10 (DECISIONS 2026-11-10 "Issue 14 built")
+Status: wontfix 2026-11-11 — built 2026-11-10, then taken out (Roy: "don't need helpers"; DECISIONS 2026-11-11)
 Spec item 18. An admin adds a person (name, email) for one Session only; they sign in with the emailed link; they
 may do anything a Lifeshaper may in Serve at that satellite (Roy 2026-11-10: "no need to do RBAC now") until the
 Session closes. Done when: the helper checks children in at that Session and, once it closes,

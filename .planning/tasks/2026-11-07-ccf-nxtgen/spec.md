@@ -57,8 +57,8 @@ Registration = a new Child joins; Check-in = a registered Child is recorded at a
 17. **Serve** (`/{satellite}/serve`): "Open now" (Sessions with check-in open) and "Today" (today's classes not yet
     open, each with Open check-in for an admin); none → "No class today". The bar's dropdown switches between open
     Sessions.
-18. **Helper for the day**: an admin adds a person for one Session only; their access ends when it closes. They sign
-    in with the emailed link.
+18. ~~**Helper for the day**~~ — dropped (Roy 2026-11-11: "don't need helpers"): someone who helps is made a
+    Lifeshaper on People. Built in issue 14, then taken out.
 19. **Offline (later round, noted now)**: opening and closing need signal; an open door that loses signal keeps
     checking in and sends when back — those Check-ins are kept even if the Session closed meanwhile.
 
