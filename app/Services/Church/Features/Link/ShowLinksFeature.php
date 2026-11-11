@@ -13,6 +13,7 @@ use App\Domains\Church\Jobs\GetSatellitesJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
+use App\Services\Church\DataObjects\LinksPageData;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -45,13 +46,13 @@ final class ShowLinksFeature extends BaseLinkFeature
         ));
         $links = $this->run(new GetSatelliteLinksJob(church: $church, satelliteIds: array_map(fn (SatelliteOptionData $s): int => $s->id, $options)));
 
-        return Inertia::render('Church/Links/Index', [
-            'satellites' => array_map(fn (SatelliteOptionData $s): SatelliteLinksData => new SatelliteLinksData(
+        return Inertia::render('Church/Links/Index', new LinksPageData(
+            satellites: array_map(fn (SatelliteOptionData $s): SatelliteLinksData => new SatelliteLinksData(
                 id: $s->id,
                 name: $s->name,
                 links: array_map(SatelliteLinkData::fromModel(...), $links[$s->id] ?? []),
             ), $options),
-            'max' => SatelliteLink::MAX_PER_SATELLITE,
-        ]);
+            max: SatelliteLink::MAX_PER_SATELLITE,
+        ));
     }
 }

@@ -13,7 +13,7 @@ use Spatie\TypeScriptTransformer\Transformers\EnumTransformer;
 
 /**
  * Generates only the enums that say `#[TypeScript]` — every enum in `app/Enums` (EnumTest). A domain's private
- * enum (the registry import's column map) never reaches a page and stays out of `generated.d.ts`.
+ * enum (the registry import's column map) never reaches a page and stays out of `generated.ts`.
  */
 final class AttributedEnumTransformer extends EnumTransformer
 {

@@ -11,15 +11,7 @@ import DoorTabs from '@/components/molecules/DoorTabs.vue'
 import SessionControls from '@/components/molecules/SessionControls.vue'
 import DoorFamilyCard from '@/components/organisms/DoorFamilyCard.vue'
 import ScanCardSheet from '@/components/organisms/ScanCardSheet.vue'
-import type {
-    ChildHealth,
-    DoorCheckIn,
-    DoorFamily,
-    DoorScan,
-    LevelOption,
-    DoorSession,
-    SessionChoice,
-} from '@/types'
+import type { ChildHealth, DoorPage } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { Search } from 'lucide-vue-next'
 import { computed, reactive, ref } from 'vue'
@@ -37,21 +29,7 @@ import { route } from 'ziggy-js'
  * Children are checked in only while an admin has the class open (spec item 15): until then, and once closed, the
  * search is hidden and the list has no Undo; the class's admin opens and closes it here (SessionControls).
  */
-const props = defineProps<{
-    /** The Session at this address (spec item 16): its class, date and state (spec item 15). */
-    session: DoorSession
-    /** The bar's dropdown (Roy 2026-11-10): the satellite's classes open now that this person may open. */
-    open_classes: SessionChoice[]
-    /** An admin of the class: closes it here, and opens it again. */
-    can_open: boolean
-    checked_in: DoorCheckIn[]
-    query: string
-    /** The search was a name card (slice 3): its code and the children it named — ticked on their family cards. */
-    scan: DoorScan | null
-    families: DoorFamily[]
-    levels: LevelOption[]
-    health?: ChildHealth | null
-}>()
+const props = defineProps<DoorPage>()
 
 const satellite = useSatellite()
 const q = ref(props.query)

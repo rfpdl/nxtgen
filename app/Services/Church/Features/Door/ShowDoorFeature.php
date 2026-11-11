@@ -27,10 +27,12 @@ use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
 use App\Services\Church\Data\DoorQueryInput;
+use App\Services\Church\DataObjects\DoorPageData;
 use App\Services\Church\Features\BaseChurchFeature;
 use Illuminate\Database\Eloquent\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\LaravelData\Lazy;
 
 /**
  * The door (DECISIONS 2026-10-26), phone first, at its Session's own address (spec item 16: `/<code>/checkin`, which
@@ -80,25 +82,25 @@ final class ShowDoorFeature extends BaseChurchFeature
         [$families, $scan] = $this->search($church, $query, $address->card);
         $suggested = $this->suggestedLevels($families);
 
-        return Inertia::render('Church/Door/Index', [
+        return Inertia::render('Church/Door/Index', new DoorPageData(
             // Spec item 15: check-in only while open; an admin of the class closes it here, and opens it again.
-            'session' => DoorSessionData::fromModel($session, $today),
+            session: DoorSessionData::fromModel($session, $today),
             // The bar's dropdown (Roy 2026-11-10): the satellite's classes open now whose door this person may open.
-            'open_classes' => array_map(SessionChoiceData::fromModel(...), array_values(array_filter(
+            open_classes: array_map(SessionChoiceData::fromModel(...), array_values(array_filter(
                 $this->run(new GetOpenSessionsJob(satellite: $this->satellite(), today: $today)),
                 fn (Session $open): bool => $this->scope()->canCheckInTo($open->schedule),
             ))),
             // Opening again is only on its own day (Astra, issue 12): another day's Open would open TODAY's Session.
-            'can_open' => $session->date->isSameDay($today) && $this->scope()->canOpenSessionOf($session->schedule),
-            'checked_in' => array_map(fn (CheckIn $c): DoorCheckInData => DoorCheckInData::fromCheckIn($c, $church->timezone), $checkIns),
-            'query' => $query,
-            'scan' => $scan,
-            'families' => array_values($families->map(fn (Family $f): DoorFamilyData => DoorFamilyData::fromModel($f, $checkedIn, $suggested, canOpen: $this->scope()->canSeeFamily($f)))->all()),
-            'levels' => $this->run(new GetLevelsJob),
-            'health' => Inertia::optional(fn (): ?ChildHealthData => ! request()->filled('health')
+            can_open: $session->date->isSameDay($today) && $this->scope()->canOpenSessionOf($session->schedule),
+            checked_in: array_map(fn (CheckIn $c): DoorCheckInData => DoorCheckInData::fromCheckIn($c, $church->timezone), $checkIns),
+            query: $query,
+            scan: $scan,
+            families: array_values($families->map(fn (Family $f): DoorFamilyData => DoorFamilyData::fromModel($f, $checkedIn, $suggested, canOpen: $this->scope()->canSeeFamily($f)))->all()),
+            levels: $this->run(new GetLevelsJob),
+            health: Lazy::inertia(fn (): ?ChildHealthData => ! request()->filled('health')
                 ? null
                 : ChildHealthData::fromModel($this->run(new GetChurchChildJob(church: $church, id: request()->integer('health'))))),
-        ]);
+        ));
     }
 
     /**

@@ -6,7 +6,7 @@ import PageHeader from '@/components/atoms/PageHeader.vue'
 import SelectField from '@/components/atoms/SelectField.vue'
 import TextField from '@/components/atoms/TextField.vue'
 import PlatformShell from '@/components/layout/PlatformShell.vue'
-import type { ChurchSettings } from '@/types'
+import type { ChurchSettingsInput, PlatformSettingsPage } from '@/types'
 import { Head, useForm } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { route } from 'ziggy-js'
@@ -15,12 +15,9 @@ import { route } from 'ziggy-js'
  * The church's settings (spec item 12): its time zone, the fee for a lost or damaged name card (in dirhams) and the
  * date Moving-Up measures ages on. A card already asked for keeps its fee.
  */
-const props = defineProps<{
-    settings: ChurchSettings
-    timezones: string[]
-}>()
+const props = defineProps<PlatformSettingsPage>()
 
-const form = useForm({
+const form = useForm<ChurchSettingsInput>({
     timezone: props.settings.timezone,
     card_fee: props.settings.card_fee,
     moving_up_date: props.settings.moving_up_date ?? '',

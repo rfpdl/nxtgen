@@ -5,7 +5,7 @@ import PageHeader from '@/components/atoms/PageHeader.vue'
 import SectionHeading from '@/components/atoms/SectionHeading.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import ServeClassCard from '@/components/molecules/ServeClassCard.vue'
-import type { ServeClass } from '@/types'
+import type { ServePage } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { route } from 'ziggy-js'
@@ -16,7 +16,7 @@ import { route } from 'ziggy-js'
  * (an admin opens one here and goes on to its door; a Lifeshaper sees "Not open yet", Roy 2026-11-10) or closed.
  * None today: "No class today". Replaces the old door page, where a class was picked (Roy 2026-11-10).
  */
-const props = defineProps<{ today: string; classes: ServeClass[] }>()
+const props = defineProps<ServePage>()
 
 const openNow = computed(() => props.classes.filter((c) => c.state === 'open'))
 const rest = computed(() => props.classes.filter((c) => c.state !== 'open'))

@@ -12,6 +12,7 @@ use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
 use App\Foundation\Support\FamilyFormEnums;
+use App\Services\Family\DataObjects\FamilyHomePageData;
 use App\Services\Family\Features\BaseFamilyFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -37,13 +38,13 @@ final class ShowFamilyFeature extends BaseFamilyFeature
         $family = $this->family();
         $me = $this->guardian();
 
-        return Inertia::render('Family/Show', [
-            'family' => $this->run(new GetFamilyPortalJob(family: $family)),
-            'details' => FamilyDetailsData::fromModel($family),
-            'me' => GuardianEditData::fromModel($me),
-            'other_guardians' => GuardianEditData::othersOf($family),
-            'satellites' => $this->run(new GetSatellitesJob(church: $family->church)),
-            'enums' => FamilyFormEnums::toFrontend(),
-        ]);
+        return Inertia::render('Family/Show', new FamilyHomePageData(
+            family: $this->run(new GetFamilyPortalJob(family: $family)),
+            details: FamilyDetailsData::fromModel($family),
+            me: GuardianEditData::fromModel($me),
+            other_guardians: GuardianEditData::othersOf($family),
+            satellites: $this->run(new GetSatellitesJob(church: $family->church)),
+            enums: FamilyFormEnums::toFrontend(),
+        ));
     }
 }

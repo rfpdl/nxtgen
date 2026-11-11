@@ -8,6 +8,7 @@ use App\Data\Models\Satellite;
 use App\Domains\Church\Jobs\GetSatellitesJob;
 use App\Foundation\Attributes\UserStory;
 use App\Foundation\Support\FamilyFormEnums;
+use App\Services\Public\DataObjects\RegisterPageData;
 use App\Services\Public\Features\BasePublicFeature;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -39,9 +40,9 @@ final class ShowRegisterFeature extends BasePublicFeature
             return redirect()->route('public.register', [$this->satellite, ...request()->query()]);
         }
 
-        return Inertia::render('Public/Register', [
-            'satellites' => $this->run(new GetSatellitesJob(church: $this->satellite->church)),
-            'enums' => FamilyFormEnums::toFrontend(),
-        ]);
+        return Inertia::render('Public/Register', new RegisterPageData(
+            satellites: $this->run(new GetSatellitesJob(church: $this->satellite->church)),
+            enums: FamilyFormEnums::toFrontend(),
+        ));
     }
 }

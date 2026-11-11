@@ -1,4 +1,5 @@
-type Satellite = App.Domains.Church.DataObjects.SatelliteData
+import type { SatelliteData } from '@/types/generated'
+type Satellite = SatelliteData
 
 /**
  * The shared `satellite` prop (HandleInertiaRequests) for tests that mount a component reading `useSatellite()`:

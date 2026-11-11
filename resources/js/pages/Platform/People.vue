@@ -3,7 +3,7 @@ import PageHeader from '@/components/atoms/PageHeader.vue'
 import PlatformShell from '@/components/layout/PlatformShell.vue'
 import StaffMemberCard from '@/components/molecules/StaffMemberCard.vue'
 import AddStaffForm from '@/components/organisms/AddStaffForm.vue'
-import type { GrantOption, StaffMember } from '@/types'
+import type { PlatformPeoplePage } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
@@ -11,7 +11,7 @@ import { route } from 'ziggy-js'
  * The platform's People (spec item 12): give any Role anywhere — a new satellite's first admin — and everyone who
  * serves, at every satellite, with their Roles.
  */
-defineProps<{ people: StaffMember[]; grant_options: GrantOption[] }>()
+defineProps<PlatformPeoplePage>()
 
 function remove(roleId: number): void {
     router.delete(route('platform.people.roles.destroy', roleId), { preserveScroll: true })

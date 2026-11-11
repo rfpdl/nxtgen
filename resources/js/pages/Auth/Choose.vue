@@ -3,7 +3,7 @@ import AppButton from '@/components/atoms/AppButton.vue'
 import PageHeader from '@/components/atoms/PageHeader.vue'
 import SignOutButton from '@/components/atoms/SignOutButton.vue'
 import AppShell from '@/components/layout/AppShell.vue'
-import type { LandingOption } from '@/types'
+import type { ChoosePage, LandingOption } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
@@ -11,7 +11,7 @@ import { route } from 'ziggy-js'
  * One login, more than one place: pick one. The pick is remembered on this device (POST /home/choice). On the kit
  * (the Bold look): each place is one big button, its church under its name.
  */
-defineProps<{ options: LandingOption[] }>()
+defineProps<ChoosePage>()
 
 function choose(option: LandingOption): void {
     router.post(route('home.choice'), { place: option.place })

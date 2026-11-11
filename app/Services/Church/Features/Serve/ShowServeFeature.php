@@ -13,6 +13,7 @@ use App\Domains\Schedule\Jobs\GetTodaysSchedulesJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
+use App\Services\Church\DataObjects\ServePageData;
 use App\Services\Church\Features\BaseChurchFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -53,15 +54,15 @@ final class ShowServeFeature extends BaseChurchFeature
         }
         usort($classes, fn (Schedule $a, Schedule $b): int => [$a->starts_at, mb_strtolower($a->name)] <=> [$b->starts_at, mb_strtolower($b->name)]);
 
-        return Inertia::render('Church/Serve/Index', [
-            'today' => $today->format('D j M'),
-            'classes' => array_map(fn (Schedule $class): ServeClassData => ServeClassData::fromModel(
+        return Inertia::render('Church/Serve/Index', new ServePageData(
+            today: $today->format('D j M'),
+            classes: array_map(fn (Schedule $class): ServeClassData => ServeClassData::fromModel(
                 $class,
                 $sessions[$class->id] ?? null,
                 $today,
                 // Opening again needs the class to meet today (OpenSessionFeature).
                 canOpen: $class->meetsOn($today) && $scope->canOpenSessionOf($class),
             ), $classes),
-        ]);
+        ));
     }
 }

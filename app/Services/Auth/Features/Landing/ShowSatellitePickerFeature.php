@@ -9,6 +9,7 @@ use App\Data\Models\User;
 use App\Domains\Church\DataObjects\SatelliteChoiceData;
 use App\Domains\Church\Jobs\GetOpenSatellitesJob;
 use App\Foundation\Attributes\UserStory;
+use App\Services\Auth\DataObjects\PickSatellitePageData;
 use App\Services\Auth\Features\BaseAuthFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -36,8 +37,8 @@ final class ShowSatellitePickerFeature extends BaseAuthFeature
         $satellites = $this->run(new GetOpenSatellitesJob(user: $user));
         abort_if($satellites === [], 404);
 
-        return Inertia::render('Auth/PickSatellite', [
-            'satellites' => array_map(fn (Satellite $s): SatelliteChoiceData => SatelliteChoiceData::fromModel($s), $satellites),
-        ]);
+        return Inertia::render('Auth/PickSatellite', new PickSatellitePageData(
+            satellites: array_map(fn (Satellite $s): SatelliteChoiceData => SatelliteChoiceData::fromModel($s), $satellites),
+        ));
     }
 }

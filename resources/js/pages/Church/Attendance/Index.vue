@@ -7,7 +7,7 @@ import SelectField from '@/components/atoms/SelectField.vue'
 import TextField from '@/components/atoms/TextField.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import AttendanceSquadTable from '@/components/molecules/AttendanceSquadTable.vue'
-import type { AttendanceClass, AttendanceSquad } from '@/types'
+import type { AttendanceClass, AttendancePage } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { route } from 'ziggy-js'
@@ -18,14 +18,7 @@ import { route } from 'ziggy-js'
  * retired class that met stays in the picker, marked "(retired)". On the kit (the Bold look): each Squad a Card
  * headed by a Pill in its Level's colour.
  */
-const props = defineProps<{
-    classes: AttendanceClass[]
-    class_id: number | null
-    date: string
-    date_label: string
-    squads: AttendanceSquad[]
-    total: number
-}>()
+const props = defineProps<AttendancePage>()
 
 const here = useSatellite()
 

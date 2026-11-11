@@ -4,7 +4,7 @@ import Card from '@/components/atoms/Card.vue'
 import PageHeader from '@/components/atoms/PageHeader.vue'
 import TextField from '@/components/atoms/TextField.vue'
 import AppShell from '@/components/layout/AppShell.vue'
-import type { UpdatePasswordInput } from '@/types'
+import type { PasswordPage, UpdatePasswordInput } from '@/types'
 import { Head, useForm } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
@@ -13,7 +13,7 @@ import { route } from 'ziggy-js'
  * kit (the Bold look): the bar (no menu — it is reached from the menu, and Back returns), one Card, the two fields
  * and the one button.
  */
-defineProps<{ has_password: boolean }>()
+defineProps<PasswordPage>()
 
 const form = useForm<UpdatePasswordInput & { password_confirmation: string }>({
     password: '',

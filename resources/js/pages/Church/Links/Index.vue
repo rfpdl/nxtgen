@@ -4,7 +4,7 @@ import AppButton from '@/components/atoms/AppButton.vue'
 import PageHeader from '@/components/atoms/PageHeader.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import SatelliteLinks from '@/components/organisms/SatelliteLinks.vue'
-import type { SatelliteLinks as SatelliteLinksProp } from '@/types'
+import type { LinksPage } from '@/types'
 import { Head } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
@@ -12,7 +12,7 @@ import { route } from 'ziggy-js'
  * Links (GLOSSARY; Roy 2026-11-06): each satellite this admin looks after, with the Links its QR poster shows —
  * its Facebook group, its WhatsApp group, anything parents should scan. The poster itself is in Serve.
  */
-defineProps<{ satellites: SatelliteLinksProp[]; max: number }>()
+defineProps<LinksPage>()
 
 const here = useSatellite()
 </script>

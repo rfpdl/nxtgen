@@ -1,8 +1,9 @@
+import type { SatelliteData } from '@/types/generated'
 import type { SharedProps } from '@/types'
 import { usePage } from '@inertiajs/vue3'
 import { computed, type ComputedRef } from 'vue'
 
-type Satellite = App.Domains.Church.DataObjects.SatelliteData
+type Satellite = SatelliteData
 
 /**
  * The satellite the page is about — the shared `satellite` prop (HandleInertiaRequests): the one its address names

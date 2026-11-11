@@ -3,7 +3,7 @@ import AppButton from '@/components/atoms/AppButton.vue'
 import PageHeader from '@/components/atoms/PageHeader.vue'
 import SignOutButton from '@/components/atoms/SignOutButton.vue'
 import AppShell from '@/components/layout/AppShell.vue'
-import type { SatelliteChoice } from '@/types'
+import type { PickSatellitePage } from '@/types'
 import { Head } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
@@ -11,7 +11,7 @@ import { route } from 'ziggy-js'
  * "Pick your satellite" (spec item 11): someone who serves at several satellites and used none yet picks one; each is
  * one big button to its home there (Admin for an admin, else Serve). The bar remembers the last one after that.
  */
-defineProps<{ satellites: SatelliteChoice[] }>()
+defineProps<PickSatellitePage>()
 </script>
 
 <template>

@@ -8,7 +8,7 @@ import ChurchShell from '@/components/layout/ChurchShell.vue'
 import FamilySearchResultCard from '@/components/molecules/FamilySearchResultCard.vue'
 import AddChildForm from '@/components/organisms/AddChildForm.vue'
 import RegisterFamilyForm from '@/components/organisms/RegisterFamilyForm.vue'
-import type { FamilySearchResult, SatelliteOption } from '@/types'
+import type { StaffRegisterPage } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { Search } from 'lucide-vue-next'
 import { ref } from 'vue'
@@ -18,11 +18,7 @@ import { areaRoute } from '@/composables/useArea'
  * Register a family (staff, plan §6 R1), search first: is the family already here (church-wide, masked — add a child
  * to it), and only then "Not found — register a new family", which opens the registration form.
  */
-const props = defineProps<{
-    query: string
-    results: FamilySearchResult[]
-    satellites: SatelliteOption[]
-}>()
+const props = defineProps<StaffRegisterPage>()
 
 const satellite = useSatellite()
 

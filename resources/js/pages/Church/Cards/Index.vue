@@ -11,13 +11,7 @@ import Pager from '@/components/molecules/Pager.vue'
 import PrintListCard from '@/components/molecules/PrintListCard.vue'
 import CardRequestRow from '@/components/organisms/CardRequestRow.vue'
 import { useEnum } from '@/composables/useEnum'
-import type {
-    CardListTab,
-    CardRequestRow as Row,
-    MakePrintListInput,
-    Pagination,
-    PrintList,
-} from '@/types'
+import type { CardListTab, MakePrintListInput, CardRequestsPage } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import { route } from 'ziggy-js'
@@ -28,15 +22,7 @@ import { route } from 'ziggy-js'
  * found by name (`?q=`, kept across tabs and pages). Each row moves itself (CardRequestRow). On Approved: "Make print list" keeps the cards it shows as a
  * print list (name cards 04), and the lists still to print offer Download and "Mark these N printed" (PrintListCard).
  */
-const props = defineProps<{
-    requests: Row[]
-    pagination: Pagination
-    tab: CardListTab
-    /** The child-name search, kept across tabs and pages (null = none). */
-    q: string | null
-    /** On Approved: the print lists still to print (GLOSSARY "Print list"); empty elsewhere. */
-    print_lists: PrintList[]
-}>()
+const props = defineProps<CardRequestsPage>()
 
 const satellite = useSatellite()
 const { options } = useEnum('card_tab')

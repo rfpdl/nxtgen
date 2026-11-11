@@ -15,6 +15,7 @@ use App\Enums\ChildStatusEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
 use App\Services\Church\Data\ChildListQuery;
+use App\Services\Church\DataObjects\ChildrenPageData;
 use App\Services\Church\Features\BaseChurchFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -42,14 +43,14 @@ final class ShowChildrenFeature extends BaseChurchFeature
 
         $page = $this->run(new GetChildrenJob(church: $church, satelliteIds: $scope->visibleSatelliteIds(), filters: $filters, page: request()->integer('page', 1)));
 
-        return Inertia::render('Church/Children/Index', [
-            'children' => array_map(fn (Child $c): ChildListRowData => ChildListRowData::fromModel($c), $page->items),
-            'pagination' => $page->meta(),
-            'filters' => ListFiltersData::fromChildFilters($filters),
-            'options' => [
+        return Inertia::render('Church/Children/Index', new ChildrenPageData(
+            children: array_map(fn (Child $c): ChildListRowData => ChildListRowData::fromModel($c), $page->items),
+            pagination: $page->meta(),
+            filters: ListFiltersData::fromChildFilters($filters),
+            options: [
                 'levels' => [...$this->run(new GetLevelsJob), LevelOptionData::none()],
             ],
-            'enums' => ['child_status' => ChildStatusEnum::toFrontend()],
-        ]);
+            enums: ['child_status' => ChildStatusEnum::toFrontend()],
+        ));
     }
 }

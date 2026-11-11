@@ -16,6 +16,16 @@ describes the design; this records the choices that shaped or changed it.
   flag, not the full health notes; two phones checking in the same child → the first is kept, the other sees "already
   in"; offline, Undo, Who's in (this phone's) and registering a new family still work. Still to ask: which families a
   door phone saves.
+- **Every page's props are generated from PHP** (TODO #43, Codex; Claude's call on how): a Feature renders one
+  `…PageData` (`app/Services/X/DataObjects/` — a page's data is its Service's, as it brings several Domains' DTOs
+  together, and a Domain may not import another), and the page declares `defineProps<XPage>()`, that same type. The
+  generator now writes one flat module (`resources/js/types/generated.ts`) instead of a global `App.*` namespace,
+  because Vue's compiler cannot follow the namespace into `defineProps`. A page's `enums` stay page-wide (read with
+  `useEnum()`), hidden from its props type. The shared props are `SharedPropsData`, each lazy part a
+  `Lazy::closure` so a partial reload still skips them. The door's health details stay an optional prop
+  (`Lazy::inertia`). `PageContractTest` holds every Feature and page to this; its known-gaps lists started with all
+  23 pages and ended the night empty. The forms Codex named post generated Inputs (`SatelliteInput`,
+  `ChurchSettingsInput`, roll call's `MarkPresentInput`/`HeadCountInput`).
 - **Closed classes stay under "Today" on Serve** with "Closed" and "See who was in" (Roy confirmed).
 - **Safari Tab after the menu closes on a wide screen (TODO #40) fixed** (Roy: "fix it next"): focus goes to the menu
   row's current page instead of the hidden Menu button.

@@ -19,6 +19,7 @@ use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
+use App\Services\Church\DataObjects\ChurchPeoplePageData;
 use App\Services\Church\Features\BaseChurchFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -72,13 +73,13 @@ final class ShowPeopleFeature extends BaseChurchFeature
             );
         })->sortBy(fn (StaffMemberData $p): string => mb_strtolower($p->name))->values();
 
-        return Inertia::render('Church/People/Index', [
-            'people' => $people->all(),
-            'grant_options' => $this->grantOptions($satellites, $this->run(new GetSchedulesBySatelliteJob(
+        return Inertia::render('Church/People/Index', new ChurchPeoplePageData(
+            people: array_values($people->all()),
+            grant_options: $this->grantOptions($satellites, $this->run(new GetSchedulesBySatelliteJob(
                 church: $church,
                 satelliteIds: array_map(fn (SatelliteOptionData $s): int => $s->id, $satellites),
             ))),
-        ]);
+        ));
     }
 
     /**

@@ -23,7 +23,7 @@ function page() {
             children: [],
             filters: {} as never,
             pagination: { page: 1, last_page: 1, total: 0, per_page: 50 },
-            options: { satellites: [], levels: [] },
+            options: { levels: [] },
         },
         global: {
             stubs: {

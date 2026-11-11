@@ -1,8 +1,9 @@
+import type { SatelliteData } from '@/types/generated'
 import { useSatellite } from '@/composables/useSatellite'
 import { makeSatellite } from '@/tests/satellite'
 import { describe, expect, it, vi } from 'vitest'
 
-const page: { props: { satellite: App.Domains.Church.DataObjects.SatelliteData | null } } = {
+const page: { props: { satellite: SatelliteData | null } } = {
     props: { satellite: makeSatellite() },
 }
 

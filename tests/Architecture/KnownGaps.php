@@ -111,4 +111,11 @@ final class KnownGaps
     // MigrationTest
     /** @var list<string> migrations using a plain timestamp()/timestamps()/softDeletes() */
     public const array MIGRATION_PLAIN_TIMESTAMP = [];
+
+    // PageContractTest (TODO #43): started 2026-11-11 with every page listed, paid off the same night
+    /** @var list<string> Inertia page names rendered from an array, not a …PageData */
+    public const array PAGE_PROPS_NOT_PAGE_DATA = [];
+
+    /** @var list<string> page files (under resources/js/pages) declaring their props by hand */
+    public const array PAGE_PROPS_HAND_TYPED = [];
 }

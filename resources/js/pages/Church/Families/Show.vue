@@ -21,47 +21,20 @@ import EditChildForm from '@/components/organisms/EditChildForm.vue'
 import FamilyDetailsForm from '@/components/organisms/FamilyDetailsForm.vue'
 import type {
     CardRequest,
-    ChildAttendance,
     ChildCheckIn,
     ChildStatus,
-    DuplicatePair,
     DuplicateStatus,
-    FamilyAdmin,
-    FamilyDetails,
-    GuardianEdit,
-    LevelOption,
-    Note,
     ResolveDuplicateInput,
-    SatelliteOption,
     UpdateChildLevelInput,
     UpdateChildStatusInput,
+    StaffFamilyPage,
 } from '@/types'
 import { Head, router, usePage } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import { route } from 'ziggy-js'
 import { areaRoute } from '@/composables/useArea'
 
-const props = defineProps<{
-    family: FamilyAdmin
-    /** Each child's attendance, newest first (slice 3). Staff only. */
-    attendance: ChildAttendance[]
-    /** Each child's open Card request (name cards), at most one per child. Staff only. */
-    card_requests: CardRequest[]
-    /** What staff changed on this family and its children (system notes), newest first. Staff only. */
-    notes: Note[]
-    /** Open possible duplicates this family is on, for an admin who may answer them (empty for everyone else). */
-    duplicates: DuplicatePair[]
-    /** Only for someone who may edit this family (null otherwise). */
-    details: FamilyDetails | null
-    primary: GuardianEdit | null
-    other_guardians: GuardianEdit[]
-    satellites: SatelliteOption[]
-    /** Correct the email, set a child's status, delete a photo for good: an editor, in the Admin area only (Roy 2026-11-06). */
-    admin_controls: boolean
-    /** Satellite admins only (plan §3.2; DECISIONS 2026-11-08), in the Admin area: correct a child's Level outside Moving-Up. */
-    can_set_level: boolean
-    levels: LevelOption[]
-}>()
+const props = defineProps<StaffFamilyPage>()
 
 const satellite = useSatellite()
 

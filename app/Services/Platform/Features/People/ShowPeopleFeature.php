@@ -18,6 +18,7 @@ use App\Domains\Schedule\Jobs\GetSchedulesBySatelliteJob;
 use App\Enums\RoleEnum;
 use App\Enums\ScopeTypeEnum;
 use App\Foundation\Attributes\UserStory;
+use App\Services\Platform\DataObjects\PlatformPeoplePageData;
 use App\Services\Platform\Features\BasePlatformFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -59,10 +60,10 @@ final class ShowPeopleFeature extends BasePlatformFeature
             );
         })->sortBy(fn (StaffMemberData $p): string => mb_strtolower($p->name))->values();
 
-        return Inertia::render('Platform/People', [
-            'people' => $people->all(),
-            'grant_options' => $this->grantOptions($satellites, $this->run(new GetSchedulesBySatelliteJob(church: $church, satelliteIds: $ids))),
-        ]);
+        return Inertia::render('Platform/People', new PlatformPeoplePageData(
+            people: array_values($people->all()),
+            grant_options: $this->grantOptions($satellites, $this->run(new GetSchedulesBySatelliteJob(church: $church, satelliteIds: $ids))),
+        ));
     }
 
     /**

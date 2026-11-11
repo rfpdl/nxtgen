@@ -6,6 +6,7 @@ namespace App\Services\Platform\Features\Settings;
 
 use App\Domains\Church\DataObjects\ChurchSettingsData;
 use App\Foundation\Attributes\UserStory;
+use App\Services\Platform\DataObjects\PlatformSettingsPageData;
 use App\Services\Platform\Features\BasePlatformFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -24,9 +25,9 @@ final class ShowSettingsFeature extends BasePlatformFeature
 {
     public function handle(): Response
     {
-        return Inertia::render('Platform/Settings', [
-            'settings' => ChurchSettingsData::fromModel($this->church()),
-            'timezones' => timezone_identifiers_list(),
-        ]);
+        return Inertia::render('Platform/Settings', new PlatformSettingsPageData(
+            settings: ChurchSettingsData::fromModel($this->church()),
+            timezones: timezone_identifiers_list(),
+        ));
     }
 }

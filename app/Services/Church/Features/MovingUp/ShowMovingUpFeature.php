@@ -13,6 +13,7 @@ use App\Domains\Level\Jobs\GetMovingUpChildrenJob;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
+use App\Services\Church\DataObjects\MovingUpPageData;
 use App\Services\Church\Features\BaseChurchFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -40,13 +41,13 @@ final class ShowMovingUpFeature extends BaseChurchFeature
         $satellite = $this->satellite();
         $last = $this->run(new GetLastMovingUpJob(satellite: $satellite));
 
-        return Inertia::render('Church/MovingUp/Index', [
-            'children' => array_map(
+        return Inertia::render('Church/MovingUp/Index', new MovingUpPageData(
+            children: array_map(
                 fn (Child $c): MovingUpCandidateData => MovingUpCandidateData::fromChild($c),
                 $this->run(new GetMovingUpChildrenJob(satellite: $satellite)),
             ),
-            'without_level' => $this->run(new GetChildrenWithoutLevelCountJob(satellite: $satellite)),
-            'last' => $last === null ? null : MovingUpData::fromModel($last, $church->timezone),
-        ]);
+            without_level: $this->run(new GetChildrenWithoutLevelCountJob(satellite: $satellite)),
+            last: $last === null ? null : MovingUpData::fromModel($last, $church->timezone),
+        ));
     }
 }

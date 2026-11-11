@@ -15,6 +15,7 @@ use App\Enums\ChildStatusEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
 use App\Services\Church\Data\FamilyListQuery;
+use App\Services\Church\DataObjects\FamiliesPageData;
 use App\Services\Church\Features\BaseChurchFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -42,14 +43,14 @@ final class ShowFamiliesFeature extends BaseChurchFeature
 
         $page = $this->run(new GetFamiliesJob(church: $church, satelliteIds: $scope->visibleSatelliteIds(), filters: $filters, page: request()->integer('page', 1)));
 
-        return Inertia::render('Church/Families/Index', [
-            'families' => array_map(fn (Family $f) => FamilyListRowData::fromModel($f, fullEmail: $scope->canEditFamily($f), mayResend: $scope->canResendLink($f)), $page->items),
-            'pagination' => $page->meta(),
-            'filters' => ListFiltersData::fromFamilyFilters($filters),
-            'options' => [
+        return Inertia::render('Church/Families/Index', new FamiliesPageData(
+            families: array_map(fn (Family $f) => FamilyListRowData::fromModel($f, fullEmail: $scope->canEditFamily($f), mayResend: $scope->canResendLink($f)), $page->items),
+            pagination: $page->meta(),
+            filters: ListFiltersData::fromFamilyFilters($filters),
+            options: [
                 'levels' => [...$this->run(new GetLevelsJob), LevelOptionData::none()],
             ],
-            'enums' => ['child_status' => ChildStatusEnum::toFrontend()],
-        ]);
+            enums: ['child_status' => ChildStatusEnum::toFrontend()],
+        ));
     }
 }

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Domains\Church\DataObjects\SharedFlashData;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 
@@ -76,13 +77,11 @@ function flashedKeys(): array
  */
 function sharedFlashKeys(): array
 {
-    $source = file_get_contents(app_path('Http/Middleware/HandleInertiaRequests.php'));
-
-    preg_match("/'flash' => \[(.*?)\n            \],/s", (string) $source, $block);
-
-    preg_match_all("/'([a-zA-Z_]+)' =>/", $block[1] ?? '', $matches);
-
-    return $matches[1];
+    // The shared flash is SharedFlashData (TODO #43): its properties are the keys every page receives.
+    return array_map(
+        fn (ReflectionParameter $p): string => $p->getName(),
+        (new ReflectionClass(SharedFlashData::class))->getConstructor()?->getParameters() ?? [],
+    );
 }
 
 it('finds the flash keys it is supposed to be guarding', function (): void {

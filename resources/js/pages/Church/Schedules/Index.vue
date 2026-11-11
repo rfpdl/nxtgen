@@ -2,14 +2,14 @@
 import PageHeader from '@/components/atoms/PageHeader.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import SatelliteSchedules from '@/components/organisms/SatelliteSchedules.vue'
-import type { SatelliteSchedules as SatelliteSchedulesProp } from '@/types'
+import type { SchedulesPage } from '@/types'
 import { Head } from '@inertiajs/vue3'
 
 /**
  * Classes (GLOSSARY "Schedule", DECISIONS 2026-10-26): each satellite this admin looks after, with its classes.
  * A weekly class shows at the door on its day every week; a one-time class on its date only (spec item 14).
  */
-defineProps<{ satellites: SatelliteSchedulesProp[] }>()
+defineProps<SchedulesPage>()
 </script>
 
 <template>

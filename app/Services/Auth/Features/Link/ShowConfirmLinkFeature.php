@@ -6,6 +6,7 @@ namespace App\Services\Auth\Features\Link;
 
 use App\Enums\MagicLinkRouteEnum;
 use App\Foundation\Attributes\UserStory;
+use App\Services\Auth\DataObjects\ConfirmLinkPageData;
 use App\Services\Auth\Features\BaseAuthFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -31,13 +32,13 @@ final class ShowConfirmLinkFeature extends BaseAuthFeature
 
     public function handle(): Response
     {
-        return Inertia::render('Auth/ConfirmLink', [
-            'purpose' => $this->purpose,
+        return Inertia::render('Auth/ConfirmLink', new ConfirmLinkPageData(
+            purpose: $this->purpose,
             // The page's words are the enum's (TODO #41): never retyped in Vue.
-            'title' => $this->purpose->label(),
-            'prompt' => $this->purpose->prompt(),
-            'button' => $this->purpose->button(),
-            'action' => route($this->purpose->routeName(), $this->token),
-        ]);
+            title: $this->purpose->label(),
+            prompt: $this->purpose->prompt(),
+            button: $this->purpose->button(),
+            action: route($this->purpose->routeName(), $this->token),
+        ));
     }
 }

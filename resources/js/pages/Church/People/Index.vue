@@ -4,15 +4,12 @@ import PageHeader from '@/components/atoms/PageHeader.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import StaffMemberCard from '@/components/molecules/StaffMemberCard.vue'
 import AddStaffForm from '@/components/organisms/AddStaffForm.vue'
-import type { GrantOption, StaffMember } from '@/types'
+import type { ChurchPeoplePage } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
 /** People who serve (plan §6): add someone (one role from what this viewer may give), and each person with their roles. */
-defineProps<{
-    people: StaffMember[]
-    grant_options: GrantOption[]
-}>()
+defineProps<ChurchPeoplePage>()
 
 const satellite = useSatellite()
 

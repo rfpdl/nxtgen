@@ -1,32 +1,112 @@
 /*
- * Frontend types. Server shapes come from `generated.d.ts` (`php artisan typescript:transform`) — response DTOs,
+ * Frontend types. Server shapes come from `generated.ts` (`php artisan typescript:transform`) — response DTOs,
  * Inputs and enums, all snake_case (DECISIONS 2026-10-17). They are aliased here so components import from one
  * place; nothing here redefines a shape the server owns.
  */
 
+import type {
+    AttendanceChildData,
+    AttendanceClassData,
+    AttendancePageData,
+    AttendanceSquadData,
+    CardFeeEnum,
+    CardListTabEnum,
+    CardMoveEnum,
+    CardReasonEnum,
+    CardRequestData,
+    CardRequestRowData,
+    CardRequestsPageData,
+    ChildAttendanceData,
+    ChildCheckInData,
+    ChildHealthData,
+    ChildInput,
+    ChildListRowData,
+    ChildPortalData,
+    ChildStatusEnum,
+    ChildrenPageData,
+    ChoosePageData,
+    ChurchData,
+    ChurchPeoplePageData,
+    ChurchSettingsData,
+    ConfirmLinkPageData,
+    DoorCheckInData,
+    DoorChildData,
+    DoorFamilyData,
+    DoorPageData,
+    DoorScanData,
+    DoorSessionData,
+    DuplicatePairData,
+    DuplicateStatusEnum,
+    FamiliesPageData,
+    FamilyAdminData,
+    FamilyDetailsData,
+    FamilyDetailsInput,
+    FamilyHomePageData,
+    FamilyListRowData,
+    FamilyPortalData,
+    FamilySearchResultData,
+    GenderEnum,
+    GrantOptionData,
+    GuardianDetailsInput,
+    GuardianEditData,
+    GuardianPortalData,
+    LandingOptionData,
+    LevelData,
+    LevelOptionData,
+    LifestageEnum,
+    LinksPageData,
+    ListChildData,
+    ListFiltersData,
+    MagicLinkRouteEnum,
+    MovingUpCandidateData,
+    MovingUpChildData,
+    MovingUpData,
+    MovingUpPageData,
+    NoteData,
+    OtherGuardianInput,
+    PaginationData,
+    PasswordPageData,
+    PickSatellitePageData,
+    PlatformPeoplePageData,
+    PlatformSatelliteData,
+    PlatformSatellitesPageData,
+    PlatformSettingsPageData,
+    PosterLinkData,
+    PosterPageData,
+    PrintListData,
+    RegisterPageData,
+    RelationshipEnum,
+    SatelliteChoiceData,
+    SatelliteLinkData,
+    SatelliteLinksData,
+    SatelliteOptionData,
+    SatelliteSchedulesData,
+    ScheduleData,
+    SchedulesPageData,
+    ServeClassData,
+    ServePageData,
+    SessionChoiceData,
+    SessionStateEnum,
+    SharedPropsData,
+    SquadHeadCountData,
+    StaffFamilyPageData,
+    StaffMemberData,
+    StaffRegisterPageData,
+    WeekdayEnum,
+    WhosInChildData,
+    WhosInPageData,
+    WhosInSquadData,
+} from './generated'
+
 // ─── What every page receives (HandleInertiaRequests::share, RequireAssignment) ─────────────────────────
 
-export type Church = App.Domains.Church.DataObjects.ChurchData
-export type SatelliteChoice = App.Domains.Church.DataObjects.SatelliteChoiceData
-export type PlatformSatellite = App.Domains.Church.DataObjects.PlatformSatelliteData
-export type ChurchSettings = App.Domains.Church.DataObjects.ChurchSettingsData
+export type Church = ChurchData
+export type SatelliteChoice = SatelliteChoiceData
+export type PlatformSatellite = PlatformSatelliteData
+export type ChurchSettings = ChurchSettingsData
 
-export type SharedProps = {
-    auth: {
-        user: { id: number; name: string } | null
-        can_switch?: boolean
-        is_platform_admin?: boolean
-    }
-    flash: { success?: string | null; error?: string | null }
-    /** The church the page is about: the address's satellite's, or a parent's own; null elsewhere. */
-    church: Church | null
-    /** The bar's satellite switch: on a staff page, the satellites its viewer may open (spec item 13); else none. */
-    open_satellites: SatelliteChoice[]
-    /** The satellite the address names (`/{satellite}/…`); null on a page outside one. */
-    satellite: App.Domains.Church.DataObjects.SatelliteData | null
-    /** The staff menu: set on church staff pages (from RequireAssignment's scope), null on every other page. */
-    church_nav: App.Domains.Church.DataObjects.ChurchNavData | null
-}
+/** What every page receives: HandleInertiaRequests::share, generated from SharedPropsData (TODO #43). */
+export type SharedProps = SharedPropsData
 
 // ─── Enums ──────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -41,132 +121,107 @@ export type Option<T extends string = string> = { value: T; label: string; color
 
 /** Every enum a page may be given under `enums`, by the name the Feature shares it as. */
 export type EnumMap = {
-    gender: App.Enums.GenderEnum
-    relationship: App.Enums.RelationshipEnum
-    lifestage: App.Enums.LifestageEnum
-    child_status: App.Enums.ChildStatusEnum
-    weekday: App.Enums.WeekdayEnum
+    gender: GenderEnum
+    relationship: RelationshipEnum
+    lifestage: LifestageEnum
+    child_status: ChildStatusEnum
+    weekday: WeekdayEnum
     /** The reasons staff may pick for a new name card: Lost or Damaged (never First card). */
-    card_reason: App.Enums.CardReasonEnum
+    card_reason: CardReasonEnum
     /** The Cards page's tabs: Asked, Approved, Printed, Given or refused. */
-    card_tab: App.Enums.CardListTabEnum
+    card_tab: CardListTabEnum
     /** A Card request's moves, named for their buttons (Cards). */
-    card_move: App.Enums.CardMoveEnum
+    card_move: CardMoveEnum
 }
 
 export type EnumProps = { [K in keyof EnumMap]?: Option<EnumMap[K]>[] }
 
-export type Gender = App.Enums.GenderEnum
-export type Relationship = App.Enums.RelationshipEnum
-export type Lifestage = App.Enums.LifestageEnum
-export type ChildStatus = App.Enums.ChildStatusEnum
-export type DuplicateStatus = App.Enums.DuplicateStatusEnum
-export type MagicLinkRoute = App.Enums.MagicLinkRouteEnum
-export type Weekday = App.Enums.WeekdayEnum
-export type CardReason = App.Enums.CardReasonEnum
-export type CardFee = App.Enums.CardFeeEnum
-export type CardListTab = App.Enums.CardListTabEnum
-export type CardMove = App.Enums.CardMoveEnum
+export type Gender = GenderEnum
+export type Relationship = RelationshipEnum
+export type Lifestage = LifestageEnum
+export type ChildStatus = ChildStatusEnum
+export type DuplicateStatus = DuplicateStatusEnum
+export type MagicLinkRoute = MagicLinkRouteEnum
+export type Weekday = WeekdayEnum
+export type CardReason = CardReasonEnum
+export type CardFee = CardFeeEnum
+export type CardListTab = CardListTabEnum
+export type CardMove = CardMoveEnum
 
 // ─── Response DTOs ──────────────────────────────────────────────────────────────────────────────────────
 
 /** THE pagination type: where a paged list is (ListPage::meta). */
-export type Pagination = App.Foundation.DataObjects.PaginationData
+export type Pagination = PaginationData
 
-export type LandingOption = App.Domains.Church.DataObjects.LandingOptionData
-export type SatelliteOption = App.Domains.Church.DataObjects.SatelliteOptionData
-export type FamilyPortal = App.Domains.Family.DataObjects.FamilyPortalData
-export type ChildPortal = App.Domains.Family.DataObjects.ChildPortalData
-export type FamilyListRow = App.Domains.Family.DataObjects.FamilyListRowData
-export type FamilySearchResult = App.Domains.Family.DataObjects.FamilySearchResultData
-export type FamilyAdmin = App.Domains.Family.DataObjects.FamilyAdminData
-export type StaffMember = App.Domains.Church.DataObjects.StaffMemberData
-export type GrantOption = App.Domains.Church.DataObjects.GrantOptionData
-export type FamilyDetails = App.Domains.Family.DataObjects.FamilyDetailsData
-export type GuardianEdit = App.Domains.Family.DataObjects.GuardianEditData
-export type Note = App.Domains.Family.DataObjects.NoteData
-export type DuplicatePair = App.Domains.Family.DataObjects.DuplicatePairData
-export type ChildListRow = App.Domains.Family.DataObjects.ChildListRowData
-export type LevelOption = App.Domains.Level.DataObjects.LevelOptionData
+export type LandingOption = LandingOptionData
+export type SatelliteOption = SatelliteOptionData
+export type FamilyPortal = FamilyPortalData
+export type ChildPortal = ChildPortalData
+export type FamilyListRow = FamilyListRowData
+export type FamilySearchResult = FamilySearchResultData
+export type FamilyAdmin = FamilyAdminData
+export type StaffMember = StaffMemberData
+export type GrantOption = GrantOptionData
+export type FamilyDetails = FamilyDetailsData
+export type GuardianEdit = GuardianEditData
+export type Note = NoteData
+export type DuplicatePair = DuplicatePairData
+export type ChildListRow = ChildListRowData
+export type LevelOption = LevelOptionData
 /** THE Level shape on every list, card and Squad: its number picks the pill's colour, its name is read. */
-export type Level = App.Foundation.DataObjects.LevelData
+export type Level = LevelData
 /** A child on a family's list row or search hit: nickname and Level. */
-export type ListChild = App.Domains.Family.DataObjects.ListChildData
+export type ListChild = ListChildData
 /** A parent or guardian as a family page lists them: name, relationship, phone. */
-export type GuardianPortal = App.Domains.Family.DataObjects.GuardianPortalData
+export type GuardianPortal = GuardianPortalData
 /** A class (GLOSSARY "Schedule") on the Classes page, and a satellite with its classes. */
-export type Schedule = App.Domains.Schedule.DataObjects.ScheduleData
-export type SatelliteSchedules = App.Domains.Schedule.DataObjects.SatelliteSchedulesData
+export type Schedule = ScheduleData
+export type SatelliteSchedules = SatelliteSchedulesData
 /** Links (GLOSSARY): a satellite's own addresses on its QR poster — on the Links page, a satellite with them, and on the poster with its QR. */
-export type SatelliteLink = App.Domains.Church.DataObjects.SatelliteLinkData
-export type SatelliteLinks = App.Domains.Church.DataObjects.SatelliteLinksData
-export type PosterLink = App.Domains.Church.DataObjects.PosterLinkData
+export type SatelliteLink = SatelliteLinkData
+export type SatelliteLinks = SatelliteLinksData
+export type PosterLink = PosterLinkData
 /** The door (DECISIONS 2026-10-26/27): a family found, one of its children, a child checked in, a child's health. */
 /** The Session a door or Who's in page is at (spec item 16), and one of today's classes on Serve's first page. */
-export type DoorSession = App.Domains.CheckIn.DataObjects.DoorSessionData
-export type ServeClass = App.Domains.CheckIn.DataObjects.ServeClassData
+export type DoorSession = DoorSessionData
+export type ServeClass = ServeClassData
 /** One of the satellite's classes open now, in the bar's dropdown on a class's page (Roy 2026-11-10). */
-export type SessionChoice = App.Domains.CheckIn.DataObjects.SessionChoiceData
+export type SessionChoice = SessionChoiceData
 /** Where today's Session of a class stands (spec item 15): not open yet, open, or closed. */
-export type SessionState = App.Enums.SessionStateEnum
-export type DoorFamily = App.Domains.CheckIn.DataObjects.DoorFamilyData
-export type DoorChild = App.Domains.CheckIn.DataObjects.DoorChildData
-export type DoorCheckIn = App.Domains.CheckIn.DataObjects.DoorCheckInData
-export type ChildHealth = App.Domains.CheckIn.DataObjects.ChildHealthData
+export type SessionState = SessionStateEnum
+export type DoorFamily = DoorFamilyData
+export type DoorChild = DoorChildData
+export type DoorCheckIn = DoorCheckInData
+export type ChildHealth = ChildHealthData
 /** A name card at the door (slice 3): the code it spells and the children it names. */
-export type DoorScan = App.Domains.CheckIn.DataObjects.DoorScanData
+export type DoorScan = DoorScanData
 /** Who's in, the door's second tab (DECISIONS 2026-10-28 — roll call): a Squad of today's class, one child in it. */
-export type WhosInSquad = App.Domains.CheckIn.DataObjects.WhosInSquadData
-export type WhosInChild = App.Domains.CheckIn.DataObjects.WhosInChildData
+export type WhosInSquad = WhosInSquadData
+export type WhosInChild = WhosInChildData
 /** A Squad's confirmed head count: how many, when (church time) and who (first name). */
-export type SquadHeadCount = App.Domains.CheckIn.DataObjects.SquadHeadCountData
+export type SquadHeadCount = SquadHeadCountData
 /** A child's attendance on the staff family page (slice 3): one per child, each Check-in a line. Staff only. */
-export type ChildAttendance = App.Domains.CheckIn.DataObjects.ChildAttendanceData
+export type ChildAttendance = ChildAttendanceData
 /** One line of a child's attendance: date, class, satellite, Squad, present. */
-export type ChildCheckIn = App.Domains.CheckIn.DataObjects.ChildCheckInData
+export type ChildCheckIn = ChildCheckInData
 /** Attendance (DECISIONS 2026-10-26): a Squad of a Session, one child checked in to it, a satellite in the picker. */
-export type AttendanceSquad = App.Domains.CheckIn.DataObjects.AttendanceSquadData
-export type AttendanceChild = App.Domains.CheckIn.DataObjects.AttendanceChildData
-export type AttendanceClass = App.Domains.CheckIn.DataObjects.AttendanceClassData
+export type AttendanceSquad = AttendanceSquadData
+export type AttendanceChild = AttendanceChildData
+export type AttendanceClass = AttendanceClassData
 /** A child's open Card request on the staff family page (name cards): its step, fee state and THE words for it ("Asked · not paid"). */
-export type CardRequest = App.Domains.Card.DataObjects.CardRequestData
+export type CardRequest = CardRequestData
 /** One row of the Cards page (admins): whose card, family, why, the fee, and a refusal's reason. */
-export type CardRequestRow = App.Domains.Card.DataObjects.CardRequestRowData
+export type CardRequestRow = CardRequestRowData
 /** A print list still to print (GLOSSARY "Print list"): when, by whom, its cards the viewer sees and those left. */
-export type PrintList = App.Domains.Card.DataObjects.PrintListData
+export type PrintList = PrintListData
 /** Moving-Up (DECISIONS 2026-11-06): a child who will move, the last Moving-Up, and one child it moved. */
-export type MovingUpCandidate = App.Domains.Level.DataObjects.MovingUpCandidateData
-export type MovingUp = App.Domains.Level.DataObjects.MovingUpData
-export type MovingUpChild = App.Domains.Level.DataObjects.MovingUpChildData
+export type MovingUpCandidate = MovingUpCandidateData
+export type MovingUp = MovingUpData
+export type MovingUpChild = MovingUpChildData
 /** A registration list's filters, named as the address parameters the filter bar sends back. */
-export type ListFilters = App.Domains.Family.DataObjects.ListFiltersData
+export type ListFilters = ListFiltersData
 
 // ─── Inputs: what a form posts, typed from the class that validates it ──────────────────────────────────
-
-export type ChildInput = App.Foundation.Inputs.ChildInput
-export type GuardianInput = App.Foundation.Inputs.GuardianInput
-export type GuardianDetailsInput = App.Foundation.Inputs.GuardianDetailsInput
-export type OtherGuardianInput = App.Foundation.Inputs.OtherGuardianInput
-export type FamilyDetailsInput = App.Foundation.Inputs.FamilyDetailsInput
-export type RegisterFamilyInput = App.Foundation.Inputs.RegisterFamilyInput
-export type ChildPhotoInput = App.Foundation.Inputs.ChildPhotoInput
-export type PasswordLoginInput = App.Services.Auth.Data.PasswordLoginInput
-export type RequestMagicLinkInput = App.Services.Auth.Data.RequestMagicLinkInput
-export type MoveChildrenUpInput = App.Services.Church.Data.MoveChildrenUpInput
-export type UpdatePasswordInput = App.Services.Auth.Data.UpdatePasswordInput
-export type AddStaffInput = App.Services.Church.Data.AddStaffInput
-export type CorrectFamilyEmailInput = App.Services.Church.Data.CorrectFamilyEmailInput
-export type ResolveDuplicateInput = App.Services.Church.Data.ResolveDuplicateInput
-export type UpdateChildStatusInput = App.Services.Church.Data.UpdateChildStatusInput
-export type UpdateChildLevelInput = App.Services.Church.Data.UpdateChildLevelInput
-export type ScheduleInput = App.Services.Church.Data.ScheduleInput
-export type SatelliteLinkInput = App.Services.Church.Data.SatelliteLinkInput
-export type MoveSatelliteLinkInput = App.Services.Church.Data.MoveSatelliteLinkInput
-export type CheckInInput = App.Services.Church.Data.CheckInInput
-export type CheckInChildInput = App.Services.Church.Data.CheckInChildInput
-export type CardRequestInput = App.Services.Church.Data.CardRequestInput
-export type RefuseCardRequestInput = App.Services.Church.Data.RefuseCardRequestInput
-export type MakePrintListInput = App.Services.Church.Data.MakePrintListInput
 
 /**
  * An Input while a person is still filling it in: every answer may still be blank (`''`), an unanswered
@@ -209,3 +264,61 @@ export type FamilyDetailsDraft = Draft<FamilyDetailsInput>
 
 /** One item of the app shell's menu (AppShell): where it goes, and whether the page is under it. */
 export type ShellItem = { label: string; href: string; testid?: string; current?: boolean }
+
+// The server's own names, as they are (Inputs and DTOs named alike here and in PHP).
+export type {
+    AddStaffInput,
+    CardRequestInput,
+    CheckInChildInput,
+    CheckInInput,
+    ChildInput,
+    ChildPhotoInput,
+    ChurchSettingsInput,
+    CorrectFamilyEmailInput,
+    FamilyDetailsInput,
+    GuardianDetailsInput,
+    GuardianInput,
+    HeadCountInput,
+    MakePrintListInput,
+    MarkPresentInput,
+    MoveChildrenUpInput,
+    MoveSatelliteLinkInput,
+    OtherGuardianInput,
+    PasswordLoginInput,
+    RefuseCardRequestInput,
+    RegisterFamilyInput,
+    RequestMagicLinkInput,
+    ResolveDuplicateInput,
+    SatelliteInput,
+    SatelliteLinkInput,
+    ScheduleInput,
+    UpdateChildLevelInput,
+    UpdateChildStatusInput,
+    UpdatePasswordInput,
+} from './generated'
+
+// ─── Page props: each page's …PageData, the ONE contract with its Feature (TODO #43) ───────────────────
+
+export type ChoosePage = ChoosePageData
+export type PickSatellitePage = PickSatellitePageData
+export type PasswordPage = PasswordPageData
+export type ConfirmLinkPage = ConfirmLinkPageData
+export type PlatformSatellitesPage = PlatformSatellitesPageData
+export type ChurchPeoplePage = ChurchPeoplePageData
+export type PlatformPeoplePage = PlatformPeoplePageData
+export type PlatformSettingsPage = PlatformSettingsPageData
+export type AttendancePage = AttendancePageData
+export type SchedulesPage = SchedulesPageData
+export type CardRequestsPage = CardRequestsPageData
+export type ChildrenPage = ChildrenPageData
+export type LinksPage = LinksPageData
+export type MovingUpPage = MovingUpPageData
+export type FamiliesPage = FamiliesPageData
+export type StaffRegisterPage = StaffRegisterPageData
+export type ServePage = ServePageData
+export type PosterPage = PosterPageData
+export type FamilyHomePage = FamilyHomePageData
+export type RegisterPage = RegisterPageData
+export type StaffFamilyPage = StaffFamilyPageData
+export type WhosInPage = WhosInPageData
+export type DoorPage = DoorPageData

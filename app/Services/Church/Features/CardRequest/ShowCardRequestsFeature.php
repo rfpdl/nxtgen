@@ -16,6 +16,7 @@ use App\Enums\CardMoveEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
 use App\Services\Church\Data\CardListQuery;
+use App\Services\Church\DataObjects\CardRequestsPageData;
 use App\Services\Church\Features\BaseChurchFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -48,17 +49,17 @@ final class ShowCardRequestsFeature extends BaseChurchFeature
 
         $page = $this->run(new GetCardRequestsJob(church: $church, satelliteIds: $scope->cardSatelliteIds(), tab: $tab, page: $address->page, query: $q));
 
-        return Inertia::render('Church/Cards/Index', [
-            'requests' => array_map(fn (CardRequest $r): CardRequestRowData => CardRequestRowData::fromRequest($r), $page->items),
-            'pagination' => $page->meta(),
-            'tab' => $tab,
-            'q' => $q,
+        return Inertia::render('Church/Cards/Index', new CardRequestsPageData(
+            requests: array_map(fn (CardRequest $r): CardRequestRowData => CardRequestRowData::fromRequest($r), $page->items),
+            pagination: $page->meta(),
+            tab: $tab,
+            q: $q,
             // The print lists still to print, on Approved (name cards 04).
-            'print_lists' => $tab === CardListTabEnum::Approved ? array_map(
+            print_lists: $tab === CardListTabEnum::Approved ? array_map(
                 fn (PrintList $l): PrintListData => PrintListData::fromModel($l, $church->timezone),
                 $this->run(new GetOpenPrintListsJob(church: $church, satelliteIds: $scope->cardSatelliteIds())),
             ) : [],
-            'enums' => ['card_tab' => CardListTabEnum::toFrontend(), 'card_move' => CardMoveEnum::toFrontend()],
-        ]);
+            enums: ['card_tab' => CardListTabEnum::toFrontend(), 'card_move' => CardMoveEnum::toFrontend()],
+        ));
     }
 }

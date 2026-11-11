@@ -12,6 +12,7 @@ use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
 use App\Foundation\Support\FamilyFormEnums;
+use App\Services\Church\DataObjects\StaffRegisterPageData;
 use App\Services\Church\Features\BaseChurchFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -38,11 +39,11 @@ final class ShowRegisterFeature extends BaseChurchFeature
 
         $results = $this->run(new SearchFamiliesJob(church: $church, query: $query));
 
-        return Inertia::render('Church/Families/Register', [
-            'query' => $query,
-            'results' => array_values($results->map(fn (Family $f) => FamilySearchResultData::fromModel($f, canOpen: $scope->canSeeFamily($f), mayResend: $scope->canResendLink($f)))->all()),
-            'satellites' => $this->run(new GetSatellitesJob(church: $church)),
-            'enums' => FamilyFormEnums::toFrontend(),
-        ]);
+        return Inertia::render('Church/Families/Register', new StaffRegisterPageData(
+            query: $query,
+            results: array_values($results->map(fn (Family $f) => FamilySearchResultData::fromModel($f, canOpen: $scope->canSeeFamily($f), mayResend: $scope->canResendLink($f)))->all()),
+            satellites: $this->run(new GetSatellitesJob(church: $church)),
+            enums: FamilyFormEnums::toFrontend(),
+        ));
     }
 }

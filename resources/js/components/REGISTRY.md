@@ -3,7 +3,7 @@
 Every component in `resources/js/components/` (except vendored `ui/`) is listed here. The discipline test
 fails when one is missing. Reuse before you build: search this list first.
 
-Props are typed from `@/types` (aliases over the generated, snake_case `generated.d.ts`); a form's model is a
+Props are typed from `@/types` (aliases over the generated, snake_case `generated.ts`); a form's model is a
 `Draft<…Input>`. Enum options come from the page's `enums` prop through `useEnum()`, the page's church through
 `useChurch()` — neither is passed down as a prop.
 

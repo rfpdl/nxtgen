@@ -1,3 +1,4 @@
+import type { HeadCountInput, MarkPresentInput } from '@/types'
 import { router, usePoll } from '@inertiajs/vue3'
 import { onBeforeUnmount, reactive } from 'vue'
 import { route } from 'ziggy-js'
@@ -47,7 +48,7 @@ export function useRollCall(code: () => string) {
     /** Send a PUT after everything before it; `done` runs when it is answered (not when it is dropped by stop()). */
     function enqueue(
         url: string,
-        data: Record<string, boolean | number>,
+        data: MarkPresentInput | HeadCountInput,
         done: () => void,
         more: { errorBag?: string; onError?: (errors: Record<string, string>) => void } = {},
     ): void {

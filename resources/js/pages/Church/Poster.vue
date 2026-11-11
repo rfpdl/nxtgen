@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppButton from '@/components/atoms/AppButton.vue'
 import { useSatellite } from '@/composables/useSatellite'
-import type { PosterLink } from '@/types'
+import type { PosterPage } from '@/types'
 import { Head } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
@@ -12,13 +12,7 @@ import { route } from 'ziggy-js'
  * (DECISIONS 2026-11-08); the buttons are hidden on paper. On paper everything is smaller, so six Links still print on
  * one A4 or Letter page (Astra; e2e prints it to PDF and counts the pages).
  */
-defineProps<{
-    register_url: string
-    /** What the QR code says: the satellite's code address, which never changes (spec item 7). */
-    qr_url: string
-    qr: string
-    links: PosterLink[]
-}>()
+defineProps<PosterPage>()
 
 const satellite = useSatellite()
 

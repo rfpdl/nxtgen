@@ -8,7 +8,7 @@ import RowList from '@/components/atoms/RowList.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import Pager from '@/components/molecules/Pager.vue'
 import RegistrationListFilters from '@/components/molecules/RegistrationListFilters.vue'
-import type { ChildListRow, LevelOption, ListFilters, Pagination, SharedProps } from '@/types'
+import type { SharedProps, ChildrenPage } from '@/types'
 import { Head, router, usePage } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 import { areaRoute } from '@/composables/useArea'
@@ -20,12 +20,7 @@ import { areaRoute } from '@/composables/useArea'
  * On the kit (the Bold look): one stacked row per child — the whole row opens the family — the Level a Pill in its
  * own colour. A satellite admin also gets "Moving-Up" here — once a year, so not a menu item (DECISIONS 2026-11-06).
  */
-defineProps<{
-    children: ChildListRow[]
-    filters: ListFilters
-    pagination: Pagination
-    options: { levels: LevelOption[] }
-}>()
+defineProps<ChildrenPage>()
 
 const satellite = useSatellite()
 const nav = usePage<SharedProps>().props.church_nav

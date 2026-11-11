@@ -8,7 +8,7 @@ import ChildPhotoForm from '@/components/organisms/ChildPhotoForm.vue'
 import EditChildForm from '@/components/organisms/EditChildForm.vue'
 import FamilyDetailsForm from '@/components/organisms/FamilyDetailsForm.vue'
 import GuardianList from '@/components/molecules/GuardianList.vue'
-import type { FamilyDetails, FamilyPortal, GuardianEdit, SatelliteOption } from '@/types'
+import type { FamilyHomePage } from '@/types'
 import { Head } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { route } from 'ziggy-js'
@@ -18,13 +18,7 @@ import { route } from 'ziggy-js'
  * pill, the photo and Edit — then the parents and guardians with "Edit family details". The menu (FamilyShell)
  * holds Switch and Sign out.
  */
-const props = defineProps<{
-    family: FamilyPortal
-    details: FamilyDetails
-    me: GuardianEdit
-    other_guardians: GuardianEdit[]
-    satellites: SatelliteOption[]
-}>()
+const props = defineProps<FamilyHomePage>()
 
 /** "The Reyes family", with "CCF DXB · Lives in Al Barsha" under it — the bar already says "My family". */
 const title = computed(() => `The ${props.me.last_name} family`)

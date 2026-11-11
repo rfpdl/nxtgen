@@ -9,6 +9,7 @@ use App\Domains\CheckIn\DataObjects\AttendanceSquadData;
 use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
+use App\Services\Church\DataObjects\AttendancePageData;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -35,13 +36,13 @@ final class ShowAttendanceFeature extends BaseAttendanceFeature
     {
         ['schedules' => $schedules, 'selection' => $selection, 'squads' => $squads] = $this->attendance();
 
-        return Inertia::render('Church/Attendance/Index', [
-            'classes' => array_map(AttendanceClassData::fromModel(...), $schedules),
-            'class_id' => $selection->schedule?->id,
-            'date' => $selection->date->toDateString(),
-            'date_label' => $selection->date->format('D j M'),
-            'squads' => $squads,
-            'total' => array_sum(array_map(fn (AttendanceSquadData $s): int => $s->count, $squads)),
-        ]);
+        return Inertia::render('Church/Attendance/Index', new AttendancePageData(
+            classes: array_map(AttendanceClassData::fromModel(...), $schedules),
+            class_id: $selection->schedule?->id,
+            date: $selection->date->toDateString(),
+            date_label: $selection->date->format('D j M'),
+            squads: $squads,
+            total: array_sum(array_map(fn (AttendanceSquadData $s): int => $s->count, $squads)),
+        ));
     }
 }

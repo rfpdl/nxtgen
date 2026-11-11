@@ -16,6 +16,7 @@ use App\Enums\AccessRowEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
 use App\Services\Church\Data\DoorQueryInput;
+use App\Services\Church\DataObjects\WhosInPageData;
 use App\Services\Church\Features\BaseChurchFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -53,16 +54,16 @@ final class ShowWhosInFeature extends BaseChurchFeature
             $church->timezone,
         );
 
-        return Inertia::render('Church/Door/WhosIn', [
+        return Inertia::render('Church/Door/WhosIn', new WhosInPageData(
             // A closed Session's Who's in stays readable, and read-only (spec item 16; Roy 2026-11-10).
-            'session' => DoorSessionData::fromModel($session, $today),
+            session: DoorSessionData::fromModel($session, $today),
             // The bar's dropdown (Roy 2026-11-10): the satellite's classes open now whose door this person may open.
-            'open_classes' => array_map(SessionChoiceData::fromModel(...), array_values(array_filter(
+            open_classes: array_map(SessionChoiceData::fromModel(...), array_values(array_filter(
                 $this->run(new GetOpenSessionsJob(satellite: $this->satellite(), today: $today)),
                 fn (Session $open): bool => $this->scope()->canCheckInTo($open->schedule),
             ))),
-            'squads' => $squads,
-            'squad_id' => collect($squads)->contains(fn (WhosInSquadData $s): bool => $s->id === $address->squad) ? $address->squad : null,
-        ]);
+            squads: $squads,
+            squad_id: collect($squads)->contains(fn (WhosInSquadData $s): bool => $s->id === $address->squad) ? $address->squad : null,
+        ));
     }
 }

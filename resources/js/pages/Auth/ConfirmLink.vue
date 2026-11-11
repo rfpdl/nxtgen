@@ -3,7 +3,7 @@ import AppButton from '@/components/atoms/AppButton.vue'
 import Card from '@/components/atoms/Card.vue'
 import PageHeader from '@/components/atoms/PageHeader.vue'
 import AppShell from '@/components/layout/AppShell.vue'
-import type { MagicLinkRoute } from '@/types'
+import type { ConfirmLinkPage } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
@@ -13,13 +13,7 @@ import { ref } from 'vue'
  * address the button posts to, so nothing here rebuilds a route or retypes a word. On the kit (the Bold look): the
  * bar, a line that says what pressing does, and one big button.
  */
-const props = defineProps<{
-    purpose: MagicLinkRoute
-    title: string
-    prompt: string
-    button: string
-    action: string
-}>()
+const props = defineProps<ConfirmLinkPage>()
 
 const busy = ref(false)
 

@@ -8,7 +8,7 @@ import DoorTabs from '@/components/molecules/DoorTabs.vue'
 import SessionControls from '@/components/molecules/SessionControls.vue'
 import WhosInSquadCard from '@/components/molecules/WhosInSquadCard.vue'
 import { useRollCall } from '@/composables/useRollCall'
-import type { DoorSession, SessionChoice, WhosInSquad } from '@/types'
+import type { WhosInPage } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { route } from 'ziggy-js'
@@ -20,14 +20,7 @@ import { route } from 'ziggy-js'
  * server; under each Squad, its head count is confirmed (issue 02). The list refreshes about every 20 seconds, so
  * children checked in at the door appear (useRollCall).
  */
-const props = defineProps<{
-    /** The Session at this address (spec item 16); closed, it is looked at, not changed (Roy 2026-11-10). */
-    session: DoorSession
-    /** The bar's dropdown (Roy 2026-11-10): the satellite's classes open now that this person may open. */
-    open_classes: SessionChoice[]
-    squads: WhosInSquad[]
-    squad_id: number | null
-}>()
+const props = defineProps<WhosInPage>()
 
 const ALL = 'all'
 const { pending, confirming, countErrors, mark, confirm, stop } = useRollCall(

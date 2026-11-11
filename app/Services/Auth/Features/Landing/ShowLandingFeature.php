@@ -8,6 +8,7 @@ use App\Data\Models\User;
 use App\Domains\Church\DataObjects\LandingOptionData;
 use App\Domains\Church\Jobs\GetLandingOptionsJob;
 use App\Foundation\Attributes\UserStory;
+use App\Services\Auth\DataObjects\ChoosePageData;
 use App\Services\Auth\Features\BaseAuthFeature;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -54,6 +55,6 @@ final class ShowLandingFeature extends BaseAuthFeature
             return redirect($option->url);
         }
 
-        return Inertia::render('Auth/Choose', ['options' => $options]);
+        return Inertia::render('Auth/Choose', new ChoosePageData(options: $options));
     }
 }

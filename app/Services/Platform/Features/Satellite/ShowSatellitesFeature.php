@@ -9,6 +9,7 @@ use App\Domains\Church\DataObjects\PlatformSatelliteData;
 use App\Domains\Church\Jobs\GetSatelliteAdminCountsJob;
 use App\Domains\Church\Jobs\GetSatellitesForChurchJob;
 use App\Foundation\Attributes\UserStory;
+use App\Services\Platform\DataObjects\PlatformSatellitesPageData;
 use App\Services\Platform\Features\BasePlatformFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -32,11 +33,11 @@ final class ShowSatellitesFeature extends BasePlatformFeature
         $church = $this->church();
         $admins = $this->run(new GetSatelliteAdminCountsJob(church: $church));
 
-        return Inertia::render('Platform/Satellites', [
-            'satellites' => array_map(
+        return Inertia::render('Platform/Satellites', new PlatformSatellitesPageData(
+            satellites: array_map(
                 fn (Satellite $s): PlatformSatelliteData => PlatformSatelliteData::fromModel($s, $admins[$s->id] ?? 0),
                 $this->run(new GetSatellitesForChurchJob(church: $church)),
             ),
-        ]);
+        ));
     }
 }

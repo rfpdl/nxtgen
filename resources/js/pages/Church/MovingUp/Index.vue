@@ -10,7 +10,7 @@ import Pill from '@/components/atoms/Pill.vue'
 import SectionHeading from '@/components/atoms/SectionHeading.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import MovingUpLastCard from '@/components/molecules/MovingUpLastCard.vue'
-import type { MoveChildrenUpInput, MovingUp, MovingUpCandidate } from '@/types'
+import type { MoveChildrenUpInput, MovingUpCandidate, MovingUpPage } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
 import { route } from 'ziggy-js'
@@ -23,12 +23,7 @@ import { route } from 'ziggy-js'
  * a list that changed meanwhile moves nobody (the server says to look again). Above it, the last Moving-Up, to put
  * back (MovingUpLastCard).
  */
-const props = defineProps<{
-    children: MovingUpCandidate[]
-    /** Active children with no Level yet: not moved. */
-    without_level: number
-    last: MovingUp | null
-}>()
+const props = defineProps<MovingUpPage>()
 
 const satellite = useSatellite()
 

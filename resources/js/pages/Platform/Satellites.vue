@@ -5,7 +5,7 @@ import Disclosure from '@/components/atoms/Disclosure.vue'
 import PageHeader from '@/components/atoms/PageHeader.vue'
 import TextField from '@/components/atoms/TextField.vue'
 import PlatformShell from '@/components/layout/PlatformShell.vue'
-import type { PlatformSatellite } from '@/types'
+import type { PlatformSatellite, PlatformSatellitesPage, SatelliteInput } from '@/types'
 import { Head, useForm, type InertiaForm } from '@inertiajs/vue3'
 import { reactive, watch } from 'vue'
 import { route } from 'ziggy-js'
@@ -15,9 +15,9 @@ import { route } from 'ziggy-js'
  * for each its address, its registration code — what its QR poster carries, never changed — and how many admins it
  * has; rename it or move its address, and open it (its Admin).
  */
-const props = defineProps<{ satellites: PlatformSatellite[] }>()
+const props = defineProps<PlatformSatellitesPage>()
 
-const adding = useForm({ name: '', slug: '' })
+const adding = useForm<SatelliteInput>({ name: '', slug: '' })
 function add(): void {
     adding.post(route('platform.satellites.store'), {
         preserveScroll: true,
@@ -26,12 +26,12 @@ function add(): void {
 }
 
 // A form per satellite, made for each one the page gets — a satellite just added too (the page stays mounted).
-const editing = reactive<Record<number, InertiaForm<{ name: string; slug: string }>>>({})
+const editing = reactive<Record<number, InertiaForm<SatelliteInput>>>({})
 watch(
     () => props.satellites,
     (satellites) => {
         for (const s of satellites) {
-            editing[s.id] ??= useForm({ name: s.name, slug: s.slug })
+            editing[s.id] ??= useForm<SatelliteInput>({ name: s.name, slug: s.slug })
         }
     },
     { immediate: true },

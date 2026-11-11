@@ -15,6 +15,7 @@ use App\Enums\AccessRowEnum;
 use App\Enums\WeekdayEnum;
 use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
+use App\Services\Church\DataObjects\SchedulesPageData;
 use App\Services\Church\Features\BaseChurchFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -74,9 +75,9 @@ final class ShowSchedulesFeature extends BaseChurchFeature
             );
         }, $options);
 
-        return Inertia::render('Church/Schedules/Index', [
-            'satellites' => $satellites,
-            'enums' => ['weekday' => WeekdayEnum::toFrontend()],
-        ]);
+        return Inertia::render('Church/Schedules/Index', new SchedulesPageData(
+            satellites: $satellites,
+            enums: ['weekday' => WeekdayEnum::toFrontend()],
+        ));
     }
 }

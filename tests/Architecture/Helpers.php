@@ -152,13 +152,17 @@ function middlewareFiles(): array
 }
 
 /**
- * Response DTOs: `app/Domains/X/DataObjects/*Data.php`.
+ * Response DTOs: `app/Domains/X/DataObjects/*Data.php` — and a page's props, `app/Services/X/DataObjects/*PageData.php`
+ * (TODO #43): a page's contract is its Service's, as it brings several Domains' DTOs together.
  *
  * @return list<string>
  */
 function dataObjectFiles(): array
 {
-    return array_values(array_filter(phpFiles('Domains', '*Data.php'), fn (string $f): bool => str_contains($f, '/DataObjects/')));
+    return array_values(array_filter(
+        [...phpFiles('Domains', '*Data.php'), ...phpFiles('Services', '*PageData.php')],
+        fn (string $f): bool => str_contains($f, '/DataObjects/'),
+    ));
 }
 
 /**

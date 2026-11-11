@@ -4,7 +4,7 @@ import PageHeader from '@/components/atoms/PageHeader.vue'
 import AppShell from '@/components/layout/AppShell.vue'
 import RegisterFamilyForm from '@/components/organisms/RegisterFamilyForm.vue'
 import { useChurch } from '@/composables/useChurch'
-import type { SatelliteOption } from '@/types'
+import type { RegisterPage } from '@/types'
 import { Head } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 
@@ -12,7 +12,7 @@ import { route } from 'ziggy-js'
  * A satellite's registration link and QR code open this (the Bold look): the bar with no menu, then the form, starting
  * on the satellite in the address.
  */
-defineProps<{ satellites: SatelliteOption[] }>()
+defineProps<RegisterPage>()
 
 const church = useChurch()
 const satellite = useSatellite()

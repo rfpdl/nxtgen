@@ -10,7 +10,7 @@ import RowList from '@/components/atoms/RowList.vue'
 import ChurchShell from '@/components/layout/ChurchShell.vue'
 import Pager from '@/components/molecules/Pager.vue'
 import RegistrationListFilters from '@/components/molecules/RegistrationListFilters.vue'
-import type { FamilyListRow, LevelOption, ListFilters, Pagination } from '@/types'
+import type { FamiliesPage } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { route } from 'ziggy-js'
@@ -23,12 +23,7 @@ import { areaRoute, inAdminArea } from '@/composables/useArea'
  * Level's colour; an unconfirmed email says so and, where the viewer may, offers the link again (under the row's
  * link). 50 to a page.
  */
-defineProps<{
-    families: FamilyListRow[]
-    filters: ListFilters
-    pagination: Pagination
-    options: { levels: LevelOption[] }
-}>()
+defineProps<FamiliesPage>()
 
 const satellite = useSatellite()
 

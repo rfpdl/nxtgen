@@ -28,6 +28,7 @@ use App\Foundation\Attributes\AccessRow;
 use App\Foundation\Attributes\UserStory;
 use App\Foundation\Support\FamilyFormEnums;
 use App\Foundation\Support\RouteArea;
+use App\Services\Church\DataObjects\StaffFamilyPageData;
 use App\Services\Church\Features\BaseChurchFeature;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -76,40 +77,40 @@ final class ShowFamilyFeature extends BaseChurchFeature
         $canSetLevel = $inAdmin && $scope->canSetLevel();
         $primary = $family->primaryGuardian;
 
-        return Inertia::render('Church/Families/Show', [
-            'family' => FamilyAdminData::fromModel($family, canEdit: $canEditDetails, fullEmail: $canEdit),
+        return Inertia::render('Church/Families/Show', new StaffFamilyPageData(
+            family: FamilyAdminData::fromModel($family, canEdit: $canEditDetails, fullEmail: $canEdit),
             // Each child's attendance (slice 3): staff only — the parent's own page never carries it.
-            'attendance' => ChildAttendanceData::forChildren(
+            attendance: ChildAttendanceData::forChildren(
                 $family->children,
                 $this->run(new GetFamilyCheckInsJob(family: $family)),
                 $this->run(new GetChurchTodayJob(church: $church))->year,
             ),
             // Each child's open Card request (name cards): staff only, as attendance.
-            'card_requests' => array_map(CardRequestData::fromModel(...), $this->run(new GetFamilyOpenCardRequestsJob(family: $family))),
-            'notes' => $this->run(new GetFamilyNotesJob(family: $family)),
-            'duplicates' => $inAdmin && $scope->canReviewDuplicates() ? array_values($this->run(new GetFamilyOpenDuplicatesJob(family: $family))
+            card_requests: array_map(CardRequestData::fromModel(...), $this->run(new GetFamilyOpenCardRequestsJob(family: $family))),
+            notes: $this->run(new GetFamilyNotesJob(family: $family)),
+            duplicates: $inAdmin && $scope->canReviewDuplicates() ? array_values($this->run(new GetFamilyOpenDuplicatesJob(family: $family))
                 ->filter(fn (DuplicateCandidate $p): bool => $scope->canEditFamily(DuplicateCandidate::familyOf($p->subject)))
                 ->map(fn (DuplicateCandidate $p): DuplicatePairData => DuplicatePairData::fromModel(
                     $p,
                     canOpenSubject: $scope->canSeeFamily(DuplicateCandidate::familyOf($p->subject)),
                     canOpenCandidate: $scope->canSeeFamily(DuplicateCandidate::familyOf($p->candidate)),
                 ))->all()) : [],
-            'details' => $canEditDetails ? FamilyDetailsData::fromModel($family) : null,
-            'primary' => $canEditDetails && $primary !== null ? GuardianEditData::fromModel($primary) : null,
-            'other_guardians' => $canEditDetails ? GuardianEditData::othersOf($family) : [],
+            details: $canEditDetails ? FamilyDetailsData::fromModel($family) : null,
+            primary: $canEditDetails && $primary !== null ? GuardianEditData::fromModel($primary) : null,
+            other_guardians: $canEditDetails ? GuardianEditData::othersOf($family) : [],
             // Where the family may be moved: anywhere for an admin who may edit it; its own satellite for anyone else.
-            'satellites' => match (true) {
+            satellites: match (true) {
                 $canEdit => $this->run(new GetSatellitesJob(church: $church)),
                 $canEditDetails => [SatelliteOptionData::fromModel($family->homeSatellite)],
                 default => [],
             },
             // Correct the email, set a child's status: an editor, in Admin.
-            'admin_controls' => $inAdmin && $canEdit,
-            'can_set_level' => $canSetLevel,
-            'levels' => $canSetLevel ? $this->run(new GetLevelsJob) : [],
-            'enums' => [...FamilyFormEnums::toFrontend(), 'child_status' => ChildStatusEnum::toFrontend(), 'card_reason' => CardReasonEnum::toFrontend(CardReasonEnum::staffChoices()),
+            admin_controls: $inAdmin && $canEdit,
+            can_set_level: $canSetLevel,
+            levels: $canSetLevel ? $this->run(new GetLevelsJob) : [],
+            enums: [...FamilyFormEnums::toFrontend(), 'child_status' => ChildStatusEnum::toFrontend(), 'card_reason' => CardReasonEnum::toFrontend(CardReasonEnum::staffChoices()),
                 // The desk's move on a child's card, in CardMoveEnum's words ("Given").
                 'card_move' => CardMoveEnum::toFrontend([CardMoveEnum::Give])],
-        ]);
+        ));
     }
 }
